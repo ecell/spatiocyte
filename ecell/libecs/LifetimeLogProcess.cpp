@@ -72,6 +72,14 @@ void LifetimeLogProcess::initializeFirst()
           ++cntUntracked;
         }
     }
+  //This process is only for tracking the lifetime of one particular species
+  //that goes through several intermediate species before finally untracked
+  //when it becomes a final untracked species. For example if we want to track
+  //the lifetime of a MinDatp_m molecule after it is bound to the membrane and
+  //it goes through another state such as MinDadp_m before dissociating and
+  //becoming a Vacant species:
+  //trackedSpecies = MinDatp_m, MinDadp_m (coefficient -1)
+  //untrackedSpecies = Vacant (coefficient 1)
   if(!cntTracked)
     {
       THROW_EXCEPTION(ValueError, String(
@@ -90,7 +98,7 @@ void LifetimeLogProcess::initializeFirst()
                       "]: Lifetime logging requires at least one " +
                       "nonHD variable reference with 1 " +
                       "coefficient as the untracked species, " +
-                      "but none is given."); 
+                      "but none is given.");
     }
 }
 
@@ -122,6 +130,12 @@ void LifetimeLogProcess::fire()
     {
       cout << "Iterations left:" << Iterations << " of " <<
         theTotalIterations << std::endl;    
+      //Since there is only one file even when there are more than one
+      //iterations, save header only once:
+      if(Iterations == theTotalIterations)
+        {
+          saveFileHeader(theLogFile);
+        }
     }
   if(theTime >= LogEnd && Iterations > 0)
     {
@@ -168,7 +182,6 @@ void LifetimeLogProcess::logTrackedMolecule(ReactionProcess* aProcess,
                                             Species* aSpecies,
                                             const Voxel* aMolecule)
 {
-  std::cout << "end:" << getStepper()->getCurrentTime() << std::endl;
   if(isBindingSite[aProcess->getID()])
     {
       if(aProcess->getMoleculeC() &&
@@ -188,14 +201,32 @@ void LifetimeLogProcess::logTrackedMolecule(ReactionProcess* aProcess,
   const Point anOrigin(aSpecies->coord2point(aTag.origin));
   availableTagIDs.push_back(aTag.id);
   double aTime(getStepper()->getCurrentTime());
-  theLogFile << std::setprecision(15) << aTime-theTagTimes[aTag.id] << "," <<
+  double duration(aTime-theTagTimes[aTag.id]);
+  totalDuration += duration;
+  ++logCnt;
+  theLogFile << std::setprecision(15) << duration << "," <<
     distance(aPoint, anOrigin)*2*theSpatiocyteStepper->getVoxelRadius() << ","
-    << theTagTimes[aTag.id] << "," << aTime << "," << konCnt << std::endl;
+    << theTagTimes[aTag.id] << "," << aTime << "," << konCnt << "," <<
+    1/(totalDuration/logCnt) << std::endl;
+  std::cout << "average koff:" << 1/(totalDuration/logCnt) << std::endl;
+}
+
+void LifetimeLogProcess::saveFileHeader(std::ofstream& aFile)
+{
+  aFile << "Duration of";
+  for(unsigned i(0); i != isTrackedSpecies.size(); ++i)
+    {
+      if(isTrackedSpecies[i])
+        {
+          aFile << ":" << id2species(i)->getIDString();
+        }
+    }
+  aFile << "(s), Distance(m), Start time(s), End time(s), " <<
+    "kon counts (some still bound), Average koff so far(1/s)" << std::endl; 
 }
 
 void LifetimeLogProcess::initTrackedMolecule(Species* aSpecies)
 {
-  std::cout << "start:" << getStepper()->getCurrentTime() << std::endl;
   const unsigned anIndex(aSpecies->size()-1);
   Tag& aTag(aSpecies->getTag(anIndex));
   aTag.origin = aSpecies->getCoord(anIndex);
@@ -217,6 +248,8 @@ bool LifetimeLogProcess::isDependentOnPre(const ReactionProcess* aProcess)
 {
   const VariableReferenceVector& aVariableReferences(
                                        aProcess->getVariableReferenceVector()); 
+  //isBindingSite is to indentify processes that has the tracked species
+  //as both the substrate and product.
   for(unsigned i(0); i != isTrackedSpecies.size(); ++i)
     {
       if(isTrackedSpecies[i] && isInVariableReferences(

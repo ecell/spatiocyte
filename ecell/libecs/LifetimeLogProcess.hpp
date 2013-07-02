@@ -46,7 +46,9 @@ public:
       INHERIT_PROPERTIES(IteratingLogProcess);
     }
   LifetimeLogProcess():
-    konCnt(0)
+    konCnt(0),
+    logCnt(0),
+    totalDuration(0)
   {
     FileName = "LifetimeLog.csv";
   }
@@ -61,6 +63,7 @@ public:
   virtual void interruptedPost(ReactionProcess*);
   virtual bool isDependentOnPre(const ReactionProcess*);
   virtual bool isDependentOnPost(const ReactionProcess*);
+  virtual void saveFileHeader(std::ofstream&);
 private:
   bool isInVariableReferences(const VariableReferenceVector&, const int,
                               const Variable*) const;
@@ -68,6 +71,8 @@ private:
   void initTrackedMolecule(Species*);
 private:
   unsigned konCnt;
+  unsigned logCnt;
+  double totalDuration;
   std::vector<bool> isTrackedSpecies;
   std::vector<bool> isUntrackedSpecies;
   std::vector<bool> isBindingSite;
