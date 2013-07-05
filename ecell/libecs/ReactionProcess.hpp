@@ -161,13 +161,13 @@ public:
             {
               theInterruptedProcesses.push_back(aSpatiocyteProcess);
             }
-          if(this != aReactionProcess &&
-             aSpatiocyteProcess->isDependentOnPre(this))
+          //A ReactionProcess can interruptPre and interruptPost itself
+          //so we don't exclude this ReactionProcess here:
+          if(aSpatiocyteProcess->isDependentOnPre(this))
             {
               theInterruptedProcessesPre.push_back(aSpatiocyteProcess);
             }
-          if(this != aReactionProcess &&
-             aSpatiocyteProcess->isDependentOnPost(this))
+          if(aSpatiocyteProcess->isDependentOnPost(this))
             {
               theInterruptedProcessesPost.push_back(aSpatiocyteProcess);
             }

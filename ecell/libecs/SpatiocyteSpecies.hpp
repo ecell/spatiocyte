@@ -2712,6 +2712,34 @@ public:
         }
       return NULL;
     } 
+  Voxel* getRandomDiffuseVoxel(Voxel* source, Species* aTargetSpecies,
+                               int searchVacant)
+    {
+      std::vector<unsigned> compCoords;
+      if(searchVacant)
+        { 
+          for(unsigned i(0); i != source->diffuseSize; ++i)
+            {
+              unsigned aCoord(source->adjoiningCoords[i]);
+              if(getID(theLattice[aCoord]) == aTargetSpecies->getID())
+                {
+                  compCoords.push_back(aCoord);
+                }
+            }
+        }
+      else
+        {
+          for(unsigned i(0); i != source->diffuseSize; ++i)
+            {
+              unsigned aCoord(source->adjoiningCoords[i]);
+              if(theStepper->id2Comp(getID(theLattice[aCoord])) == theComp)
+                {
+                  compCoords.push_back(aCoord);
+                }
+            }
+        }
+      return getRandomVacantVoxel(compCoords, aTargetSpecies);
+    } 
   Voxel* getRandomAdjoiningVoxel(Voxel* source,
                                  Species* aTargetSpecies,
                                  int searchVacant)

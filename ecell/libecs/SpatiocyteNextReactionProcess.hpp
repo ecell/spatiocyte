@@ -55,6 +55,7 @@ public:
       PROPERTYSLOT_SET_GET(Polymorph, Rates);
     }
   SpatiocyteNextReactionProcess():
+    isReactAB(false),
     Deoligomerize(0),
     theDeoligomerIndex(0),
     BindingSite(-1),
@@ -144,14 +145,19 @@ public:
   virtual void initializeFourth();
   virtual void printParameters();
   virtual bool isDependentOn(const Process*) const;
+  virtual bool isDependentOnPost(ReactionProcess*);
+  virtual bool isDependentOnPre(ReactionProcess*);
+  virtual void interruptedPost(ReactionProcess*);
+  virtual void interruptedPre(ReactionProcess*);
   virtual bool react();
   virtual double getPropensity() const;
   virtual double getNewPropensity();
 protected:
   void updateSubstrates();
-  void updateMoleculesA();
+  /*
   double getIntervalUnbindAB();
   double getIntervalUnbindMultiAB();
+  */
   virtual void calculateOrder();
   virtual bool reactACD(Species*, Species*, Species*);
   virtual bool reactAC(Species*, Species*);
@@ -166,6 +172,7 @@ protected:
   virtual Voxel* reactvAvBC(Species*);
   double getPropensityZerothOrder(); 
   double getPropensityFirstOrder();
+  double getPropensityFirstOrderReactAB();
   double getPropensityFirstOrderDeoligomerize();
   double getPropensitySecondOrderHomo(); 
   double getPropensitySecondOrderHetero(); 
@@ -173,7 +180,11 @@ protected:
   void checkExternStepperInterrupted();
   void setVariableReferences(const VariableReferenceVector&);
   void setDeoligomerIndex(const unsigned);
+  void removeCoordsA(const unsigned);
+  void removeAdjCoordsA(Voxel*);
+  void addCoordsA(Species*, Species*, const unsigned, unsigned&);
 protected:
+  bool isReactAB;
   unsigned Deoligomerize;
   unsigned nextIndexA;
   unsigned theDeoligomerIndex;
@@ -191,7 +202,7 @@ protected:
   Polymorph Rates;
   std::stringstream pFormula;
   PropensityMethod thePropensityMethod;  
-  std::vector<Voxel*> moleculesA;
+  std::vector<unsigned> theCoordsA;
 };
 
 }

@@ -49,8 +49,12 @@ void LifetimeLogProcess::initialize()
 void LifetimeLogProcess::initializeFirst()
 {
   SpatiocyteProcess::initializeFirst();
-  isBindingSite.resize(getStepper()->getProcessVector().size(), false);
+  isBindingSiteReaction.resize(getStepper()->getProcessVector().size(), false);
+  isDimerizationReaction.resize(getStepper()->getProcessVector().size(), false);
+  isDedimerizationReaction.resize(getStepper()->getProcessVector().size(),
+                                  false);
   isTrackedSpecies.resize(theSpecies.size(), false);
+  isTrackedDimerSpecies.resize(theSpecies.size(), false);
   isUntrackedSpecies.resize(theSpecies.size(), false);
   unsigned cntTracked(0);
   unsigned cntUntracked(0);
@@ -156,7 +160,11 @@ void LifetimeLogProcess::fire()
 
 void LifetimeLogProcess::interruptedPre(ReactionProcess* aProcess)
 {
-  if(aProcess->getA() && isTrackedSpecies[aProcess->getA()->getID()])
+  if(isDimerizationReaction[aProcess->getID()])
+    {
+      saveDimerizingMonomerTag(aProcess);
+    }
+  else if(aProcess->getA() && isTrackedSpecies[aProcess->getA()->getID()])
     {
       logTrackedMolecule(aProcess, aProcess->getA(), aProcess->getMoleculeA());
     }
@@ -168,7 +176,11 @@ void LifetimeLogProcess::interruptedPre(ReactionProcess* aProcess)
 
 void LifetimeLogProcess::interruptedPost(ReactionProcess* aProcess)
 {
-  if(aProcess->getC() && isTrackedSpecies[aProcess->getC()->getID()])
+  if(isDedimerizationReaction[aProcess->getID()])
+    {
+      initDedimerizingMonomerTag(aProcess);
+    }
+  else if(aProcess->getC() && isTrackedSpecies[aProcess->getC()->getID()])
     {
       initTrackedMolecule(aProcess->getC());
     }
@@ -182,7 +194,7 @@ void LifetimeLogProcess::logTrackedMolecule(ReactionProcess* aProcess,
                                             Species* aSpecies,
                                             const Voxel* aMolecule)
 {
-  if(isBindingSite[aProcess->getID()])
+  if(isBindingSiteReaction[aProcess->getID()])
     {
       if(aProcess->getMoleculeC() &&
          isTrackedSpecies[aProcess->getC()->getID()])
@@ -218,12 +230,59 @@ void LifetimeLogProcess::saveFileHeader(std::ofstream& aFile)
     {
       if(isTrackedSpecies[i])
         {
-          aFile << ":" << id2species(i)->getIDString();
+          aFile << ":" << theSpecies[i]->getIDString();
         }
     }
   aFile << "(s), Distance(m), Start time(s), End time(s), " <<
-    "kon counts (some still bound), Average koff so far(1/s)" << std::endl; 
+    "kon counts (some still haven't koff), Average koff so far(1/s)" <<
+    std::endl; 
 }
+
+void LifetimeLogProcess::initDedimerizingMonomerTag(ReactionProcess* aProcess)
+{
+  //Monomer C's tag will be the dimers tag, we need to set
+  //monomer D's tag to the previously saved tag:
+  std::cout << "1" << std::endl;
+  Species* C(aProcess->getC());
+  std::cout << "2" << std::endl;
+  Species* D(aProcess->getD());
+  std::cout << "3" << std::endl;
+  //Since it is first order dedimerization reaction, the reaction will be
+  //executed by SNRP and STPL both of which have valid moleculeC and moleculeD.
+  //We only need to access moleculeC and moleculeD as C->size()-1 index
+  //when the reaction is DIRP since moleculeC and moleculeD are not valid
+  //for DIRP.
+  const Voxel* molC(aProcess->getMoleculeC());
+  std::cout << "4" << std::endl;
+  const Voxel* molD(aProcess->getMoleculeD());
+  std::cout << "5" << std::endl;
+  const unsigned indexC(C->getIndex(molC));
+  std::cout << "6" << std::endl;
+  const unsigned indexD(D->getIndex(molD));
+  std::cout << "7" << std::endl;
+  Tag& aTag(D->getTag(indexD));
+  std::cout << "8 id:" << C->getTag(indexC).id << " size:" << theDimerizingMonomerTags.size() << std::endl;
+  aTag = theDimerizingMonomerTags[C->getTag(indexC).id];
+  std::cout << "9" << std::endl;
+}
+
+void LifetimeLogProcess::saveDimerizingMonomerTag(ReactionProcess* aProcess)
+{
+  std::cout << "saving" << std::endl;
+  //Monomer A's tag will be taken up by the product dimer, so save the 
+  //monomer B tag before it is destroyed after the dimerization
+  //reaction:
+  Species* A(aProcess->getA());
+  Species* B(aProcess->getB());
+  const Voxel* molA(aProcess->getMoleculeA());
+  const Voxel* molB(aProcess->getMoleculeB());
+  const unsigned indexA(A->getIndex(molA));
+  const unsigned indexB(B->getIndex(molB));
+  std::cout << "tag time size:" << theTagTimes.size() << std::endl;
+  theDimerizingMonomerTags.resize(theTagTimes.size());
+  theDimerizingMonomerTags[A->getTag(indexA).id] = B->getTag(indexB);
+}
+
 
 void LifetimeLogProcess::initTrackedMolecule(Species* aSpecies)
 {
@@ -244,76 +303,77 @@ void LifetimeLogProcess::initTrackedMolecule(Species* aSpecies)
   ++konCnt;
 }
 
-bool LifetimeLogProcess::isDependentOnPre(const ReactionProcess* aProcess)
+bool LifetimeLogProcess::isDependentOnPre(ReactionProcess* aProcess)
 {
-  const VariableReferenceVector& aVariableReferences(
-                                       aProcess->getVariableReferenceVector()); 
-  //isBindingSite is to indentify processes that has the tracked species
-  //as both the substrate and product.
-  for(unsigned i(0); i != isTrackedSpecies.size(); ++i)
+  Species* A(aProcess->getA());
+  Species* B(aProcess->getB());
+  Species* C(aProcess->getC());
+  Species* D(aProcess->getD());
+  //Monomer + Monomer -> Dimer
+  //See if a tracked product species is a dimer by
+  //checking if the two substrates are tracked species:
+  if(A && isTrackedSpecies[A->getID()] &&
+     B && isTrackedSpecies[B->getID()] && C && !D)
     {
-      if(isTrackedSpecies[i] && isInVariableReferences(
-           aVariableReferences, -1, theSpecies[i]->getVariable()))
-        {
-          for(unsigned j(0); j != isUntrackedSpecies.size(); ++j)
-            {
-              if(isUntrackedSpecies[j] && isInVariableReferences(
-                 aVariableReferences, 1, theSpecies[j]->getVariable()))
-                {
-                  for(unsigned k(0); k != isTrackedSpecies.size(); ++k)
-                    {
-                      if(isTrackedSpecies[k] && isInVariableReferences(
-                         aVariableReferences, 1, theSpecies[k]->getVariable())) 
-                        {
-                          isBindingSite[aProcess->getID()] = true;
-                          return true;
-                        }
-                    }
-                  return true;
-                }
-            }
-        }
+      std::cout << "dimerization:" << A->getIDString() << " " << B->getIDString() << std::endl;
+      isTrackedDimerSpecies[C->getID()] = true;
+      isDimerizationReaction[aProcess->getID()] = true;
+      return true;
     }
-  return false;
-}
 
-bool LifetimeLogProcess::isInVariableReferences(const VariableReferenceVector&
-                                                aVariableReferences,
-                                                const int aCoefficient,
-                                                const Variable* aVariable) const
-{
-  for(VariableReferenceVector::const_iterator
-      i(aVariableReferences.begin()); i != aVariableReferences.end(); ++i)
+  if((A && isTrackedSpecies[A->getID()]) ||
+     (B && isTrackedSpecies[B->getID()]))
     {
-      //If the both coefficients have the same sign:
-      if((*i).getCoefficient()*aCoefficient > 0 &&
-         (*i).getVariable() == aVariable)
+      if((C && isUntrackedSpecies[C->getID()]) ||
+         (D && isUntrackedSpecies[D->getID()]))
         {
+          if((C && isTrackedSpecies[C->getID()]) ||
+             (D && isTrackedSpecies[D->getID()]))
+            {
+              isBindingSiteReaction[aProcess->getID()] = true;
+            }
           return true;
         }
     }
   return false;
 }
 
-bool LifetimeLogProcess::isDependentOnPost(const ReactionProcess* aProcess)
+bool LifetimeLogProcess::isDependentOnPost(ReactionProcess* aProcess)
 {
-  const VariableReferenceVector& aVariableReferences(
-                                       aProcess->getVariableReferenceVector()); 
-  for(unsigned i(0); i != isTrackedSpecies.size(); ++i)
+  Species* A(aProcess->getA());
+  Species* B(aProcess->getB());
+  Species* C(aProcess->getC());
+  Species* D(aProcess->getD());
+  //Dimer -> Monomer + Monomer
+  //See if a tracked substrate species is a dimer by
+  //checking if the products are made up of two tracked species:
+  if(((A && isTrackedSpecies[A->getID()] && !B) ||
+      (B && isTrackedSpecies[B->getID()] && !A)) && C && D)
     {
-      if(isTrackedSpecies[i] && isInVariableReferences(
-           aVariableReferences, 1, theSpecies[i]->getVariable()))
+      if(isTrackedSpecies[C->getID()] && isTrackedSpecies[D->getID()])
         {
-          for(unsigned j(0); j != isTrackedSpecies.size(); ++j)
+      std::cout << "dedimerization:" << C->getIDString() << " " << D->getIDString() << std::endl;
+          if(A)
             {
-              if(isTrackedSpecies[j] && isInVariableReferences(
-                   aVariableReferences, -1, theSpecies[j]->getVariable()))
-                {
-                  return false;
-                }
+              isTrackedDimerSpecies[A->getID()] = true;
             }
+          else
+            {
+              isTrackedDimerSpecies[B->getID()] = true;
+            }
+          isDedimerizationReaction[aProcess->getID()] = true;
           return true;
         }
+    }
+  if((C && isTrackedSpecies[C->getID()]) ||
+     (D && isTrackedSpecies[D->getID()]))
+    {
+      if((A && isTrackedSpecies[A->getID()]) ||
+         (B && isTrackedSpecies[B->getID()]))
+        {
+          return false;
+        }
+      return true;
     }
   return false;
 }

@@ -61,22 +61,26 @@ public:
   virtual void fire();
   virtual void interruptedPre(ReactionProcess*);
   virtual void interruptedPost(ReactionProcess*);
-  virtual bool isDependentOnPre(const ReactionProcess*);
-  virtual bool isDependentOnPost(const ReactionProcess*);
+  virtual bool isDependentOnPre(ReactionProcess*);
+  virtual bool isDependentOnPost(ReactionProcess*);
   virtual void saveFileHeader(std::ofstream&);
 private:
-  bool isInVariableReferences(const VariableReferenceVector&, const int,
-                              const Variable*) const;
   void logTrackedMolecule(ReactionProcess*, Species*, const Voxel*);
   void initTrackedMolecule(Species*);
+  void saveDimerizingMonomerTag(ReactionProcess*);
+  void initDedimerizingMonomerTag(ReactionProcess*);
 private:
   unsigned konCnt;
   unsigned logCnt;
   double totalDuration;
   std::vector<bool> isTrackedSpecies;
+  std::vector<bool> isTrackedDimerSpecies;
   std::vector<bool> isUntrackedSpecies;
-  std::vector<bool> isBindingSite;
+  std::vector<bool> isBindingSiteReaction;
+  std::vector<bool> isDimerizationReaction;
+  std::vector<bool> isDedimerizationReaction;
   std::vector<unsigned> availableTagIDs;
+  std::vector<Tag> theDimerizingMonomerTags;
   std::vector<double> theTagTimes;
 };
 

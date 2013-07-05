@@ -170,11 +170,11 @@ public:
     {
       return false;
     }
-  virtual bool isDependentOnPre(const ReactionProcess* aProcess)
+  virtual bool isDependentOnPre(ReactionProcess* aProcess)
     {
       return false;
     }
-  virtual bool isDependentOnPost(const ReactionProcess* aProcess)
+  virtual bool isDependentOnPost(ReactionProcess* aProcess)
     {
       return false;
     }
@@ -220,10 +220,6 @@ public:
   virtual void setQueueID(ProcessID anID)
     {
       theQueueID = anID;
-    }
-  Species* id2species(unsigned short id)
-    {
-      return theSpatiocyteStepper->id2species(id);
     }
   virtual unsigned getLatticeResizeCoord(unsigned)
     {
