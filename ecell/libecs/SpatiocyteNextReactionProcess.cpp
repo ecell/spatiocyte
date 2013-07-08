@@ -399,10 +399,14 @@ bool SpatiocyteNextReactionProcess::react()
       else
         {
           //nonHD + nonHD -> nonHD + nonHD
-          if(C && D)
+          if(C && D && !F)
             {
               //always true reaction:
               reactABCD();
+              if(variableF)
+                {
+                  variableF->addValue(coefficientF);
+                }
             }
           //nonHD + nonHD -> nonHD
           else
