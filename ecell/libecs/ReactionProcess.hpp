@@ -73,6 +73,7 @@ public:
     variableD(NULL), 
     variableE(NULL),
     variableF(NULL),
+    variableG(NULL),
     moleculeA(NULL),
     moleculeB(NULL),
     moleculeC(NULL),
@@ -176,23 +177,23 @@ public:
             }
         }
     }
-  virtual Species* getA()
+  virtual Species* getA() const
     {
       return A;
     }
-  virtual Species* getB()
+  virtual Species* getB() const
     {
       return B;
     }
-  virtual Species* getC()
+  virtual Species* getC() const
     {
       return C;
     }
-  virtual Species* getD()
+  virtual Species* getD() const
     {
       return D;
     }
-  virtual Species* getE()
+  virtual Species* getE() const
     {
       return E;
     }

@@ -61,8 +61,8 @@ public:
   virtual void fire();
   virtual void interruptedPre(ReactionProcess*);
   virtual void interruptedPost(ReactionProcess*);
-  virtual bool isDependentOnPre(ReactionProcess*);
-  virtual bool isDependentOnPost(ReactionProcess*);
+  virtual bool isDependentOnPre(const Process*);
+  virtual bool isDependentOnPost(const Process*);
   virtual void saveFileHeader(std::ofstream&);
 private:
   void logTrackedMolecule(ReactionProcess*, Species*, const Voxel*);
