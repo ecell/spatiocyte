@@ -204,7 +204,6 @@ protected:
   std::stringstream pFormula;
   PropensityMethod thePropensityMethod;  
   std::vector<unsigned> theCoordsA;
-  std::vector<unsigned> coordsA;
 };
 
 }
