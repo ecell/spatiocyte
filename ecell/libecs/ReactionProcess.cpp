@@ -132,4 +132,21 @@ void ReactionProcess::calculateOrder()
     }
 } 
 
+int ReactionProcess::getVariableNetCoefficient(const Process* aProcess,
+                                               const Variable* aVariable) const
+{
+  int netCoefficient(0);
+  const VariableReferenceVector& aVariableReferences(
+                                 aProcess->getVariableReferenceVector()); 
+  for(VariableReferenceVector::const_iterator i(aVariableReferences.begin());
+      i != aVariableReferences.end(); ++i)
+    {
+      if((*i).getVariable() == aVariable)
+        {
+          netCoefficient += (*i).getCoefficient();
+        }
+    }
+  return netCoefficient;
+}
+
 }

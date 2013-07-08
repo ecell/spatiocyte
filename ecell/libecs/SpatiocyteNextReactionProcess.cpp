@@ -446,7 +446,13 @@ void SpatiocyteNextReactionProcess::reactABC()
   const unsigned rand(theRng->Integer(theCoordsA.size()));
   moleculeA = &(*theLattice)[theCoordsA[rand]];
   moleculeB = A->getRandomDiffuseVoxel(moleculeA, B, 1);
+  if(moleculeB == NULL)
+    {
+      std::cout << "error in SNRP reactABC" << std::endl;
+    }
+  std::cout << "size before:" << theCoordsA.size() << std::endl;
   interruptProcessesPre();
+  std::cout << "size after:" << theCoordsA.size() << std::endl;
   if(A != C)
     {
       unsigned indexA(A->getIndex(moleculeA));
@@ -464,8 +470,20 @@ void SpatiocyteNextReactionProcess::reactABCD()
 {
   const unsigned rand(theRng->Integer(theCoordsA.size()));
   moleculeA = &(*theLattice)[theCoordsA[rand]];
+  std::cout << "coordA:" << theCoordsA[rand] << std::endl;
+  for(unsigned i(0); i != moleculeA->diffuseSize; ++i)
+    {
+      std::cout << "species " << i << " coord:" << theSpecies[getID((*theLattice)[moleculeA->adjoiningCoords[i]])]->getIDString() << std::endl;
+    }
+  std::cout << "A:" << A->getIDString() << " B:" << B->getIDString() << std::endl;
   moleculeB = A->getRandomDiffuseVoxel(moleculeA, B, 1);
+  if(moleculeB == NULL)
+    {
+      std::cout << "error in SNRP reactABCD" << std::endl;
+    }
+  std::cout << "size before:" << theCoordsA.size() << std::endl;
   interruptProcessesPre();
+  std::cout << "size after:" << theCoordsA.size() << std::endl;
   if(A != C)
     {
       unsigned indexA(A->getIndex(moleculeA));
@@ -480,6 +498,7 @@ void SpatiocyteNextReactionProcess::reactABCD()
       B->removeMolecule(indexB);
       D->addMolecule(moleculeB, tagB);
     }
+  std::cout << "reaction done" << std::endl << std::endl;;
 }
 
 //nonHD -> nonHD + nonHD
@@ -775,6 +794,7 @@ double SpatiocyteNextReactionProcess::getPropensityFirstOrderReactAB()
     {
       sizeA = 0;
     }
+  std::cout << "getting propensity:" << p*sizeA << " p:" << p << " size:" << sizeA << std::endl;
   return p*sizeA;
 }
 
@@ -1395,41 +1415,6 @@ double SpatiocyteNextReactionProcess::getPropensity() const
 //substrate of this process:
 bool SpatiocyteNextReactionProcess::isDependentOn(const Process* aProcess) const
 {
-  //First get the unique Variables of the aProcess:
-  std::vector<const Variable*> aVariables;
-  const VariableReferenceVector&
-    aVariableReferences(aProcess->getVariableReferenceVector()); 
-  for(VariableReferenceVector::const_iterator i(aVariableReferences.begin());
-      i != aVariableReferences.end(); ++i)
-    {
-      const Variable* aVariable((*i).getVariable());
-      if(std::find(aVariables.begin(), aVariables.end(), aVariable) ==
-         aVariables.end())
-        {
-          aVariables.push_back(aVariable);
-        }
-    }
-  //Find out if the values of the unique variables will be changed
-  //by the Process aProcess, i.e., netCoefficient != 0:
-  std::vector<int> aNetCoefficients;
-  aNetCoefficients.resize(aVariables.size());
-  for(std::vector<int>::iterator i(aNetCoefficients.begin());
-      i!=aNetCoefficients.end(); ++i)
-    {
-      (*i) = 0;
-    }
-  for(VariableReferenceVector::const_iterator i(aVariableReferences.begin());
-      i != aVariableReferences.end(); ++i)
-    {
-      for(std::vector<const Variable*>::const_iterator j(aVariables.begin());
-          j != aVariables.end(); ++j)
-        {
-          if((*i).getVariable() == (*j))
-            {
-              aNetCoefficients[j-aVariables.begin()] += (*i).getCoefficient();
-            }
-        }
-    }
   //Check if any variable with netCoefficient != 0 is a substrate
   //of this process:
   for(VariableReferenceVector::const_iterator
@@ -1438,36 +1423,7 @@ bool SpatiocyteNextReactionProcess::isDependentOn(const Process* aProcess) const
     {
       if((*i).isAccessor())
         {
-          for(std::vector<const Variable*>::const_iterator
-              j(aVariables.begin()); j != aVariables.end(); ++j)
-            {
-              if((*i).getVariable() == (*j) && 
-                 aNetCoefficients[j-aVariables.begin()])
-                {
-                  return true;
-                }
-            }
-        }
-    }
-  return false;
-}
-
-bool SpatiocyteNextReactionProcess::isDependentOnPre(ReactionProcess* aProcess)
-{
-  if(isReactAB)
-    {
-      if(aProcess->getA() != aProcess->getC() && 
-         aProcess->getA() != aProcess->getD())
-        {
-          if(aProcess->getA() == A || aProcess->getA() == B)
-            {
-              return true;
-            }
-        }
-      if(aProcess->getB() != aProcess->getC() && 
-         aProcess->getB() != aProcess->getD())
-        {
-          if(aProcess->getB() == A || aProcess->getB() == B)
+          if(getVariableNetCoefficient(aProcess, (*i).getVariable()))
             {
               return true;
             }
@@ -1476,25 +1432,27 @@ bool SpatiocyteNextReactionProcess::isDependentOnPre(ReactionProcess* aProcess)
   return false;
 }
 
-bool SpatiocyteNextReactionProcess::isDependentOnPost(ReactionProcess* aProcess)
+bool SpatiocyteNextReactionProcess::isDependentOnPre(const Process* aProcess)
 {
   if(isReactAB)
     {
-      if(aProcess->getA() != aProcess->getC() && 
-         aProcess->getB() != aProcess->getC())
+      if(getVariableNetCoefficient(aProcess, A->getVariable()) < 0 ||
+         getVariableNetCoefficient(aProcess, B->getVariable()) < 0)
         {
-          if(aProcess->getC() == A || aProcess->getC() == B)
-            {
-              return true;
-            }
+          return true;
         }
-      if(aProcess->getA() != aProcess->getD() && 
-         aProcess->getB() != aProcess->getD())
+    }
+  return false;
+}
+
+bool SpatiocyteNextReactionProcess::isDependentOnPost(const Process* aProcess)
+{
+  if(isReactAB)
+    {
+      if(getVariableNetCoefficient(aProcess, A->getVariable()) > 0 ||
+         getVariableNetCoefficient(aProcess, B->getVariable()) > 0)
         {
-          if(aProcess->getD() == A || aProcess->getD() == B)
-            {
-              return true;
-            }
+          return true;
         }
     }
   return false;
@@ -1502,66 +1460,217 @@ bool SpatiocyteNextReactionProcess::isDependentOnPost(ReactionProcess* aProcess)
 
 void SpatiocyteNextReactionProcess::interruptedPre(ReactionProcess* aProcess)
 {
+  std::cout << "before pre me:" << getIDString() << " by:" << aProcess->getIDString() << std::endl;
+  /*
+  for(unsigned i(0); i != theCoordsA.size(); ++i)
+    {
+      for(unsigned j(0); j != theCoordsA.size(); ++j)
+        {
+          if(i != j && theCoordsA[i] == theCoordsA[j])
+            {
+              std::cout << "before pre: there is duplicate:" << theCoordsA[i] << " i:" << i << " j:" << j << " me:" << getIDString() << " by:" << aProcess->getIDString() << std::endl;
+            }
+        }
+    }
+    */
+  coordsA.resize(0);
   if(isReactAB)
     {
       Species* a(aProcess->getA());
       Species* b(aProcess->getB());
-      if(a)
+      if(a && aProcess->getA() != aProcess->getC())
         {
           if(a == A)
             {
-              removeCoordsA(a->getCoord(a->getIndex(aProcess->getMoleculeA())));
+              std::cout << "1. removing A coord:" << A->getCoord(A->getIndex(aProcess->getMoleculeA())) << std::endl;
+              removeCoordsA(A->getCoord(A->getIndex(aProcess->getMoleculeA())));
             }
           else if(a == B)
             {
+              std::cout << "2. removing B coord:" << B->getCoord(B->getIndex(aProcess->getMoleculeA())) << std::endl;
               removeAdjCoordsA(aProcess->getMoleculeA());
             }
         }
-      if(b && a != b)
+      if(b && a != b && aProcess->getB() != aProcess->getD())
         {
           if(b == A)
             {
-              removeCoordsA(b->getCoord(b->getIndex(aProcess->getMoleculeB())));
+              std::cout << "3. removing A coord:" << A->getCoord(A->getIndex(aProcess->getMoleculeB())) << std::endl;
+              removeCoordsA(A->getCoord(A->getIndex(aProcess->getMoleculeB())));
             }
           else if(b == B)
             {
+              std::cout << "4. removing B coord:" << B->getCoord(B->getIndex(aProcess->getMoleculeB())) << std::endl;
               removeAdjCoordsA(aProcess->getMoleculeB());
             }
         }
     }
+  std::vector<unsigned> aCoords;
+  for(unsigned i(0); i != A->size(); ++i)
+    {
+      Voxel& mol(*A->getMolecule(i));
+      for(unsigned j(0); j != mol.diffuseSize; ++j)
+        {
+          const unsigned adjCoord(mol.adjoiningCoords[j]);
+          if(getID((*theLattice)[adjCoord]) == B->getID())
+            {
+              aCoords.push_back(A->getCoord(i));
+            }
+        }
+    }
+  if(aCoords.size() != theCoordsA.size())
+    {
+      for(unsigned i(0); i != aCoords.size(); ++i)
+        {
+          if(std::find(theCoordsA.begin(), theCoordsA.end(), aCoords[i]) ==
+             theCoordsA.end() &&
+            std::find(coordsA.begin(), coordsA.end(), aCoords[i]) ==
+             coordsA.end())
+            {
+              std::cout << "-----------------------------------------------pre:" << theCoordsA.size() << " me:" << getIDString() << " by:" << aProcess->getIDString() << " cnt:" << aCoords.size() << " size:" << theCoordsA.size() << std::endl;
+              std::cout << "not inserted:" << std::endl;
+              std::cout << " A:" <<  aCoords[i] << std::endl;
+              Voxel& mol((*theLattice)[aCoords[i]]);
+              for(unsigned j(0); j != mol.diffuseSize; ++j)
+                {
+                  const unsigned adjCoord(mol.adjoiningCoords[j]);
+                  if(getID((*theLattice)[adjCoord]) == B->getID())
+                    {
+                      std::cout << "  B:" << adjCoord << std::endl;
+                    }
+                }
+            }
+        }
+    }
+  /*
+  for(unsigned i(0); i != theCoordsA.size(); ++i)
+    {
+      for(unsigned j(0); j != theCoordsA.size(); ++j)
+        {
+          if(i != j && theCoordsA[i] == theCoordsA[j])
+            {
+              std::cout << "after pre: there is duplicate:" << theCoordsA[i] << " me:" << getIDString() << " by:" << aProcess->getIDString() << std::endl;
+            }
+        }
+    }
+    */
+  std::cout << "done pre" << std::endl;
 }
 
 void SpatiocyteNextReactionProcess::interruptedPost(ReactionProcess* aProcess)
 {
+  /*
+  for(unsigned i(0); i != theCoordsA.size(); ++i)
+    {
+      for(unsigned j(0); j != theCoordsA.size(); ++j)
+        {
+          if(i != j && theCoordsA[i] == theCoordsA[j])
+            {
+              std::cout << "before post: there is duplicate:" << theCoordsA[i] << " i:" << i << " j:" << j << " me:" << getIDString() << " by:" << aProcess->getIDString() << std::endl;
+            }
+        }
+    }
+    */
   if(isReactAB)
     {
+          std::cout << "0" << std::endl;
       Species* aC(aProcess->getC());
       Species* aD(aProcess->getD());
       unsigned coordA(theNullCoord);
-      if(aC == A || aD == A)
+      if((aC == A && aProcess->getC() != aProcess->getA()) || 
+         (aD == A && aProcess->getD() != aProcess->getB()))
         { 
+          std::cout << "1" << std::endl;
           addCoordsA(A, B, A->size()-1, coordA);
-          if(aC == aD)
+          if(aC == aD && aProcess->getC() != aProcess->getA() &&
+             aProcess->getD() != aProcess->getB())
             {
+          std::cout << "2" << std::endl;
               addCoordsA(A, B, A->size()-2, coordA);
             }
         }
-      if(aC == B || aD == B)
+      if((aC == B && aC != aProcess->getA()) ||
+         (aD == B && aD != aProcess->getB()))
         {
+          std::cout << "3" << std::endl;
           if(A != B)
             { 
+          std::cout << "4" << std::endl;
               addCoordsA(B, A, B->size()-1, coordA);
-              if(aC == aD)
+              if(aC == aD && aProcess->getC() != aProcess->getA() &&
+                 aProcess->getD() != aProcess->getB())
                 {
+          std::cout << "5" << std::endl;
                   addCoordsA(B, A, B->size()-2, coordA);
                 }
             }
         }
     }
+  std::vector<unsigned> aCoords;
+  for(unsigned i(0); i != A->size(); ++i)
+    {
+      Voxel& mol(*A->getMolecule(i));
+      for(unsigned j(0); j != mol.diffuseSize; ++j)
+        {
+          const unsigned adjCoord(mol.adjoiningCoords[j]);
+          if(getID((*theLattice)[adjCoord]) == B->getID())
+            {
+              aCoords.push_back(A->getCoord(i));
+            }
+        }
+    }
+  if(aCoords.size() != theCoordsA.size())
+    {
+      std::cout << "-----------------------------------------------post:" << theCoordsA.size() << " me:" << getIDString() << " by:" << aProcess->getIDString() << " cnt:" << aCoords.size() << " size:" << theCoordsA.size() << std::endl;
+      for(unsigned i(0); i != aCoords.size(); ++i)
+        {
+          if(std::find(theCoordsA.begin(), theCoordsA.end(), aCoords[i]) ==
+             theCoordsA.end())
+            {
+              std::cout << "not inserted:" << std::endl;
+              std::cout << " A:" <<  aCoords[i] << std::endl;
+              Voxel& mol((*theLattice)[aCoords[i]]);
+              for(unsigned j(0); j != mol.diffuseSize; ++j)
+                {
+                  const unsigned adjCoord(mol.adjoiningCoords[j]);
+                  if(getID((*theLattice)[adjCoord]) == B->getID())
+                    {
+                      std::cout << "  B:" << adjCoord << std::endl;
+                    }
+                }
+            }
+        }
+    }
+  for(unsigned i(0); i != theCoordsA.size(); ++i)
+    {
+      for(unsigned j(0); j != theCoordsA.size(); ++j)
+        {
+          if(i != j && theCoordsA[i] == theCoordsA[j])
+            {
+              std::cout << "after post: there is duplicate:" << theCoordsA[i] << " i:" << i << " j:" << j << std::endl;
+            }
+        }
+    }
+  std::cout << "done post" << std::endl;
 }
 
 void SpatiocyteNextReactionProcess::removeCoordsA(const unsigned coordA)
 {
+  coordsA.push_back(coordA);
+  std::cout << "coordA to be removed:" << coordA << std::endl;
+  for(unsigned i(0); i != theCoordsA.size(); ++i)
+    {
+      std::cout << "i:" << i << " Before remove A:" << theCoordsA[i] << std::endl;
+      Voxel& mol((*theLattice)[theCoordsA[i]]);
+      for(unsigned j(0); j != mol.diffuseSize; ++j)
+        {
+          const unsigned adjCoord(mol.adjoiningCoords[j]);
+          if(getID((*theLattice)[adjCoord]) == B->getID())
+            {
+              std::cout << "  B:" << adjCoord << std::endl;
+            }
+        }
+    }
   unsigned i(0);
   while(i < theCoordsA.size())
     {
@@ -1572,6 +1681,19 @@ void SpatiocyteNextReactionProcess::removeCoordsA(const unsigned coordA)
         }
       ++i;
     }
+  for(unsigned i(0); i != theCoordsA.size(); ++i)
+    {
+      std::cout << " i:" << i << "  After remove A:" << theCoordsA[i] << std::endl;
+      Voxel& mol((*theLattice)[theCoordsA[i]]);
+      for(unsigned j(0); j != mol.diffuseSize; ++j)
+        {
+          const unsigned adjCoord(mol.adjoiningCoords[j]);
+          if(getID((*theLattice)[adjCoord]) == B->getID())
+            {
+              std::cout << "    B:" << adjCoord << std::endl;
+            }
+        }
+    }
 }
 
 void SpatiocyteNextReactionProcess::removeAdjCoordsA(Voxel* molB)
@@ -1581,7 +1703,48 @@ void SpatiocyteNextReactionProcess::removeAdjCoordsA(Voxel* molB)
       const unsigned adjCoord(molB->adjoiningCoords[i]);
       if(getID((*theLattice)[adjCoord]) == A->getID())
         {
-          removeCoordsA(adjCoord);
+          removeSingleCoordsA(adjCoord);
+        }
+    }
+}
+
+void SpatiocyteNextReactionProcess::removeSingleCoordsA(const unsigned coordA)
+{
+  coordsA.push_back(coordA);
+  std::cout << "single coordA to be removed:" << coordA << std::endl;
+  for(unsigned i(0); i != theCoordsA.size(); ++i)
+    {
+      std::cout << "i:" << i << " Before remove A:" << theCoordsA[i] << std::endl;
+      Voxel& mol((*theLattice)[theCoordsA[i]]);
+      for(unsigned j(0); j != mol.diffuseSize; ++j)
+        {
+          const unsigned adjCoord(mol.adjoiningCoords[j]);
+          if(getID((*theLattice)[adjCoord]) == B->getID())
+            {
+              std::cout << "  B:" << adjCoord << std::endl;
+            }
+        }
+    }
+  for(unsigned i(0); i != theCoordsA.size(); ++i)
+    {
+      if(theCoordsA[i] == coordA)
+        {
+          theCoordsA[i] = theCoordsA.back();
+          theCoordsA.pop_back();
+          return;
+        }
+    }
+  for(unsigned i(0); i != theCoordsA.size(); ++i)
+    {
+      std::cout << " i:" << i << "  After remove A:" << theCoordsA[i] << std::endl;
+      Voxel& mol((*theLattice)[theCoordsA[i]]);
+      for(unsigned j(0); j != mol.diffuseSize; ++j)
+        {
+          const unsigned adjCoord(mol.adjoiningCoords[j]);
+          if(getID((*theLattice)[adjCoord]) == B->getID())
+            {
+              std::cout << "    B:" << adjCoord << std::endl;
+            }
         }
     }
 }
@@ -1590,6 +1753,8 @@ void SpatiocyteNextReactionProcess::addCoordsA(Species* a, Species* b,
                                                const unsigned indexA,
                                                unsigned& coordA)
 {
+  std::cout << "a:" << a->getIDString() << std::endl;
+  std::cout << "b:" << b->getIDString() << std::endl;
   const unsigned coord(a->getCoord(indexA));
   const Voxel& mol((*theLattice)[coord]);
   for(unsigned i(0); i != mol.diffuseSize; ++i)
@@ -1597,12 +1762,14 @@ void SpatiocyteNextReactionProcess::addCoordsA(Species* a, Species* b,
       const unsigned adjCoord(mol.adjoiningCoords[i]);
       if(getID((*theLattice)[adjCoord]) == b->getID())
         {
+          std::cout << "i:" << i << " coord:" << coord << " adjCoord:" << adjCoord << std::endl;
           if(a == A && coord != coordA)
             {
               theCoordsA.push_back(coord);
             }
           else if(adjCoord != coordA)
             {
+              std::cout << "pushing:" << adjCoord << std::endl;
               theCoordsA.push_back(adjCoord);
             }
         }

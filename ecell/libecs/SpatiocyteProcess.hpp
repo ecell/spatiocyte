@@ -170,11 +170,11 @@ public:
     {
       return false;
     }
-  virtual bool isDependentOnPre(ReactionProcess* aProcess)
+  virtual bool isDependentOnPre(const Process* aProcess)
     {
       return false;
     }
-  virtual bool isDependentOnPost(ReactionProcess* aProcess)
+  virtual bool isDependentOnPost(const Process* aProcess)
     {
       return false;
     }

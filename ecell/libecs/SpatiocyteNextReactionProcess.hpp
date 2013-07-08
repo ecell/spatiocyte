@@ -145,8 +145,8 @@ public:
   virtual void initializeFourth();
   virtual void printParameters();
   virtual bool isDependentOn(const Process*) const;
-  virtual bool isDependentOnPost(ReactionProcess*);
-  virtual bool isDependentOnPre(ReactionProcess*);
+  virtual bool isDependentOnPost(const Process*);
+  virtual bool isDependentOnPre(const Process*);
   virtual void interruptedPost(ReactionProcess*);
   virtual void interruptedPre(ReactionProcess*);
   virtual bool react();
@@ -181,6 +181,7 @@ protected:
   void setVariableReferences(const VariableReferenceVector&);
   void setDeoligomerIndex(const unsigned);
   void removeCoordsA(const unsigned);
+  void removeSingleCoordsA(const unsigned);
   void removeAdjCoordsA(Voxel*);
   void addCoordsA(Species*, Species*, const unsigned, unsigned&);
 protected:
@@ -203,6 +204,7 @@ protected:
   std::stringstream pFormula;
   PropensityMethod thePropensityMethod;  
   std::vector<unsigned> theCoordsA;
+  std::vector<unsigned> coordsA;
 };
 
 }

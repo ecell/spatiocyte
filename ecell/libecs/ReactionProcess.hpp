@@ -156,18 +156,18 @@ public:
             aReactionProcess(dynamic_cast<ReactionProcess*>(*i));
           SpatiocyteProcess*
             aSpatiocyteProcess(dynamic_cast<SpatiocyteProcess*>(*i));
-          Process* me(dynamic_cast<Process*>(this));
+          const Process* me(dynamic_cast<Process*>(this));
           if(this != aReactionProcess && aSpatiocyteProcess->isDependentOn(me))
             {
               theInterruptedProcesses.push_back(aSpatiocyteProcess);
             }
           //A ReactionProcess can interruptPre and interruptPost itself
           //so we don't exclude this ReactionProcess here:
-          if(aSpatiocyteProcess->isDependentOnPre(this))
+          if(aSpatiocyteProcess->isDependentOnPre(me))
             {
               theInterruptedProcessesPre.push_back(aSpatiocyteProcess);
             }
-          if(aSpatiocyteProcess->isDependentOnPost(this))
+          if(aSpatiocyteProcess->isDependentOnPost(me))
             {
               theInterruptedProcessesPost.push_back(aSpatiocyteProcess);
             }
@@ -225,6 +225,7 @@ public:
   virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
 protected:
   virtual void calculateOrder();
+  int getVariableNetCoefficient(const Process*, const Variable*) const;
 protected:
   int coefficientA;
   int coefficientB;
