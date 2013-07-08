@@ -403,6 +403,10 @@ bool SpatiocyteNextReactionProcess::react()
             {
               //always true reaction:
               reactABCD();
+              if(variableG)
+                {
+                  variableG->addValue(coefficientG);
+                }
               if(variableF)
                 {
                   variableF->addValue(coefficientF);
@@ -787,6 +791,29 @@ double SpatiocyteNextReactionProcess::getPropensityFirstOrderDeoligomerize()
   return p*A->getBoundCnt(theDeoligomerIndex);
 }
 
+double SpatiocyteNextReactionProcess::getPropensitySecondOrderReactABvG() 
+{
+  double sizeA(theCoordsA.size());
+  if(sizeA < -coefficientA)
+    {
+      sizeA = 0;
+    }
+  else
+    {
+      sizeA = pow(sizeA, -coefficientA);
+    }
+  double sizeG(variableG->getValue());
+  if(sizeG < -coefficientG)
+    {
+      sizeG = 0;
+    }
+  else
+    {
+      sizeG = pow(sizeG, -coefficientG);
+    }
+  return p*sizeA*sizeG;
+}
+
 //Need to solve homodimerization reaction of two substrate species (Size-1):
 double SpatiocyteNextReactionProcess::getPropensitySecondOrderHetero() 
 {
@@ -1041,6 +1068,7 @@ void SpatiocyteNextReactionProcess::initializeFourth()
   Comp* compB(NULL);
   Comp* compC(NULL);
   Comp* compD(NULL);
+  int secondCoefficient(coefficientB);
   if(A)
     {
       compA = A->getComp();
@@ -1048,8 +1076,7 @@ void SpatiocyteNextReactionProcess::initializeFourth()
     }
   else if(variableA)
     {
-      compA = theSpatiocyteStepper->system2Comp(
-                         variableA->getSuperSystem());
+      compA = theSpatiocyteStepper->system2Comp(variableA->getSuperSystem());
       compB = compA;
     }
   if(B)
@@ -1058,8 +1085,12 @@ void SpatiocyteNextReactionProcess::initializeFourth()
     }
   else if(variableB)
     {
-      compB = theSpatiocyteStepper->system2Comp(
-                         variableB->getSuperSystem());
+      compB = theSpatiocyteStepper->system2Comp(variableB->getSuperSystem());
+    }
+  if(variableG)
+    {
+      compB = theSpatiocyteStepper->system2Comp(variableG->getSuperSystem());
+      secondCoefficient = coefficientG;
     }
   if(C)
     {
@@ -1105,7 +1136,7 @@ void SpatiocyteNextReactionProcess::initializeFourth()
     }
   //Used also by A + B -> product(s) since A and B are in bound form, which
   //is a first order dissociation reaction:
-  else if(theOrder == 1 || isReactAB) 
+  else if(theOrder == 1 || (isReactAB && !variableG)) 
     {
       //Convert the unit m/s of k to 1/s for p if the reaction is a surface
       //adsorption reaction:
@@ -1198,7 +1229,7 @@ void SpatiocyteNextReactionProcess::initializeFourth()
             }
           //unit of k is in (m^3)^(totalCoefficient-1)/s
           //we need to convert k to p which has the unit 1/s
-          int totalCoefficient(coefficientA+coefficientB);
+          int totalCoefficient(coefficientA+secondCoefficient);
           p = k/(pow(aVolume, fabs(totalCoefficient)-1));
           pFormula << "[k/aVolume:" << k << "/" << aVolume << "]";
         }
@@ -1240,7 +1271,7 @@ void SpatiocyteNextReactionProcess::initializeFourth()
             }
           //unit of k is in (m^2)^(totalCoefficient-1)/s
           //we need to convert k to p which has the unit 1/s
-          int totalCoefficient(coefficientA+coefficientB);
+          int totalCoefficient(coefficientA+secondCoefficient);
           p = k/(pow(anArea, fabs(totalCoefficient)-1));
           pFormula << "[k/anArea:" << k << "/" << anArea << "]";
         }
@@ -1272,6 +1303,14 @@ void SpatiocyteNextReactionProcess::printParameters()
     {
       cout << " + " << getIDString(variableB);
     }
+  if(G)
+    {
+      cout << " + " << getIDString(G);
+    }
+  else if(variableG)
+    {
+      cout << " + " << getIDString(variableG);
+    }
   if(!A && !variableA)
     {
       if(C)
@@ -1301,6 +1340,14 @@ void SpatiocyteNextReactionProcess::printParameters()
   else if(variableD)
     {
       cout << " + " << getIDString(variableD);
+    }
+  if(F)
+    {
+      cout << " + " << getIDString(F);
+    }
+  else if(variableF)
+    {
+      cout << " + " << getIDString(variableF);
     }
   double interval(theTime-getStepper()->getCurrentTime());
   double propensity(thePropensity);
@@ -1596,8 +1643,16 @@ void SpatiocyteNextReactionProcess::calculateOrder()
       if(A && B)
         {
           isReactAB = true;
-          thePropensityMethod = &SpatiocyteNextReactionProcess::
-            getPropensityFirstOrderReactAB;
+          if(variableG)
+            {
+              thePropensityMethod = &SpatiocyteNextReactionProcess::
+                getPropensitySecondOrderReactABvG;
+            }
+          else
+            {
+              thePropensityMethod = &SpatiocyteNextReactionProcess::
+                getPropensityFirstOrderReactAB;
+            }
         }
       //Two unique substrate species:
       //A + B -> products:

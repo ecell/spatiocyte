@@ -55,6 +55,7 @@ public:
     coefficientD(0),
     coefficientE(0),
     coefficientF(0),
+    coefficientG(0),
     SearchVacant(-1),
     theOrder(0),
     k(-1),
@@ -65,6 +66,7 @@ public:
     D(NULL),
     E(NULL),
     F(NULL),
+    G(NULL),
     variableA(NULL),
     variableB(NULL),
     variableC(NULL),
@@ -77,6 +79,7 @@ public:
     moleculeD(NULL),
     moleculeE(NULL),
     moleculeF(NULL),
+    moleculeG(NULL),
     moleculeP(NULL),
     moleculeS(NULL) {}
   virtual ~ReactionProcess() {}
@@ -233,6 +236,7 @@ protected:
   int coefficientD;
   int coefficientE;
   int coefficientF;
+  int coefficientG;
   int SearchVacant;
   int theOrder;
   double k;
@@ -244,6 +248,7 @@ protected:
   Species* D;
   Species* E;
   Species* F;
+  Species* G;
   //Variables are for HD species:
   Variable* variableA;
   Variable* variableB;
@@ -251,12 +256,14 @@ protected:
   Variable* variableD;
   Variable* variableE;
   Variable* variableF;
+  Variable* variableG;
   Voxel* moleculeA;
   Voxel* moleculeB;
   Voxel* moleculeC;
   Voxel* moleculeD;
   Voxel* moleculeE;
   Voxel* moleculeF;
+  Voxel* moleculeG;
   Voxel* moleculeP;
   Voxel* moleculeS;
   std::vector<SpatiocyteProcess*> theInterruptedProcesses;

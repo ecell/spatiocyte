@@ -61,7 +61,7 @@ void ReactionProcess::calculateOrder()
                 }
             }
           //The second reactant, B:
-          else
+          else if(B == NULL && variableB == NULL)
             {
               coefficientB = aCoefficient;
               if(aVariable->getName() == "HD")
@@ -71,6 +71,19 @@ void ReactionProcess::calculateOrder()
               else
                 {
                   B = theSpatiocyteStepper->getSpecies(aVariable);
+                }
+            }
+          //The third reactant, G:
+          else
+            {
+              coefficientG = aCoefficient;
+              if(aVariable->getName() == "HD")
+                {
+                  variableG = aVariable;
+                }
+              else
+                {
+                  G = theSpatiocyteStepper->getSpecies(aVariable);
                 }
             }
         }

@@ -95,7 +95,8 @@ public:
       ReactionProcess::initialize();
       isPriorityQueued = true;
       checkExternStepperInterrupted();
-      if(!(getOrder() == 0 || getOrder() == 1 || getOrder() == 2))
+      if(!(getOrder() == 0 || getOrder() == 1 || getOrder() == 2 ||
+           (getOrder() == 3 && variableG)))
         {
           if(getZeroVariableReferenceOffset() > 2)
             {
@@ -176,6 +177,7 @@ protected:
   double getPropensityFirstOrderDeoligomerize();
   double getPropensitySecondOrderHomo(); 
   double getPropensitySecondOrderHetero(); 
+  double getPropensitySecondOrderReactABvG();
   void removeMoleculeE();
   void checkExternStepperInterrupted();
   void setVariableReferences(const VariableReferenceVector&);
