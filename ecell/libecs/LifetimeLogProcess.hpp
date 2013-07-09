@@ -85,7 +85,6 @@ private:
   std::vector<bool> isRemoveDimerReaction;
   std::vector<bool> isTrackedSpecies;
   std::vector<bool> isTrackedDimerSpecies;
-  std::vector<bool> isUntrackedSpecies;
   std::vector<unsigned> availableTagIDs;
   std::vector<Tag> theDimerizingMonomerTags;
   std::vector<double> theTagTimes;

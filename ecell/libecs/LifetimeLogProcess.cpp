@@ -57,31 +57,21 @@ void LifetimeLogProcess::initializeFirst()
                                   false);
   isTrackedSpecies.resize(theSpecies.size(), false);
   isTrackedDimerSpecies.resize(theSpecies.size(), false);
-  isUntrackedSpecies.resize(theSpecies.size(), false);
   unsigned cntTracked(0);
-  unsigned cntUntracked(0);
   for(VariableReferenceVector::iterator
       i(theVariableReferenceVector.begin());
       i != theVariableReferenceVector.end(); ++i)
     {
       Species* aSpecies(theSpatiocyteStepper->variable2species(
                                      (*i).getVariable())); 
-      if((*i).getCoefficient() == -1)
-        {
-          isTrackedSpecies[aSpecies->getID()] = true;
-          aSpecies->setIsTagged();
-          ++cntTracked;
-        }
-      else if((*i).getCoefficient() == 1)
-        {
-          isUntrackedSpecies[aSpecies->getID()] = true;
-          ++cntUntracked;
-        }
+      isTrackedSpecies[aSpecies->getID()] = true;
+      aSpecies->setIsTagged();
+      ++cntTracked;
     }
   setTrackedDimerSpecies();
   //This process is only for tracking the lifetime of one particular species
   //that goes through several intermediate species before finally untracked
-  //when it becomes a final untracked species. For example if we want to track
+  //when it becomes an untracked species. For example if we want to track
   //the lifetime of a MinDatp_m molecule after it is bound to the membrane and
   //it goes through another state such as MinDadp_m before dissociating and
   //becoming a Vacant species:
@@ -93,19 +83,8 @@ void LifetimeLogProcess::initializeFirst()
                       getPropertyInterface().getClassName()) +
                       "[" + getFullID().asString() + 
                       "]: Lifetime logging requires at least one " +
-                      "nonHD variable reference with -1 " +
-                      "coefficient as the tracked species, " +
+                      "nonHD variable as the tracked species, " +
                       "but none is given."); 
-    }
-  if(!cntUntracked)
-    {
-      THROW_EXCEPTION(ValueError, String(
-                      getPropertyInterface().getClassName()) +
-                      "[" + getFullID().asString() + 
-                      "]: Lifetime logging requires at least one " +
-                      "nonHD variable reference with 1 " +
-                      "coefficient as the untracked species, " +
-                      "but none is given.");
     }
 }
 
@@ -208,7 +187,6 @@ void LifetimeLogProcess::fire()
 
 void LifetimeLogProcess::interruptedPre(ReactionProcess* aProcess)
 {
-  //std::cout << "me:" << getIDString() << " interruptedPre:" << aProcess->getIDString() << std::endl;
   if(isDimerizationReaction[aProcess->getID()])
     {
       saveDimerizingMonomerTag(aProcess);
@@ -228,8 +206,7 @@ void LifetimeLogProcess::interruptedPre(ReactionProcess* aProcess)
 }
 
 void LifetimeLogProcess::interruptedPost(ReactionProcess* aProcess)
-{
-  //std::cout << "me:" << getIDString() << " interruptedPost:" << aProcess->getIDString() << std::endl;
+
   if(isDedimerizationReaction[aProcess->getID()])
     {
       initDedimerizingMonomerTag(aProcess);
@@ -314,28 +291,19 @@ void LifetimeLogProcess::initDedimerizingMonomerTag(ReactionProcess* aProcess)
 {
   //Monomer C's tag will be the dimers tag, we need to set
   //monomer D's tag to the previously saved tag:
-  //std::cout << "1" << std::endl;
   Species* C(aProcess->getC());
-  //std::cout << "2" << std::endl;
   Species* D(aProcess->getD());
-  //std::cout << "3" << std::endl;
   //Since it is first order dedimerization reaction, the reaction will be
   //executed by SNRP and STPL both of which have valid moleculeC and moleculeD.
   //We only need to access moleculeC and moleculeD as C->size()-1 index
   //when the reaction is DIRP since moleculeC and moleculeD are not valid
   //for DIRP.
   const Voxel* molC(aProcess->getMoleculeC());
-  //std::cout << "4" << std::endl;
   const Voxel* molD(aProcess->getMoleculeD());
-  //std::cout << "5" << std::endl;
   const unsigned indexC(C->getIndex(molC));
-  //std::cout << "6" << std::endl;
   const unsigned indexD(D->getIndex(molD));
-  //std::cout << "7" << std::endl;
   Tag& aTag(D->getTag(indexD));
-  //std::cout << "8 id:" << C->getTag(indexC).id << " size:" << theDimerizingMonomerTags.size() << std::endl;
   aTag = theDimerizingMonomerTags[C->getTag(indexC).id];
-  //std::cout << "9" << std::endl;
 }
 
 void LifetimeLogProcess::initDimerNewTags(Species* aDimer)
@@ -368,7 +336,6 @@ void LifetimeLogProcess::addTagTime(Tag& aTag)
 
 void LifetimeLogProcess::saveDimerizingMonomerTag(ReactionProcess* aProcess)
 {
-  //std::cout << "saving" << std::endl;
   //Monomer A's tag will be taken up by the product dimer, so save the 
   //monomer B tag before it is destroyed after the dimerization
   //reaction:
@@ -378,7 +345,6 @@ void LifetimeLogProcess::saveDimerizingMonomerTag(ReactionProcess* aProcess)
   const Voxel* molB(aProcess->getMoleculeB());
   const unsigned indexA(A->getIndex(molA));
   const unsigned indexB(B->getIndex(molB));
-  //std::cout << "tag time size:" << theTagTimes.size() << std::endl;
   theDimerizingMonomerTags.resize(theTagTimes.size());
   theDimerizingMonomerTags[A->getTag(indexA).id] = B->getTag(indexB);
 }
@@ -419,8 +385,8 @@ bool LifetimeLogProcess::isDependentOnPre(const Process* aProcess)
   if((A && isTrackedSpecies[A->getID()]) ||
      (B && isTrackedSpecies[B->getID()]))
     {
-      if((C && isUntrackedSpecies[C->getID()]) ||
-         (D && isUntrackedSpecies[D->getID()]))
+      if((C && !isTrackedSpecies[C->getID()]) ||
+         (D && !isTrackedSpecies[D->getID()]))
         {
           if((C && isTrackedSpecies[C->getID()]) ||
              (D && isTrackedSpecies[D->getID()]))
