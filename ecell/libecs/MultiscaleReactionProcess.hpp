@@ -69,7 +69,14 @@ public:
   virtual void react(Voxel* molA, Voxel* molB, const unsigned indexA,
                      const unsigned indexB)
     {
+      //We need an explicit declaration of the react method here
+      //although it is identical to DIRP's react method because
+      //this-> in DIRP would refer to its own method.
+      moleculeA = molA;
+      moleculeB = molB;
+      interruptProcessesPre();
       (this->*reactM)(molA, molB, indexA, indexB);
+      interruptProcessesPost();
     }
 protected:
   unsigned getIdx(Species*, Voxel*, const unsigned);

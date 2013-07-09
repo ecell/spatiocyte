@@ -1350,6 +1350,7 @@ void SpatiocyteNextReactionProcess::printParameters()
       cout << " + " << getIDString(variableF);
     }
   double interval(theTime-getStepper()->getCurrentTime());
+  double actualInterval(interval);
   double propensity(thePropensity);
   if(theTime == libecs::INF)
     {
@@ -1395,10 +1396,11 @@ void SpatiocyteNextReactionProcess::printParameters()
         {
           variableB->addValue(-1);
         }
-      getInitInterval();
+      actualInterval = getInitInterval();
     }
   cout << " k:" << k << " p = " << pFormula.str() << " = " << p
-    << " nextTime:" << interval << " propensity:" << propensity;
+    << " predicted nextTime:" << interval << " actual nextTime:" << 
+    actualInterval << " propensity:" << propensity;
   if(theDeoligomerIndex)
     {
       cout << " DeoligomerIndex:" << theDeoligomerIndex;

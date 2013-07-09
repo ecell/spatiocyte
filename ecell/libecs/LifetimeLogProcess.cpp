@@ -160,6 +160,7 @@ void LifetimeLogProcess::fire()
 
 void LifetimeLogProcess::interruptedPre(ReactionProcess* aProcess)
 {
+  //std::cout << "me:" << getIDString() << " interruptedPre:" << aProcess->getIDString() << std::endl;
   if(isDimerizationReaction[aProcess->getID()])
     {
       saveDimerizingMonomerTag(aProcess);
@@ -176,6 +177,7 @@ void LifetimeLogProcess::interruptedPre(ReactionProcess* aProcess)
 
 void LifetimeLogProcess::interruptedPost(ReactionProcess* aProcess)
 {
+  //std::cout << "me:" << getIDString() << " interruptedPost:" << aProcess->getIDString() << std::endl;
   if(isDedimerizationReaction[aProcess->getID()])
     {
       initDedimerizingMonomerTag(aProcess);
@@ -321,7 +323,7 @@ bool LifetimeLogProcess::isDependentOnPre(const Process* aProcess)
   if(A && isTrackedSpecies[A->getID()] &&
      B && isTrackedSpecies[B->getID()] && C && !D)
     {
-      //std::cout << "dimerization:" << A->getIDString() << " " << B->getIDString() << std::endl;
+      //std::cout << "dimerization:" << A->getIDString() << " " << B->getIDString() << " me:" << getIDString() << " reaction:" << aReactionProcess->getIDString() << std::endl;
       isTrackedDimerSpecies[C->getID()] = true;
       isDimerizationReaction[aReactionProcess->getID()] = true;
       return true;
@@ -364,7 +366,7 @@ bool LifetimeLogProcess::isDependentOnPost(const Process* aProcess)
     {
       if(isTrackedSpecies[C->getID()] && isTrackedSpecies[D->getID()])
         {
-      //std::cout << "dedimerization:" << C->getIDString() << " " << D->getIDString() << std::endl;
+      //std::cout << "dedimerization:" << C->getIDString() << " " << D->getIDString() << " me:" << getIDString() << " reaction:" << aReactionProcess->getIDString() << std::endl;
           if(A)
             {
               isTrackedDimerSpecies[A->getID()] = true;

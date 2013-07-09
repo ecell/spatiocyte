@@ -521,9 +521,7 @@ void SpatiocyteStepper::initializeFourth()
 {
   for(unsigned i(0); i != theSpatiocyteProcesses.size(); ++i)
     {      
-      std::cout << theSpatiocyteProcesses[i]->getIDString() << std::endl;
       theSpatiocyteProcesses[i]->initializeFourth();
-      std::cout << "done" << std::endl;
     }
 }
 

@@ -266,7 +266,7 @@ public:
         }
       return aVariable;
     }
-  String getIDString()
+  String getIDString() const
     {
       return getFullID().asString();
     }
