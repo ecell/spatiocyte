@@ -28,12 +28,12 @@
 // E-Cell Project, Institute for Advanced Biosciences, Keio University.
 //
 
-#include <MicrotubuleProcess.hpp>
+#include <libecs/MicrotubuleProcess.hpp>
 
 namespace libecs
 {
 
-LIBECS_DM_INIT(MicrotubuleProcess, Process); 
+LIBECS_DM_INIT_STATIC(MicrotubuleProcess, Process); 
 
 unsigned MicrotubuleProcess::getLatticeResizeCoord(unsigned aStartCoord)
 {

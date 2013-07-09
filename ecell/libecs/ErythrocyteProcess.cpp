@@ -136,6 +136,24 @@ void ErythrocyteProcess::initializeProtofilaments()
           theVertexSpecies->addMolecule(&(*theLattice)[aCoord]);
         }
     }
+  for(unsigned i(0); i != theSpectrinSpecies->size(); ++i)
+    {
+      Voxel* mol(theSpectrinSpecies->getMolecule(i));
+      unsigned cnt(0);
+      for(unsigned i(0); i != mol->diffuseSize; ++i)
+        {
+          Voxel& adj((*theLattice)[mol->adjoiningCoords[i]]);
+          if(getID(adj) == theSpectrinSpecies->getID())
+            {
+              ++cnt;
+            }
+        }
+      if(cnt > 2)
+        {
+          theSpectrinSpecies->removeMolecule(mol);
+          theVertexSpecies->addMolecule(mol);
+        }
+    }
 }
 
 unsigned int ErythrocyteProcess::getIntersectCount(Point& aPoint,

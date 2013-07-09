@@ -73,6 +73,7 @@ TagProcess.cpp\
 PeriodicBoundaryDiffusionProcess.cpp\
 SpatiocyteTauLeapProcess.cpp\
 LifetimeLogProcess.cpp\
+MicrotubuleProcess.cpp\
 MultiscaleReactionProcess.cpp
 
 libecsdir=$(ECELL_INCLUDE_DIR)/libecs
@@ -143,6 +144,7 @@ SpatiocyteSpecies.hpp\
 SpatiocyteVector.hpp\
 SpatiocyteTauLeapProcess.hpp\
 LifetimeLogProcess.hpp\
+MicrotubuleProcess.hpp\
 MultiscaleReactionProcess.hpp\
 SpatiocyteVisualizer.hpp\
 SpatiocyteDebug.hpp

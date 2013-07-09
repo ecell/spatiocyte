@@ -66,19 +66,26 @@ public:
   virtual void saveFileHeader(std::ofstream&);
 private:
   void logTrackedMolecule(ReactionProcess*, Species*, const Voxel*);
+  void logTrackedDimer(Species*, const Voxel*);
   void initTrackedMolecule(Species*);
+  void initDimerNewTags(Species*);
   void saveDimerizingMonomerTag(ReactionProcess*);
   void initDedimerizingMonomerTag(ReactionProcess*);
+  void setTrackedDimerSpecies();
+  void logTag(Species*, Tag&, const unsigned);
+  void addTagTime(Tag&);
 private:
   unsigned konCnt;
   unsigned logCnt;
   double totalDuration;
+  std::vector<bool> isAddDimerReaction;
+  std::vector<bool> isBindingSiteReaction;
+  std::vector<bool> isDedimerizationReaction;
+  std::vector<bool> isDimerizationReaction;
+  std::vector<bool> isRemoveDimerReaction;
   std::vector<bool> isTrackedSpecies;
   std::vector<bool> isTrackedDimerSpecies;
   std::vector<bool> isUntrackedSpecies;
-  std::vector<bool> isBindingSiteReaction;
-  std::vector<bool> isDimerizationReaction;
-  std::vector<bool> isDedimerizationReaction;
   std::vector<unsigned> availableTagIDs;
   std::vector<Tag> theDimerizingMonomerTags;
   std::vector<double> theTagTimes;

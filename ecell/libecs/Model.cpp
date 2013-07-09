@@ -78,6 +78,7 @@
 #include "TagProcess.hpp"
 #include "VisualizationLogProcess.hpp"
 #include "MultiscaleReactionProcess.hpp"
+#include "MicrotubuleProcess.hpp"
 #include "LifetimeLogProcess.hpp"
 
 namespace libecs
@@ -529,6 +530,7 @@ void Model::registerBuiltinModules()
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, VisualizationLogProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, SpatiocyteTauLeapProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, MultiscaleReactionProcess );
+    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, MicrotubuleProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, CompartmentProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, ErythrocyteProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, IteratingLogProcess );
