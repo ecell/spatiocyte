@@ -206,7 +206,7 @@ void LifetimeLogProcess::interruptedPre(ReactionProcess* aProcess)
 }
 
 void LifetimeLogProcess::interruptedPost(ReactionProcess* aProcess)
-
+{
   if(isDedimerizationReaction[aProcess->getID()])
     {
       initDedimerizingMonomerTag(aProcess);
