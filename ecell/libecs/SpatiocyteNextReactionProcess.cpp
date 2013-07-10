@@ -117,6 +117,7 @@ bool SpatiocyteNextReactionProcess::react()
       else if(A && variableC && variableD)
         {
           moleculeA = A->getRandomMolecule();
+          interruptProcessesPre();
           A->removeMolecule(moleculeA);
           variableC->addValue(coefficientC);
           variableD->addValue(coefficientD);
@@ -125,6 +126,7 @@ bool SpatiocyteNextReactionProcess::react()
       else if(A && variableC && !D && !variableD)
         {
           moleculeA = A->getRandomMolecule();
+          interruptProcessesPre();
           A->removeMolecule(moleculeA);
           variableC->addValue(coefficientC);
         }
@@ -442,6 +444,7 @@ bool SpatiocyteNextReactionProcess::reactMultiABC()
     {
       return false;
     }
+  interruptProcessesPre();
   A->removeMolecule(nextIndexA);
   C->addMolecule(moleculeC);
   return true;
@@ -566,6 +569,7 @@ bool SpatiocyteNextReactionProcess::reactDeoligomerize(Species* a, Species* c)
           return false;
         }
     }
+  interruptProcessesPre();
   if(a->getIsOnMultiscale() && c->getIsOnMultiscale())
     {
       c->addMoleculeInMulti(moleculeC, a->getTag(indexA).vacantIdx);
@@ -652,6 +656,7 @@ bool SpatiocyteNextReactionProcess::reactACbind(Species* a, Species* c)
       //of nonND which can be occupied by C:
       return false;
     }
+  interruptProcessesPre();
   Tag tagA(a->getTag(indexA));
   a->removeMolecule(indexA);
   c->addMolecule(moleculeC, tagA);
@@ -1278,6 +1283,23 @@ void SpatiocyteNextReactionProcess::initializeFourth()
       else
         {
           NEVER_GET_HERE;
+        }
+    }
+  //Do this after populating molecules:
+  if(isReactAB)
+    {
+      for(unsigned i(0); i != A->size(); ++i)
+        {
+          const unsigned coordA(A->getCoord(i));
+          const Voxel* molA(A->getMolecule(i));
+          for(unsigned j(0); j != molA->diffuseSize; ++j)
+            {
+              const unsigned adjCoord(molA->adjoiningCoords[j]);
+              if(getID((*theLattice)[adjCoord]) == B->getID())
+                {
+                  theCoordsA.push_back(coordA);
+                }
+            }
         }
     }
 }
