@@ -498,6 +498,8 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
 {
   unsigned indexA(a->getRandomIndex());
   moleculeA = a->getMolecule(indexA);
+  //This is needed when a is species B, used by interruptedPre:
+  moleculeB = moleculeA;
   moleculeC = NULL;
   moleculeD = NULL;
   if(a->getVacantID() == c->getVacantID() || a->getID() == c->getVacantID())
@@ -589,6 +591,8 @@ bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
 {
   unsigned indexA(a->getRandomIndex());
   moleculeA = a->getMolecule(indexA);
+  //This is needed when a is species B, used by interruptedPre:
+  moleculeB = moleculeA;
   if(ImplicitUnbind && 
      E->getRandomAdjoiningVoxel(moleculeA, E, SearchVacant) == NULL)
     {
