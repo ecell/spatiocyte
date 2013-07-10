@@ -56,6 +56,7 @@ public:
   virtual void initialize();
   virtual void initializeFirst();
   virtual void initializeSecond();
+  virtual void initializeFourth();
   virtual void initializeFifth();
   virtual void initializeLastOnce();
   virtual void fire();
@@ -67,8 +68,8 @@ public:
 private:
   void logTrackedMolecule(ReactionProcess*, Species*, const Voxel*);
   void logTrackedDimer(Species*, const Voxel*);
-  void initTrackedMolecule(Species*);
-  void initDimerNewTags(Species*);
+  void initTrackedMolecule(Species*, const unsigned);
+  void initTrackedDimer(Species*, const unsigned);
   void saveDimerizingMonomerTag(ReactionProcess*);
   void initDedimerizingMonomerTag(ReactionProcess*);
   void setTrackedDimerSpecies();

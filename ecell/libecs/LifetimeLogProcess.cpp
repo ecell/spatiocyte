@@ -144,6 +144,33 @@ void LifetimeLogProcess::initializeLastOnce()
   theLogFile.open(FileName.c_str(), std::ios::trunc);
 }
 
+void LifetimeLogProcess::initializeFourth()
+{
+  //The following is done after populating all molecules:
+  for(unsigned i(0); i != isTrackedSpecies.size(); ++i)
+    {
+      if(isTrackedSpecies[i])
+        {
+          Species* aSpecies(theSpecies[i]);
+          for(unsigned j(0); j != aSpecies->size(); ++j)
+            {
+              initTrackedMolecule(aSpecies, j);
+            }
+        }
+    }
+  for(unsigned i(0); i != isTrackedDimerSpecies.size(); ++i)
+    {
+      if(isTrackedDimerSpecies[i])
+        {
+          Species* aSpecies(theSpecies[i]);
+          for(unsigned j(0); j != aSpecies->size(); ++j)
+            {
+              initTrackedDimer(aSpecies, j);
+            }
+        }
+    }
+}
+
 void LifetimeLogProcess::initializeFifth()
 {
   theInterval = LogEnd;
@@ -213,15 +240,15 @@ void LifetimeLogProcess::interruptedPost(ReactionProcess* aProcess)
     }
   else if(isAddDimerReaction[aProcess->getID()])
     {
-      initDimerNewTags(aProcess->getC());
+      initTrackedDimer(aProcess->getC(), aProcess->getC()->size()-1);
     }
   else if(aProcess->getC() && isTrackedSpecies[aProcess->getC()->getID()])
     {
-      initTrackedMolecule(aProcess->getC());
+      initTrackedMolecule(aProcess->getC(), aProcess->getC()->size()-1);
     }
   else if(aProcess->getD() && isTrackedSpecies[aProcess->getD()->getID()])
     {
-      initTrackedMolecule(aProcess->getD());
+      initTrackedMolecule(aProcess->getD(), aProcess->getD()->size()-1);
     }
 }
 
@@ -306,18 +333,27 @@ void LifetimeLogProcess::initDedimerizingMonomerTag(ReactionProcess* aProcess)
   aTag = theDimerizingMonomerTags[C->getTag(indexC).id];
 }
 
-void LifetimeLogProcess::initDimerNewTags(Species* aDimer)
+void LifetimeLogProcess::initTrackedDimer(Species* aSpecies,
+                                          const unsigned anIndex)
 {
-  const unsigned anIndex(aDimer->size()-1);
-  Tag& tagA(aDimer->getTag(anIndex));
-  tagA.origin = aDimer->getCoord(anIndex);
-  addTagTime(tagA);
+  initTrackedMolecule(aSpecies, anIndex);
+  Tag& tagA(aSpecies->getTag(anIndex));
   Tag tagB(tagA);
   addTagTime(tagB);
   theDimerizingMonomerTags.resize(theTagTimes.size());
   theDimerizingMonomerTags[tagA.id] = tagB;
-  konCnt += 2;
+  ++konCnt;
 }
+
+void LifetimeLogProcess::initTrackedMolecule(Species* aSpecies,
+                                             const unsigned anIndex)
+{
+  Tag& aTag(aSpecies->getTag(anIndex));
+  aTag.origin = aSpecies->getCoord(anIndex);
+  addTagTime(aTag);
+  ++konCnt;
+}
+
 
 void LifetimeLogProcess::addTagTime(Tag& aTag)
 {
@@ -349,15 +385,6 @@ void LifetimeLogProcess::saveDimerizingMonomerTag(ReactionProcess* aProcess)
   theDimerizingMonomerTags[A->getTag(indexA).id] = B->getTag(indexB);
 }
 
-
-void LifetimeLogProcess::initTrackedMolecule(Species* aSpecies)
-{
-  const unsigned anIndex(aSpecies->size()-1);
-  Tag& aTag(aSpecies->getTag(anIndex));
-  aTag.origin = aSpecies->getCoord(anIndex);
-  addTagTime(aTag);
-  ++konCnt;
-}
 
 bool LifetimeLogProcess::isDependentOnPre(const Process* aProcess)
 {
