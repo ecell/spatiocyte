@@ -52,6 +52,7 @@ public:
       PROPERTYSLOT_SET_GET(Real, Interval);
       PROPERTYSLOT_SET_GET(Real, P);
       PROPERTYSLOT_SET_GET(Real, Propensity);
+      PROPERTYSLOT_SET_GET(Real, MoleculeRadius);
       PROPERTYSLOT_SET_GET(Real, WalkProbability);
     }
   DiffusionProcess():
@@ -61,6 +62,7 @@ public:
     Interval(0),
     P(1),
     Propensity(0),
+    MoleculeRadius(0),
     WalkProbability(1),
     theDiffusionSpecies(NULL),
     theTrailSpecies(NULL),
@@ -73,6 +75,7 @@ public:
   SIMPLE_SET_GET_METHOD(Real, Interval);
   SIMPLE_SET_GET_METHOD(Real, P);
   SIMPLE_SET_GET_METHOD(Real, Propensity);
+  SIMPLE_SET_GET_METHOD(Real, MoleculeRadius);
   SIMPLE_SET_GET_METHOD(Real, WalkProbability);
   virtual void substrateValueChanged(double) {}
   virtual void initialize()
@@ -163,6 +166,10 @@ public:
       if(theTrailSpecies)
         {
           theDiffusionSpecies->setTrailSpecies(theTrailSpecies);
+        }
+      if(MoleculeRadius)
+        {
+          theDiffusionSpecies->setMoleculeRadius(MoleculeRadius);
         }
     }
   virtual void initializeFourth()
@@ -364,6 +371,7 @@ protected:
   double Interval;
   double P;
   double Propensity;
+  double MoleculeRadius;
   double WalkProbability;
   Species* theDiffusionSpecies;
   Species* theTrailSpecies;

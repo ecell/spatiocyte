@@ -74,7 +74,10 @@ void CompartmentProcess::setVacantCompSpeciesProperties()
   for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
     {
       theVacantCompSpecies[i]->setDimension(theDimension);
-      theVacantCompSpecies[i]->setMoleculeRadius(SubunitRadius);
+      if(theVacantCompSpecies[i]->getMoleculeRadius() < SubunitRadius)
+        {
+          theVacantCompSpecies[i]->setMoleculeRadius(SubunitRadius);
+        }
       theVacantCompSpecies[i]->setDiffuseRadius(DiffuseRadius);
       if(theLipidSpecies)
         {

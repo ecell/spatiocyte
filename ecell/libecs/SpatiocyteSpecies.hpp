@@ -3150,11 +3150,11 @@ public:
       double minZ(pointA.z-aLipidStart.z-nDist*2);
       double maxY(pointA.y-aLipidStart.y+nDist*2);
       double maxZ(pointA.z-aLipidStart.z+nDist*2);
-      unsigned rowStart((unsigned)std::max(minY/(nLipidRadius*sqrt(3)), 0.0));
-      unsigned colStart((unsigned)std::max(minZ/(nLipidRadius*2), 0.0));
-      unsigned rowEnd((unsigned)std::min(maxY/(nLipidRadius*sqrt(3)), 
+      unsigned rowStart((unsigned)std::max(minY/(nLipidRadius*sqrt(3))-1, 0.0));
+      unsigned colStart((unsigned)std::max(minZ/(nLipidRadius*2)-1, 0.0));
+      unsigned rowEnd((unsigned)std::min(maxY/(nLipidRadius*sqrt(3))+1, 
                                          double(lipRows)));
-      unsigned colEnd((unsigned)std::min(maxZ/(nLipidRadius*2),
+      unsigned colEnd((unsigned)std::min(maxZ/(nLipidRadius*2)+1,
                                          double(lipCols)));
       for(unsigned i(rowStart); i != rowEnd; ++i)
         {
