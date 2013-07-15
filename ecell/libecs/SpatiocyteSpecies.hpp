@@ -142,22 +142,14 @@ public:
       theNullCoord = aNullCoord;
       theNullID = aNullID;
       theStride = UINT_MAX/speciesSize;
-      theReactionProbabilities.resize(speciesSize);
-      theDiffusionInfluencedReactions.resize(speciesSize);
-      isFinalizeReactions.resize(speciesSize);
+      theReactionProbabilities.resize(speciesSize, 0);
+      theDiffusionInfluencedReactions.resize(speciesSize, NULL);
+      isFinalizeReactions.resize(speciesSize, false);
+      isMultiscaleBinderID.resize(speciesSize, false);
+      isMultiMultiReactantID.resize(speciesSize, false);
+      isMultiscaleBoundID.resize(speciesSize, false);
+      isProductPair.resize(speciesSize, false);
       theMultiscaleUnbindIDs.resize(speciesSize);
-      isMultiscaleBinderID.resize(speciesSize);
-      isMultiMultiReactantID.resize(speciesSize);
-      isMultiscaleBoundID.resize(speciesSize);
-      for(unsigned i(0); i != speciesSize; ++i)
-        {
-          isMultiscaleBinderID[i] = false;
-          isMultiMultiReactantID[i] = false;
-          isMultiscaleBoundID[i] = false;
-          theDiffusionInfluencedReactions[i] = NULL;
-          theReactionProbabilities[i] = 0;
-          isFinalizeReactions[i] = false;
-        }
       if(theComp)
         {
           setVacantSpecies(theComp->vacantSpecies);
@@ -184,6 +176,10 @@ public:
           isGaussianPopulation = true;
         }
       thePopulateProcess = aProcess;
+    }
+  void setProductPair(Species* aSpecies)
+    {
+      isProductPair[aSpecies->getID()] = true;
     }
   bool isTrailSpecies(Species* aSpecies)
     {
@@ -1025,10 +1021,10 @@ public:
             {
               if(theWalkProbability == 1 || theRng.Fixed() < theWalkProbability)
                 {
-                  source->idx = theTags[i].vacantIdx;
-                  if(theTags[i].vacantIdx != target->idx)
+                  source->idx = theTags[i].multiIdx;
+                  if(theTags[i].multiIdx != target->idx)
                     {
-                      theTags[i].vacantIdx = target->idx;
+                      theTags[i].multiIdx = target->idx;
                     }
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
@@ -1514,22 +1510,22 @@ public:
           theBoundCnts[boundCnt]++;
         }
     }
-  void addMoleculeInMulti(Voxel* aVoxel, const unsigned vacantIdx,
+  void addMoleculeInMulti(Voxel* aVoxel, const unsigned multiIdx,
                           const unsigned boundCnt)
     {
       //use direct since we don't want to count bounds:
       addMoleculeDirect(aVoxel);
-      theTags[theMoleculeSize-1].vacantIdx = vacantIdx;
+      theTags[theMoleculeSize-1].multiIdx = multiIdx;
       if(isDeoligomerize)
         {
           theTags[theMoleculeSize-1].boundCnt = boundCnt;
           theBoundCnts[boundCnt]++;
         }
     }
-  void addMoleculeInMulti(Voxel* aVoxel, const unsigned vacantIdx)
+  void addMoleculeInMulti(Voxel* aVoxel, const unsigned multiIdx)
     {
       addMoleculeTagless(aVoxel);
-      theTags[theMoleculeSize-1].vacantIdx = vacantIdx;
+      theTags[theMoleculeSize-1].multiIdx = multiIdx;
     }
   void softAddMolecule(Voxel* aVoxel)
     {
@@ -1968,7 +1964,7 @@ public:
             }
         }
     }
-  bool isIntersectMultiscale(const unsigned srcCoord)
+  bool isMultiIntersectCoord(const unsigned srcCoord)
     {
       const unsigned coordA(srcCoord-vacStartCoord);
       if(isRegularLattice)
@@ -1982,9 +1978,10 @@ public:
               int coordB(coordA+anOffsets[i]);
               if(isInLattice(coordB, offsetRow+rowA))
                 {
-                  const unsigned anID(getID(theLattice[coordB+lipStartCoord]));
-                  if(theSpecies[anID]->getIsMultiscale() ||
-                     isMultiscaleBoundID[anID])
+                  Species* aSpecies(theSpecies[
+                                    getID(theLattice[coordB+lipStartCoord])]);
+                  if(aSpecies->getIsMultiscale() ||
+                     aSpecies->getIsOnMultiscale())
                     {
                       return true;
                     }
@@ -2003,6 +2000,36 @@ public:
                   return true;
                 }
             }
+        }
+      return false;
+    }
+  bool isMultiIntersectCoord(const unsigned coordA, const unsigned ignoreIdx)
+    {
+      if(isRegularLattice)
+        {
+          const int rowA(coordA/lipCols);
+          const std::vector<int>& anOffsets(theOffsets[rowA%2][0]);
+          for(unsigned i(0); i != anOffsets.size(); ++i)
+            {
+              const int offsetRow((anOffsets[i]+theRegLatticeCoord)/lipCols-
+                                  theRegLatticeCoord/lipCols);
+              int coordB(coordA+anOffsets[i]);
+              if(isInLattice(coordB, offsetRow+rowA))
+                {
+                  const unsigned idx(theLattice[coordB+lipStartCoord].idx);
+                  Species* aSpecies(theSpecies[idx/theStride]);
+                  if((aSpecies->getIsMultiscale() && idx != ignoreIdx) ||
+                     (aSpecies->getIsOnMultiscale() && 
+                      aSpecies->getTag(idx%theStride).multiIdx != ignoreIdx))
+                    {
+                      return true;
+                    }
+                }
+            }
+        }
+      else
+        {
+          //do for non regular lattice
         }
       return false;
     }
@@ -2116,7 +2143,7 @@ public:
                       else
                         {
                           const unsigned multiIdx(theSpecies[tarID
-                                          ]->getTag(idx%theStride).vacantIdx);
+                                          ]->getTag(idx%theStride).multiIdx);
                           target = theSpecies[multiIdx/theStride
                             ]->getMolecule(multiIdx%theStride);
                         }
@@ -2168,10 +2195,10 @@ public:
         */
       return isIntersect;
     }
-  void bindMultiscale(Voxel* aVoxel, const unsigned vacantIdx)
+  void bindMultiscale(Voxel* aVoxel, const unsigned multiIdx)
     { 
       unsigned anID(getID(aVoxel));
-      theDiffusionInfluencedReactions[anID]->bind(aVoxel, vacantIdx);
+      theDiffusionInfluencedReactions[anID]->bind(aVoxel, multiIdx);
       isFinalizeReactions[anID] = true;
     }
   void unbindMultiscale(Voxel* aVoxel)
@@ -2305,7 +2332,7 @@ public:
           if(isOnMultiscale)
             {
               theDeoligomerizedProduct->addMoleculeInMulti(aVoxel,
-                                                           aTag.vacantIdx);
+                                                           aTag.multiIdx);
               removeMoleculeDirect(index);
             }
           else
@@ -2769,9 +2796,38 @@ public:
         }
       return getRandomVacantVoxel(compCoords, aTargetSpecies);
     } 
+  Voxel* getMultiRandomAdjoiningVoxel(Species* A, Species* C, Voxel* molA,
+                                      const unsigned searchVacant)
+    {
+      //molA will be replaced with molecule from this species after the
+      //reaction:
+      const unsigned coordA(molA->coord-vacStartCoord);
+      const unsigned idxA(molA->idx);
+      const unsigned row(coordA/lipCols);
+      if(!isMultiIntersectCoord(coordA, idxA))
+        {
+          std::vector<int>& anOffsets(theProductPairOffsets[C->getID()][row%2]);
+          for(unsigned i(0); i != anOffsets.size(); ++i)
+            {
+              const unsigned coordC(coordA+anOffsets[i]);
+              if(!C->isMultiIntersectCoord(coordC, idxA))
+                {
+                  return &theLattice[coordC+vacStartCoord];
+                }
+            }
+        }
+      return NULL;
+    }
   Voxel* getRandomAdjoiningVoxel(Voxel* source, Voxel* target,
                                  int searchVacant)
     {
+      /*
+      if(getIsMultiscale())
+        {
+          return getMultiscaleRandomAdjoiningVoxel(aSpecies, source, target,
+                                                   searchVacant);
+        }
+        */
       std::vector<unsigned> compCoords;
       if(searchVacant)
         { 
@@ -3011,6 +3067,127 @@ public:
       theAdjoinOffsets = anAdjoinOffsets;
       theRowOffsets = aRowOffsets;
     }
+  void setProductPairOffsets(const std::vector<std::vector<int> > 
+                             anAdjoinOffsets,
+                             const std::vector<int> aRowOffsets,
+                             Species* aLipid, const Point& aLipidStart, 
+                             const unsigned aVacantRows,
+                             const unsigned aVacantCols,
+                             const double nLipidRadius,
+                             const double aSubunitAngle, Point& aSurfaceNormal)
+    {
+      unsigned rowA(aVacantRows/2);
+      unsigned rowB(rowA+1);
+      if(rowB >= aVacantRows && rowA > 0)
+        {
+          rowB = rowA-1;
+        }
+      else if(!rowA)
+        {
+          rowB = 0;
+        }
+      unsigned aCol(aVacantCols/2);
+      unsigned coordA(rowA*aVacantCols+aCol);
+      unsigned coordB(rowB*aVacantCols+aCol);
+      theProductPairOffsets.resize(theSpecies.size());
+      std::vector<unsigned> coordsA;
+      for(unsigned i(0); i != theOffsets[rowA%2][0].size(); ++i)
+        {
+          coordsA.push_back(theOffsets[rowA%2][0][i]+coordA);
+        }
+      std::vector<unsigned> coordsB;
+      for(unsigned i(0); i != theOffsets[rowB%2][0].size(); ++i)
+        {
+          coordsB.push_back(theOffsets[rowB%2][0][i]+coordB);
+        }
+      for(unsigned i(0); i != theSpecies.size(); ++i)
+        {
+          if(theProductPairOffsets[i].empty() && isProductPair[i])
+            {
+              double nDist((theMoleculeRadius+
+                            2*theSpecies[i]->getMoleculeRadius())/
+                           (2*theVoxelRadius));
+              theProductPairOffsets[i].resize(2);
+              pushProductPairOffsets(rowA, coordA, coordsA, nDist, aLipidStart,
+                                     nLipidRadius, 
+                                     theProductPairOffsets[i][rowA%2], i);
+              pushProductPairOffsets(rowB, coordB, coordsB, nDist, aLipidStart,
+                                     nLipidRadius, 
+                                     theProductPairOffsets[i][rowB%2], i);
+              std::cout << getIDString() << " pair:" << 
+                theSpecies[i]->getIDString() << " size:" << 
+                theProductPairOffsets[i][rowA%2].size() << " b:" << 
+                theProductPairOffsets[i][rowB%2].size() << std::endl;
+            }
+        }
+    }
+  void getRowColStartEnd(const unsigned coordA, const double nDist,
+                         const Point& aLipidStart, const double nLipidRadius,
+                         unsigned& rowStart, unsigned& colStart,
+                         unsigned& rowEnd, unsigned& colEnd)
+    {
+      Point& pointA(*theLattice[coordA+vacStartCoord].point);
+      double minY(pointA.y-aLipidStart.y-nDist*2);
+      double minZ(pointA.z-aLipidStart.z-nDist*2);
+      double maxY(pointA.y-aLipidStart.y+nDist*2);
+      double maxZ(pointA.z-aLipidStart.z+nDist*2);
+      rowStart = (unsigned)std::max(minY/(nLipidRadius*sqrt(3))-1, 0.0);
+      colStart = (unsigned)std::max(minZ/(nLipidRadius*2)-1, 0.0);
+      rowEnd = (unsigned)std::min(maxY/(nLipidRadius*sqrt(3))+1,
+                                  double(lipRows));
+      colEnd = (unsigned)std::min(maxZ/(nLipidRadius*2)+1, double(lipCols));
+    }
+  void pushProductPairOffsets(const unsigned row, const unsigned coordA,
+                              const std::vector<unsigned>& myCoords,
+                              const double nDist, const Point& aLipidStart,
+                              const double nLipidRadius,
+                              std::vector<int>& aProductPairOffsets,
+                              const unsigned aSpeciesID)
+    {
+      unsigned rowStart, rowEnd, colStart, colEnd;
+      getRowColStartEnd(coordA, nDist, aLipidStart, nLipidRadius, rowStart,
+                        colStart, rowEnd, colEnd);
+      for(unsigned i(rowStart); i != rowEnd; ++i)
+        {
+          for(unsigned j(colStart); j != colEnd; ++j)
+            {
+              unsigned pairCoord(i*lipCols+j);
+              if(theSpecies[aSpeciesID
+                 ]->isValidProductPairCoord(i, pairCoord, myCoords))
+                { 
+                  aProductPairOffsets.push_back(long(pairCoord)-long(coordA));
+                }
+            }
+        }
+    }
+  bool isValidProductPairCoord(const unsigned row, const unsigned coord,
+                               const std::vector<unsigned>& pairCoords)  
+    {
+      for(unsigned i(0); i != theOffsets[row%2][0].size(); ++i)
+        {
+          const unsigned coordB(theOffsets[row%2][0][i]+coord);
+          if(std::find(pairCoords.begin(), pairCoords.end(), coordB) !=
+             pairCoords.end())
+            {
+              return false;
+            }
+        }
+      for(unsigned i(0); i != theOffsets[row%2][0].size(); ++i)
+        {
+          const unsigned coordB(theOffsets[row%2][0][i]+coord);
+          Voxel& aVoxel(theLattice[coordB+lipStartCoord]);
+          for(unsigned j(0); j != aVoxel.diffuseSize; ++j)
+            {
+              const unsigned coordC(aVoxel.adjoiningCoords[j]-lipStartCoord);
+              if(std::find(pairCoords.begin(), pairCoords.end(), coordC) !=
+                 pairCoords.end())
+                {
+                  return true;
+                }
+            }
+        }
+      return false;
+    }
   void setIntersectOffsets(const std::vector<std::vector<int> > anAdjoinOffsets,
                            const std::vector<int> aRowOffsets,
                            Species* aLipid, const Point& aLipidStart, 
@@ -3071,7 +3248,7 @@ public:
                          theTarOffsets[row%2][i], theSrcOffsets[row%2][i]);
           theRotOffsets[row%2][i].resize(2);
           if(i)
-            { 
+            {
               setDiffOffsets(refOffsets[i-1], refOffsets[i],
                              theRotOffsets[row%2][i-1][1]);
               setDiffOffsets(refOffsets[i], refOffsets[i-1],
@@ -3367,7 +3544,7 @@ public:
     {
       if(isMultiscale)
         {
-          if(isIntersectMultiscale(aVoxel->coord))
+          if(isMultiIntersectCoord(aVoxel->coord))
             {
               return false;
             }
@@ -3389,7 +3566,7 @@ public:
         }
       if(aSpecies->getIsMultiscale())
         {
-          if(aSpecies->isIntersectMultiscale(aVoxel->coord))
+          if(aSpecies->isMultiIntersectCoord(aVoxel->coord))
             {
               return false;
             }
@@ -3503,6 +3680,7 @@ private:
   SpatiocyteDebug cout;
   std::vector<int> theRowOffsets;
   std::vector<std::vector<int> > theAdjoinOffsets;
+  std::vector<std::vector<std::vector<int> > > theProductPairOffsets;
   std::vector<std::vector<std::vector<int> > > theOffsets;
   std::vector<std::vector<std::vector<std::vector<int> > > > theTarOffsets;
   std::vector<std::vector<std::vector<std::vector<int> > > > theSrcOffsets;
@@ -3511,6 +3689,7 @@ private:
   std::vector<bool> isMultiscaleBinderID;
   std::vector<bool> isMultiMultiReactantID;
   std::vector<bool> isMultiscaleBoundID;
+  std::vector<bool> isProductPair;
   std::vector<unsigned> collisionCnts;
   std::vector<unsigned> theCoords;
   std::vector<unsigned> theMultiscaleUnbindIDs;

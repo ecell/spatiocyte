@@ -496,6 +496,7 @@ void SpatiocyteNextReactionProcess::reactABCD()
 //nonHD -> nonHD + nonHD
 bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
 {
+  std::cout << "in:" << getIDString() << std::endl;
   unsigned indexA(a->getRandomIndex());
   moleculeA = a->getMolecule(indexA);
   //This is needed when a is species B, used by interruptedPre:
@@ -505,8 +506,8 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
   if(a->getVacantID() == c->getVacantID() || a->getID() == c->getVacantID())
     {
       moleculeC = moleculeA;
-      moleculeD = d->getRandomAdjoiningVoxel(moleculeC, moleculeC,
-                                             SearchVacant);
+      moleculeD = d->getMultiRandomAdjoiningVoxel(A, C, moleculeC,
+                                                  SearchVacant);
       if(moleculeD == NULL)
         {
           return false;
@@ -516,8 +517,8 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
           a->getID() == d->getVacantID())
     {
       moleculeD = moleculeA;
-      moleculeC = c->getRandomAdjoiningVoxel(moleculeD, moleculeD,
-                                             SearchVacant);
+      moleculeC = c->getMultiRandomAdjoiningVoxel(A, D, moleculeD,
+                                                  SearchVacant);
       if(moleculeC == NULL)
         {
           return false;
@@ -539,6 +540,7 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
           return false;
         }
     }
+  std::cout << "out" << std::endl;
   interruptProcessesPre();
   Tag tagA(a->getTag(indexA));
   a->removeMolecule(indexA);
@@ -574,7 +576,7 @@ bool SpatiocyteNextReactionProcess::reactDeoligomerize(Species* a, Species* c)
   interruptProcessesPre();
   if(a->getIsOnMultiscale() && c->getIsOnMultiscale())
     {
-      c->addMoleculeInMulti(moleculeC, a->getTag(indexA).vacantIdx);
+      c->addMoleculeInMulti(moleculeC, a->getTag(indexA).multiIdx);
       a->softRemoveMolecule(indexA);
     }
   else
@@ -616,7 +618,7 @@ bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
   interruptProcessesPre();
   if(a->getIsOnMultiscale() && c->getIsOnMultiscale())
     {
-      c->addMoleculeInMulti(moleculeC, a->getTag(indexA).vacantIdx);
+      c->addMoleculeInMulti(moleculeC, a->getTag(indexA).multiIdx);
       a->softRemoveMolecule(indexA);
     }
   else
@@ -1024,6 +1026,13 @@ void SpatiocyteNextReactionProcess::initializeSecond()
       if(Deoligomerize)
         {
           A->setIsDeoligomerize(C, Deoligomerize);
+        }
+      //nonHD -> nonHD + nonHD
+      //used by multiscale dissociation reaction
+      if(!B && D)
+        {
+          C->setProductPair(D);
+          D->setProductPair(C);
         }
     }
 }

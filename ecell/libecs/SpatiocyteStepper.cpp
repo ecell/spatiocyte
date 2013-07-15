@@ -725,7 +725,7 @@ void SpatiocyteStepper::checkSpecies()
                 }
               if(aSpecies->getIsOnMultiscale())
                 {
-                  if(!aSpecies->getTag(j).vacantIdx)
+                  if(!aSpecies->getTag(j).multiIdx)
                     {
                       cout << aSpecies->getIDString() << " size:" << 
                         aSpecies->size() << " vacidx wrong:" << j << std::endl;

@@ -296,7 +296,7 @@ void LifetimeLogProcess::logTag(Species* aSpecies, Tag& aTag,
     distance(aPoint, anOrigin)*2*theSpatiocyteStepper->getVoxelRadius() << ","
     << theTagTimes[aTag.id] << "," << aTime << "," << konCnt << "," <<
     1/(totalDuration/logCnt) << std::endl;
-  std::cout << "average koff:" << 1/(totalDuration/logCnt) << std::endl;
+  //std::cout << "average koff:" << 1/(totalDuration/logCnt) << std::endl;
 }
 
 void LifetimeLogProcess::saveFileHeader(std::ofstream& aFile)

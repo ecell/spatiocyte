@@ -145,7 +145,7 @@ unsigned MultiscaleReactionProcess::getIdx(Species* aSpecies,
 {
   if(aSpecies->getIsOnMultiscale())
     {
-      return aSpecies->getTag(index).vacantIdx;
+      return aSpecies->getTag(index).multiIdx;
     }
   return mol->idx;
 }
@@ -343,7 +343,7 @@ void MultiscaleReactionProcess::reactBtoC_Multi(Voxel* molA,
   B->softRemoveMolecule(indexB);
   if(A->getIsOnMultiscale())
     {
-      molA->idx = A->getTag(indexA).vacantIdx;
+      molA->idx = A->getTag(indexA).multiIdx;
     }
   A->softRemoveMolecule(indexA);
 }
@@ -358,7 +358,7 @@ void MultiscaleReactionProcess::reactAtoC_Multi(Voxel* molA,
   A->softRemoveMolecule(indexA);
   if(B->getIsOnMultiscale())
     {
-      molB->idx = B->getTag(indexB).vacantIdx;
+      molB->idx = B->getTag(indexB).multiIdx;
     }
   B->softRemoveMolecule(indexB);
 }

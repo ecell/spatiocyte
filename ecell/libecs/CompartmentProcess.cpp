@@ -335,6 +335,16 @@ void CompartmentProcess::setSpeciesIntersectLipids()
                                                        SubunitAngle,
                                                        surfaceNormal);
         }
+      for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
+        {
+          theVacantCompSpecies[i]->setProductPairOffsets(theAdjoinOffsets,
+                                                         theRowOffsets,
+                                                         theLipidSpecies,
+                                                         lipidStart, Filaments,
+                                                         Subunits, nLipidRadius,
+                                                         SubunitAngle,
+                                                         surfaceNormal);
+        }
     }
   else
     {

@@ -54,10 +54,10 @@ public:
   virtual void initializeMultiscaleWalkBindUnbind();
   virtual void initializeMultiscaleCompReaction();
   virtual void setReactMethod();
-  virtual void bind(Voxel* aVoxel, const unsigned vacantIdx)
+  virtual void bind(Voxel* aVoxel, const unsigned multiIdx)
     {
       const unsigned index(aVoxel->idx%theStride);
-      M->addMoleculeInMulti(aVoxel, vacantIdx, N->getTag(index).boundCnt);
+      M->addMoleculeInMulti(aVoxel, multiIdx, N->getTag(index).boundCnt);
       N->removeMoleculeBoundDirect(index);
     }
   virtual void unbind(Voxel* aVoxel)
