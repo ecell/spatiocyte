@@ -74,7 +74,8 @@ void CompartmentProcess::setVacantCompSpeciesProperties()
   for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
     {
       theVacantCompSpecies[i]->setDimension(theDimension);
-      if(theVacantCompSpecies[i]->getMoleculeRadius() < SubunitRadius)
+      if(SubunitRadius && 
+         theVacantCompSpecies[i]->getMoleculeRadius() == VoxelRadius)
         {
           theVacantCompSpecies[i]->setMoleculeRadius(SubunitRadius);
         }

@@ -496,7 +496,6 @@ void SpatiocyteNextReactionProcess::reactABCD()
 //nonHD -> nonHD + nonHD
 bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
 {
-  std::cout << "in:" << getIDString() << std::endl;
   unsigned indexA(a->getRandomIndex());
   moleculeA = a->getMolecule(indexA);
   //This is needed when a is species B, used by interruptedPre:
@@ -540,7 +539,6 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
           return false;
         }
     }
-  std::cout << "out" << std::endl;
   interruptProcessesPre();
   Tag tagA(a->getTag(indexA));
   a->removeMolecule(indexA);
