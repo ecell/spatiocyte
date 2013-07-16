@@ -505,8 +505,7 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
   if(a->getVacantID() == c->getVacantID() || a->getID() == c->getVacantID())
     {
       moleculeC = moleculeA;
-      moleculeD = d->getMultiRandomAdjoiningVoxel(A, C, moleculeC,
-                                                  SearchVacant);
+      moleculeD = d->getRandomAdjoiningVoxel(A, C, moleculeA, SearchVacant);
       if(moleculeD == NULL)
         {
           return false;
@@ -516,8 +515,7 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
           a->getID() == d->getVacantID())
     {
       moleculeD = moleculeA;
-      moleculeC = c->getMultiRandomAdjoiningVoxel(A, D, moleculeD,
-                                                  SearchVacant);
+      moleculeC = c->getRandomAdjoiningVoxel(A, D, moleculeA, SearchVacant);
       if(moleculeC == NULL)
         {
           return false;
@@ -532,8 +530,7 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
           //of nonND which can be occupied by C:
           return false;
         }
-      moleculeD = d->getRandomAdjoiningVoxel(moleculeC, moleculeC,
-                                             SearchVacant);
+      moleculeD = d->getRandomAdjoiningVoxel(moleculeC, SearchVacant);
       if(moleculeD == NULL)
         {
           return false;

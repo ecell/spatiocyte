@@ -39,7 +39,7 @@ namespace libecs
 
 LIBECS_DM_CLASS(DiffusionInfluencedReactionProcess, ReactionProcess)
 { 
-  typedef void (DiffusionInfluencedReactionProcess::*Method)(Voxel*, Voxel*,
+  typedef bool (DiffusionInfluencedReactionProcess::*Method)(Voxel*, Voxel*,
                                        const unsigned, const unsigned);
 public:
   LIBECS_DM_OBJECT(DiffusionInfluencedReactionProcess, Process)
@@ -76,14 +76,17 @@ public:
   virtual void checkSubstrates();
   virtual void initializeSecond();
   virtual void initializeThird();
-  virtual void react(Voxel* molA, Voxel* molB, const unsigned indexA,
+  virtual bool react(Voxel* molA, Voxel* molB, const unsigned indexA,
                      const unsigned indexB)
     {
       moleculeA = molA;
       moleculeB = molB;
-      interruptProcessesPre();
-      (this->*reactM)(molA, molB, indexA, indexB);
-      interruptProcessesPost();
+      if((this->*reactM)(molA, molB, indexA, indexB))
+        {
+          interruptProcessesPost();
+          return true;
+        }
+      return false;
     }
   virtual void bind(Voxel*, const unsigned) {}
   virtual void unbind(Voxel*) {}
@@ -108,42 +111,42 @@ protected:
   void removeMolecule(Species*, Voxel*, const unsigned, Species*) const;
   Voxel* getPopulatableVoxel(Species*, Voxel*, Voxel*);
   Voxel* getPopulatableVoxel(Species*, Voxel*, Voxel*, Voxel*);
-  void reactNone(Voxel*, Voxel*, const unsigned, const unsigned) {}
-  void reactVarC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactVarC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactVarC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactVarC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactVarC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactVarD_AeqC(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactVarD_BeqC(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactVarD_AtoC(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactVarD_BtoC(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactVarD_NtoC(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactAeqC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactAeqC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactBeqC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactBeqC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactBtoC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactNtoC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactAtoC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactAtoC_BeqD_tagAtoC(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactNtoC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactAtoC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactAtoC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactBtoC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactBtoC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactNtoC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactNtoC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactVarC_VarD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactAtoC_compNtoE(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactVarC(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactAeqC(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactBeqC(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactAtoC(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactBtoC(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactNtoC(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactBtoC_tagBtoC(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactBtoC_tagAtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactNone(Voxel*, Voxel*, const unsigned, const unsigned) {}
+  bool reactVarC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactVarC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactVarC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactVarC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactVarC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactVarD_AeqC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactVarD_BeqC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactVarD_AtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactVarD_BtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactVarD_NtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactAeqC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactAeqC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactBeqC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactBeqC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactBtoC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactNtoC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactAtoC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactAtoC_BeqD_tagAtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactNtoC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactAtoC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactAtoC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactBtoC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactBtoC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactNtoC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactNtoC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactVarC_VarD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactAtoC_compNtoE(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactVarC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactAeqC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactBeqC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactAtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactBtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactNtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactBtoC_tagBtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactBtoC_tagAtoC(Voxel*, Voxel*, const unsigned, const unsigned);
 private:
   void setFreeSequenceReactMethod();
   void setForcedSequenceReactMethod();

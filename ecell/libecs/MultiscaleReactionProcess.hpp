@@ -41,7 +41,7 @@ namespace libecs
 
 LIBECS_DM_CLASS(MultiscaleReactionProcess, DiffusionInfluencedReactionProcess)
 { 
-  typedef void (MultiscaleReactionProcess::*Method)(Voxel*, Voxel*,
+  typedef bool (MultiscaleReactionProcess::*Method)(Voxel*, Voxel*,
                                               const unsigned, const unsigned);
 public:
   LIBECS_DM_OBJECT(MultiscaleReactionProcess, Process)
@@ -66,7 +66,7 @@ public:
       N->addMoleculeExMulti(aVoxel, M->getTag(index).boundCnt);
       M->removeMoleculeBoundDirect(index);
     }
-  virtual void react(Voxel* molA, Voxel* molB, const unsigned indexA,
+  virtual bool react(Voxel* molA, Voxel* molB, const unsigned indexA,
                      const unsigned indexB)
     {
       //We need an explicit declaration of the react method here
@@ -74,33 +74,36 @@ public:
       //this-> in DIRP would refer to its own method.
       moleculeA = molA;
       moleculeB = molB;
-      interruptProcessesPre();
-      (this->*reactM)(molA, molB, indexA, indexB);
-      interruptProcessesPost();
+      if((this->*reactM)(molA, molB, indexA, indexB))
+        {
+          interruptProcessesPost();
+          return true;
+        }
+      return false;
     }
 protected:
   unsigned getIdx(Species*, Voxel*, const unsigned);
-  void reactMuAtoMuC(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactAllMuAtoMuC(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactMuBtoMuC(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactAtoC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactMuAtoMuC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactBtoC_MuAtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactMuBtoMuC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactAeqC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactMuAeqMuC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactMuAeqMuC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactBeqC_MuAtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactMuBeqMuC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactMuBtoMuC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactBtoC_MuAeqMuD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactMuAtoMuC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactMuAtoMuC_MuBeqMuD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactAtoC_MuBeqMuD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactAtoC_Multi(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactBtoC_Multi(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactMuAtoMuC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
-  void reactMuBeqMuC_MuAtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactMuAtoMuC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactAllMuAtoMuC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactMuBtoMuC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactAtoC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactMuAtoMuC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactBtoC_MuAtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactMuBtoMuC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactAeqC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactMuAeqMuC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactMuAeqMuC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactBeqC_MuAtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactMuBeqMuC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactMuBtoMuC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactBtoC_MuAeqMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactMuAtoMuC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactMuAtoMuC_MuBeqMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactAtoC_MuBeqMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactAtoC_Multi(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactBtoC_Multi(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactMuAtoMuC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactMuBeqMuC_MuAtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
   void setReactVarC_D();
   void setReactVarD_C();
   void setReactD();

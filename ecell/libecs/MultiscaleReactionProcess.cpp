@@ -151,194 +151,233 @@ unsigned MultiscaleReactionProcess::getIdx(Species* aSpecies,
 }
 
 //MuA + MuB -> [MuC <- allMuA]
-void MultiscaleReactionProcess::reactAllMuAtoMuC(Voxel* molA,
+bool MultiscaleReactionProcess::reactAllMuAtoMuC(Voxel* molA,
                                                  Voxel* molB,
                                                  const unsigned indexA,
                                                  const unsigned indexB)
 {
-  Tag aTag(A->getTag(indexA));
-  A->softRemoveMolecule(indexA);
-  removeMolecule(B, molB, indexB);
-  C->addMolecule(molA, aTag); 
+  if(!C->isMultiIntersectCoord(molA->coord, molA->idx, molB->idx))
+    {
+      interruptProcessesPre();
+      Tag aTag(A->getTag(indexA));
+      A->softRemoveMolecule(indexA);
+      removeMolecule(B, molB, indexB);
+      C->addMolecule(molA, aTag);
+      return true;
+    }
+  return false;
 }
 
 //MuA + B -> [MuC <- MuA]
-void MultiscaleReactionProcess::reactMuAtoMuC(Voxel* molA,
+bool MultiscaleReactionProcess::reactMuAtoMuC(Voxel* molA,
                                                        Voxel* molB,
                                                        const unsigned indexA,
                                                        const unsigned indexB)
 {
+  interruptProcessesPre();
   C->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
   B->removeMolecule(indexB);
+  return true;
 }
   
 
 //A + MuB -> [MuC <- MuB]
-void MultiscaleReactionProcess::reactMuBtoMuC(Voxel* molA,
+bool MultiscaleReactionProcess::reactMuBtoMuC(Voxel* molA,
                                                        Voxel* molB,
                                                        const unsigned indexA,
                                                        const unsigned indexB)
 {
+  interruptProcessesPre();
   C->addMoleculeInMulti(molB, getIdx(B, molB, indexB));
   A->removeMolecule(indexA);
+  return true;
 }
 
 //A + MuB -> [C <- molA] + [MuD <- MuB]
-void MultiscaleReactionProcess::reactAtoC_MuBtoMuD(Voxel* molA,
+bool MultiscaleReactionProcess::reactAtoC_MuBtoMuD(Voxel* molA,
                                                         Voxel* molB,
                                                         const unsigned indexA,
                                                         const unsigned indexB)
 {
+  interruptProcessesPre();
   C->addMolecule(molA);
   A->softRemoveMolecule(indexA);
   //A != B, since only B is in multiscale comp:
   D->addMoleculeInMulti(molB, getIdx(B, molB, indexB));
   B->softRemoveMolecule(indexB);
+  return true;
 }
 
 //MuA + B -> [MuC <- MuA] + [D <- molB]
-void MultiscaleReactionProcess::reactMuAtoMuC_BtoD(Voxel* molA,
+bool MultiscaleReactionProcess::reactMuAtoMuC_BtoD(Voxel* molA,
                                                         Voxel* molB,
                                                         const unsigned indexA,
                                                         const unsigned indexB)
 {
+  interruptProcessesPre();
   C->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
   A->softRemoveMolecule(indexA);
   D->addMolecule(molB);
   B->softRemoveMolecule(indexB);
+  return true;
 }
 
 //MuA + B -> [C <- molB] + [MuD <- MuA]
-void MultiscaleReactionProcess::reactBtoC_MuAtoMuD(Voxel* molA,
+bool MultiscaleReactionProcess::reactBtoC_MuAtoMuD(Voxel* molA,
                                                         Voxel* molB,
                                                         const unsigned indexA,
                                                         const unsigned indexB)
 {
+  interruptProcessesPre();
   C->addMolecule(molB);
   B->softRemoveMolecule(indexB);
   D->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
   A->softRemoveMolecule(indexA);
+  return true;
 }
 
 //A + MuB -> [MuC <- MuB] + [D <- molA]
-void MultiscaleReactionProcess::reactMuBtoMuC_AtoD(Voxel* molA,
+bool MultiscaleReactionProcess::reactMuBtoMuC_AtoD(Voxel* molA,
                                                         Voxel* molB,
                                                         const unsigned indexA,
                                                         const unsigned indexB)
 {
+  interruptProcessesPre();
   C->addMoleculeInMulti(molB, getIdx(B, molB, indexB));
   B->softRemoveMolecule(indexB);
   D->addMolecule(molA);
   A->softRemoveMolecule(indexA);
+  return true;
 }
                   
 //A + MuB -> [A == C] + [MuD <- MuB]
-void MultiscaleReactionProcess::reactAeqC_MuBtoMuD(Voxel* molA,
+bool MultiscaleReactionProcess::reactAeqC_MuBtoMuD(Voxel* molA,
                                                         Voxel* molB,
                                                         const unsigned indexA,
                                                         const unsigned indexB)
 {
+  interruptProcessesPre();
   D->addMoleculeInMulti(molB, getIdx(B, molB, indexB));
   B->softRemoveMolecule(indexB);
+  return true;
 }
 
 //A + MuB -> [MuA == MuC] + [MuD <- MuB]
-void MultiscaleReactionProcess::reactMuAeqMuC_MuBtoMuD(Voxel* molA,
+bool MultiscaleReactionProcess::reactMuAeqMuC_MuBtoMuD(Voxel* molA,
                                                        Voxel* molB,
                                                        const unsigned indexA,
                                                        const unsigned indexB)
 {
+  interruptProcessesPre();
   D->addMoleculeInMulti(molB, getIdx(B, molB, indexB));
   B->softRemoveMolecule(indexB);
+  return true;
 }
 
 //MuA + B -> [MuA == MuC] + [D <- molB]
-void MultiscaleReactionProcess::reactMuAeqMuC_BtoD(Voxel* molA,
+bool MultiscaleReactionProcess::reactMuAeqMuC_BtoD(Voxel* molA,
                                                         Voxel* molB,
                                                         const unsigned indexA,
                                                         const unsigned indexB)
 {
+  interruptProcessesPre();
   D->addMolecule(molB);
   B->softRemoveMolecule(indexB);
+  return true;
 }
 
 //MuA + B -> [B == C] + [MuD <- MuA]
-void MultiscaleReactionProcess::reactBeqC_MuAtoMuD(Voxel* molA,
+bool MultiscaleReactionProcess::reactBeqC_MuAtoMuD(Voxel* molA,
                                                         Voxel* molB,
                                                         const unsigned indexA,
                                                         const unsigned indexB)
 {
+  interruptProcessesPre();
   D->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
   A->softRemoveMolecule(indexA);
+  return true;
 }
 
 //A + MuB -> [MuB == MuC] + [D <- molA]
-void MultiscaleReactionProcess::reactMuBeqMuC_AtoD(Voxel* molA,
+bool MultiscaleReactionProcess::reactMuBeqMuC_AtoD(Voxel* molA,
                                                         Voxel* molB,
                                                         const unsigned indexA,
                                                         const unsigned indexB)
 {
+  interruptProcessesPre();
   D->addMolecule(molA);
   A->softRemoveMolecule(indexA);
+  return true;
 }
 
 //A + MuB -> [MuC <- MuB] + [A == D]
-void MultiscaleReactionProcess::reactMuBtoMuC_AeqD(Voxel* molA,
+bool MultiscaleReactionProcess::reactMuBtoMuC_AeqD(Voxel* molA,
                                                         Voxel* molB,
                                                         const unsigned indexA,
                                                         const unsigned indexB)
 {
+  interruptProcessesPre();
   C->addMoleculeInMulti(molB, getIdx(B, molB, indexB));
   B->softRemoveMolecule(indexB);
+  return true;
 }
 
 //MuA + B -> [C <- molB] + [MuA == MuD]
-void MultiscaleReactionProcess::reactBtoC_MuAeqMuD(Voxel* molA,
+bool MultiscaleReactionProcess::reactBtoC_MuAeqMuD(Voxel* molA,
                                                         Voxel* molB,
                                                         const unsigned indexA,
                                                         const unsigned indexB)
 {
+  interruptProcessesPre();
   C->addMolecule(molB);
   B->softRemoveMolecule(indexB);
+  return true;
 }
 
 //MuA + B -> [MuC <- MuA] + [B == D]
-void MultiscaleReactionProcess::reactMuAtoMuC_BeqD(Voxel* molA,
+bool MultiscaleReactionProcess::reactMuAtoMuC_BeqD(Voxel* molA,
                                                         Voxel* molB,
                                                         const unsigned indexA,
                                                         const unsigned indexB)
 {
+  interruptProcessesPre();
   C->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
   A->softRemoveMolecule(indexA);
+  return true;
 }
 
 //MuA + B -> [MuC <- MuA] + [MuB == MuD]
-void MultiscaleReactionProcess::reactMuAtoMuC_MuBeqMuD(Voxel* molA,
+bool MultiscaleReactionProcess::reactMuAtoMuC_MuBeqMuD(Voxel* molA,
                                                        Voxel* molB,
                                                        const unsigned indexA,
                                                        const unsigned indexB)
 {
+  interruptProcessesPre();
   C->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
   A->softRemoveMolecule(indexA);
+  return true;
 }
 
 
 //A + MuB -> [C <- molA] + [MuB == MuD]
-void MultiscaleReactionProcess::reactAtoC_MuBeqMuD(Voxel* molA,
+bool MultiscaleReactionProcess::reactAtoC_MuBeqMuD(Voxel* molA,
                                                         Voxel* molB,
                                                         const unsigned indexA,
                                                         const unsigned indexB)
 {
+  interruptProcessesPre();
   C->addMolecule(molA);
   A->softRemoveMolecule(indexA);
+  return true;
 }
 
 //MuA + B -> [C <- molB]
-void MultiscaleReactionProcess::reactBtoC_Multi(Voxel* molA,
+bool MultiscaleReactionProcess::reactBtoC_Multi(Voxel* molA,
                                                          Voxel* molB,
                                                          const unsigned indexA,
                                                          const unsigned indexB)
 {
+  interruptProcessesPre();
   C->addMolecule(molB);
   B->softRemoveMolecule(indexB);
   if(A->getIsOnMultiscale())
@@ -346,14 +385,16 @@ void MultiscaleReactionProcess::reactBtoC_Multi(Voxel* molA,
       molA->idx = A->getTag(indexA).multiIdx;
     }
   A->softRemoveMolecule(indexA);
+  return true;
 }
 
 //A + MuB -> [C <- molA]
-void MultiscaleReactionProcess::reactAtoC_Multi(Voxel* molA,
+bool MultiscaleReactionProcess::reactAtoC_Multi(Voxel* molA,
                                                          Voxel* molB,
                                                          const unsigned indexA,
                                                          const unsigned indexB)
 {
+  interruptProcessesPre();
   C->addMolecule(molA);
   A->softRemoveMolecule(indexA);
   if(B->getIsOnMultiscale())
@@ -361,30 +402,35 @@ void MultiscaleReactionProcess::reactAtoC_Multi(Voxel* molA,
       molB->idx = B->getTag(indexB).multiIdx;
     }
   B->softRemoveMolecule(indexB);
+  return true;
 }
 
 //A + B -> [MuC <- MuA] + [MuD <- MuB]
-void MultiscaleReactionProcess:: reactMuAtoMuC_MuBtoMuD(Voxel* molA,
+bool MultiscaleReactionProcess::reactMuAtoMuC_MuBtoMuD(Voxel* molA,
                                                          Voxel* molB,
                                                          const unsigned indexA,
                                                          const unsigned indexB)
 {
+  interruptProcessesPre();
   const unsigned idxA(getIdx(A, molA, indexA));
   const unsigned idxB(getIdx(B, molB, indexB));
   A->softRemoveMolecule(indexA);
   removeMolecule(B, molB, indexB);
   C->addMoleculeInMulti(molA, idxA);
   D->addMoleculeInMulti(molB, idxB);
+  return true;
 }
 
 //A + B -> [MuB == MuC] + [MuD <- MuA]
-void MultiscaleReactionProcess::reactMuBeqMuC_MuAtoMuD(Voxel* molA,
-                                                         Voxel* molB,
-                                                         const unsigned indexA,
-                                                         const unsigned indexB)
+bool MultiscaleReactionProcess::reactMuBeqMuC_MuAtoMuD(Voxel* molA,
+                                                       Voxel* molB,
+                                                       const unsigned indexA,
+                                                       const unsigned indexB)
 {
+  interruptProcessesPre();
   D->addMoleculeInMulti(molA, getIdx(A, molA, indexA));
   A->softRemoveMolecule(indexA);
+  return true;
 }
 
 void MultiscaleReactionProcess::setReactVarC_D()

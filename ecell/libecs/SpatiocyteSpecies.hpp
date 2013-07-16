@@ -2065,6 +2065,40 @@ public:
         }
       return false;
     }
+  bool isMultiIntersectCoord(const unsigned srcCoord, const unsigned ignoreIdx,
+                             const unsigned ignoreIdx2)
+    {
+      const unsigned coordA(srcCoord-vacStartCoord);
+      if(isRegularLattice)
+        {
+          const int rowA(coordA/lipCols);
+          const std::vector<int>& anOffsets(theOffsets[rowA%2][0]);
+          for(unsigned i(0); i != anOffsets.size(); ++i)
+            {
+              const int offsetRow((anOffsets[i]+theRegLatticeCoord)/lipCols-
+                                  theRegLatticeCoord/lipCols);
+              int coordB(coordA+anOffsets[i]);
+              if(isInLattice(coordB, offsetRow+rowA))
+                {
+                  const unsigned idx(theLattice[coordB+lipStartCoord].idx);
+                  Species* aSpecies(theSpecies[idx/theStride]);
+                  if((aSpecies->getIsMultiscale() && idx != ignoreIdx &&
+                      idx != ignoreIdx2) ||
+                     (aSpecies->getIsOnMultiscale() && 
+                      aSpecies->getTag(idx%theStride).multiIdx != ignoreIdx &&
+                      aSpecies->getTag(idx%theStride).multiIdx != ignoreIdx2))
+                    {
+                      return true;
+                    }
+                }
+            }
+        }
+      else
+        {
+          //do for non regular lattice
+        }
+      return false;
+    }
   bool isInLatticeOrigins(int& coord, const int tarRow, Origin& anOrigin)
     {
       if(isPeriodic)
@@ -2810,7 +2844,7 @@ public:
     {
       std::vector<unsigned> compCoords;
       if(searchVacant)
-        { 
+        {
           for(unsigned i(0); i != source->adjoiningSize; ++i)
             {
               unsigned aCoord(source->adjoiningCoords[i]);
@@ -2833,46 +2867,53 @@ public:
         }
       return getRandomVacantVoxel(compCoords, aTargetSpecies);
     } 
-  Voxel* getMultiRandomAdjoiningVoxel(Species* A, Species* C, Voxel* molA,
+  Voxel* getMultiRandomAdjoiningVoxel(Species* A, Species* D, Voxel* molA,
                                       const unsigned searchVacant)
     {
-      //molA will be replaced with molecule from this species after the
+      //molA will be replaced with molecule from this species (C) after the
       //reaction:
       const unsigned coordA(molA->coord-vacStartCoord);
       const unsigned idxA(molA->idx);
       const unsigned row(coordA/lipCols);
-      if(!C->isMultiIntersectCoord(coordA, idxA))
+      if(!isMultiIntersectCoord(coordA, idxA))
         {
-          std::vector<int>& anOffsets(C->getProductPairOffsets(row, getID()));
-          for(unsigned i(0); i != anOffsets.size(); ++i)
+          std::vector<int>& anOffsets(theProductPairOffsets[D->getID()][row%2]);
+          std::vector<unsigned> doneAdjs;
+          unsigned i;
+          do
             {
+              do
+                {
+                  i = theRng.Integer(anOffsets.size()); 
+                }
+              while(searchVacant && std::find(doneAdjs.begin(), doneAdjs.end(),
+                                              i) != doneAdjs.end());
+              doneAdjs.push_back(i);
               const int offsetRow((anOffsets[i]+theRegLatticeCoord)/lipCols-
                                   theRegLatticeCoord/lipCols+row);
-              int coordC(coordA+anOffsets[i]);
-              if(isInLattice(coordC, offsetRow) &&
-                 !isMultiIntersectCoord(coordC, idxA))
+              int coordD(coordA+anOffsets[i]);
+              if(isInLattice(coordD, offsetRow) &&
+                 !D->isMultiIntersectCoord(coordD, idxA))
                 {
-                  return &theLattice[coordC+vacStartCoord];
+                  return &theLattice[coordD+vacStartCoord];
                 }
             }
+          while(searchVacant && doneAdjs.size() < anOffsets.size());
         }
       return NULL;
     }
-  std::vector<int>& getProductPairOffsets(const unsigned row,
-                                          const unsigned pairID)
+  Voxel* getRandomAdjoiningVoxel(Species* A, Species* C, Voxel* molA,
+                                 const unsigned searchVacant)
     {
-      return theProductPairOffsets[pairID][row%2];
+      if(getIsMultiscale())
+        {
+          return C->getMultiRandomAdjoiningVoxel(A, this, molA, searchVacant);
+        }
+      return getRandomAdjoiningVoxel(molA, searchVacant);
     }
   Voxel* getRandomAdjoiningVoxel(Voxel* source, Voxel* target,
                                  int searchVacant)
     {
-      /*
-      if(getIsMultiscale())
-        {
-          return getMultiscaleRandomAdjoiningVoxel(aSpecies, source, target,
-                                                   searchVacant);
-        }
-        */
       std::vector<unsigned> compCoords;
       if(searchVacant)
         { 
