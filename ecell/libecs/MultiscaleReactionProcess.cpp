@@ -156,13 +156,16 @@ bool MultiscaleReactionProcess::reactAllMuAtoMuC(Voxel* molA,
                                                  const unsigned indexA,
                                                  const unsigned indexB)
 {
-  if(!C->isMultiIntersectCoord(molA->coord, molA->idx, molB->idx))
+  const unsigned idxA(A->getMolecule(indexA)->idx);
+  const unsigned idxB(B->getMolecule(indexB)->idx);
+  const unsigned coordA(molA->coord-A->getLipStartCoord());
+  if(!C->isMultiIntersectCoord(coordA, idxA, idxB))
     {
       interruptProcessesPre();
       Tag aTag(A->getTag(indexA));
       A->softRemoveMolecule(indexA);
-      removeMolecule(B, molB, indexB);
-      C->addMolecule(molA, aTag);
+      removeMolecule(B, B->getMolecule(indexB), indexB);
+      C->addMolecule(&(*theLattice)[coordA+A->getVacStartCoord()], aTag);
       return true;
     }
   return false;

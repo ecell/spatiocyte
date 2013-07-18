@@ -790,7 +790,7 @@ public:
                             }
                         }
                       unsigned aMoleculeSize(theMoleculeSize);
-                      react(source, target, i);
+                      react(source, target, i, target->idx%theStride, tarID);
                       //If the reaction is successful, the last molecule of this
                       //species will replace the pointer of i, so we need to 
                       //decrement i to perform the diffusion on it. However, if
@@ -874,7 +874,7 @@ public:
                             }
                         }
                       unsigned aMoleculeSize(theMoleculeSize);
-                      react(source, target, i);
+                      react(source, target, i, target->idx%theStride, tarID);
                       //If the reaction is successful, the last molecule of this
                       //species will replace the pointer of i, so we need to 
                       //decrement i to perform the diffusion on it. However, if
@@ -985,7 +985,7 @@ public:
                             }
                         }
                       unsigned aMoleculeSize(theMoleculeSize);
-                      react(source, target, i);
+                      react(source, target, i, target->idx%theStride, tarID);
                       //If the reaction is successful, the last molecule of this
                       //species will replace the pointer of i, so we need to 
                       //decrement i to perform the diffusion on it. However, if
@@ -1040,7 +1040,7 @@ public:
                      theRng.Fixed() < theReactionProbabilities[tarID])
                     {
                       unsigned aMoleculeSize(theMoleculeSize);
-                      react(source, target, i);
+                      react(source, target, i, target->idx%theStride, tarID);
                       //If the reaction is successful, the last molecule of this
                       //species will replace the pointer of i, so we need to 
                       //decrement i to perform the diffusion on it. However, if
@@ -1283,10 +1283,9 @@ public:
             }
         }
     }
-  void react(Voxel* src, Voxel* tar, unsigned srcIndex)
+  void react(Voxel* src, Voxel* tar, const unsigned srcIndex,
+             const unsigned tarIndex, const unsigned tarID)
     {
-      const unsigned tarID(tar->idx/theStride);
-      const unsigned tarIndex(tar->idx%theStride);
       DiffusionInfluencedReactionProcess* aReaction(
                       theDiffusionInfluencedReactions[tarID]);
       if(aReaction->getA() == this)
@@ -2065,10 +2064,9 @@ public:
         }
       return false;
     }
-  bool isMultiIntersectCoord(const unsigned srcCoord, const unsigned ignoreIdx,
+  bool isMultiIntersectCoord(const unsigned coordA, const unsigned ignoreIdx,
                              const unsigned ignoreIdx2)
     {
-      const unsigned coordA(srcCoord-vacStartCoord);
       if(isRegularLattice)
         {
           const int rowA(coordA/lipCols);
@@ -2098,6 +2096,14 @@ public:
           //do for non regular lattice
         }
       return false;
+    }
+  unsigned getLipStartCoord() const
+    {
+      return lipStartCoord;
+    }
+  unsigned getVacStartCoord() const
+    {
+      return vacStartCoord;
     }
   bool isInLatticeOrigins(int& coord, const int tarRow, Origin& anOrigin)
     {
@@ -2186,7 +2192,7 @@ public:
           int coordB(coordA+anOffsets[i]);
           if(isInLattice(coordB, offsetRow))
             {
-              const unsigned idx(theLattice[coordB+lipStartCoord].idx);
+              unsigned idx(theLattice[coordB+lipStartCoord].idx);
               const unsigned tarID(idx/theStride);
               if(!isMultiMultiReactive &&
                  (theSpecies[tarID]->getIsMultiscale() ||
@@ -2200,7 +2206,13 @@ public:
                   if(theReactionProbabilities[tarID] == 1 ||
                      theRng.Fixed() < theReactionProbabilities[tarID])
                     { 
-                      Voxel* target;
+                      Voxel* target(&theLattice[coordB+lipStartCoord]);
+                      if(!theSpecies[tarID]->getIsMultiscale())
+                        {
+                          idx = theSpecies[tarID
+                            ]->getTag(idx%theStride).multiIdx;
+                        }
+                      /*
                       if(theSpecies[tarID]->getIsMultiscale())
                         {
                           target = theSpecies[tarID
@@ -2213,8 +2225,10 @@ public:
                           target = theSpecies[multiIdx/theStride
                             ]->getMolecule(multiIdx%theStride);
                         }
+                        */
                       unsigned aMoleculeSize(theMoleculeSize);
-                      react(source, target, srcIndex);
+                      react(target, target, srcIndex, idx%theStride,
+                            idx/theStride);
                       //If the reaction is successful, the last molecule of this
                       //species will replace the pointer of i, so we need to 
                       //decrement i to perform the diffusion on it. However, if
