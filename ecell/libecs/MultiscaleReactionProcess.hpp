@@ -104,6 +104,7 @@ protected:
   bool reactBtoC_Multi(Voxel*, Voxel*, const unsigned, const unsigned);
   bool reactMuAtoMuC_MuBtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
   bool reactMuBeqMuC_MuAtoMuD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool searchMultiPopulateCoord(unsigned&, const unsigned, const unsigned);
   void setReactVarC_D();
   void setReactVarD_C();
   void setReactD();

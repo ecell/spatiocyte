@@ -2212,20 +2212,6 @@ public:
                           idx = theSpecies[tarID
                             ]->getTag(idx%theStride).multiIdx;
                         }
-                      /*
-                      if(theSpecies[tarID]->getIsMultiscale())
-                        {
-                          target = theSpecies[tarID
-                            ]->getMolecule(idx%theStride);
-                        }
-                      else
-                        {
-                          const unsigned multiIdx(theSpecies[tarID
-                                          ]->getTag(idx%theStride).multiIdx);
-                          target = theSpecies[multiIdx/theStride
-                            ]->getMolecule(multiIdx%theStride);
-                        }
-                        */
                       unsigned aMoleculeSize(theMoleculeSize);
                       react(target, target, srcIndex, idx%theStride,
                             idx/theStride);
