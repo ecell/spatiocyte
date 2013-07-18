@@ -2105,7 +2105,7 @@ public:
     {
       return vacStartCoord;
     }
-  bool isInLatticeOrigins(int& coord, const int tarRow, Origin& anOrigin)
+  bool isInLatticeOrigins(int& coord, const int tarRow, Origin& anOrigin) const
     {
       if(isPeriodic)
         {
@@ -2151,7 +2151,7 @@ public:
         }
       return true;
     }
-  bool isInLattice(int& coord, const int rowOffset)
+  bool isInLattice(int& coord, const int rowOffset) const
     {
       if(isPeriodic)
         {
@@ -2915,6 +2915,28 @@ public:
           while(searchVacant && doneAdjs.size() < anOffsets.size());
         }
       return NULL;
+    }
+  unsigned getMultiCoord(const unsigned molIndex,
+                         const unsigned offsetIndex) const
+    { 
+      const unsigned coordA(getCoord(molIndex)-vacStartCoord);
+      if(isRegularLattice)
+        {
+          const int rowA(coordA/lipCols);
+          const int anOffset(theOffsets[rowA%2][0][offsetIndex]);
+          const int offsetRow((anOffset+theRegLatticeCoord)/lipCols-
+                              theRegLatticeCoord/lipCols+rowA);
+          int coord(coordA+anOffset);
+          if(isInLattice(coord, offsetRow))
+            {
+              return coord;
+            }
+        }
+      return theNullCoord;
+    }
+  unsigned getOffsetSize() const 
+    {
+      return theOffsets[0][0].size();
     }
   Voxel* getRandomAdjoiningVoxel(Species* A, Species* C, Voxel* molA,
                                  const unsigned searchVacant)

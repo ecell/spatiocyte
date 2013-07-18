@@ -156,17 +156,58 @@ bool MultiscaleReactionProcess::reactAllMuAtoMuC(Voxel* molA,
                                                  const unsigned indexA,
                                                  const unsigned indexB)
 {
-  const unsigned idxA(A->getMolecule(indexA)->idx);
-  const unsigned idxB(B->getMolecule(indexB)->idx);
-  const unsigned coordA(molA->coord-A->getLipStartCoord());
-  if(!C->isMultiIntersectCoord(coordA, idxA, idxB))
+  moleculeA = A->getMolecule(indexA);
+  moleculeB = B->getMolecule(indexB);
+  const unsigned idxA(moleculeA->idx);
+  const unsigned idxB(moleculeB->idx);
+  if(SearchVacant)
     {
-      interruptProcessesPre();
-      Tag aTag(A->getTag(indexA));
-      A->softRemoveMolecule(indexA);
-      removeMolecule(B, B->getMolecule(indexB), indexB);
-      C->addMolecule(&(*theLattice)[coordA+A->getVacStartCoord()], aTag);
-      return true;
+      unsigned sizeA(A->getOffsetSize());
+      unsigned size(sizeA+B->getOffsetSize());
+      std::vector<unsigned> done;
+      unsigned i;
+      do
+        {
+          do
+            {
+              i = theRng->Integer(size); 
+            }
+          while(std::find(done.begin(), done.end(), i) != done.end());
+          done.push_back(i);
+          unsigned coord;
+          if(i < sizeA)
+            {
+              coord = A->getMultiCoord(indexA, i);
+            }
+          else
+            {
+              coord = B->getMultiCoord(indexB, i-sizeA);
+            }
+          if(coord != theNullCoord && 
+             !C->isMultiIntersectCoord(coord, idxA, idxB))
+            {
+              interruptProcessesPre();
+              Tag aTag(A->getTag(indexA));
+              A->softRemoveMolecule(indexA);
+              removeMolecule(B, moleculeB, indexB);
+              C->addMolecule(&(*theLattice)[coord+A->getVacStartCoord()], aTag);
+              return true;
+            }
+        }
+      while(done.size() < size);
+    }
+  else
+    {
+      const unsigned coordA(molA->coord-A->getLipStartCoord());
+      if(!C->isMultiIntersectCoord(coordA, idxA, idxB))
+        {
+          interruptProcessesPre();
+          Tag aTag(A->getTag(indexA));
+          A->softRemoveMolecule(indexA);
+          removeMolecule(B, moleculeB, indexB);
+          C->addMolecule(&(*theLattice)[coordA+A->getVacStartCoord()], aTag);
+          return true;
+        }
     }
   return false;
 }
