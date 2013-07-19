@@ -186,6 +186,7 @@ protected:
   void removeSingleCoordsA(const unsigned);
   void removeAdjCoordsA(Voxel*);
   void addCoordsA(Species*, Species*, const unsigned, unsigned&);
+  Voxel* newMultiC();
 protected:
   bool isReactAB;
   unsigned Deoligomerize;

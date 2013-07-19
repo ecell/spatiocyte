@@ -437,7 +437,7 @@ bool DiffusionInfluencedReactionProcess::reactAtoC_compNtoE(Voxel* molA,
                                                         const unsigned indexA,
                                                         const unsigned indexB)
 {
-  Voxel* mol(E->getRandomCompVoxel(1));
+  Voxel* mol(E->getRandomPopulatableVoxel(1));
   if(mol)
     { 
       interruptProcessesPre();

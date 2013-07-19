@@ -68,7 +68,14 @@ bool SpatiocyteNextReactionProcess::react()
     {
       if(C)
         { 
-          moleculeC = C->getRandomCompVoxel(SearchVacant);
+          if(C->getIsMultiscale())
+            {
+              moleculeC = newMultiC();
+            }
+          else
+            {
+              moleculeC = C->getRandomPopulatableVoxel(SearchVacant);
+            }
           if(moleculeC == NULL)
             {
               return false;
@@ -195,7 +202,7 @@ bool SpatiocyteNextReactionProcess::react()
             }
           else
             {
-              moleculeC = C->getRandomCompVoxel(SearchVacant);
+              moleculeC = C->getRandomPopulatableVoxel(SearchVacant);
               if(moleculeC)
                 {
                   moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
@@ -432,6 +439,18 @@ bool SpatiocyteNextReactionProcess::react()
         }
     }
   return true;
+}
+
+
+Voxel* SpatiocyteNextReactionProcess::newMultiC()
+{
+  std::vector<unsigned> multiCnts;
+  moleculeC = C->getRandomPopulatableMulti(SearchVacant, multiCnts);
+  if(moleculeC == NULL)
+    {
+      return NULL;
+    }
+  return moleculeC;
 }
 
 //MultiNonHD.nonHD -> nonHD
@@ -724,7 +743,7 @@ Voxel* SpatiocyteNextReactionProcess::reactvAC(Variable* vA, Species* c)
     }
   else
     {
-      moleculeC = c->getRandomCompVoxel(SearchVacant);
+      moleculeC = c->getRandomPopulatableVoxel(SearchVacant);
     }
   return moleculeC;
 }
@@ -761,7 +780,7 @@ Voxel* SpatiocyteNextReactionProcess::reactvAvBC(Species* c)
     }
   else
     {
-      moleculeC = C->getRandomCompVoxel(SearchVacant);
+      moleculeC = C->getRandomPopulatableVoxel(SearchVacant);
     }
   return moleculeC;
 }

@@ -1639,7 +1639,7 @@ public:
               const unsigned coord(coordB+lipStartCoord);
               const unsigned anID(getID(theLattice[coord]));
               if(theSpecies[anID]->getIsMultiscale() ||
-                 isMultiscaleBoundID[anID])
+                 theSpecies[anID]->getIsOnMultiscale())
                 {
                   return false;
                 }
@@ -1729,8 +1729,8 @@ public:
                 {
                   ++tarCnt;
                 }
-              else if(theSpecies[anID]->getIsMultiscale() ||
-                      isMultiscaleBoundID[anID])
+              else if(theSpecies[anID]->getIsMultiscale() || 
+                      theSpecies[anID]->getIsOnMultiscale())
                 {
                   return false;
                 }
@@ -2026,12 +2026,50 @@ public:
               unsigned coordB(theIntersectLipids[coordA][i]+lipStartCoord);
               unsigned anID(getID(theLattice[coordB]));
               if(theSpecies[anID]->getIsMultiscale() ||
-                 isMultiscaleBoundID[anID])
+                 theSpecies[anID]->getIsOnMultiscale())
                 {
                   return true;
                 }
             }
         }
+      return false;
+    }
+  bool isMultiIntersectCoord(const unsigned srcCoord,
+                             std::vector<unsigned>& multiCompCnts)
+    {
+      std::vector<unsigned> cnts;
+      cnts.resize(theSpecies.size(), 0);
+      const unsigned coordA(srcCoord-vacStartCoord);
+      if(isRegularLattice)
+        {
+          const int rowA(coordA/lipCols);
+          const std::vector<int>& anOffsets(theOffsets[rowA%2][0]);
+          for(unsigned i(0); i != anOffsets.size(); ++i)
+            {
+              const int offsetRow((anOffsets[i]+theRegLatticeCoord)/lipCols-
+                                  theRegLatticeCoord/lipCols);
+              int coordB(coordA+anOffsets[i]);
+              if(isInLattice(coordB, offsetRow+rowA))
+                {
+                  Species* aSpecies(theSpecies[
+                                    getID(theLattice[coordB+lipStartCoord])]);
+                  if(aSpecies->getIsMultiscale() ||
+                     aSpecies->getIsOnMultiscale())
+                    {
+                      return true;
+                    }
+                  else
+                    {
+                      ++cnts[aSpecies->getID()];
+                    }
+                }
+            }
+        }
+      else
+        {
+          //do for non regular lattice
+        }
+      multiCompCnts = cnts;
       return false;
     }
   bool isMultiIntersectCoord(const unsigned coordA, const unsigned ignoreIdx)
@@ -2195,8 +2233,8 @@ public:
               unsigned idx(theLattice[coordB+lipStartCoord].idx);
               const unsigned tarID(idx/theStride);
               if(!isMultiMultiReactive &&
-                 (theSpecies[tarID]->getIsMultiscale() ||
-                  isMultiscaleBoundID[tarID]))
+                 (theSpecies[tarID]->getIsMultiscale() || 
+                  theSpecies[tarID]->getIsOnMultiscale()))
                 {
                   return true;
                 }
@@ -2231,7 +2269,7 @@ public:
                   isIntersect = true;
                 }
               else if(theSpecies[tarID]->getIsMultiscale() ||
-                      isMultiscaleBoundID[tarID])
+                      theSpecies[tarID]->getIsOnMultiscale())
                 {
                   isIntersect = true;
                 }
@@ -2902,6 +2940,26 @@ public:
         }
       return NULL;
     }
+  void getMultiCoords(const unsigned molIndex,
+                      std::vector<unsigned>& coords) const
+    {
+      const unsigned coordA(getCoord(molIndex)-vacStartCoord);
+      if(isRegularLattice)
+        {
+          const int rowA(coordA/lipCols);
+          const std::vector<int>& anOffsets(theOffsets[rowA%2][0]);
+          for(unsigned i(0); i != anOffsets.size(); ++i)
+            {
+              const int offsetRow((anOffsets[i]+theRegLatticeCoord)/lipCols-
+                                  theRegLatticeCoord/lipCols);
+              int coord(coordA+anOffsets[i]);
+              if(isInLattice(coord, offsetRow+rowA))
+                {
+                  coords.push_back(coord+lipStartCoord);
+                }
+            }
+        }
+    }
   unsigned getMultiCoord(const unsigned molIndex,
                          const unsigned offsetIndex) const
     { 
@@ -3045,7 +3103,41 @@ public:
         }
       return NULL;
     }
-  Voxel* getRandomCompVoxel(int searchVacant)
+  Voxel* getRandomPopulatableMulti(int searchVacant,
+                                   std::vector<unsigned>& multiCompCnts)
+    {
+      const unsigned aSize(theVacantSpecies->compVoxelSize());
+      const unsigned r(theRng.Integer(aSize)); 
+      if(searchVacant)
+        {
+          for(unsigned i(r); i != aSize; ++i)
+            {
+              Voxel* aVoxel(theVacantSpecies->getCompVoxel(i));
+              if(!isMultiIntersectCoord(aVoxel->coord, multiCompCnts))
+                {
+                  return aVoxel;
+                }
+            }
+          for(unsigned i(0); i != r; ++i)
+            {
+              Voxel* aVoxel(theVacantSpecies->getCompVoxel(i));
+              if(!isMultiIntersectCoord(aVoxel->coord, multiCompCnts))
+                {
+                  return aVoxel;
+                }
+            }
+        }
+      else
+        {
+          Voxel* aVoxel(theVacantSpecies->getCompVoxel(r));
+          if(!isMultiIntersectCoord(aVoxel->coord, multiCompCnts))
+            {
+              return aVoxel;
+            }
+        }
+      return NULL;
+    }
+  Voxel* getRandomPopulatableVoxel(int searchVacant)
     {
       const unsigned aSize(theVacantSpecies->compVoxelSize());
       const unsigned r(theRng.Integer(aSize)); 
