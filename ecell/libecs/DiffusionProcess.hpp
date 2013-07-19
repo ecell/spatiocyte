@@ -108,6 +108,7 @@ public:
                 }
               theDiffusionSpecies = aSpecies;
               theDiffusionSpecies->setDiffusionCoefficient(D);
+              theDiffusionSpecies->setWalkPropensity(Propensity);
             }
           else if((*i).getCoefficient() < 0)
             {
@@ -220,7 +221,6 @@ public:
         {
           if(Propensity)
             {
-              theDiffusionSpecies->setWalkPropensity(Propensity);
               if(theDiffusionSpecies->getIsRegularLattice())
                 {
                   if(Origins)

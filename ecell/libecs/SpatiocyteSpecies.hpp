@@ -258,6 +258,10 @@ public:
   void setWalkPropensity(const double aPropensity)
     {
       theWalkPropensity = aPropensity;
+      if(aPropensity > 0)
+        {
+          isDiffusing = true;
+        }
     }
   bool getIsRegularLattice()
     {
@@ -1066,8 +1070,8 @@ public:
           const int tarIndex(theRng.Integer(2)); 
           const unsigned coordA(source->coord-vacStartCoord);
           const int rowA(coordA/lipCols);
-          if(!isIntersectMultiscaleRegular(source, i, coordA, rowA,
-                       theRotOffsets[rowA%2][theTags[i].rotIndex][tarIndex]))
+          if(!isIntersectMultiscaleRegular(i, coordA, rowA,
+                         theRotOffsets[rowA%2][theTags[i].rotIndex][tarIndex]))
             { 
               unsigned srcIndex(0);
               unsigned srcRotIndex(theTags[i].rotIndex+1);
@@ -1103,7 +1107,7 @@ public:
           const int tarIndex(theRng.Integer(2)); 
           const unsigned coordA(source->coord-vacStartCoord);
           const int rowA(coordA/lipCols); 
-          if(!isIntersectMultiscaleRegular(source, i, coordA, rowA,
+          if(!isIntersectMultiscaleRegular(i, coordA, rowA,
                  theRotOffsets[rowA%2][theTags[i].rotIndex][tarIndex]))
             {
               unsigned srcIndex(0);
@@ -1153,7 +1157,7 @@ public:
           Voxel* target(&theLattice[tarCoord+vacStartCoord]);
           if(getID(target) == theVacantID)
             {
-              if(isMoveMultiscaleWalkPropensityRegular(srcCoord, row,
+              if(isMoveMultiscaleWalkPropensityRegular(i, srcCoord, row,
                      theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
                      theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex], i))
                 {
@@ -1183,7 +1187,7 @@ public:
           Voxel* target(&theLattice[tarCoord+vacStartCoord]);
           if(getID(target) == theVacantID)
             {
-              if(isMoveMultiscaleWalkPropensityRegular(srcCoord, row,
+              if(isMoveMultiscaleWalkPropensityRegular(i, srcCoord, row,
                      theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
                      theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex], i))
                 {
@@ -1210,7 +1214,7 @@ public:
               continue;
             }
           Voxel* target(&theLattice[tarCoord+vacStartCoord]);
-          if(!isIntersectMultiscaleRegular(source, i, srcCoord, row,
+          if(!isIntersectMultiscaleRegular(i, srcCoord, row,
                    theTarOffsets[row%2][theTags[i].rotIndex][tarIndex]))
             {
               moveMultiscaleMoleculeRegular(srcCoord, row, 
@@ -1241,7 +1245,7 @@ public:
           Voxel* target(&theLattice[tarCoord+vacStartCoord]);
           if(getID(target) == theVacantID)
             {
-              if(!isIntersectMultiscaleRegular(source, i, srcCoord, row,
+              if(!isIntersectMultiscaleRegular(i, srcCoord, row,
                    theTarOffsets[row%2][theTags[i].rotIndex][tarIndex]))
                 {
                   moveMultiscaleMoleculeRegular(srcCoord, row, 
@@ -1616,12 +1620,67 @@ public:
             }
         }
     }
-  bool isMoveMultiscaleWalkPropensityRegular(const unsigned coordA, 
-                                             const unsigned rowA,
-                                           const std::vector<int>& tarOffsets,
-                                           const std::vector<int>& srcOffsets,
-                                           const unsigned index)
+  bool isIntersectMultiscaleRegular(unsigned& srcIndex,
+                                    const unsigned coordA, 
+                                    const unsigned rowA,
+                                    const std::vector<int>& anOffsets)
     {
+      bool isIntersect(false);
+      for(unsigned i(0); i != anOffsets.size(); ++i)
+        {
+          const int offsetRow((anOffsets[i]+theRegLatticeCoord)/lipCols-
+                              theRegLatticeCoord/lipCols+rowA);
+          int coordB(coordA+anOffsets[i]);
+          if(isInLattice(coordB, offsetRow))
+            {
+              unsigned idx(theLattice[coordB+lipStartCoord].idx);
+              const unsigned tarID(idx/theStride);
+              if(!isMultiMultiReactive &&
+                 (theSpecies[tarID]->getIsMultiscale() || 
+                  theSpecies[tarID]->getIsOnMultiscale()))
+                {
+                  return true;
+                }
+              else if(isMultiMultiReactantID[tarID])
+                {
+                  //If it meets the reaction probability:
+                  if(theReactionProbabilities[tarID] == 1 ||
+                     theRng.Fixed() < theReactionProbabilities[tarID])
+                    { 
+                      Voxel* target(&theLattice[coordB+lipStartCoord]);
+                      if(!theSpecies[tarID]->getIsMultiscale())
+                        {
+                          idx = theSpecies[tarID
+                            ]->getTag(idx%theStride).multiIdx;
+                        }
+                      unsigned aMoleculeSize(theMoleculeSize);
+                      react(target, target, srcIndex, idx%theStride,
+                            idx/theStride);
+                      if(theMoleculeSize < aMoleculeSize)
+                        {
+                          --srcIndex;
+                        }
+                      return true;
+                    }
+                  isIntersect = true;
+                }
+              else if(theSpecies[tarID]->getIsMultiscale() ||
+                      theSpecies[tarID]->getIsOnMultiscale())
+                {
+                  isIntersect = true;
+                }
+            }
+        }
+      return isIntersect;
+    }
+  bool isMoveMultiscaleWalkPropensityRegular(unsigned& srcIndex,
+                                             const unsigned coordA, 
+                                             const unsigned rowA,
+                                             const std::vector<int>& tarOffsets,
+                                             const std::vector<int>& srcOffsets,
+                                             const unsigned index)
+    {
+      bool isIntersect(false);
       theIdxList.resize(0);
       theBindList.resize(0);
       theVacantList.resize(0);
@@ -1637,26 +1696,68 @@ public:
           if(isInLattice(coordB, offsetRow))
             {
               const unsigned coord(coordB+lipStartCoord);
-              const unsigned anID(getID(theLattice[coord]));
-              if(theSpecies[anID]->getIsMultiscale() ||
-                 theSpecies[anID]->getIsOnMultiscale())
+              unsigned idx(theLattice[coord].idx);
+              const unsigned tarID(idx/theStride);
+              //If it doesn't perform MultiMulti reaction and
+              //intersects with another Multi:
+              if(!isMultiMultiReactive &&
+                 (theSpecies[tarID]->getIsMultiscale() ||
+                  theSpecies[tarID]->getIsOnMultiscale()))
                 {
                   return false;
                 }
-              if(isMultiscaleBinderID[anID])
+              else if(isMultiMultiReactantID[tarID])
                 {
-                  ++tarCnt;
+                  //If it meets the reaction probability:
+                  if(theReactionProbabilities[tarID] == 1 ||
+                     theRng.Fixed() < theReactionProbabilities[tarID])
+                    { 
+                      Voxel* target(&theLattice[coord]);
+                      if(!theSpecies[tarID]->getIsMultiscale())
+                        {
+                          idx = theSpecies[tarID
+                            ]->getTag(idx%theStride).multiIdx;
+                        }
+                      unsigned aMoleculeSize(theMoleculeSize);
+                      react(target, target, srcIndex, idx%theStride,
+                            idx/theStride);
+                      if(theMoleculeSize < aMoleculeSize)
+                        {
+                          --srcIndex;
+                        }
+                      return false;
+                    }
+                  isIntersect = true;
                 }
-              if(getID(theLattice[coord]) ==
-                 theMultiscaleVacantSpecies->getID())
+              //If it performs MultiMulti reaction and
+              //intersects with another non-reacting Multi:
+              else if(theSpecies[tarID]->getIsMultiscale() ||
+                      theSpecies[tarID]->getIsOnMultiscale())
                 {
-                  theIdxList.push_back(coord);
+                  isIntersect = true;
                 }
+              //If it doesn't intersect another Multi:
               else
                 {
-                  theBindList.push_back(coord);
+                  if(isMultiscaleBinderID[tarID])
+                    {
+                      ++tarCnt;
+                    }
+                  if(getID(theLattice[coord]) ==
+                     theMultiscaleVacantSpecies->getID())
+                    {
+                      theIdxList.push_back(coord);
+                    }
+                  else
+                    {
+                      theBindList.push_back(coord);
+                    }
                 }
             }
+        }
+      if(isIntersect)
+        {
+          return false;
         }
       //count src
       for(unsigned i(0); i != srcOffsets.size(); ++i)
@@ -2216,66 +2317,6 @@ public:
           return false;
         }
       return true;
-    }
-  bool isIntersectMultiscaleRegular(Voxel* source, unsigned& srcIndex,
-                                    const unsigned coordA, 
-                                    const unsigned rowA,
-                                    const std::vector<int>& anOffsets)
-    {
-      bool isIntersect(false);
-      for(unsigned i(0); i != anOffsets.size(); ++i)
-        {
-          const int offsetRow((anOffsets[i]+theRegLatticeCoord)/lipCols-
-                              theRegLatticeCoord/lipCols+rowA);
-          int coordB(coordA+anOffsets[i]);
-          if(isInLattice(coordB, offsetRow))
-            {
-              unsigned idx(theLattice[coordB+lipStartCoord].idx);
-              const unsigned tarID(idx/theStride);
-              if(!isMultiMultiReactive &&
-                 (theSpecies[tarID]->getIsMultiscale() || 
-                  theSpecies[tarID]->getIsOnMultiscale()))
-                {
-                  return true;
-                }
-              else if(isMultiMultiReactantID[tarID])
-                {
-                  //If it meets the reaction probability:
-                  if(theReactionProbabilities[tarID] == 1 ||
-                     theRng.Fixed() < theReactionProbabilities[tarID])
-                    { 
-                      Voxel* target(&theLattice[coordB+lipStartCoord]);
-                      if(!theSpecies[tarID]->getIsMultiscale())
-                        {
-                          idx = theSpecies[tarID
-                            ]->getTag(idx%theStride).multiIdx;
-                        }
-                      unsigned aMoleculeSize(theMoleculeSize);
-                      react(target, target, srcIndex, idx%theStride,
-                            idx/theStride);
-                      //If the reaction is successful, the last molecule of this
-                      //species will replace the pointer of i, so we need to 
-                      //decrement i to perform the diffusion on it. However, if
-                      //theMoleculeSize didn't decrease, that means the
-                      //currently walked molecule was a product of this
-                      //reaction and so we don't need to walk it again by
-                      //decrementing i.
-                      if(theMoleculeSize < aMoleculeSize)
-                        {
-                          --srcIndex;
-                        }
-                      return true;
-                    }
-                  isIntersect = true;
-                }
-              else if(theSpecies[tarID]->getIsMultiscale() ||
-                      theSpecies[tarID]->getIsOnMultiscale())
-                {
-                  isIntersect = true;
-                }
-            }
-        }
-      return isIntersect;
     }
   bool isIntersectMultiscale(const unsigned srcCoord, const unsigned tarCoord)
     {
