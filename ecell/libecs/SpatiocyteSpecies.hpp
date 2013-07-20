@@ -2981,6 +2981,10 @@ public:
         }
       return NULL;
     }
+  unsigned getMultiCoordSize() const
+    {
+      return theOffsets[0][0].size();
+    }
   void getMultiCoords(const unsigned molIndex,
                       std::vector<unsigned>& coords) const
     {

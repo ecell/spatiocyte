@@ -132,14 +132,31 @@ void ReactionProcess::calculateOrder()
       //aCoefficient == 0:
       else
         {
-          coefficientE = aCoefficient;
-          if(aVariable->getName() == "HD")
+          //The first non-changed species, E:
+          if(E == NULL && variableE == NULL)
             {
-              variableE = aVariable;
+              coefficientE = aCoefficient;
+              if(aVariable->getName() == "HD")
+                {
+                  variableE = aVariable;
+                }
+              else
+                {
+                  E = theSpatiocyteStepper->getSpecies(aVariable);
+                }
             }
-          else
+          //The second non-changed species, H:
+          else if(H == NULL && variableH == NULL)
             {
-              E = theSpatiocyteStepper->getSpecies(aVariable);
+              coefficientH = aCoefficient;
+              if(aVariable->getName() == "HD")
+                {
+                  variableH = aVariable;
+                }
+              else
+                {
+                  H = theSpatiocyteStepper->getSpecies(aVariable);
+                }
             }
         }
     }

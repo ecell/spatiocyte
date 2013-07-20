@@ -450,6 +450,22 @@ Voxel* SpatiocyteNextReactionProcess::newMultiC()
     {
       return NULL;
     }
+  if(E)
+    {
+      unsigned cnt(multiCnts[E->getID()]);
+      double prob(cnt*theRates[1]);
+      if(H)
+        {
+          cnt += multiCnts[H->getID()];
+          prob += multiCnts[H->getID()]*theRates[2];
+        }
+      prob += (C->getMultiCoordSize()-cnt)*theRates[0];
+      prob /= C->getMultiCoordSize();
+      if(theRng->Fixed() > prob)
+        {
+          return NULL;
+        }
+    }
   return moleculeC;
 }
 
