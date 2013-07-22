@@ -504,7 +504,6 @@ public:
     {
       isMultiscale = true;
       isMultiscaleComp = true;
-      theSpeciesToInMultiIDs.resize(theSpecies.size());
     }
   bool getIsMultiscale()
     {
@@ -1518,26 +1517,18 @@ public:
                           const unsigned boundCnt)
     {
       //use direct since we don't want to count bounds:
-      addMoleculeInMulti(aVoxel, multiIdx);
+      addMoleculeDirect(aVoxel);
+      theTags[theMoleculeSize-1].multiIdx = multiIdx;
       if(isDeoligomerize)
         {
           theTags[theMoleculeSize-1].boundCnt = boundCnt;
           theBoundCnts[boundCnt]++;
         }
     }
-  void addInMultiCnt(const unsigned id, const unsigned multiIdx)
-    {
-      ++theInMultiCnts[multiIdx%theStride][theSpeciesToInMultiID[id]];
-    }
-  void removeInMultiCnt(const unsigned id, const unsigned multiIdx)
-    {
-      --theInMultiCnts[multiIdx%theStride][theSpeciesToInMultiID[id]];
-    }
   void addMoleculeInMulti(Voxel* aVoxel, const unsigned multiIdx)
     {
       addMoleculeTagless(aVoxel);
       theTags[theMoleculeSize-1].multiIdx = multiIdx;
-      theSpecies[multiIdx/theStride]->addInMultiCnt(getID(), multiIdx);
     }
   void softAddMolecule(Voxel* aVoxel)
     {
@@ -1586,19 +1577,8 @@ public:
         {
           if(isMultiscale)
             {
-              std::vector<unsigned> cnts;
-              theInMultiCnts.push_back(cnts.resize(theInMultiIDs.size()));
               addMultiscaleMolecule(aVoxel, theMoleculeSize);
               addMoleculeTagged(aVoxel, aTag);
-              /*
-              //TODO: don't know what is this for
-              Species* aSpecies(theSpecies[getID(aVoxel)]);
-              if(aSpecies->getVacantSpecies() != theMultiscaleVacantSpecies)
-                {
-                addMultiscaleMolecule(aVoxel, theMoleculeSize);
-                addMoleculeTagged(aVoxel, aTag);
-                }
-                */
             }
           else
             {
@@ -2512,11 +2492,6 @@ public:
         {
           theBoundCnts[theTags[anIndex].boundCnt]--;
         }
-      if(isOnMultiscale)
-        {
-          const unsigned multiIdx(theTags[anIndex].multiIdx);
-          theSpecies[multiIdx/theStride]->removeInMultiCnt(getID(), multiIdx);
-        }
       --theMoleculeSize;
       if(theMoleculeSize > anIndex)
         {
@@ -2528,11 +2503,6 @@ public:
     }
   void removeMoleculeDirect(unsigned anIndex)
     {
-      if(isOnMultiscale)
-        {
-          const unsigned multiIdx(theTags[anIndex].multiIdx);
-          theSpecies[multiIdx/theStride]->removeInMultiCnt(getID(), multiIdx);
-        }
       --theMoleculeSize;
       if(theMoleculeSize > anIndex)
         {
@@ -2543,8 +2513,6 @@ public:
             {
               updateBoundMultiIdx(theMolecules[anIndex],
                                   theTags[anIndex].rotIndex);
-              theInMultiCnts[anIndex] = theInMultiCnts.back();
-              theInMultiCnts.pop_back();
             }
         }
       theVariable->setValue(theMoleculeSize);
@@ -3601,12 +3569,6 @@ public:
     {
       isMultiscaleBoundID[prodID] = true;
       isMultiscaleBinderID[subID] = true;
-      if(std::find(theInMultiIDs.begin(), theInMultiIDs.end(), prodID) ==
-         theInMultiIDs.end())
-        {
-          theSpeciesToInMultiID[prodID] = theInMultiIDs.size();
-          theInMultiIDs.push_back(prodID);
-        }
       if(isMultiMultiReactive)
         {
           for(unsigned i(0); i != isMultiMultiReactantID.size(); ++i)
@@ -3622,12 +3584,6 @@ public:
     {
       isMultiscaleBoundID[subID] = true;
       theMultiscaleUnbindIDs[subID] = prodID;
-      if(std::find(theInMultiIDs.begin(), theInMultiIDs.end(), prodID) ==
-         theInMultiIDs.end())
-        {
-          theSpeciesToInMultiID[prodID] = theInMultiIDs.size();
-          theInMultiIDs.push_back(prodID);
-        }
     }
   //Get the fraction of number of nanoscopic molecules (anID) within the
   //multiscale molecule (index):
@@ -3933,9 +3889,6 @@ private:
   std::vector<bool> isProductPair;
   std::vector<unsigned> collisionCnts;
   std::vector<unsigned> theCoords;
-  std::vector<std::vector<unsigned> > theInMultiCnts;
-  std::vector<unsigned> theSpeciesToInMultiID;
-  std::vector<unsigned> theInMultiIDs;
   std::vector<unsigned> theMultiscaleUnbindIDs;
   std::vector<unsigned> thePopulatableCoords;
   std::vector<unsigned> theMultiscaleStructureCoords;
