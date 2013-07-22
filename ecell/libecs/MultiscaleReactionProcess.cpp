@@ -417,6 +417,7 @@ bool MultiscaleReactionProcess::reactBtoC_Multi(Voxel* molA,
                                                          const unsigned indexA,
                                                          const unsigned indexB)
 {
+  std::cout << "hella" << getIDString() << std::endl;
   interruptProcessesPre();
   C->addMolecule(molB);
   B->softRemoveMolecule(indexB);
@@ -573,18 +574,22 @@ void MultiscaleReactionProcess::setReactC()
     }
   else if(B->isReplaceable(C))
     {
+  std::cout << "1inside:" << getIDString() << std::endl;
       if(B->getIsMultiscaleComp() && !A->getIsMultiscaleComp())
         {
+  std::cout << "2inside:" << getIDString() << std::endl;
           //A + B -> [MuC <- MuB]
           reactM = &MultiscaleReactionProcess::reactMuBtoMuC;
         }
       else if(!B->getIsMultiscaleComp() && A->getIsMultiscaleComp())
         {
+  std::cout << "3inside:" << getIDString() << std::endl;
           //A + B -> [C <- molB]
           reactM = &MultiscaleReactionProcess::reactBtoC_Multi;
         }
       else
         {
+  std::cout << "4inside:" << getIDString() << std::endl;
           //A + B -> [MuC <- MuB]
           throwException("reactMuBtoMuC");
         }
