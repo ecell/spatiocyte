@@ -468,15 +468,9 @@ Voxel* SpatiocyteNextReactionProcess::newMultiC()
 //multiNonHD -> nonHD
 bool SpatiocyteNextReactionProcess::reactMultiAC()
 {
-  unsigned indexA(A->getRandomIndex());
+  std::cout << "reacting:" << theNextIndex << std::endl;
+  const unsigned indexA(theNextIndex);
   moleculeA = A->getMolecule(indexA);
-  //This is needed when a is species B, used by interruptedPre:
-  moleculeB = moleculeA;
-  if(ImplicitUnbind && 
-     E->getRandomAdjoiningVoxel(moleculeA, E, SearchVacant) == NULL)
-    {
-      return false;
-    }
   moleculeC = NULL;
   if(A->getVacantID() == C->getVacantID() || A->getID() == C->getVacantID())
     {
@@ -487,8 +481,6 @@ bool SpatiocyteNextReactionProcess::reactMultiAC()
       moleculeC = C->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
       if(moleculeC == NULL)
         {
-          //Only proceed if we can find an adjoining vacant voxel
-          //of nonND which can be occupied by C:
           return false;
         }
     }
@@ -504,7 +496,7 @@ bool SpatiocyteNextReactionProcess::reactMultiAC()
       A->removeMolecule(indexA);
       C->addMolecule(moleculeC, tagA);
     }
-  removeMoleculeE();
+  std::cout << "done reacting:" << theNextIndex << std::endl;
   return true;
 }
 
@@ -1529,6 +1521,10 @@ void SpatiocyteNextReactionProcess::printParameters()
 
 double SpatiocyteNextReactionProcess::getNewInterval()
 {
+  if(isMultiAC)
+    {
+      return theInterval;
+    }
   if(getNewPropensity())
     {
       return -log(theRng->FixedU())/thePropensity;
@@ -1538,6 +1534,14 @@ double SpatiocyteNextReactionProcess::getNewInterval()
 
 double SpatiocyteNextReactionProcess::getInterval(double aCurrentTime)
 {
+  if(isMultiAC)
+    {
+      if(theNextTimes.size())
+        {
+          return theNextTimes[theNextIndex]-aCurrentTime;
+        }
+      return libecs::INF;
+    }
   if(theTime == libecs::INF)
     {
       return getNewInterval();
@@ -1652,7 +1656,7 @@ void SpatiocyteNextReactionProcess::interruptedEndDiffusion(Species* aSpecies)
   if(isMultiAC)
     {
       const double aCurrentTime(getStepper()->getCurrentTime());
-      double thetime(libecs::INF);
+      theInterval = libecs::INF;
       for(unsigned i(0); i != A->size(); ++i)
         {
           unsigned cnt(A->getInMultiCnt(i, E->getID()));
@@ -1666,16 +1670,26 @@ void SpatiocyteNextReactionProcess::interruptedEndDiffusion(Species* aSpecies)
           fraction += (A->getMultiCoordSize()-cnt)*theRates[0];
           fraction /= A->getMultiCoordSize();
           const double aPropensity(p*fraction);
-          const double aNextTime(aCurrentTime+thePropensities[i]/aPropensity*
+          /*
+          std::cout << "---------------i:" << i << std::endl;
+          std::cout << "new prop:" << aPropensity << std::endl; 
+          std::cout << "old prop:" << thePropensities[i] << std::endl; 
+          std::cout << "theNextTimes[i]:" << theNextTimes[i] << std::endl; 
+          std::cout << "currentTime:" << aCurrentTime << std::endl; 
+          std::cout << "next-curr:" << theNextTimes[i]-aCurrentTime << std::endl; 
+          */
+          const double anInterval(thePropensities[i]/aPropensity*
                                  (theNextTimes[i]-aCurrentTime));
           thePropensities[i] = aPropensity;
-          theNextTimes[i] = aNextTime;
-          if(aNextTime < theTime)
+          theNextTimes[i] = anInterval+aCurrentTime;
+          if(anInterval < theInterval)
             {
-              theTime = aNextTime;
+              theInterval = anInterval;
               theNextIndex = i;
             }
         }
+      theSpatiocyteStepper->addInterruptedProcess(
+                                      dynamic_cast<SpatiocyteProcess*>(this));
     }
 }
 
@@ -1684,6 +1698,8 @@ void SpatiocyteNextReactionProcess::interruptedAddMolecule(Species* aSpecies,
 {
   if(isMultiAC)
     {
+      const double aCurrentTime(getStepper()->getCurrentTime());
+      theInterval = theTime-aCurrentTime;
       unsigned cnt(A->getInMultiCnt(index, E->getID()));
       double fraction(cnt*theRates[1]);
       if(H)
@@ -1695,14 +1711,18 @@ void SpatiocyteNextReactionProcess::interruptedAddMolecule(Species* aSpecies,
       fraction += (A->getMultiCoordSize()-cnt)*theRates[0];
       fraction /= A->getMultiCoordSize();
       const double aPropensity(p*fraction);
-      const double aNextTime(-log(theRng->FixedU())/aPropensity+
-                       getStepper()->getCurrentTime()); 
+      const double anInterval(-log(theRng->FixedU())/aPropensity);
       thePropensities.push_back(aPropensity);
-      theNextTimes.push_back(aNextTime);
-      if(aNextTime < theTime)
+      theNextTimes.push_back(anInterval+aCurrentTime);
+      /*
+      std::cout << "adding molecule:" << index << " time:" << anInterval+aCurrentTime << std::endl;
+      std::cout << "add theInterval:" << anInterval << " index:" << index << " theInterval:" << theInterval << " theTime:" << theTime << " curr:" << aCurrentTime << std::endl;
+      */
+      if(anInterval < theInterval)
         {
-          theTime = aNextTime;
+          theInterval = anInterval;
           theNextIndex = index;
+          //std::cout << "settinga dd interval:" << theInterval << std::endl;
         }
       if(index != thePropensities.size()-1)
         {
@@ -1718,17 +1738,20 @@ void SpatiocyteNextReactionProcess::interruptedRemoveMolecule(Species* aSpecies,
     {
       thePropensities[index] = thePropensities.back();
       thePropensities.pop_back();
+      //std::cout << "removing molecule:" << index << " time:" << theNextTimes[index] << std::endl;
       theNextTimes[index] = theNextTimes.back();
       theNextTimes.pop_back();
       if(index == theNextIndex)
         {
-          theTime = libecs::INF;
+          theInterval = libecs::INF;
+          const double aCurrentTime(getStepper()->getCurrentTime());
           for(unsigned i(0); i != theNextTimes.size(); ++i)
             {
-              if(theNextTimes[i] < theTime)
+              if(theNextTimes[i]-aCurrentTime < theInterval)
                 {
-                  theTime = theNextTimes[i];
+                  theInterval = theNextTimes[i]-aCurrentTime;
                   theNextIndex = i;
+                  //std::cout << "rem theInterval:" << theInterval << " index:" << theNextIndex << std::endl;
                 }
             }
         }

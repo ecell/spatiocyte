@@ -248,6 +248,7 @@ public:
     {
       const double anOldTime(theTime);
       theTime = aCurrentTime + getInterval(aCurrentTime);
+      //std::cout << getIDString() << " curr:" << aCurrentTime << " theQueueID:" << theQueueID << " oldTime:" << anOldTime << " theTime:" << theTime << std::endl;
       if(theTime >= anOldTime)
         {
           thePriorityQueue->moveDown(theQueueID);
