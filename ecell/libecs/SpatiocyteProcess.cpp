@@ -36,6 +36,25 @@ namespace libecs
 
 LIBECS_DM_INIT_STATIC(SpatiocyteProcess, Process);
 
+void SpatiocyteProcess::initializeThird()
+{
+  for(unsigned i(0); i != theSpecies.size(); ++i)
+    {
+      if(isDependentOnRemoveMolecule(theSpecies[i]))
+        {
+          theSpecies[i]->addInterruptRemoveMolecule(this);
+        }
+      if(isDependentOnAddMolecule(theSpecies[i]))
+        {
+          theSpecies[i]->addInterruptAddMolecule(this);
+        }
+      if(isDependentOnEndDiffusion(theSpecies[i]))
+        {
+          theSpecies[i]->addInterruptEndDiffusion(this);
+        }
+    }
+}
+
 String SpatiocyteProcess::getIDString(Voxel* aVoxel) const
 {
   Variable* aVariable(theSpecies[getID(aVoxel)]->getVariable());

@@ -145,10 +145,6 @@ public:
       theInterruptedProcessesPre.resize(0);
       theInterruptedProcessesPost.resize(0);
     }
-  virtual void initializeFourth()
-    {
-      SpatiocyteProcess::initializeFourth();
-    }
   //Only ReactionProcesses can interrupt other processes because only 
   //they can change the number of molecules. 
   //This method is called to set the list of processes which will be

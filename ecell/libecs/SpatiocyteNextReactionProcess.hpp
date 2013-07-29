@@ -55,6 +55,7 @@ public:
       PROPERTYSLOT_SET_GET(Polymorph, Rates);
     }
   SpatiocyteNextReactionProcess():
+    isMultiAC(false),
     isReactAB(false),
     Deoligomerize(0),
     theDeoligomerIndex(0),
@@ -148,18 +149,20 @@ public:
   virtual bool isDependentOn(const Process*) const;
   virtual bool isDependentOnPost(const Process*);
   virtual bool isDependentOnPre(const Process*);
+  virtual bool isDependentOnEndDiffusion(Species*);
+  virtual bool isDependentOnAddMolecule(Species*);
+  virtual bool isDependentOnRemoveMolecule(Species*);
   virtual void interruptedPost(ReactionProcess*);
   virtual void interruptedPre(ReactionProcess*);
+  virtual void interruptedEndDiffusion(Species*);
+  virtual void interruptedAddMolecule(Species*, const unsigned);
+  virtual void interruptedRemoveMolecule(Species*, const unsigned);
   virtual bool react();
   virtual double getPropensity() const;
   virtual double getNewPropensity();
 protected:
   void updateSubstrates();
-  /*
-  double getIntervalUnbindAB();
-  double getIntervalUnbindMultiAB();
-  */
-  virtual void calculateOrder();
+  virtual void setPropensityMethod();
   virtual bool reactACD(Species*, Species*, Species*);
   virtual bool reactAC(Species*, Species*);
   virtual bool reactDeoligomerize(Species*, Species*);
@@ -167,12 +170,13 @@ protected:
   virtual bool reactACDbind(Species*, Species*, Species*);
   virtual void reactABCD();
   virtual void reactABC();
-  virtual bool reactMultiABC();
+  virtual bool reactMultiAC();
   virtual Voxel* reactvAC(Variable*, Species*);
   virtual Comp* getComp2D(Species*);
   virtual Voxel* reactvAvBC(Species*);
   double getPropensityZerothOrder(); 
   double getPropensityFirstOrder();
+  double getPropensityFirstOrderMultiAC();
   double getPropensityFirstOrderReactAB();
   double getPropensityFirstOrderDeoligomerize();
   double getPropensitySecondOrderHomo(); 
@@ -188,10 +192,11 @@ protected:
   void addCoordsA(Species*, Species*, const unsigned, unsigned&);
   Voxel* newMultiC();
 protected:
+  bool isMultiAC;
   bool isReactAB;
   unsigned Deoligomerize;
-  unsigned nextIndexA;
   unsigned theDeoligomerIndex;
+  unsigned theNextIndex;
   int BindingSite;
   int ImplicitUnbind;
   double initSizeA;
@@ -202,6 +207,8 @@ protected:
   double SpaceB;
   double SpaceC;
   double thePropensity;
+  std::vector<double> theNextTimes;
+  std::vector<double> thePropensities;
   std::vector<double> theRates;
   Polymorph Rates;
   std::stringstream pFormula;

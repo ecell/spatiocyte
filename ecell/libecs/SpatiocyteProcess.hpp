@@ -73,13 +73,16 @@ public:
       theStride = UINT_MAX/theSpecies.size();
     }
   virtual void initializeSecond() {}
-  virtual void initializeThird() {}
+  virtual void initializeThird();
   virtual void initializeFourth() {}
   virtual void initializeFifth() {}
   virtual void initializeLastOnce() {}
   virtual void printParameters() {}
   virtual void updateResizedLattice() {}
   virtual void finalizeFire() {}
+  virtual void interruptedEndDiffusion(Species*) {}
+  virtual void interruptedAddMolecule(Species*, const unsigned) {}
+  virtual void interruptedRemoveMolecule(Species*, const unsigned) {}
   virtual void initialize()
     {
       if(isInitialized)
@@ -175,6 +178,18 @@ public:
       return false;
     }
   virtual bool isDependentOnPost(const Process* aProcess)
+    {
+      return false;
+    }
+  virtual bool isDependentOnAddMolecule(Species*)
+    {
+      return false;
+    }
+  virtual bool isDependentOnRemoveMolecule(Species*)
+    {
+      return false;
+    }
+  virtual bool isDependentOnEndDiffusion(Species*)
     {
       return false;
     }
