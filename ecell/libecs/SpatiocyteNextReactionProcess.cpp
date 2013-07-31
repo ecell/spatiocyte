@@ -1670,16 +1670,9 @@ void SpatiocyteNextReactionProcess::interruptedEndDiffusion(Species* aSpecies)
           fraction += (A->getMultiCoordSize()-cnt)*theRates[0];
           fraction /= A->getMultiCoordSize();
           const double aPropensity(p*fraction);
-          /*
-          std::cout << "---------------i:" << i << std::endl;
-          std::cout << "new prop:" << aPropensity << std::endl; 
-          std::cout << "old prop:" << thePropensities[i] << std::endl; 
-          std::cout << "theNextTimes[i]:" << theNextTimes[i] << std::endl; 
-          std::cout << "currentTime:" << aCurrentTime << std::endl; 
-          std::cout << "next-curr:" << theNextTimes[i]-aCurrentTime << std::endl; 
-          */
           const double anInterval(thePropensities[i]/aPropensity*
                                  (theNextTimes[i]-aCurrentTime));
+          std::cout << "max:" << thePropensities[i] << " new:" << aPropensity << " nextTime:" << theNextTimes[i] << " currTime:" << aCurrentTime << std::endl;
           thePropensities[i] = aPropensity;
           theNextTimes[i] = anInterval+aCurrentTime;
           if(anInterval < theInterval)
@@ -1714,15 +1707,10 @@ void SpatiocyteNextReactionProcess::interruptedAddMolecule(Species* aSpecies,
       const double anInterval(-log(theRng->FixedU())/aPropensity);
       thePropensities.push_back(aPropensity);
       theNextTimes.push_back(anInterval+aCurrentTime);
-      /*
-      std::cout << "adding molecule:" << index << " time:" << anInterval+aCurrentTime << std::endl;
-      std::cout << "add theInterval:" << anInterval << " index:" << index << " theInterval:" << theInterval << " theTime:" << theTime << " curr:" << aCurrentTime << std::endl;
-      */
       if(anInterval < theInterval)
         {
           theInterval = anInterval;
           theNextIndex = index;
-          //std::cout << "settinga dd interval:" << theInterval << std::endl;
         }
       if(index != thePropensities.size()-1)
         {
@@ -1738,7 +1726,6 @@ void SpatiocyteNextReactionProcess::interruptedRemoveMolecule(Species* aSpecies,
     {
       thePropensities[index] = thePropensities.back();
       thePropensities.pop_back();
-      //std::cout << "removing molecule:" << index << " time:" << theNextTimes[index] << std::endl;
       theNextTimes[index] = theNextTimes.back();
       theNextTimes.pop_back();
       if(index == theNextIndex)
@@ -1751,7 +1738,6 @@ void SpatiocyteNextReactionProcess::interruptedRemoveMolecule(Species* aSpecies,
                 {
                   theInterval = theNextTimes[i]-aCurrentTime;
                   theNextIndex = i;
-                  //std::cout << "rem theInterval:" << theInterval << " index:" << theNextIndex << std::endl;
                 }
             }
         }

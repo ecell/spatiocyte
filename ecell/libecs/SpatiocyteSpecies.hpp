@@ -1534,13 +1534,88 @@ public:
   void addInMultiCnt(const unsigned id, const unsigned multiIdx)
     {
       ++theInMultiCnts[multiIdx%theStride][theSpeciesToInMultiID[id]];
+      /*
+      std::cout << "adding in:" << getIDString() << std::endl;
+      unsigned index(multiIdx%theStride);
+      std::vector<unsigned> cnts;
+      if(index+1 < theMoleculeSize)
+        {
+          std::vector<unsigned> coords;
+          std::cout << "1" << std::endl;
+          getMultiCoords(index, coords);
+          std::cout << "2" << std::endl;
+          cnts.resize(theInMultiIDs.size());
+          for(unsigned i(0); i != coords.size(); ++i)
+            {
+              unsigned idx(theLattice[coords[i]+lipStartCoord].idx);
+              if(theSpecies[idx/theStride]->getIsOnMultiscale())
+                {
+                  ++cnts[theSpeciesToInMultiID[idx/theStride]];
+                }
+            }
+          std::cout << "adding:" << getIDString(id) << std::endl;
+          for(unsigned i(0); i != theInMultiCnts[index].size(); ++i)
+            {
+              std::cout << "cnts i:" << i << " actual:" << cnts[i] << " val:" << 
+                theInMultiCnts[index][i] << std::endl;
+            }
+        }
+        */
     }
   void removeInMultiCnt(const unsigned id, const unsigned multiIdx)
     {
       --theInMultiCnts[multiIdx%theStride][theSpeciesToInMultiID[id]];
+      /*
+      std::cout << "removing in:" << getIDString() << std::endl;
+      unsigned index(multiIdx%theStride);
+      std::vector<unsigned> cnts;
+      if(index+1 < theMoleculeSize)
+        {
+          std::vector<unsigned> coords;
+          std::cout << "1" << std::endl;
+          getMultiCoords(index, coords);
+          std::cout << "2" << std::endl;
+          cnts.resize(theInMultiIDs.size());
+          for(unsigned i(0); i != coords.size(); ++i)
+            {
+              unsigned idx(theLattice[coords[i]+lipStartCoord].idx);
+              if(theSpecies[idx/theStride]->getIsOnMultiscale())
+                {
+                  ++cnts[theSpeciesToInMultiID[idx/theStride]];
+                }
+            }
+          std::cout << "removing:" << getIDString(id) << std::endl;
+          for(unsigned i(0); i != theInMultiCnts[index].size(); ++i)
+            {
+              std::cout << "cnts i:" << i << " actual:" << cnts[i] << " val:" << 
+                theInMultiCnts[index][i] << std::endl;
+            }
+        }
+        */
     }
   unsigned getInMultiCnt(const unsigned anIndex, const unsigned id) const
     {
+      /*
+      std::cout << "getInMultiCnt:" << getIDString(id) << " inID:" << 
+        theSpeciesToInMultiID[id] << std::endl;
+      std::vector<unsigned> cnts;
+      std::vector<unsigned> coords;
+      getMultiCoords(anIndex, coords);
+      cnts.resize(theInMultiIDs.size());
+      for(unsigned i(0); i != coords.size(); ++i)
+        {
+          unsigned idx(theLattice[coords[i]].idx);
+          if(theSpecies[idx/theStride]->getIsOnMultiscale())
+            {
+              ++cnts[theSpeciesToInMultiID[idx/theStride]];
+            }
+        }
+      for(unsigned i(0); i != theInMultiCnts[anIndex].size(); ++i)
+        {
+          std::cout << "cnts i:" << i << " actual:" << cnts[i] << " val:" << 
+            theInMultiCnts[anIndex][i] << std::endl;
+        }
+        */
       return theInMultiCnts[anIndex][theSpeciesToInMultiID[id]];
     }
   void addMoleculeInMulti(Voxel* aVoxel, const unsigned multiIdx)
@@ -2372,17 +2447,17 @@ public:
       ++theMoleculeSize;
       theVariable->setValue(theMoleculeSize);
     }
-  String getIDString(unsigned anID)
+  String getIDString(unsigned anID) const
     {
       return theSpecies[anID]->getIDString();
     }
-  String getIDString(Species* aSpecies)
+  String getIDString(Species* aSpecies) const
     {
       return aSpecies->getIDString();
     }
-  String getIDString()
+  String getIDString() const
     {
-      Variable* aVariable(getVariable());
+      const Variable* aVariable(getVariable());
       if(aVariable)
         {
           return "["+aVariable->getSystemPath().asString()+":"+
