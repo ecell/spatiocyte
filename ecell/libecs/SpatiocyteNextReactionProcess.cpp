@@ -110,7 +110,7 @@ bool SpatiocyteNextReactionProcess::react()
                 {
                   return reactDeoligomerize(A, C);
                 }
-              else if(A->getIsMultiscale())
+              else if(isMultiAC)
                 {
                   return reactMultiAC();
                 }

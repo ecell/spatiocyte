@@ -103,7 +103,6 @@ public:
   Point getPeriodicPoint(unsigned, unsigned, Origin*);
   void checkLattice();
   void checkSpecies();
-  void checkMultiscale();
   void setPeriodicEdge();
   void reset(int);
   unsigned getNewMoleculeID();
