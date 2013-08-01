@@ -650,30 +650,12 @@ inline void SpatiocyteStepper::step()
 {
   do
     {
-      cout << "before:" << thePriorityQueue.getTop()->getIDString() << " "
-      << getCurrentTime() << std::endl;
-      for(unsigned i(0); i != theSpecies.size(); ++i)
-        {
-          if(theSpecies[i]->getIsMultiscale())
-            {
-              for(unsigned j(0); j != theSpecies[i]->size(); ++j)
-                {
-                  theSpecies[i]->printInMulti(j);
-                }
-            }
-        }
+      //cout << "before:" << thePriorityQueue.getTop()->getIDString() << " "
+       // << getCurrentTime() << std::endl;
+      //checkMultiscale();
       thePriorityQueue.getTop()->fire();
-      std::cout << "after:" << std::endl;
-      for(unsigned i(0); i != theSpecies.size(); ++i)
-        {
-          if(theSpecies[i]->getIsMultiscale())
-            {
-              for(unsigned j(0); j != theSpecies[i]->size(); ++j)
-                {
-                  theSpecies[i]->printInMulti(j);
-                }
-            }
-        }
+      //std::cout << "after:" << std::endl;
+      //checkMultiscale();
       //checkSpecies();
       //checkLattice();
       if(thePriorityQueue.getTop()->getTime() != getCurrentTime())
@@ -708,6 +690,34 @@ void SpatiocyteStepper::interruptAllProcesses(const double aCurrentTime)
   for(unsigned i(0); i != theSpatiocyteProcesses.size(); ++i)
     {
       theSpatiocyteProcesses[i]->substrateValueChanged(aCurrentTime);
+    }
+}
+
+void SpatiocyteStepper::checkMultiscale()
+{
+  for(unsigned i(0); i != theSpecies.size(); ++i)
+    {
+      Species* aSpecies(theSpecies[i]);
+      if(aSpecies->getIsMultiscale())
+        {
+          for(unsigned j(0); j != aSpecies->size(); ++j)
+            {
+              Voxel* aVoxel(aSpecies->getMolecule(j));
+              unsigned anID(aVoxel->idx/theStride);
+              if(anID != aSpecies->getID() && 
+                 !theSpecies[anID]->getIsMultiscale())
+                {
+                  unsigned anIndex(aVoxel->idx%theStride);
+                  if(theSpecies[anID]->getMolecule(anIndex) != aVoxel)
+                    {
+                      cout << "error in index j:" << j << " " <<
+                        theSpecies[anID]->getIDString() << " size:"
+                        << theSpecies[anID]->size() << " index:" << anIndex
+                        << " idx:" << aVoxel->idx << std::endl;
+                    }
+                }
+            }
+        }
     }
 }
 
