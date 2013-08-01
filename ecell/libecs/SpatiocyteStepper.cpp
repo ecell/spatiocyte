@@ -650,9 +650,30 @@ inline void SpatiocyteStepper::step()
 {
   do
     {
-      //cout << "before:" << thePriorityQueue.getTop()->getIDString() << " "
-      //<< getCurrentTime() << std::endl;
+      cout << "before:" << thePriorityQueue.getTop()->getIDString() << " "
+      << getCurrentTime() << std::endl;
+      for(unsigned i(0); i != theSpecies.size(); ++i)
+        {
+          if(theSpecies[i]->getIsMultiscale())
+            {
+              for(unsigned j(0); j != theSpecies[i]->size(); ++j)
+                {
+                  theSpecies[i]->printInMulti(j);
+                }
+            }
+        }
       thePriorityQueue.getTop()->fire();
+      std::cout << "after:" << std::endl;
+      for(unsigned i(0); i != theSpecies.size(); ++i)
+        {
+          if(theSpecies[i]->getIsMultiscale())
+            {
+              for(unsigned j(0); j != theSpecies[i]->size(); ++j)
+                {
+                  theSpecies[i]->printInMulti(j);
+                }
+            }
+        }
       //checkSpecies();
       //checkLattice();
       if(thePriorityQueue.getTop()->getTime() != getCurrentTime())

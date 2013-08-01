@@ -1033,7 +1033,13 @@ public:
                   source->idx = theTags[i].multiIdx;
                   if(theTags[i].multiIdx != target->idx)
                     {
-                      theTags[i].multiIdx = target->idx;
+                      unsigned& srcIdx(theTags[i].multiIdx);
+                      const unsigned tarIdx(target->idx);
+                      theSpecies[tarIdx/theStride]->addInMultiCnt(getID(),
+                                                                  tarIdx);
+                      theSpecies[srcIdx/theStride]->removeInMultiCnt(getID(),
+                                                                     srcIdx);
+                      srcIdx = tarIdx;
                     }
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
@@ -1532,72 +1538,38 @@ public:
         }
     }
   void addInMultiCnt(const unsigned id, const unsigned multiIdx)
-    {
+    { 
       ++theInMultiCnts[multiIdx%theStride][theSpeciesToInMultiID[id]];
       /*
-      std::cout << "adding in:" << getIDString() << std::endl;
-      unsigned index(multiIdx%theStride);
-      std::vector<unsigned> cnts;
-      if(index+1 < theMoleculeSize)
+      if(multiIdx%theStride < theMoleculeSize)
         {
-          std::vector<unsigned> coords;
-          std::cout << "1" << std::endl;
-          getMultiCoords(index, coords);
-          std::cout << "2" << std::endl;
-          cnts.resize(theInMultiIDs.size());
-          for(unsigned i(0); i != coords.size(); ++i)
-            {
-              unsigned idx(theLattice[coords[i]+lipStartCoord].idx);
-              if(theSpecies[idx/theStride]->getIsOnMultiscale())
-                {
-                  ++cnts[theSpeciesToInMultiID[idx/theStride]];
-                }
-            }
-          std::cout << "adding:" << getIDString(id) << std::endl;
-          for(unsigned i(0); i != theInMultiCnts[index].size(); ++i)
-            {
-              std::cout << "cnts i:" << i << " actual:" << cnts[i] << " val:" << 
-                theInMultiCnts[index][i] << std::endl;
-            }
+          std::cout << "addinmulti:" << multiIdx%theStride << " " << getIDString(id) << " multiId:" << theSpeciesToInMultiID[id] << std::endl;
+          printInMulti(multiIdx%theStride);
         }
         */
     }
   void removeInMultiCnt(const unsigned id, const unsigned multiIdx)
     {
-      --theInMultiCnts[multiIdx%theStride][theSpeciesToInMultiID[id]];
       /*
-      std::cout << "removing in:" << getIDString() << std::endl;
-      unsigned index(multiIdx%theStride);
-      std::vector<unsigned> cnts;
-      if(index+1 < theMoleculeSize)
+      if(!theInMultiCnts[multiIdx%theStride][theSpeciesToInMultiID[id]])
         {
-          std::vector<unsigned> coords;
-          std::cout << "1" << std::endl;
-          getMultiCoords(index, coords);
-          std::cout << "2" << std::endl;
-          cnts.resize(theInMultiIDs.size());
-          for(unsigned i(0); i != coords.size(); ++i)
-            {
-              unsigned idx(theLattice[coords[i]+lipStartCoord].idx);
-              if(theSpecies[idx/theStride]->getIsOnMultiscale())
-                {
-                  ++cnts[theSpeciesToInMultiID[idx/theStride]];
-                }
-            }
-          std::cout << "removing:" << getIDString(id) << std::endl;
-          for(unsigned i(0); i != theInMultiCnts[index].size(); ++i)
-            {
-              std::cout << "cnts i:" << i << " actual:" << cnts[i] << " val:" << 
-                theInMultiCnts[index][i] << std::endl;
-            }
+          std::cout << "rmeove in multi wrong" << std::endl;
         }
-        */
+      std::cout << "reminmulti:" << multiIdx%theStride << " " << getIDString(id) << " multiId:" << theSpeciesToInMultiID[id] << std::endl;
+      printInMulti(multiIdx%theStride);
+      */
+      --theInMultiCnts[multiIdx%theStride][theSpeciesToInMultiID[id]];
     }
   unsigned getInMultiCnt(const unsigned anIndex, const unsigned id) const
     {
       /*
-      std::cout << "getInMultiCnt:" << getIDString(id) << " inID:" << 
-        theSpeciesToInMultiID[id] << std::endl;
+      std::cout << "getInMulti" << std::endl;
+      printInMulti(anIndex);
+      */
+      return theInMultiCnts[anIndex][theSpeciesToInMultiID[id]];
+    }
+  void printInMulti(const unsigned anIndex) const
+    {
       std::vector<unsigned> cnts;
       std::vector<unsigned> coords;
       getMultiCoords(anIndex, coords);
@@ -1612,11 +1584,19 @@ public:
         }
       for(unsigned i(0); i != theInMultiCnts[anIndex].size(); ++i)
         {
-          std::cout << "cnts i:" << i << " actual:" << cnts[i] << " val:" << 
-            theInMultiCnts[anIndex][i] << std::endl;
+          if(cnts[i] != theInMultiCnts[anIndex][i])
+            {
+              std::cout << "cnts i:" << i << " actual:" << cnts[i] << " val:" <<
+                theInMultiCnts[anIndex][i] << " " << " index:" << anIndex << " " << getIDString();
+              for(unsigned j(0); j != theSpecies.size(); ++j)
+                {
+                  if(i == theSpeciesToInMultiID[j])
+                    {
+                      std::cout << " " << getIDString(j) << std::endl;
+                    }
+                }
+            }
         }
-        */
-      return theInMultiCnts[anIndex][theSpeciesToInMultiID[id]];
     }
   void addMoleculeInMulti(Voxel* aVoxel, const unsigned multiIdx)
     {
@@ -1676,11 +1656,19 @@ public:
         {
           if(isMultiscale)
             {
-              theInMultiCnts.resize(theInMultiCnts.size()+1);
-              theInMultiCnts.back().resize(theInMultiIDs.size());
+              std::vector<unsigned> tmp;
+              tmp.resize(theInMultiIDs.size(), 0);
+              theInMultiCnts.push_back(tmp);
               addMultiscaleMolecule(aVoxel, theMoleculeSize);
             }
           addMoleculeTagged(aVoxel, aTag);
+          if(isMultiscale)
+            {
+              /*
+              std::cout << "after add:" << theMoleculeSize-1 << std::endl;
+              printInMulti(theMoleculeSize-1);
+              */
+            }
         }
       else
         {
@@ -2607,8 +2595,8 @@ public:
     {
       for(unsigned i(0); i != theInterruptedProcessesRemoveMolecule.size(); ++i)
         {
-          theInterruptedProcessesRemoveMolecule[i]->interruptedRemoveMolecule(this,
-                                                                              anIndex);
+          theInterruptedProcessesRemoveMolecule[i
+            ]->interruptedRemoveMolecule(this, anIndex);
         }
       if(isOnMultiscale)
         {
@@ -2625,6 +2613,12 @@ public:
             {
               updateBoundMultiIdx(theMolecules[anIndex],
                                   theTags[anIndex].rotIndex);
+              /*
+              std::cout << "printing replaced:" << anIndex << std::endl;
+              printInMulti(anIndex);
+              std::cout << "printing next:" << theMoleculeSize << std::endl;
+              printInMulti(theMoleculeSize);
+              */
               theInMultiCnts[anIndex] = theInMultiCnts.back();
               theInMultiCnts.pop_back();
             }
@@ -3079,10 +3073,6 @@ public:
             }
         }
       return theNullCoord;
-    }
-  unsigned getOffsetSize() const 
-    {
-      return theOffsets[0][0].size();
     }
   Voxel* getRandomAdjoiningVoxel(Species* A, Species* C, Voxel* molA,
                                  const unsigned searchVacant)

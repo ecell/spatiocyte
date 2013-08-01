@@ -178,8 +178,8 @@ bool MultiscaleReactionProcess::searchMultiPopulateCoord(unsigned& coordA,
                                                          const unsigned idxA,
                                                          const unsigned idxB)
 {
-  unsigned sizeA(A->getOffsetSize());
-  unsigned size(sizeA+B->getOffsetSize());
+  unsigned sizeA(A->getMultiCoordSize());
+  unsigned size(sizeA+B->getMultiCoordSize());
   std::vector<unsigned> done;
   unsigned i;
   do

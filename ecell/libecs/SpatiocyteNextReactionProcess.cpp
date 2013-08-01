@@ -468,7 +468,6 @@ Voxel* SpatiocyteNextReactionProcess::newMultiC()
 //multiNonHD -> nonHD
 bool SpatiocyteNextReactionProcess::reactMultiAC()
 {
-  std::cout << "reacting:" << theNextIndex << std::endl;
   const unsigned indexA(theNextIndex);
   moleculeA = A->getMolecule(indexA);
   moleculeC = NULL;
@@ -496,7 +495,6 @@ bool SpatiocyteNextReactionProcess::reactMultiAC()
       A->removeMolecule(indexA);
       C->addMolecule(moleculeC, tagA);
     }
-  std::cout << "done reacting:" << theNextIndex << std::endl;
   return true;
 }
 
@@ -1523,7 +1521,12 @@ double SpatiocyteNextReactionProcess::getNewInterval()
 {
   if(isMultiAC)
     {
-      return theInterval;
+      if(theNextTimes.size())
+        {
+          return theNextTimes[theNextIndex]-getStepper()->getCurrentTime();
+        }
+      return libecs::INF;
+      //return theInterval;
     }
   if(getNewPropensity())
     {
@@ -1672,7 +1675,7 @@ void SpatiocyteNextReactionProcess::interruptedEndDiffusion(Species* aSpecies)
           const double aPropensity(p*fraction);
           const double anInterval(thePropensities[i]/aPropensity*
                                  (theNextTimes[i]-aCurrentTime));
-          std::cout << "max:" << thePropensities[i] << " new:" << aPropensity << " nextTime:" << theNextTimes[i] << " currTime:" << aCurrentTime << std::endl;
+          std::cout << "oldPropensity:" << thePropensities[i] << " newPropensity:" << aPropensity << " oldNextTime:" << theNextTimes[i] << " newNextTime:" << anInterval+aCurrentTime << " aCurrentTime:" << aCurrentTime << " interval:" << anInterval << std::endl;
           thePropensities[i] = aPropensity;
           theNextTimes[i] = anInterval+aCurrentTime;
           if(anInterval < theInterval)
@@ -1694,27 +1697,30 @@ void SpatiocyteNextReactionProcess::interruptedAddMolecule(Species* aSpecies,
       const double aCurrentTime(getStepper()->getCurrentTime());
       theInterval = theTime-aCurrentTime;
       unsigned cnt(A->getInMultiCnt(index, E->getID()));
+      std::cout << "cntE:" << cnt << std::endl;
       double fraction(cnt*theRates[1]);
+      std::cout << "fractionE:" << fraction << std::endl;
       if(H)
         {
           const unsigned cntH(A->getInMultiCnt(index, H->getID()));
           cnt += cntH;
+          std::cout << "cntH:" << cntH << " totalCnt:" << cnt << std::endl;
           fraction += cntH*theRates[2];
+          std::cout << "fractionH:" << cntH*theRates[2] << " fraction:" << fraction << std::endl;
         }
       fraction += (A->getMultiCoordSize()-cnt)*theRates[0];
+      std::cout << "coordASize:" << A->getMultiCoordSize() << " fraction:" << fraction << std::endl;
       fraction /= A->getMultiCoordSize();
+      std::cout << "fraction:" << fraction << std::endl;
       const double aPropensity(p*fraction);
       const double anInterval(-log(theRng->FixedU())/aPropensity);
+      std::cout << "add:" << index << " propensity:" << aPropensity << " p:" << p << " fraction:" << fraction << " interval:" << anInterval << std::endl;
       thePropensities.push_back(aPropensity);
       theNextTimes.push_back(anInterval+aCurrentTime);
       if(anInterval < theInterval)
         {
           theInterval = anInterval;
           theNextIndex = index;
-        }
-      if(index != thePropensities.size()-1)
-        {
-          std::cout << "error in interruptedAddMolecule :" << getIDString() << std::endl;
         }
     }
 }
@@ -1724,6 +1730,7 @@ void SpatiocyteNextReactionProcess::interruptedRemoveMolecule(Species* aSpecies,
 {
   if(isMultiAC)
     {
+      std::cout << "remove:" << index << std::endl;
       thePropensities[index] = thePropensities.back();
       thePropensities.pop_back();
       theNextTimes[index] = theNextTimes.back();
