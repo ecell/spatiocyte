@@ -44,7 +44,6 @@ void MultiscaleReactionProcess::initializeThird()
   else
     {
       initializeMultiscaleCompReaction();
-      DiffusionInfluencedReactionProcess::initializeThird();
     }
 }
 
@@ -136,6 +135,37 @@ void MultiscaleReactionProcess::initializeMultiscaleCompReaction()
     {
       A->setMultiMultiReactant(B->getID());
       B->setMultiMultiReactant(A->getID());
+      DiffusionInfluencedReactionProcess::initializeThird();
+    }
+  //Both substrates are combinations of onMultiscale and exMultiscale
+  else if(!A->getIsMultiscale() && !B->getIsMultiscale())
+    {
+      DiffusionInfluencedReactionProcess::initializeThird();
+    }
+  //One reactant is Multiscale and the other is either onMultiscale or
+  //exMultiscale 
+  else
+    {
+      ReactionProcess::initializeThird();
+      A->setDiffusionInfluencedReactantPair(B); 
+      B->setDiffusionInfluencedReactantPair(A); 
+      r_v = theSpatiocyteStepper->getVoxelRadius();
+      D_A = A->getDiffusionCoefficient();
+      D_B = B->getDiffusionCoefficient();
+      calculateReactionProbability();
+      if(!A->getIsMultiscale() && A->getIsDiffusing())
+        {
+          A->setDiffusionInfluencedReaction( 
+              dynamic_cast<DiffusionInfluencedReactionProcess*>(this), 
+              B->getID(), p); 
+        }
+      else if(!B->getIsMultiscale() && B->getIsDiffusing())
+        {
+          B->setDiffusionInfluencedReaction(
+              dynamic_cast<DiffusionInfluencedReactionProcess*>(this), 
+              A->getID(), p); 
+        }
+      setReactMethod();
     }
 }
 
