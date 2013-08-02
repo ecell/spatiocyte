@@ -56,8 +56,9 @@ System System(/Surface)
       VariableReferenceList [ _ Variable:/Surface:MinD ];
       Iterations 1000;
       Diffusion 1;
-      LogDuration 1e-3;
+      LogEnd 1e-3;
       LogInterval 1e-5;
+      FileName "testDiffusionSurface.csv";
     }
 }
 

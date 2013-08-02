@@ -28,9 +28,9 @@ diffuser.Origins = 1
 iterator = theSimulator.createEntity('IteratingLogProcess', 'Process:/:iterate')
 iterator.VariableReferenceList = [['_', 'Variable:/:A']]
 iterator.Iterations = 1
-iterator.LogEnd = 800000
+iterator.LogEnd = 80000000
 iterator.LogStart = 1
-iterator.LogInterval = 1
+iterator.LogInterval = 10
 iterator.Diffusion = 1
 #iterator.SquaredDisplacement = 1
 
@@ -38,7 +38,7 @@ import time
 run(1e-6)
 print "Done stirring. Now running..."
 start = time.time()
-run(800000.1)
+run(80000000.1)
 end = time.time()
 duration = end-start
 print duration
