@@ -192,9 +192,9 @@ struct Tag
 struct Origin
 {
   Point point;
-  int row;
-  int layer;
-  int col;
+  long row;
+  long layer;
+  long col;
 };
 
 /*
