@@ -374,9 +374,9 @@ SpatiocyteStepper::variable2ispecies(Variable* aVariable)
   return theSpecies.end();
 } 
 
-Species* SpatiocyteStepper::variable2species(Variable* aVariable)
+Species* SpatiocyteStepper::variable2species(const Variable* aVariable) const
 {
-  for(std::vector<Species*>::iterator i(theSpecies.begin());
+  for(std::vector<Species*>::const_iterator i(theSpecies.begin());
       i != theSpecies.end(); ++i)
     {
       if((*i)->getVariable() == aVariable)

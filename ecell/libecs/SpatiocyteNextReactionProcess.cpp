@@ -483,7 +483,7 @@ bool SpatiocyteNextReactionProcess::reactMultiAC()
           return false;
         }
     }
-  //interruptProcessesPre();
+  interruptProcessesPre();
   if(A->getIsOnMultiscale() && C->getIsOnMultiscale())
     {
       C->addMoleculeInMulti(moleculeC, A->getTag(indexA).multiIdx);
@@ -1580,7 +1580,7 @@ bool SpatiocyteNextReactionProcess::isDependentOn(const Process* aProcess) const
       i(theVariableReferenceVector.begin());
       i != theVariableReferenceVector.end(); ++i)
     {
-      if((*i).isAccessor())
+      if((*i).getCoefficient() < 0)
         {
           if(getVariableNetCoefficient(aProcess, (*i).getVariable()))
             {

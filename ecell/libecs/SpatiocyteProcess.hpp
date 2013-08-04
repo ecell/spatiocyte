@@ -304,6 +304,7 @@ protected:
   String getIDString(Variable*) const;
   String getIDString(Comp*) const;
   String getIDString(unsigned) const;
+  int getVariableNetCoefficient(const Process*, const Variable*) const;
 protected:
   bool isExternInterrupted;
   bool isInitialized;

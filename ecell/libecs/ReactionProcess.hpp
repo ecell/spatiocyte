@@ -145,6 +145,27 @@ public:
       theInterruptedProcessesPre.resize(0);
       theInterruptedProcessesPost.resize(0);
     }
+  virtual void initializeLastOnce()
+    {
+      /*
+      std::cout << getIDString() << std::endl;
+      std::cout << "\tinterruptedProcesses:" << std::endl;
+      for(unsigned i(0); i != theInterruptedProcesses.size(); ++i)
+        {
+          std::cout << "\t\t" << theInterruptedProcesses[i]->getIDString() << std::endl;
+        }
+      std::cout << "\tinterruptedProcessesPre:" << std::endl;
+      for(unsigned i(0); i != theInterruptedProcessesPre.size(); ++i)
+        {
+          std::cout << "\t\t" << theInterruptedProcessesPre[i]->getIDString() << std::endl;
+        }
+      std::cout << "\tinterruptedProcessesPost:" << std::endl;
+      for(unsigned i(0); i != theInterruptedProcessesPost.size(); ++i)
+        {
+          std::cout << "\t\t" << theInterruptedProcessesPost[i]->getIDString() << std::endl;
+        }
+        */
+    }
   //Only ReactionProcesses can interrupt other processes because only 
   //they can change the number of molecules. 
   //This method is called to set the list of processes which will be
@@ -229,7 +250,6 @@ public:
   virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
 protected:
   virtual void calculateOrder();
-  int getVariableNetCoefficient(const Process*, const Variable*) const;
 protected:
   int coefficientA;
   int coefficientB;

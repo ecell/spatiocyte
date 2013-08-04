@@ -115,7 +115,7 @@ public:
   double getNormalizedVoxelRadius();
   unsigned point2coord(Point&);
   std::vector<Comp*> const& getComps() const;
-  Species* variable2species(Variable*);
+  Species* variable2species(const Variable*) const;
   void rotateX(double, Point*, int sign=1);
   void rotateY(double, Point*, int sign=1);
   void rotateZ(double, Point*, int sign=1);

@@ -566,6 +566,36 @@ public:
              ", init size:" + int2str(theInitCoordSize) + 
              ", but is not populated.");
         }
+      /*
+      std::cout << getIDString() << std::endl;
+      std::cout << "\tDiffusionInfluenced:" << std::endl;
+      for(unsigned i(0); i != theDiffusionInfluencedReactions.size(); ++i)
+        {
+          if(theDiffusionInfluencedReactions[i])
+            {
+              std::cout << "\t\t" << theDiffusionInfluencedReactions[i
+                ]->getIDString() << std::endl;
+            }
+        }
+      std::cout << "\tAddMolecule:" << std::endl;
+      for(unsigned i(0); i != theInterruptedProcessesAddMolecule.size(); ++i)
+        {
+          std::cout << "\t\t" << theInterruptedProcessesAddMolecule[i
+            ]->getIDString() << std::endl;
+        }
+      std::cout << "\tRemoveMolecule:" << std::endl;
+      for(unsigned i(0); i != theInterruptedProcessesRemoveMolecule.size(); ++i)
+        {
+          std::cout << "\t\t" << theInterruptedProcessesRemoveMolecule[i
+            ]->getIDString() << std::endl;
+        }
+      std::cout << "\tEndDiffusion:" << std::endl;
+      for(unsigned i(0); i != theInterruptedProcessesEndDiffusion.size(); ++i)
+        {
+          std::cout << "\t\t" << theInterruptedProcessesEndDiffusion[i
+            ]->getIDString() << std::endl;
+        }
+        */
     }
   unsigned getCollisionCnt(unsigned anIndex)
     {
@@ -2623,7 +2653,7 @@ public:
     {
       return theVacantID;
     }
-  Species* getVacantSpecies()
+  Species* getVacantSpecies() const
     {
       return theVacantSpecies;
     }
@@ -3900,7 +3930,8 @@ private:
   std::vector<Species*> theDiffusionInfluencedReactantPairs;
   std::vector<Species*> theTaggedSpeciesList;
   std::vector<Species*> theTagSpeciesList;
-  std::vector<DiffusionInfluencedReactionProcess*> theDiffusionInfluencedReactions;
+  std::vector<DiffusionInfluencedReactionProcess*> 
+    theDiffusionInfluencedReactions;
   std::vector<SpatiocyteProcess*> theInterruptedProcessesAddMolecule;
   std::vector<SpatiocyteProcess*> theInterruptedProcessesRemoveMolecule;
   std::vector<SpatiocyteProcess*> theInterruptedProcessesEndDiffusion;

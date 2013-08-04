@@ -58,6 +58,7 @@ public:
       PROPERTYSLOT_SET_GET(Integer, SeparateFiles);
       PROPERTYSLOT_SET_GET(Integer, SquaredDisplacement);
       PROPERTYSLOT_SET_GET(Integer, Survival);
+      PROPERTYSLOT_SET_GET(Integer, Verbose);
       PROPERTYSLOT_SET_GET(Real, ExposureTime);
       PROPERTYSLOT_SET_GET(Real, LogEnd);
       PROPERTYSLOT_SET_GET(Real, LogInterval);
@@ -75,6 +76,7 @@ public:
   SIMPLE_SET_GET_METHOD(Integer, SeparateFiles);
   SIMPLE_SET_GET_METHOD(Integer, SquaredDisplacement);
   SIMPLE_SET_GET_METHOD(Integer, Survival);
+  SIMPLE_SET_GET_METHOD(Integer, Verbose);
   SIMPLE_SET_GET_METHOD(Real, ExposureTime);
   SIMPLE_SET_GET_METHOD(Real, LogEnd);
   SIMPLE_SET_GET_METHOD(Real, LogStart);
@@ -94,6 +96,7 @@ public:
     SeparateFiles(0),
     SquaredDisplacement(0),
     Survival(0),
+    Verbose(0),
     theFileCnt(0),
     ExposureTime(0),
     LogEnd(libecs::INF),
@@ -168,6 +171,7 @@ protected:
   unsigned SeparateFiles;
   unsigned SquaredDisplacement;
   unsigned Survival;
+  unsigned Verbose;
   unsigned theFileCnt;
   unsigned theTotalIterations;
   unsigned timePoints;

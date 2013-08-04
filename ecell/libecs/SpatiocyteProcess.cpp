@@ -86,4 +86,35 @@ String SpatiocyteProcess::getIDString(unsigned int id) const
     aVariable->getID()+"]["+int2str(id)+"]";
 }
 
+int SpatiocyteProcess::getVariableNetCoefficient(const Process* aProcess,
+                                               const Variable* aVariable) const
+{
+  int netCoefficient(0);
+  const VariableReferenceVector& aVariableReferences(
+                                 aProcess->getVariableReferenceVector()); 
+  for(VariableReferenceVector::const_iterator i(aVariableReferences.begin());
+      i != aVariableReferences.end(); ++i)
+    {
+      if((*i).getVariable() == aVariable)
+        {
+          netCoefficient += (*i).getCoefficient();
+        }
+    }
+  if(netCoefficient)
+    {
+      const Species* src(theSpatiocyteStepper->variable2species(aVariable));
+      for(VariableReferenceVector::const_iterator
+          i(aVariableReferences.begin()); i != aVariableReferences.end(); ++i)
+        {
+          const Species* tar(theSpatiocyteStepper->variable2species(
+                                                  (*i).getVariable()));
+          if(src && tar && src == tar->getVacantSpecies())
+            {
+              netCoefficient += (*i).getCoefficient();
+            }
+        }
+    }
+  return netCoefficient;
+}
+
 }

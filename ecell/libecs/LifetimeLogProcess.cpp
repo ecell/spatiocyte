@@ -296,7 +296,10 @@ void LifetimeLogProcess::logTag(Species* aSpecies, Tag& aTag,
     distance(aPoint, anOrigin)*2*theSpatiocyteStepper->getVoxelRadius() << ","
     << theTagTimes[aTag.id] << "," << aTime << "," << konCnt << "," <<
     1/(totalDuration/logCnt) << std::endl;
-  //std::cout << "average koff:" << 1/(totalDuration/logCnt) << std::endl;
+  if(Verbose)
+    {
+      std::cout << "average koff:" << 1/(totalDuration/logCnt) << std::endl;
+    }
 }
 
 void LifetimeLogProcess::saveFileHeader(std::ofstream& aFile)
@@ -404,13 +407,16 @@ bool LifetimeLogProcess::isDependentOnPre(const Process* aProcess)
   Species* D(aReactionProcess->getD());
   // Dimer -> 0
   if(A && isTrackedDimerSpecies[A->getID()] && 
+     getVariableNetCoefficient(aProcess, A->getVariable()) &&
      (!C || (C && !isTrackedSpecies[C->getID()])))
     {
       isRemoveDimerReaction[aReactionProcess->getID()] = true;
       return true;
     }
-  if((A && isTrackedSpecies[A->getID()]) ||
-     (B && isTrackedSpecies[B->getID()]))
+  if((A && isTrackedSpecies[A->getID()]) && 
+     getVariableNetCoefficient(aProcess, A->getVariable()) ||
+     (B && isTrackedSpecies[B->getID()] && 
+      getVariableNetCoefficient(aProcess, B->getVariable())))
     {
       if((C && !isTrackedSpecies[C->getID()]) ||
          (D && !isTrackedSpecies[D->getID()]))
