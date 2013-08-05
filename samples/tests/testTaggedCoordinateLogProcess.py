@@ -16,13 +16,24 @@ theSimulator.createEntity('Variable', 'Variable:/:YZPLANE').Value = 4
 theSimulator.createEntity('System', 'System:/:Surface').StepperID = 'SS'
 theSimulator.createEntity('Variable', 'Variable:/Surface:DIMENSION').Value = 2
 theSimulator.createEntity('Variable', 'Variable:/Surface:VACANT')
-theSimulator.createEntity('Variable', 'Variable:/Surface:A').Value = 500
+theSimulator.createEntity('Variable', 'Variable:/Surface:A').Value = 20
 theSimulator.createEntity('Variable', 'Variable:/Surface:As').Value = 0
+theSimulator.createEntity('Variable', 'Variable:/Surface:GFP').Value = 0
 
 logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:logger')
-logger.VariableReferenceList = [['_', 'Variable:/Surface:A'], ['_', 'Variable:/Surface:As']]
+logger.VariableReferenceList = [['_', 'Variable:/Surface:GFP']]
+logger.VariableReferenceList = [['_', 'Variable:/Surface:A']]
+logger.VariableReferenceList = [['_', 'Variable:/Surface:As']]
 logger.LogInterval = 0.01
 
+tagger = theSimulator.createEntity('TagProcess', 'Process:/:tagger')
+tagger.VariableReferenceList = [['_', 'Variable:/Surface:GFP', '-1' ]]
+tagger.VariableReferenceList = [['_', 'Variable:/Surface:A', '10' ]]
+tagger.VariableReferenceList = [['_', 'Variable:/Surface:As']]
+
+coord = theSimulator.createEntity('CoordinateLogProcess', 'Process:/:coord')
+coord.VariableReferenceList = [['_', 'Variable:/Surface:GFP', '-1' ]]
+coord.LogInterval = 0.03
 
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
 populator.VariableReferenceList = [['_', 'Variable:/Surface:A']]
@@ -33,24 +44,19 @@ binder.VariableReferenceList = [['_', 'Variable:/Surface:A','-1']]
 binder.VariableReferenceList = [['_', 'Variable:/Surface:A','-1']]
 binder.VariableReferenceList = [['_', 'Variable:/Surface:As','1']]
 binder.VariableReferenceList = [['_', 'Variable:/Surface:As','1']]
-binder.p = 0.0001
+binder.p = 0.01
 
-binder = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:reaction2')
-binder.VariableReferenceList = [['_', 'Variable:/Surface:A','-1']]
+binder = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:reaction2')
 binder.VariableReferenceList = [['_', 'Variable:/Surface:As','-1']]
-binder.VariableReferenceList = [['_', 'Variable:/Surface:As','1']]
-binder.VariableReferenceList = [['_', 'Variable:/Surface:As','1']]
-binder.p = 1
-
-react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:dissocANIOsLip')
-react.VariableReferenceList = [['_', 'Variable:/Surface:As', '-1']]
-react.VariableReferenceList = [['_', 'Variable:/Surface:A', '1']]
-react.Deoligomerize = 6
-react.Rates = [243, 81, 27, 9, 3, 1]
-#react.k = 100
+binder.VariableReferenceList = [['_', 'Variable:/Surface:A','1']]
+binder.k = 0.5
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseA')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:A']]
 diffuser.D = 1e-13
+
+diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseAs')
+diffuser.VariableReferenceList = [['_', 'Variable:/Surface:As']]
+diffuser.D = 1e-15
 
 run(100)
