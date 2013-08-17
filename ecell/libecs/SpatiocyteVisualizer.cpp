@@ -125,8 +125,8 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   isInvertBound(false),
   m_Run(false),
   m_RunReverse(false),
-  show3DMolecule(true),
-  showSurface(true),
+  show3DMolecule(false),
+  showSurface(false),
   showTime(true),
   startRecord(false),
   theResetTime(0),
@@ -1914,6 +1914,7 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table *aTable) :
   theCheckShowSurface.signal_toggled().connect( sigc::mem_fun(*this,
                             &ControlBox::on_showSurface_toggled) );
   //theCheckShowSurface.set_active();
+  theCheckShowSurface.set_active(false);
   theBoxCtrl.pack_start( theCheckShowSurface, false, false, 2 );
 
   theCheckShowTime.signal_toggled().connect( sigc::mem_fun(*this,
