@@ -137,6 +137,7 @@ public:
   virtual void preinitialize();
   virtual void initializeSecond();
   virtual void initializeThird();
+  virtual void initializeBeforePopulate();
   virtual bool isContinuous() 
     {
       return true;

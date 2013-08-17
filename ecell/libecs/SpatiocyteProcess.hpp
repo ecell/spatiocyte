@@ -74,6 +74,7 @@ public:
     }
   virtual void initializeSecond() {}
   virtual void initializeThird();
+  virtual void initializeBeforePopulate() {}
   virtual void initializeFourth() {}
   virtual void initializeFifth() {}
   virtual void initializeLastOnce() {}

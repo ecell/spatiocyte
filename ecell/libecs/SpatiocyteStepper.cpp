@@ -92,22 +92,24 @@ void SpatiocyteStepper::initialize()
   updateSpecies();
   storeSimulationParameters();
   printSimulationParameters();
-  cout << "13. populating compartments with molecules..." << std::endl;
+  cout << "13. initializing before populate..." << std::endl;
+  initializeBeforePopulate();
+  cout << "14. populating compartments with molecules..." << std::endl;
   populateComps();
-  cout << "14. initializing processes the fourth time..." << std::endl;
+  cout << "15. initializing processes the fourth time..." << std::endl;
   initializeFourth();
-  cout << "15. initializing the priority queue..." << std::endl;
+  cout << "16. initializing the priority queue..." << std::endl;
   initPriorityQueue();
-  cout << "16. initializing processes the fifth time..." << std::endl;
+  cout << "17. initializing processes the fifth time..." << std::endl;
   initializeFifth();
-  cout << "17. initializing processes the last time..." << std::endl;
+  cout << "18. initializing processes the last time..." << std::endl;
   initializeLastOnce();
-  cout << "18. finalizing species..." << std::endl;
+  cout << "19. finalizing species..." << std::endl;
   finalizeSpecies();
-  cout << "19. printing final process parameters..." << std::endl <<
+  cout << "20. printing final process parameters..." << std::endl <<
     std::endl;
   printProcessParameters();
-  cout << "20. simulation is started..." << std::endl;
+  cout << "21. simulation is started..." << std::endl;
 }
 
 
@@ -190,6 +192,7 @@ void SpatiocyteStepper::reset(int seed)
   initializeSecond();
   clearComps();
   initializeThird();
+  initializeBeforePopulate();
   populateComps();
   initializeFourth();
   initPriorityQueue();
@@ -514,6 +517,14 @@ void SpatiocyteStepper::initializeThird()
   for(unsigned i(0); i != theSpatiocyteProcesses.size(); ++i)
     {      
       theSpatiocyteProcesses[i]->initializeThird();
+    }
+}
+
+void SpatiocyteStepper::initializeBeforePopulate()
+{
+  for(unsigned i(0); i != theSpatiocyteProcesses.size(); ++i)
+    {      
+      theSpatiocyteProcesses[i]->initializeBeforePopulate();
     }
 }
 

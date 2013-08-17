@@ -1073,9 +1073,8 @@ void SpatiocyteNextReactionProcess::initializeThird()
     }
 }
 
-void SpatiocyteNextReactionProcess::initializeFourth()
+void SpatiocyteNextReactionProcess::initializeBeforePopulate()
 {
-  ReactionProcess::initializeFourth();
   if(p != -1)
     {
       return;
@@ -1296,6 +1295,11 @@ void SpatiocyteNextReactionProcess::initializeFourth()
           NEVER_GET_HERE;
         }
     }
+}
+
+void SpatiocyteNextReactionProcess::initializeFourth()
+{
+  ReactionProcess::initializeFourth();
   //Done after populating molecules:
   if(isReactAB)
     {

@@ -151,6 +151,7 @@ private:
   void initializeFirst();
   void initializeSecond();
   void initializeThird();
+  void initializeBeforePopulate();
   void initializeFourth();
   void initializeFifth();
   void initializeLastOnce();
