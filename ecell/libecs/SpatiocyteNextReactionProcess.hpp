@@ -34,6 +34,7 @@
 #define __SpatiocyteNextReactionProcess_hpp
 
 #include <sstream>
+#include <libecs/MethodProxy.hpp>
 #include <libecs/ReactionProcess.hpp>
 
 namespace libecs
@@ -41,7 +42,8 @@ namespace libecs
 
 LIBECS_DM_CLASS(SpatiocyteNextReactionProcess, ReactionProcess)
 { 
-  typedef double (SpatiocyteNextReactionProcess::*PropensityMethod)(void); 
+  typedef MethodProxy<SpatiocyteNextReactionProcess, Real> RealMethodProxy; 
+  typedef Real (SpatiocyteNextReactionProcess::*PDMethodPtr)(Variable*);
 public:
   LIBECS_DM_OBJECT(SpatiocyteNextReactionProcess, Process)
     {
@@ -49,18 +51,10 @@ public:
       PROPERTYSLOT_SET_GET(Real, SpaceA);
       PROPERTYSLOT_SET_GET(Real, SpaceB);
       PROPERTYSLOT_SET_GET(Real, SpaceC);
-      PROPERTYSLOT_SET_GET(Integer, Deoligomerize);
       PROPERTYSLOT_SET_GET(Integer, BindingSite);
-      PROPERTYSLOT_SET_GET(Integer, ImplicitUnbind);
-      PROPERTYSLOT_SET_GET(Polymorph, Rates);
+      PROPERTYSLOT_GET_NO_LOAD_SAVE(Real, Propensity);
     }
   SpatiocyteNextReactionProcess():
-    isMultiAC(false),
-    isReactAB(false),
-    Deoligomerize(0),
-    theDeoligomerIndex(0),
-    BindingSite(-1),
-    ImplicitUnbind(0),
     initSizeA(0),
     initSizeB(0),
     initSizeC(0),
@@ -68,25 +62,14 @@ public:
     SpaceA(0),
     SpaceB(0),
     SpaceC(0),
-    thePropensityMethod(&SpatiocyteNextReactionProcess::
-                               getPropensityZerothOrder) {}
+    BindingSite(-1),
+    theGetPropensityMethodPtr(RealMethodProxy::create<
+            &SpatiocyteNextReactionProcess::getPropensity_ZerothOrder>()) {}
   virtual ~SpatiocyteNextReactionProcess() {}
   SIMPLE_SET_GET_METHOD(Real, SpaceA);
   SIMPLE_SET_GET_METHOD(Real, SpaceB);
   SIMPLE_SET_GET_METHOD(Real, SpaceC);
-  SIMPLE_SET_GET_METHOD(Integer, Deoligomerize);
   SIMPLE_SET_GET_METHOD(Integer, BindingSite);
-  SIMPLE_SET_GET_METHOD(Integer, ImplicitUnbind);
-  SIMPLE_GET_METHOD(Polymorph, Rates);
-  void setRates(const Polymorph& aValue)
-    {
-      Rates = aValue;
-      PolymorphVector aValueVector(aValue.as<PolymorphVector>());
-      for(unsigned i(0); i != aValueVector.size(); ++i)
-        {
-          theRates.push_back(aValueVector[i].as<double>());
-        }
-    }
   virtual void initialize()
     {
       if(isInitialized)
@@ -95,9 +78,8 @@ public:
         }
       ReactionProcess::initialize();
       isPriorityQueued = true;
-      checkExternStepperInterrupted();
-      if(!(getOrder() == 0 || getOrder() == 1 || getOrder() == 2 ||
-           (getOrder() == 3 && variableG)))
+      isExternInterrupted = true;
+      if(!(getOrder() == 0 || getOrder() == 1 || getOrder() == 2))
         {
           if(getZeroVariableReferenceOffset() > 2)
             {
@@ -124,82 +106,63 @@ public:
         {
           initSizeD = variableD->getValue();
         }
-      if(Deoligomerize && theRates.size() && theRates.size() != Deoligomerize)
-        {
-          THROW_EXCEPTION(ValueError, 
-                          String(getPropertyInterface().getClassName()) + 
-                          "[" + getFullID().asString() + 
-                          "]: For deoligomerize reactions, the number of " +
-                          "rates given in Rates must match the number of " +
-                          "binding sites specified by Deoligomerize.");
-        }
     }
-  virtual void preinitialize();
   virtual void initializeSecond();
   virtual void initializeThird();
-  virtual void initializeBeforePopulate();
+  GET_METHOD(Real, Propensity)
+    {
+      Real aPropensity(theGetPropensityMethodPtr(this));
+      if(aPropensity < 0.0)
+        {
+          THROW_EXCEPTION(SimulationError, "Variable value <= -1.0");
+          return 0.0;
+        }
+      else
+        {
+          return aPropensity;
+        }
+    }
+  GET_METHOD(Real, Propensity_R)
+    {
+      Real aPropensity(getPropensity());
+      if(aPropensity > 0.0)
+        {
+          return 1.0/aPropensity;
+        }
+      else
+        {
+          return libecs::INF;
+        }
+    }
   virtual bool isContinuous() 
     {
       return true;
     }
-  virtual double getNewInterval();
-  virtual double getInterval(double);
+  virtual double getInterval();
   virtual void fire();
   virtual void initializeFourth();
   virtual void printParameters();
-  virtual bool isDependentOn(const Process*) const;
-  virtual bool isDependentOnPost(const Process*);
-  virtual bool isDependentOnPre(const Process*);
-  virtual bool isDependentOnEndDiffusion(Species*);
-  virtual bool isDependentOnAddMolecule(Species*);
-  virtual bool isDependentOnRemoveMolecule(Species*);
-  virtual void interruptedPost(ReactionProcess*);
-  virtual void interruptedPre(ReactionProcess*);
-  virtual void interruptedEndDiffusion(Species*);
-  virtual void interruptedAddMolecule(Species*, const unsigned);
-  virtual void interruptedRemoveMolecule(Species*, const unsigned);
-  virtual bool react();
-  virtual double getPropensity() const;
-  virtual double getNewPropensity();
+  virtual bool isInterrupted(ReactionProcess*);
 protected:
-  void updateSubstrates();
-  virtual void setPropensityMethod();
+  unsigned updateSizesAB();
+  double getIntervalUnbindAB();
+  double getIntervalUnbindMultiAB();
+  virtual void calculateOrder();
   virtual bool reactACD(Species*, Species*, Species*);
   virtual bool reactAC(Species*, Species*);
-  virtual bool reactDeoligomerize(Species*, Species*);
   virtual bool reactACbind(Species*, Species*);
   virtual bool reactACDbind(Species*, Species*, Species*);
   virtual void reactABCD();
-  virtual void reactABC();
-  virtual bool reactMultiAC();
-  virtual Voxel* reactvAC(Variable*, Species*);
+  virtual bool reactMultiABC();
+  virtual unsigned reactvAC(Variable*, Species*);
   virtual Comp* getComp2D(Species*);
-  virtual Voxel* reactvAvBC(Species*);
-  double getPropensityZerothOrder(); 
-  double getPropensityFirstOrder();
-  double getPropensityFirstOrderMultiAC();
-  double getPropensityFirstOrderReactAB();
-  double getPropensityFirstOrderDeoligomerize();
-  double getPropensitySecondOrderHomo(); 
-  double getPropensitySecondOrderHetero(); 
-  double getPropensitySecondOrderReactABvG();
-  void removeMoleculeE();
-  void checkExternStepperInterrupted();
-  void setVariableReferences(const VariableReferenceVector&);
-  void setDeoligomerIndex(const unsigned);
-  void removeCoordsA(const unsigned);
-  void removeSingleCoordsA(const unsigned);
-  void removeAdjCoordsA(Voxel*);
-  void addCoordsA(Species*, Species*, const unsigned, unsigned&);
-  Voxel* newMultiC();
+  virtual unsigned reactvAvBC(Species*);
+  Real getPropensity_ZerothOrder(); 
+  Real getPropensity_FirstOrder();
+  Real getPropensity_SecondOrder_TwoSubstrates(); 
+  Real getPropensity_SecondOrder_OneSubstrate();
+  void removeMolE();
 protected:
-  bool isMultiAC;
-  bool isReactAB;
-  unsigned Deoligomerize;
-  unsigned theDeoligomerIndex;
-  unsigned theNextIndex;
-  int BindingSite;
-  int ImplicitUnbind;
   double initSizeA;
   double initSizeB;
   double initSizeC;
@@ -207,14 +170,11 @@ protected:
   double SpaceA;
   double SpaceB;
   double SpaceC;
-  double thePropensity;
-  std::vector<double> theNextTimes;
-  std::vector<double> thePropensities;
-  std::vector<double> theRates;
-  Polymorph Rates;
+  int BindingSite;
+  unsigned nextIndexA;
   std::stringstream pFormula;
-  PropensityMethod thePropensityMethod;  
-  std::vector<unsigned> theCoordsA;
+  RealMethodProxy theGetPropensityMethodPtr;  
+  std::vector<unsigned> moleculesA;
 };
 
 }

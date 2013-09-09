@@ -57,30 +57,16 @@
 #include "Variable.hpp"
 
 // spatiocyte hpps
-#include "CompartmentProcess.hpp"
-#include "CoordinateLogProcess.hpp"
-#include "DiffusionInfluencedReactionProcess.hpp"
-#include "DiffusionProcess.hpp"
-#include "ErythrocyteProcess.hpp"
-#include "HistogramLogProcess.hpp"
-#include "IteratingLogProcess.hpp"
-#include "MassActionProcess.hpp"
-#include "MicroscopyTrackingProcess.hpp"
-#include "MicrotubuleProcess.hpp"
-#include "MoleculePopulateProcess.hpp"
-#include "OscillationAnalysisProcess.hpp"
-#include "PeriodicBoundaryDiffusionProcess.hpp"
-#include "ReactionProcess.hpp"
-#include "SpatiocyteNextReactionProcess.hpp"
-#include "SpatiocyteTauLeapProcess.hpp"
-#include "SpatiocyteProcess.hpp"
+#include "SpatiocyteThread.hpp"
+#include "SpatiocyteSpecies.hpp"
 #include "SpatiocyteStepper.hpp"
-#include "TagProcess.hpp"
+#include "SpatiocyteProcess.hpp"
 #include "VisualizationLogProcess.hpp"
-#include "SurfaceCompartmentProcess.hpp"
-#include "MultiscaleReactionProcess.hpp"
-#include "MicrotubuleProcess.hpp"
-#include "LifetimeLogProcess.hpp"
+#include "ReactionProcess.hpp"
+#include "DiffusionInfluencedReactionProcess.hpp"
+#include "MoleculePopulateProcess.hpp"
+#include "DiffusionProcess.hpp"
+
 
 namespace libecs
 {
@@ -524,29 +510,17 @@ void Model::registerBuiltinModules()
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, Variable );
 
     // spatiocyte dms in compartment branch
+    /*
+    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, Species );
+    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, Thread );
+    */
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, SpatiocyteStepper );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, SpatiocyteProcess );
-    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, MassActionProcess );
-    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, ReactionProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, VisualizationLogProcess );
-    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, SurfaceCompartmentProcess );
-    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, SpatiocyteTauLeapProcess );
-    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, MultiscaleReactionProcess );
-    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, MicrotubuleProcess );
-    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, CompartmentProcess );
-    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, ErythrocyteProcess );
-    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, IteratingLogProcess );
-    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, LifetimeLogProcess );
+    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, ReactionProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, DiffusionInfluencedReactionProcess );
-    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, SpatiocyteNextReactionProcess );
-    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, MicroscopyTrackingProcess );
-    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, CoordinateLogProcess );
-    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, HistogramLogProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, MoleculePopulateProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, DiffusionProcess );
-    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, TagProcess );
-    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, PeriodicBoundaryDiffusionProcess );
-
 }
 
 void Model::step()

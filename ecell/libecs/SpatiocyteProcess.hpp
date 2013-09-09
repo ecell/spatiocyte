@@ -53,37 +53,26 @@ public:
     isExternInterrupted(false),
     isInitialized(false),
     isPriorityQueued(false),
+    thePriority(0),
     theInterval(libecs::INF),
-    theTime(libecs::INF),
-    cout(std::cout) {}
+    theTime(libecs::INF) {}
   virtual ~SpatiocyteProcess() {}
   virtual void fire() {}
-  virtual void initializeFirst()
+  virtual void initializeFirst() {}
+  virtual void initializeSecond()
     {
-      const std::vector<Process*>& aProcesses(getStepper()->getProcessVector());
-      for(unsigned i(0); i != aProcesses.size(); ++i)
-        {
-          if(dynamic_cast<Process*>(this) == aProcesses[i])
-            {
-              theID = i;
-              break;
-            }
-        }
       theSpecies = theSpatiocyteStepper->getSpecies();
-      theStride = UINT_MAX/theSpecies.size();
     }
-  virtual void initializeSecond() {}
-  virtual void initializeThird();
-  virtual void initializeBeforePopulate() {}
+  virtual void initializeThird() {}
   virtual void initializeFourth() {}
   virtual void initializeFifth() {}
   virtual void initializeLastOnce() {}
   virtual void printParameters() {}
   virtual void updateResizedLattice() {}
-  virtual void finalizeFire() {}
-  virtual void interruptedEndDiffusion(Species*) {}
-  virtual void interruptedAddMolecule(Species*, const unsigned) {}
-  virtual void interruptedRemoveMolecule(Species*, const unsigned) {}
+  virtual void prepreinitialize()
+    {
+      //Process::prepreinitialize();
+    }
   virtual void initialize()
     {
       if(isInitialized)
@@ -92,8 +81,7 @@ public:
         }
       isInitialized = true;
       Process::initialize();
-      setSpatiocyteStepper();
-      cout.setLevel(theSpatiocyteStepper->getDebugLevel());
+      theSpatiocyteStepper = dynamic_cast<SpatiocyteStepper*>(getStepper());
       theSortedVariableReferences.resize(theVariableReferenceVector.size());
       for(VariableReferenceVector::iterator
           i(theVariableReferenceVector.begin());
@@ -113,10 +101,6 @@ public:
               Species* aSpecies(theSpatiocyteStepper->addSpecies(aVariable));
               theProcessSpecies.push_back(aSpecies);
             }
-          else
-            {
-              theProcessVariables.push_back(aVariable);
-            }
           if((*i).getCoefficient() > 0)
             {
               thePositiveVariableReferences.push_back(*i);
@@ -131,103 +115,48 @@ public:
             }
         }
     }
-  void setSpatiocyteStepper()
+  void requeue()
     {
-      Model::StepperMap aStepperMap(getModel()->getStepperMap());  
-      for(Model::StepperMap::const_iterator i(aStepperMap.begin());
-          i != aStepperMap.end(); ++i )
-        {   
-          theSpatiocyteStepper = dynamic_cast<SpatiocyteStepper*>(i->second);
-          if(theSpatiocyteStepper)
-            {
-              return;
-            }
-        }
-      THROW_EXCEPTION(ValueError, getPropertyInterface().getClassName() +
-                      ": " + getFullID().asString() +  
-                      " SpatiocyteStepper has not been declared.");
-    }
-  virtual void requeue()
-    {
-      theTime += getNewInterval(); // do this only for the Processes in Q
+      theTime += getInterval(); // do this only for the Processes in Q
       thePriorityQueue->moveTop(); // do this only for the Processes in Q
     }
-  void enqueue(double aCurrentTime)
-    {
-      const double anOldTime(theTime);
-      theTime = aCurrentTime + getNewInterval();
-      if(theTime >= anOldTime)
-        {
-          thePriorityQueue->moveDown(theQueueID);
-        }
-      else if(theTime < anOldTime)
-        {
-          thePriorityQueue->moveUp(theQueueID);
-        }          
-    }
-  void unqueue()
-    {
-      theTime = libecs::INF;
-      thePriorityQueue->moveDown(theQueueID);
-    }
-  virtual bool isDependentOn(const Process* aProcess) const
+  virtual bool isInterrupted(ReactionProcess* aProcess)
     {
       return false;
     }
-  virtual bool isDependentOnPre(const Process* aProcess)
-    {
-      return false;
-    }
-  virtual bool isDependentOnPost(const Process* aProcess)
-    {
-      return false;
-    }
-  virtual bool isDependentOnAddMolecule(Species*)
-    {
-      return false;
-    }
-  virtual bool isDependentOnRemoveMolecule(Species*)
-    {
-      return false;
-    }
-  virtual bool isDependentOnEndDiffusion(Species*)
-    {
-      return false;
-    }
-  virtual double getInterval(double aCurrentTime)
+  virtual double getInterval()
     {
       return theInterval;
-    }
-  virtual double getNewInterval()
-    {
-      return theInterval;
-    }
-  virtual double getInitInterval()
-    {
-      return getNewInterval();
     }
   virtual void setPriorityQueue(ProcessPriorityQueue* aPriorityQueue)
     {
       thePriorityQueue = aPriorityQueue;
     }
-  virtual void setLatticeProperties(std::vector<Voxel>* aLattice,
-                                    unsigned anAdjoiningCoordSize,
-                                    unsigned aNullCoord, unsigned aNullID,
-                                    RandomLib::Random* aRng)
+  virtual void setLatticeProperties(
+                                std::vector<std::vector<unsigned short> >* anIDs,
+                                std::vector<std::vector<VoxelInfo> >* anInfo,
+                                std::vector<std::vector<unsigned> >* anAdjoins,
+                                unsigned aBoxMaxSize,
+                                unsigned anAdjoiningMolSize,
+                                unsigned aNullMol, unsigned aNullID,
+                                Thread* aThread)
     {
-      theRng = aRng;
-      theLattice = aLattice;
-      theAdjoiningCoordSize = anAdjoiningCoordSize;
-      theNullCoord = aNullCoord;
+      theBoxMaxSize = aBoxMaxSize;
+      theIDs = anIDs;
+      theInfo = anInfo;
+      theAdjoins = anAdjoins;
+      theAdjoinSize = anAdjoiningMolSize;
+      theNullMol = aNullMol;
       theNullID = aNullID;
+      theThread = aThread;
     }
   double getTime() const
     {
       return theTime;
     }
-  virtual int getPriority() const
+  virtual int getQueuePriority() const
     {
-      return Process::getPriority();
+      return thePriority;
     }
   virtual void setTime(double aTime)
     {
@@ -237,19 +166,24 @@ public:
     {
       theQueueID = anID;
     }
-  virtual unsigned getLatticeResizeCoord(unsigned)
+  Species* id2species(unsigned short id)
+    {
+      return theSpatiocyteStepper->id2species(id);
+    }
+  virtual unsigned getLatticeResizeMol(unsigned)
     {
       return 0;
     }
-  virtual void interruptedPre(ReactionProcess*) {}
-  virtual void interruptedPost(ReactionProcess*) {}
-  virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
-  virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
+  virtual void addSubstrateInterrupt(Species* aSpecies, 
+                                     unsigned short aMolecule) {}
+  virtual void removeSubstrateInterrupt(Species* aSpecies, 
+                                        unsigned short aMolecule) {}
   virtual void substrateValueChanged(double aCurrentTime)
     {
       const double anOldTime(theTime);
-      theTime = aCurrentTime + getInterval(aCurrentTime);
-      //std::cout << getIDString() << " curr:" << aCurrentTime << " theQueueID:" << theQueueID << " oldTime:" << anOldTime << " theTime:" << theTime << std::endl;
+      double anInterval(std::max(getStepInterval(),
+                                 getStepper()->getMinStepInterval()));
+      theTime = aCurrentTime + anInterval;
       if(theTime >= anOldTime)
         {
           thePriorityQueue->moveDown(theQueueID);
@@ -257,7 +191,7 @@ public:
       else if(theTime < anOldTime)
         {
           thePriorityQueue->moveUp(theQueueID);
-        }          
+        }       
     }
   virtual bool getIsExternInterrupted()
     {
@@ -269,67 +203,45 @@ public:
     }
   Variable* createVariable(String anID)
     {
-      Variable* aVariable(SpatiocyteStepper::getVariable(getSuperSystem(),
-                                                         anID));
-      if(!aVariable)
-        {
-          String anEntityType("Variable");
-          SystemPath aSystemPath(getSuperSystem()->getSystemPath());
-          aSystemPath.push_back(getSuperSystem()->getID());
-          FullID aFullID(anEntityType, aSystemPath, anID);
-          aVariable = reinterpret_cast<Variable*>(
-                                getModel()->createEntity("Variable", aFullID));
-          aVariable->setValue(0);
-        }
+      String anEntityType("Variable");
+      SystemPath aSystemPath(getSuperSystem()->getSystemPath());
+      aSystemPath.push_back(getSuperSystem()->getID());
+      FullID aFullID(anEntityType, aSystemPath, anID);
+      Variable* aVariable(reinterpret_cast<Variable*>(
+                              getModel()->createEntity("Variable", aFullID)));
+      aVariable->setValue(0);
       return aVariable;
     }
-  String getIDString() const
-    {
-      return getFullID().asString();
-    }
-  unsigned getID(const Voxel* aVoxel) const
-    {
-      return aVoxel->idx/theStride;
-    }
-  unsigned getID(const Voxel& aVoxel) const
-    {
-      return aVoxel.idx/theStride;
-    }
-  unsigned getID() const
-    {
-      return theID;
-    }
 protected:
-  String getIDString(Voxel*) const;
+  String getIDString(unsigned short) const;
   String getIDString(Species*) const;
   String getIDString(Variable*) const;
   String getIDString(Comp*) const;
   String getIDString(unsigned) const;
-  int getVariableNetCoefficient(const Process*, const Variable*) const;
 protected:
   bool isExternInterrupted;
   bool isInitialized;
   bool isPriorityQueued;
-  unsigned theAdjoiningCoordSize;
-  unsigned theID;
-  unsigned theNullCoord;
+  int thePriority;
+  unsigned theAdjoinSize;
+  unsigned theBoxMaxSize;
+  unsigned theNullMol;
   unsigned theNullID;
-  unsigned theStride;
   double theInterval;
   double theTime;
-  SpatiocyteDebug cout;
   ProcessID theQueueID;
   ProcessPriorityQueue* thePriorityQueue; 
   SpatiocyteStepper* theSpatiocyteStepper;
   std::vector<Species*> theSpecies;
   std::vector<Species*> theProcessSpecies;
-  std::vector<Variable*> theProcessVariables;
-  std::vector<Voxel>* theLattice;
+  std::vector<std::vector<unsigned> >* theAdjoins;
+  std::vector<std::vector<VoxelInfo> >* theInfo;
+  std::vector<std::vector<unsigned short> >* theIDs;
   VariableReferenceVector thePositiveVariableReferences;
   VariableReferenceVector theNegativeVariableReferences;
   VariableReferenceVector theZeroVariableReferences;
   VariableReferenceVector theSortedVariableReferences;
-  RandomLib::Random* theRng;
+  Thread* theThread;
 };
 
 }

@@ -35,6 +35,7 @@
 #include <sstream>
 #include <libecs/SpatiocyteProcess.hpp>
 #include <libecs/SpatiocyteSpecies.hpp>
+#include <libecs/SpatiocyteThread.hpp>
 
 namespace libecs
 {
@@ -46,38 +47,21 @@ public:
   LIBECS_DM_OBJECT(DiffusionProcess, Process)
     {
       INHERIT_PROPERTIES(Process);
-      PROPERTYSLOT_SET_GET(Integer, Origins);
-      PROPERTYSLOT_SET_GET(Integer, RegularLattice);
       PROPERTYSLOT_SET_GET(Real, D);
-      PROPERTYSLOT_SET_GET(Real, Interval);
       PROPERTYSLOT_SET_GET(Real, P);
-      PROPERTYSLOT_SET_GET(Real, Propensity);
-      PROPERTYSLOT_SET_GET(Real, MoleculeRadius);
       PROPERTYSLOT_SET_GET(Real, WalkProbability);
     }
   DiffusionProcess():
-    Origins(0),
-    RegularLattice(0),
     D(0),
-    Interval(0),
     P(1),
-    Propensity(0),
-    MoleculeRadius(0),
     WalkProbability(1),
     theDiffusionSpecies(NULL),
-    theTrailSpecies(NULL),
     theVacantSpecies(NULL),
     theWalkMethod(&DiffusionProcess::walk) {}
   virtual ~DiffusionProcess() {}
-  SIMPLE_SET_GET_METHOD(Integer, Origins);
-  SIMPLE_SET_GET_METHOD(Integer, RegularLattice);
   SIMPLE_SET_GET_METHOD(Real, D);
-  SIMPLE_SET_GET_METHOD(Real, Interval);
   SIMPLE_SET_GET_METHOD(Real, P);
-  SIMPLE_SET_GET_METHOD(Real, Propensity);
-  SIMPLE_SET_GET_METHOD(Real, MoleculeRadius);
   SIMPLE_SET_GET_METHOD(Real, WalkProbability);
-  virtual void substrateValueChanged(double) {}
   virtual void initialize()
     {
       if(isInitialized)
@@ -108,9 +92,8 @@ public:
                 }
               theDiffusionSpecies = aSpecies;
               theDiffusionSpecies->setDiffusionCoefficient(D);
-              theDiffusionSpecies->setWalkPropensity(Propensity);
             }
-          else if((*i).getCoefficient() < 0)
+          else
             {
               if(theVacantSpecies)
                 {
@@ -126,22 +109,6 @@ public:
                 }
               theVacantSpecies = aSpecies;
             }
-          else
-            {
-              if(theTrailSpecies)
-                {
-                  THROW_EXCEPTION(ValueError, String(
-                                  getPropertyInterface().getClassName()) +
-                                  "[" + getFullID().asString() + 
-                                  "]: A DiffusionProcess requires only one " +
-                                  "nonHD variable reference with positive " +
-                                  "coefficient as the trailing species to be " +
-                                  "diffused off, but " +
-                                  getIDString(theTrailSpecies) + " and " +
-                                  getIDString(aSpecies) + " are given."); 
-                }
-              theTrailSpecies = aSpecies;
-            }
         }
       if(!theDiffusionSpecies)
         {
@@ -155,7 +122,6 @@ public:
     }
   virtual void initializeSecond()
     {
-      SpatiocyteProcess::initializeSecond();
       if(theVacantSpecies)
         {
           if(!theVacantSpecies->getIsMultiscale())
@@ -163,14 +129,6 @@ public:
               theVacantSpecies->setIsDiffusiveVacant();
             }
           theDiffusionSpecies->setVacantSpecies(theVacantSpecies);
-        }
-      if(theTrailSpecies)
-        {
-          theDiffusionSpecies->setTrailSpecies(theTrailSpecies);
-        }
-      if(MoleculeRadius)
-        {
-          theDiffusionSpecies->setMoleculeRadius(MoleculeRadius);
         }
     }
   virtual void initializeFourth()
@@ -184,19 +142,11 @@ public:
       if(D > 0)
         {
           double r_v(theDiffusionSpecies->getDiffuseRadius());
-          //From 4rv^2 = 2lDt, alpha = 4/(2l), where l is the dimension:
-          double alpha(2); //default value for 1D diffusion
+          double alpha(0.5); //default for 1D diffusion
           if(theDiffusionSpecies->getDimension() == 2)
             {
-              if(RegularLattice || theDiffusionSpecies->getIsRegularLattice())
-                {
-                  alpha = 1;
-                }
-              else
-                {
-                  alpha = pow((2*sqrt(2)+4*sqrt(3)+3*sqrt(6)+sqrt(22))/
-                              (6*sqrt(2)+4*sqrt(3)+3*sqrt(6)), 2);
-                }
+              alpha = pow((2*sqrt(2)+4*sqrt(3)+3*sqrt(6)+sqrt(22))/
+                           (6*sqrt(2)+4*sqrt(3)+3*sqrt(6)), 2);
             }
           else if(theDiffusionSpecies->getDimension() == 3)
             {
@@ -204,103 +154,40 @@ public:
             }
           theInterval = alpha*r_v*r_v*WalkProbability/D;
         }
-      else if(Interval > 0)
-        {
-          theInterval = Interval;
-        }
       theDiffusionSpecies->setDiffusionInterval(theInterval);
-      if(Origins)
-        {
-          theDiffusionSpecies->initMoleculeOrigins();
-        }
       if(theDiffusionSpecies->getIsDiffusiveVacant())
         {
           theWalkMethod = &DiffusionProcess::walkVacant;
         }
       else if(theDiffusionSpecies->getIsMultiscale())
         {
-          if(Propensity)
-            {
-              if(theDiffusionSpecies->getIsRegularLattice())
-                {
-                  if(Origins)
-                    {
-                      theWalkMethod = 
-                      &DiffusionProcess::walkMultiscalePropensityRegularOrigins;
-                    }
-                  else
-                    {
-                      theWalkMethod = 
-                        &DiffusionProcess::walkMultiscalePropensityRegular;
-                    }
-                }
-              else
-                {
-                  theWalkMethod = &DiffusionProcess::walkMultiscalePropensity;
-                }
-            }
-          else
-            {
-              if(theDiffusionSpecies->getIsRegularLattice())
-                {
-                  if(Origins)
-                    {
-                      theWalkMethod = 
-                        &DiffusionProcess::walkMultiscaleRegularOrigins;
-                    }
-                  else
-                    {
-                      theWalkMethod = &DiffusionProcess::walkMultiscaleRegular;
-                    }
-                }
-              else
-                {
-                  theWalkMethod = &DiffusionProcess::walkMultiscale;
-                }
-            }
+          theWalkMethod = &DiffusionProcess::walkMultiscale;
         }
       else 
         {
-          if(theDiffusionSpecies->getIsRegularLattice())
-            {
-              if(theDiffusionSpecies->getIsOnMultiscale())
-                {
-                  theWalkMethod = &DiffusionProcess::walkOnMultiscaleRegular;
-                }
-              else
-                {
-                  theWalkMethod = &DiffusionProcess::walkRegular;
-                }
-            }
-          else
-            {
-              if(theTrailSpecies)
-                {
-                  theWalkMethod = &DiffusionProcess::walkTrail;
-                }
-              else
-                {
-                  theWalkMethod = &DiffusionProcess::walk;
-                }
-            }
+          theWalkMethod = &DiffusionProcess::walk;
         }
       //After initializeFourth, this process will be enqueued in the priority
       //queue, so we must update the number of molecules of the diffusion 
       //species if it is a diffusiveVacant species:
-      theDiffusionSpecies->updateMoleculeSize();
+      theDiffusionSpecies->updateMolSize();
     }
   virtual void printParameters()
     {
       String aProcess(String(getPropertyInterface().getClassName()) + 
                       "[" + getFullID().asString() + "]");
-      cout << aProcess << std::endl;
-      cout << "  " << getIDString(theDiffusionSpecies) << " ";
-      cout << ":" << std::endl << "  Diffusion interval=" <<
+      std::cout << aProcess << std::endl;
+      std::cout << "  " << getIDString(theDiffusionSpecies) << " ";
+      std::cout << ":" << std::endl << "  Diffusion interval=" <<
         theInterval << ", D=" << D << ", Walk probability (P/rho)=" <<
         WalkProbability << std::endl;
     }
   virtual void fire()
     {
+      //you must requeue before diffusing and reacting the molecules
+      //because requeue calls the moveTop method and the moveTop method
+      //becomes invalid once other processes are requeued by 
+      //substrateValueChanged in DiffusionInfluencedReactionProcess:
       requeue();
       theDiffusionSpecies->resetFinalizeReactions();
       (this->*theWalkMethod)();
@@ -308,19 +195,17 @@ public:
     }
   void walk() const
     {
-      theDiffusionSpecies->walk();
-    }
-  void walkTrail() const
-    {
-      theDiffusionSpecies->walkTrail();
-    }
-  void walkRegular() const
-    {
-      theDiffusionSpecies->walkRegular();
-    }
-   void walkOnMultiscaleRegular() const
-    {
-      theDiffusionSpecies->walkOnMultiscaleRegular();
+      theThread->walk();
+      /*
+      for(unsigned i(0); i != 800; ++i)
+        {
+          aTars.resize(0);
+          for(unsigned j(0); j != 100; ++j)
+            {
+              aTars.push_back(j);
+            }
+        }
+        */
     }
   void walkVacant() const
     {
@@ -329,26 +214,6 @@ public:
   void walkMultiscale() const
     {
       theDiffusionSpecies->walkMultiscale();
-    }
-  void walkMultiscalePropensity() const
-    {
-      theDiffusionSpecies->walkMultiscalePropensity();
-    }
-  void walkMultiscaleRegular() const
-    {
-      theDiffusionSpecies->walkMultiscaleRegular();
-    }
-  void walkMultiscaleRegularOrigins() const
-    {
-      theDiffusionSpecies->walkMultiscaleRegularOrigins();
-    }
-  void walkMultiscalePropensityRegular() const
-    {
-      theDiffusionSpecies->walkMultiscalePropensityRegular();
-    }
-  void walkMultiscalePropensityRegularOrigins() const
-    {
-      theDiffusionSpecies->walkMultiscalePropensityRegularOrigins();
     }
   virtual void initializeLastOnce()
     {
@@ -365,16 +230,10 @@ public:
     }
     */
 protected:
-  unsigned Origins;
-  unsigned RegularLattice;
   double D;
-  double Interval;
   double P;
-  double Propensity;
-  double MoleculeRadius;
   double WalkProbability;
   Species* theDiffusionSpecies;
-  Species* theTrailSpecies;
   Species* theVacantSpecies;
   WalkMethod theWalkMethod;
 };

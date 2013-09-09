@@ -49,44 +49,31 @@ public:
       PROPERTYSLOT_SET_GET(Real, VoxelRadius);
       PROPERTYSLOT_SET_GET(Integer, LatticeType);
       PROPERTYSLOT_SET_GET(Integer, SearchVacant);
-      PROPERTYSLOT_SET_GET(Integer, DebugLevel);
-      PROPERTYSLOT_SET_GET(Integer, RemoveSurfaceBias);
+      PROPERTYSLOT_SET_GET(Integer, ThreadSize);
     }
   SIMPLE_SET_GET_METHOD(Real, VoxelRadius); 
   SIMPLE_SET_GET_METHOD(Integer, LatticeType); 
   SIMPLE_SET_GET_METHOD(Integer, SearchVacant); 
-  SIMPLE_SET_GET_METHOD(Integer, DebugLevel); 
-  SIMPLE_SET_GET_METHOD(Integer, RemoveSurfaceBias); 
+  SIMPLE_SET_GET_METHOD(Integer, ThreadSize); 
   SpatiocyteStepper():
     isInitialized(false),
     isPeriodicEdge(false),
     SearchVacant(false),
-    RemoveSurfaceBias(false),
-    DebugLevel(1),
     LatticeType(HCP_LATTICE),
-    theMoleculeID(0),
-    theNormalizedVoxelRadius(0.5),
+    theTotalBoxSize(8),
+    ThreadSize(6),
     VoxelRadius(10e-9),
-    cout(std::cout) {}
-  virtual ~SpatiocyteStepper() {}
+    nVoxelRadius(0.5) {}
+  virtual ~SpatiocyteStepper();
   virtual void initialize();
-  /*
-  bool isDependentOn(const Stepper*)
-    {
-      return false;
-    }
-    */
   // need to check interrupt when we suddenly stop the simulation, do we
   // need to update the priority queue?
   virtual void interrupt(double);
-  virtual void interruptAllProcesses(const double);
   virtual void step();
   void createSpecies();
   Species* addSpecies(Variable*);
   Species* createSpecies(System*, String);
-  static Variable* createVariable(const String&, const System*, Model*);
-  static Process* createProcess(const String&, const String&, const System*,
-                                Model*);
+  Variable* createVariable(System*, String);
   Species* getSpecies(Variable*);
   std::vector<Species*> getSpecies();
   Point coord2point(unsigned);
@@ -97,15 +84,13 @@ public:
   void coord2global(unsigned, unsigned&, unsigned&, unsigned&);
   void point2global(Point, unsigned&, unsigned&, unsigned&);
   Comp* system2Comp(System*);
-  bool isBoundaryCoord(unsigned, unsigned);
-  unsigned getPeriodicCoord(unsigned, unsigned, Origin*);
+  bool isBoundaryMol(unsigned, unsigned);
+  unsigned getPeriodicMol(unsigned, unsigned, Origin*);
   unsigned global2coord(unsigned, unsigned, unsigned);
   Point getPeriodicPoint(unsigned, unsigned, Origin*);
   void checkLattice();
-  void checkSpecies();
   void setPeriodicEdge();
   void reset(int);
-  unsigned getNewMoleculeID();
   unsigned getRowSize();
   unsigned getLayerSize();
   unsigned getColSize();
@@ -115,35 +100,36 @@ public:
   double getNormalizedVoxelRadius();
   unsigned point2coord(Point&);
   std::vector<Comp*> const& getComps() const;
-  Species* variable2species(const Variable*) const;
+  Species* variable2species(Variable*);
   void rotateX(double, Point*, int sign=1);
   void rotateY(double, Point*, int sign=1);
   void rotateZ(double, Point*, int sign=1);
-  bool isPeriodicEdgeCoord(unsigned, Comp*);
-  bool isRemovableEdgeCoord(unsigned, Comp*);
+  bool isPeriodicEdgeMol(unsigned, Comp*);
+  bool isRemovableEdgeMol(unsigned, Comp*);
   double getRowLength();
   double getColLength();
   double getLayerLength();
   double getMinLatticeSpace();
   void updateSpecies();
   void finalizeSpecies();
-  unsigned getStartCoord();
-  unsigned getID(const Voxel&) const;
-  unsigned getID(const Voxel*) const;
-  virtual GET_METHOD(Real, TimeScale) { return 0; }
-  Voxel* getVoxel(const unsigned int& aCoord) { return &theLattice[aCoord]; }
-  void addInterruptedProcess(SpatiocyteProcess*);
-  static Variable* getVariable(System*, String const&);
+  unsigned getStartMol();
+  virtual GET_METHOD(Real, TimeScale)
+  {
+      return 0.0;
+  }
+  void constructLattice(unsigned);
+  void concatenateLattice(unsigned);
+  void constructLattice();
+  unsigned getBoxSize();
 private:
-  void addSurfaceAdjoins(const unsigned, const Comp*);
-  void interruptProcesses(const double);
+  void initializeThreads();
   void setCompsCenterPoint();
   void setIntersectingCompartmentList();
   void setIntersectingParent();
   void setIntersectingPeers();
   void printProcessParameters();
   void checkSurfaceComp();
-  void shuffleAdjoiningCoords();
+  void shuffleAdjoins();
   void setLatticeProperties();
   void checkModel();
   void resizeProcessLattice();
@@ -151,7 +137,6 @@ private:
   void initializeFirst();
   void initializeSecond();
   void initializeThird();
-  void initializeBeforePopulate();
   void initializeFourth();
   void initializeFifth();
   void initializeLastOnce();
@@ -161,7 +146,6 @@ private:
   void setCompProperties();
   void initSpecies();
   void readjustSurfaceBoundarySizes();
-  void constructLattice();
   void compartmentalizeLattice();
   void concatenatePeriodicSurfaces();
   void registerComps();
@@ -172,9 +156,8 @@ private:
   void clearComps();
   void clearComp(Comp*);
   void populateComp(Comp*);
-  void populateSpeciesDense(std::vector<Species*>&, Species*, unsigned,
-                            unsigned);
-  void populateSpeciesSparse(std::vector<Species*>&, Species*, unsigned);
+  void populateSpeciesDense(std::vector<Species*>&, unsigned, unsigned);
+  void populateSpeciesSparse(std::vector<Species*>&);
   void registerCompSpecies(Comp*);
   void setCompProperties(Comp*);
   void setDiffusiveComp(Comp*);
@@ -184,62 +167,81 @@ private:
   void setSurfaceVoxelProperties(Comp*);
   void setSurfaceCompProperties(Comp*);
   void setVolumeCompProperties(Comp*);
-  void concatenateVoxel(Voxel&, unsigned, unsigned, unsigned);
-  void concatenateLayers(Voxel&, unsigned, unsigned, unsigned, unsigned);
-  void concatenateRows(Voxel&, unsigned, unsigned, unsigned, unsigned);
-  void concatenateCols(Voxel&, unsigned, unsigned, unsigned, unsigned);
-  void replaceVoxel(unsigned, unsigned);
-  void replaceUniVoxel(unsigned, unsigned);
+  void concatenateVoxel(const unsigned, const unsigned);
+  void concatenateLayers(const unsigned, const unsigned, const unsigned,
+                         const unsigned, const unsigned, const unsigned);
+  void concatenateRows(const unsigned, const unsigned, const unsigned,
+                         const unsigned, const unsigned, const unsigned);
+  void concatenateCols(const unsigned, const unsigned, const unsigned,
+                         const unsigned, const unsigned, const unsigned);
+  void replaceVoxel(const unsigned, const unsigned, const unsigned,
+                    const unsigned);
+  void replaceUniVoxel(const unsigned, const unsigned, const unsigned,
+                    const unsigned);
   void setMinMaxSurfaceDimensions(unsigned, Comp*);
-  bool isInsideCoord(unsigned, Comp*, double);
-  bool isSurfaceVoxel(Voxel&, unsigned, Comp*);
-  bool isLineVoxel(Voxel&, unsigned, Comp*);
-  bool isEnclosedSurfaceVoxel(Voxel&, unsigned, Comp*);
-  bool isEnclosedRootSurfaceVoxel(Voxel&, unsigned, Comp*, Comp*);
-  bool isPeerCoord(unsigned, Comp*);
-  bool isLowerPeerCoord(unsigned, Comp*);
-  bool isRootSurfaceVoxel(Voxel&, unsigned, Comp*);
-  bool isParentSurfaceVoxel(Voxel&, unsigned, Comp*);
-  bool compartmentalizeVoxel(unsigned, Comp*);
+  bool isInsideMol(unsigned, Comp*, double);
+  bool isSurfaceVoxel(unsigned short&, unsigned, Comp*);
+  bool isLineVoxel(unsigned short&, unsigned, Comp*);
+  bool isEnclosedSurfaceVoxel(unsigned short&, unsigned, Comp*);
+  bool isEnclosedRootSurfaceVoxel(unsigned short&, unsigned, Comp*, Comp*);
+  bool isPeerMol(unsigned, Comp*);
+  bool isLowerPeerMol(unsigned, Comp*);
+  bool isRootSurfaceVoxel(unsigned short&, unsigned, Comp*);
+  bool isParentSurfaceVoxel(unsigned short&, unsigned, Comp*);
+  bool compartmentalizeVoxel(unsigned, unsigned, Comp*);
   double getCuboidSpecArea(Comp*);
   unsigned coord2row(unsigned);
   unsigned coord2col(unsigned);
   unsigned coord2layer(unsigned);
   Comp* registerComp(System*, std::vector<Comp*>*);
-  void rotateCompartment(Comp*);
+  Variable* getVariable(System*, String const&);
+  void setBoundaries();
+  void setAdjBoxes();
+  void setAdjAdjBoxes();
 private:
   bool isInitialized;
   bool isPeriodicEdge;
   bool SearchVacant;
-  bool RemoveSurfaceBias;
+  char flagA;
+  char flagB;
   unsigned short theNullID;
-  unsigned DebugLevel;
   unsigned LatticeType; 
-  unsigned theAdjoiningCoordSize;
+  unsigned nThreadsRunning;
+  unsigned theAdjoinSize;
   unsigned theBioSpeciesSize;
+  unsigned theBoxSize;
   unsigned theCellShape;
-  unsigned theColSize;
-  unsigned theLayerSize;
-  unsigned theNullCoord;
-  unsigned theRowSize;
-  unsigned theStride;
-  unsigned theMoleculeID;
-  double theNormalizedVoxelRadius;
+  unsigned theTotalBoxSize;
+  unsigned theTotalCols;
+  unsigned theTotalLayers;
+  unsigned theTotalRows;
+  unsigned ThreadSize;
+  unsigned theBoxMaxSize;
+  unsigned theBoxCols;
+  unsigned theBoxRows;
+  unsigned theBoxLayers;
+  double VoxelRadius; //r_v
+  double nVoxelRadius;
   double theHCPl;
   double theHCPx;
   double theHCPy;
-  double VoxelRadius; //r_v
+  unsigned theNullMol;
   Point theCenterPoint;
   ProcessPriorityQueue thePriorityQueue; 
-  SpatiocyteDebug cout;
   std::vector<Species*>::iterator variable2ispecies(Variable*);
   std::vector<Species*> theSpecies;
   std::vector<Comp*> theComps;
-  std::vector<Voxel> theLattice;
+  std::vector<std::vector<unsigned short> > theIDs;
+  std::vector<std::vector<VoxelInfo> > theInfo;
+  std::vector<std::vector<unsigned> > theAdjoins;
   std::vector<Process*> theExternInterruptedProcesses;
-  RandomLib::Random theRan;
-  std::vector<SpatiocyteProcess*> theInterruptedProcesses;
-  std::vector<SpatiocyteProcess*> theSpatiocyteProcesses;
+  std::vector<std::vector<unsigned> > theCoordMols;
+  std::vector<std::vector<unsigned> > theAdjBoxes;
+  std::vector<std::vector<unsigned> > theAdjAdjBoxes;
+  std::vector<unsigned> theCols;
+  std::vector<unsigned> theRows;
+  std::vector<unsigned> theLayers;
+  std::vector<Thread*> theThreads;
 };
 
 }

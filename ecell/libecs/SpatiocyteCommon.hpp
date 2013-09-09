@@ -45,6 +45,7 @@ namespace libecs
 
 class SpatiocyteProcess;
 class Species;
+class Thread;
 //struct Subunit;
 typedef PriorityQueue<SpatiocyteProcess*> ProcessPriorityQueue;
 typedef ProcessPriorityQueue::ID ProcessID;
@@ -77,12 +78,12 @@ typedef ProcessPriorityQueue::ID ProcessID;
 //The 12 adjoining voxels of a voxel in the HCP lattice:
 #define NORTH    0 
 #define SOUTH    1
-#define NW       2 
-#define SW       3
-#define NE       4
-#define SE       5
-#define EAST     6 
-#define WEST     7 
+#define EAST     2 
+#define WEST     3 
+#define NW       4 
+#define SW       5
+#define NE       6
+#define SE       7
 #define DORSALN  8
 #define DORSALS  9
 #define VENTRALN 10 
@@ -111,24 +112,12 @@ struct Point
   double z;
 };
 
-struct Voxel
+struct VoxelInfo
 {
-  unsigned idx;
   unsigned short diffuseSize;
-  unsigned short adjoiningSize;
-  //We use short here to maintain the size of Voxel as 128 bytes which helps
-  //prefetching. Species ID:
-  //Try to limit the adjoiningSize <= 6:
-  unsigned int coord;
-  unsigned int* adjoiningCoords;
-  Point* point;
-  /*
-  //remove initAdjoins once MicrotubuleProcess is fixed:
-  unsigned int* initAdjoins;
-  Subunit* subunit;
-  //Contains adjoining and extended surface voxels:
-  std::vector<std::vector<unsigned int> >* surfaceCoords;
-  */
+  unsigned short adjoinSize;
+  unsigned coord;
+  Point point;
 };
 
 struct Comp
@@ -184,17 +173,14 @@ struct Tag
 {
   unsigned origin;
   unsigned id;
-  unsigned rotIndex; //rotation index
-  unsigned multiIdx;
-  unsigned boundCnt;
 };
 
 struct Origin
 {
   Point point;
-  long row;
-  long layer;
-  long col;
+  int row;
+  int layer;
+  int col;
 };
 
 /*

@@ -45,20 +45,17 @@ public:
   LIBECS_DM_OBJECT(VisualizationLogProcess, Process)
     {
       INHERIT_PROPERTIES(Process);
-      PROPERTYSLOT_SET_GET(Integer, MultiscaleStructure);
       PROPERTYSLOT_SET_GET(Integer, Polymer);
       PROPERTYSLOT_SET_GET(Real, LogInterval);
       PROPERTYSLOT_SET_GET(String, FileName);
     }
   VisualizationLogProcess():
-    MultiscaleStructure(0),
     Polymer(1),
     theLogMarker(UINT_MAX),
     theMeanCount(0),
     LogInterval(0),
     FileName("VisualLog.dat") {}
   virtual ~VisualizationLogProcess() {}
-  SIMPLE_SET_GET_METHOD(Integer, MultiscaleStructure);
   SIMPLE_SET_GET_METHOD(Integer, Polymer);
   SIMPLE_SET_GET_METHOD(Real, LogInterval);
   SIMPLE_SET_GET_METHOD(String, FileName); 
@@ -87,69 +84,25 @@ public:
     }	
   virtual void initializeFourth()
     {
-      for(VariableReferenceVector::iterator
-          i(theSortedVariableReferences.begin());
-          i != theSortedVariableReferences.end(); ++i)
+      for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
         {
-          Variable* aVariable((*i).getVariable());
-          Species* aSpecies(theSpatiocyteStepper->getSpecies(aVariable));
-          if(aSpecies)
+          Species* aSpecies(theProcessSpecies[i]);
+          if(aSpecies->getIsOffLattice())
             {
-              if(aSpecies->getIsOffLattice() && std::find(
-                  theOffLatticeSpecies.begin(), theOffLatticeSpecies.end(),
-                    aSpecies) == theOffLatticeSpecies.end())
+              theOffLatticeSpecies.push_back(aSpecies);
+            }
+          else
+            {
+              theLatticeSpecies.push_back(aSpecies);
+              if(aSpecies->getIsPolymer() && Polymer)
                 {
-                  theOffLatticeSpecies.push_back(aSpecies);
-                }
-              else if(!aSpecies->getIsOffLattice() && std::find(
-                      theLatticeSpecies.begin(), theLatticeSpecies.end(),
-                      aSpecies) == theLatticeSpecies.end())
-                {
-                  theLatticeSpecies.push_back(aSpecies);
-                  if(aSpecies->getIsPolymer() && Polymer)
-                    {
-                      thePolymerSpecies.push_back(aSpecies);
-                      thePolymerIndex.push_back(theLatticeSpecies.size()-1);
-                    }
+                  thePolymerSpecies.push_back(aSpecies);
+                  thePolymerIndex.push_back(theLatticeSpecies.size()-1);
                 }
             }
+
         }
-      if(!getPriority())
-        {
-          setPriority(-1);
-        }
-      setRadiusScales();
-    }
-  virtual void setRadiusScales()
-    {
-      theOffRadiusScales.resize(theOffLatticeSpecies.size(), 1);
-      theRadiusScales.resize(theLatticeSpecies.size(), 1);
-      for(VariableReferenceVector::iterator
-          i(thePositiveVariableReferences.begin());
-          i != thePositiveVariableReferences.end(); ++i)
-        {
-          int aCoefficient((*i).getCoefficient());
-          Variable* aVariable((*i).getVariable());
-          Species* aSpecies(theSpatiocyteStepper->getSpecies(aVariable));
-          if(aSpecies && aCoefficient >= 10000)
-            {
-              std::vector<Species*>::iterator iter(std::find(
-                 theOffLatticeSpecies.begin(), theOffLatticeSpecies.end(),
-                 aSpecies));
-              if(iter != theOffLatticeSpecies.end())
-                {
-                  theOffRadiusScales[iter-theOffLatticeSpecies.begin()] =
-                    (aCoefficient-10000)/100.0;
-                }
-              iter = std::find(theLatticeSpecies.begin(),
-                               theLatticeSpecies.end(), aSpecies);
-              if(iter != theLatticeSpecies.end())
-                {
-                  theRadiusScales[iter-theLatticeSpecies.begin()] =
-                    (aCoefficient-10000)/100.0;
-                }
-            }
-        }
+      thePriority = -1;
     }
   virtual void initializeFifth()
     {
@@ -182,7 +135,6 @@ public:
   virtual void fire()
     {
       logSpecies();
-      theLogFile.flush();
       if(LogInterval > 0)
         {
           theTime += LogInterval;
@@ -194,12 +146,10 @@ public:
           double aTime(theTime);
           theTime = libecs::INF;
           thePriorityQueue->moveTop();
-          if(thePriorityQueue->getTop() != 
-             dynamic_cast<SpatiocyteProcess*>(this))
+          if(thePriorityQueue->getTop()->getTime() > aTime)
             {
               theInterval = thePriorityQueue->getTop()->getTime() -
                 theSpatiocyteStepper->getCurrentTime();
-              setPriority(thePriorityQueue->getTop()->getPriority()-1);
             }
           theTime = aTime + theInterval;
           thePriorityQueue->move(theQueueID);
@@ -209,24 +159,21 @@ protected:
   virtual void initializeLog();
   virtual void logCompVacant();
   void logSpecies();
-  void logMolecules(int);
-  void logSourceMolecules(int);
-  void logTargetMolecules(int);
-  void logSharedMolecules(int);
+  void logMols(int);
+  void logSourceMols(int);
+  void logTargetMols(int);
+  void logSharedMols(int);
   void logPolymers(int);
   void logOffLattice(int);
 protected:
-  unsigned MultiscaleStructure;
-  unsigned Polymer;
-  unsigned theLogMarker;
-  unsigned theMeanCount;
+  unsigned int Polymer;
+  unsigned int theLogMarker;
+  unsigned int theMeanCount;
   double LogInterval;
   String FileName;
   std::ofstream theLogFile;
   std::streampos theStepStartPos;  
-  std::vector<unsigned> thePolymerIndex;
-  std::vector<double> theOffRadiusScales;
-  std::vector<double> theRadiusScales;
+  std::vector<unsigned int> thePolymerIndex;
   std::vector<Species*> thePolymerSpecies;
   std::vector<Species*> theLatticeSpecies;
   std::vector<Species*> theOffLatticeSpecies;

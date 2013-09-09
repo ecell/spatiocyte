@@ -36,30 +36,11 @@ namespace libecs
 
 LIBECS_DM_INIT_STATIC(SpatiocyteProcess, Process);
 
-void SpatiocyteProcess::initializeThird()
+String SpatiocyteProcess::getIDString(unsigned short aVoxel) const
 {
-  for(unsigned i(0); i != theSpecies.size(); ++i)
-    {
-      if(isDependentOnRemoveMolecule(theSpecies[i]))
-        {
-          theSpecies[i]->addInterruptRemoveMolecule(this);
-        }
-      if(isDependentOnAddMolecule(theSpecies[i]))
-        {
-          theSpecies[i]->addInterruptAddMolecule(this);
-        }
-      if(isDependentOnEndDiffusion(theSpecies[i]))
-        {
-          theSpecies[i]->addInterruptEndDiffusion(this);
-        }
-    }
-}
-
-String SpatiocyteProcess::getIDString(Voxel* aVoxel) const
-{
-  Variable* aVariable(theSpecies[getID(aVoxel)]->getVariable());
+  Variable* aVariable(theSpecies[aVoxel]->getVariable());
   return "["+aVariable->getSystemPath().asString()+":"+
-    aVariable->getID()+"]["+int2str(getID(aVoxel))+"]";
+    aVariable->getID()+"]["+int2str(aVoxel)+"]";
 }
 
 String SpatiocyteProcess::getIDString(Species* aSpecies) const
@@ -84,37 +65,6 @@ String SpatiocyteProcess::getIDString(unsigned int id) const
   Variable* aVariable(theSpecies[id]->getVariable());
   return "["+aVariable->getSystemPath().asString()+":"+
     aVariable->getID()+"]["+int2str(id)+"]";
-}
-
-int SpatiocyteProcess::getVariableNetCoefficient(const Process* aProcess,
-                                               const Variable* aVariable) const
-{
-  int netCoefficient(0);
-  const VariableReferenceVector& aVariableReferences(
-                                 aProcess->getVariableReferenceVector()); 
-  for(VariableReferenceVector::const_iterator i(aVariableReferences.begin());
-      i != aVariableReferences.end(); ++i)
-    {
-      if((*i).getVariable() == aVariable)
-        {
-          netCoefficient += (*i).getCoefficient();
-        }
-    }
-  if(netCoefficient)
-    {
-      const Species* src(theSpatiocyteStepper->variable2species(aVariable));
-      for(VariableReferenceVector::const_iterator
-          i(aVariableReferences.begin()); i != aVariableReferences.end(); ++i)
-        {
-          const Species* tar(theSpatiocyteStepper->variable2species(
-                                                  (*i).getVariable()));
-          if(src && tar && src == tar->getVacantSpecies())
-            {
-              netCoefficient += (*i).getCoefficient();
-            }
-        }
-    }
-  return netCoefficient;
 }
 
 }

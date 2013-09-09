@@ -43,15 +43,15 @@ void DiffusionInfluencedReactionProcess::checkSubstrates()
     {
       THROW_EXCEPTION(ValueError, String(
         getPropertyInterface().getClassName()) + " [" + getFullID().asString() +
-		    "]: This process cannot have a HD substrate species: " + 
-        getIDString(variableA));
+		    "]: A DiffusionInfluencedReactionProcess cannot have a HD " +
+        "substrate species: " + getIDString(variableA));
     }
   if(variableB)
     {
       THROW_EXCEPTION(ValueError, String(
         getPropertyInterface().getClassName()) + " [" + getFullID().asString() +
-		    "]: This process cannot have a HD substrate species: " + 
-        getIDString(variableB));
+		    "]: A DiffusionInfluencedReactionProcess cannot have a HD " +
+        "substrate species: " + getIDString(variableB));
     }
 }
 
@@ -79,910 +79,222 @@ void DiffusionInfluencedReactionProcess::initializeThird()
     {
       B->setDiffusionInfluencedReaction(this, A->getID(), p); 
     }
-  setReactMethod();
 }
 
-void DiffusionInfluencedReactionProcess::removeMolecule(Species* aSpecies, 
-                                                  Voxel* mol,
-                                                  const unsigned index) const
+//Do the reaction A + B -> C + D. So that A <- C and B <- D.
+//We need to consider that the source molecule can be either A or B.
+//If A and C belong to the same Comp, A <- C.
+//Otherwise, find a vacant adjoin voxel of A, X which is the same Comp
+//as C and X <- C.
+//Similarly, if B and D belong to the same Comp, B <- D.
+//Otherwise, find a vacant adjoin voxel of C, Y which is the same Comp
+//as D and Y <- D.
+bool DiffusionInfluencedReactionProcess::react(unsigned molA, unsigned molB,
+                                               unsigned indexA, unsigned indexB)
 {
-  if(A != B)
+  /*
+  moleculeA = molA;
+  moleculeB = molB;
+  //nonHD_A + nonHD_B -> nonHD_C + HD_D:
+  //nonHD_A + nonHD_B -> HD_C + nonHD_D:
+  if((variableC && D) || (C && variableD))
     {
-      aSpecies->removeMolecule(index);
-    }
-  else
-    {
-      //If A == B, indexB is no longer valid after molA is removed,
-      //so need to use the current index to remove molB:
-      aSpecies->removeMolecule(mol);
-    }
-}
-
-void DiffusionInfluencedReactionProcess::removeMolecule(Species* substrate, 
-                                                        Voxel* mol,
-                                                        const unsigned index,
-                                                        Species* product) const
-{
-  if(A != B)
-    { 
-      product->addMolecule(mol, substrate->getTag(index));
-      substrate->softRemoveMolecule(index);
-    }
-  else
-    {
-      Tag& aTag(substrate->getTag(mol));
-      substrate->softRemoveMolecule(mol);
-      product->addMolecule(mol, aTag);
-    }
-}
-
-Voxel* DiffusionInfluencedReactionProcess::getPopulatableVoxel(
-                                                             Species* aSpecies,
-                                                             Voxel* molA,
-                                                             Voxel* molB)
-{
-  Voxel* mol(aSpecies->getRandomAdjoiningVoxel(molA, SearchVacant));
-  if(!mol)
-    {
-      mol = aSpecies->getRandomAdjoiningVoxel(molB, SearchVacant);
-    }
-  return mol;
-}
-
-Voxel* DiffusionInfluencedReactionProcess::getPopulatableVoxel(
-                                                             Species* aSpecies,
-                                                             Voxel* molA,
-                                                             Voxel* molB,
-                                                             Voxel* molC)
-{
-  Voxel* mol(aSpecies->getRandomAdjoiningVoxel(molA, molC, SearchVacant));
-  if(!mol)
-    {
-      mol = aSpecies->getRandomAdjoiningVoxel(molB, molC, SearchVacant);
-    }
-  return mol;
-}
-
-//A + B -> variableC + [D <- molA]
-bool DiffusionInfluencedReactionProcess::reactVarC_AtoD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  interruptProcessesPre();
-  variableC->addValue(1);
-  D->addMolecule(molA, A->getTag(indexA));
-  A->softRemoveMolecule(indexA);
-  removeMolecule(B, molB, indexB);
-  return true;
-}
-
-//A + B -> variableC + [D <- molB]
-bool DiffusionInfluencedReactionProcess::reactVarC_BtoD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  interruptProcessesPre();
-  variableC->addValue(1);
-  D->addMolecule(molB, B->getTag(indexB));
-  B->softRemoveMolecule(indexB);
-  removeMolecule(A, molA, indexA);
-  return true;
-}
-
-//A + B -> variableC + [D <- molN]
-bool DiffusionInfluencedReactionProcess::reactVarC_NtoD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{ 
-  Voxel* mol(getPopulatableVoxel(D, molA, molB));
-  if(mol)
-    {
-      interruptProcessesPre();
-      variableC->addValue(1);
-      //TODO: need to use the correct tag here:
-      D->addMolecule(mol, A->getTag(indexA));
-      A->removeMolecule(indexA);
-      removeMolecule(B, molB, indexB);
-      return true;
-    }
-  return false;
-}
-
-//A + B -> variableC + [D == molA]
-bool DiffusionInfluencedReactionProcess::reactVarC_AeqD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  interruptProcessesPre();
-  variableC->addValue(1);
-  B->removeMolecule(indexB);
-  return true;
-}
-
-//A + B -> variableC + [D == molB]
-bool DiffusionInfluencedReactionProcess::reactVarC_BeqD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  interruptProcessesPre();
-  variableC->addValue(1);
-  A->removeMolecule(indexA);
-  return true;
-}
-
-//A + B -> variableD + [C <- molA]
-bool DiffusionInfluencedReactionProcess::reactVarD_AtoC(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  interruptProcessesPre();
-  variableD->addValue(1);
-  C->addMolecule(molA, A->getTag(indexA));
-  A->softRemoveMolecule(indexA);
-  removeMolecule(B, molB, indexB);
-  return true;
-}
-
-//A + B -> variableD + [C <- molB]
-bool DiffusionInfluencedReactionProcess::reactVarD_BtoC(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  interruptProcessesPre();
-  variableD->addValue(1);
-  C->addMolecule(molB, B->getTag(indexB));
-  B->softRemoveMolecule(indexB);
-  removeMolecule(A, molA, indexA);
-  return true;
-}
-
-//A + B -> variableD + [C <- molN]
-bool DiffusionInfluencedReactionProcess::reactVarD_NtoC(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{ 
-  Voxel* mol(getPopulatableVoxel(C, molA, molB));
-  if(mol)
-    {
-      interruptProcessesPre();
-      variableD->addValue(1);
-      //TODO: need to use the correct tag here:
-      C->addMolecule(mol, A->getTag(indexA));
-      A->removeMolecule(indexA);
-      removeMolecule(B, molB, indexB);
-      return true;
-    }
-  return false;
-}
-
-
-//A + B -> variableD + [C == A]
-bool DiffusionInfluencedReactionProcess::reactVarD_AeqC(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  interruptProcessesPre();
-  variableD->addValue(1);
-  B->removeMolecule(indexB);
-  return true;
-}
-
-//A + B -> variableD + [C == B]
-bool DiffusionInfluencedReactionProcess::reactVarD_BeqC(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  interruptProcessesPre();
-  variableD->addValue(1);
-  A->removeMolecule(indexA);
-  return true;
-}
-
-//A + B -> variableC + variableD
-bool DiffusionInfluencedReactionProcess::reactVarC_VarD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  interruptProcessesPre();
-  variableC->addValue(1);
-  variableD->addValue(1);
-  A->removeMolecule(indexA);
-  removeMolecule(B, molB, indexB);
-  return true;
-}
-
-//A + B -> variableC
-bool DiffusionInfluencedReactionProcess::reactVarC(Voxel* molA,
-                                                   Voxel* molB,
-                                                   const unsigned indexA,
-                                                   const unsigned indexB)
-{
-  interruptProcessesPre();
-  variableC->addValue(1);
-  A->removeMolecule(indexA);
-  removeMolecule(B, molB, indexB);
-  return true;
-}
-
-//A + B -> [A == C] + [D <- molB]
-bool DiffusionInfluencedReactionProcess::reactAeqC_BtoD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  interruptProcessesPre();
-  D->addMolecule(molB, B->getTag(indexB));
-  B->softRemoveMolecule(indexB);
-  return true;
-}
-
-//A + B -> [A == C] + [D <- molN]
-bool DiffusionInfluencedReactionProcess::reactAeqC_NtoD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  Voxel* mol(getPopulatableVoxel(D, molA, molB));
-  if(mol)
-    {
-      interruptProcessesPre();
-      D->addMolecule(mol, B->getTag(indexB));
-      B->removeMolecule(indexB);
-      return true;
-    }
-  return false;
-}
-
-//A + B -> [B == C] + [D <- molA]
-bool DiffusionInfluencedReactionProcess::reactBeqC_AtoD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  interruptProcessesPre();
-  D->addMolecule(molA, A->getTag(indexA));
-  A->softRemoveMolecule(indexA);
-  return true;
-}
-
-//A + B -> [B == C] + [D <- molN]
-bool DiffusionInfluencedReactionProcess::reactBeqC_NtoD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  Voxel* mol(getPopulatableVoxel(D, molA, molB));
-  if(mol)
-    {
-      interruptProcessesPre();
-      D->addMolecule(mol, A->getTag(indexA));
-      A->removeMolecule(indexA);
-      return true;
-    }
-  return false;
-}
-
-//A + B -> [C <- molB] + [A == D]
-bool DiffusionInfluencedReactionProcess::reactBtoC_AeqD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  interruptProcessesPre();
-  C->addMolecule(molB, B->getTag(indexB));
-  B->softRemoveMolecule(indexB);
-  return true;
-}
-
-//A + B -> [C <- molN] + [A == D]
-bool DiffusionInfluencedReactionProcess::reactNtoC_AeqD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  Voxel* mol(getPopulatableVoxel(C, molA, molB));
-  if(mol)
-    {
-      interruptProcessesPre();
-      C->addMolecule(mol, B->getTag(indexB));
-      B->removeMolecule(indexB);
-      return true;
-    }
-  return false;
-}
-
-//A + B -> [C <- molA] + [B == D]
-bool DiffusionInfluencedReactionProcess::reactAtoC_BeqD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  interruptProcessesPre();
-  C->addMolecule(molA);
-  A->softRemoveMolecule(indexA);
-  return true;
-}
-
-
-//A + B -> [C <- molA] + [tagC <- tagA] + [B == D]
-bool DiffusionInfluencedReactionProcess::reactAtoC_BeqD_tagAtoC(Voxel* molA,
-                                                                Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  interruptProcessesPre();
-  C->addMolecule(molA, A->getTag(indexA));
-  A->softRemoveMolecule(indexA);
-  return true;
-}
-
-//A + B -> [C <- molA] + [E <- compN]
-//zero-coefficient E
-//we create a molecule E at random location in the compartment to avoid
-//rebinding effect, useful to maintain the concentration of a substrate species
-//even after the reaction:
-bool DiffusionInfluencedReactionProcess::reactAtoC_compNtoE(Voxel* molA,
-                                                            Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  Voxel* mol(E->getRandomPopulatableVoxel(1));
-  if(mol)
-    { 
-      interruptProcessesPre();
-      E->addMolecule(mol);
-      C->addMolecule(molA, A->getTag(indexA));
-      A->softRemoveMolecule(indexA);
-      removeMolecule(B, molB, indexB);
-      return true;
-    }
-  return false;
-}
-
-//A + B -> [C <- molN] + [B == D]
-bool DiffusionInfluencedReactionProcess::reactNtoC_BeqD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  Voxel* mol(getPopulatableVoxel(C, molA, molB));
-  if(mol)
-    {
-      interruptProcessesPre();
-      C->addMolecule(mol, A->getTag(indexA));
-      A->removeMolecule(indexA);
-      return true;
-    }
-  return false;
-}
-
-
-//A + B -> [C <- molA] + [D <- molB]
-bool DiffusionInfluencedReactionProcess::reactAtoC_BtoD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  interruptProcessesPre();
-  C->addMolecule(molA, A->getTag(indexA));
-  A->softRemoveMolecule(indexA);
-  removeMolecule(B, molB, indexB, D);
-  return true;
-}
-
-//A + B -> [C <- molA] + [D <- molN]
-bool DiffusionInfluencedReactionProcess::reactAtoC_NtoD(
-                                                  Voxel* molA, Voxel* molB,
-                                                  const unsigned indexA,
-                                                  const unsigned indexB)
-{
-  Voxel* mol(getPopulatableVoxel(D, molA, molB));
-  if(mol)
-    {
-      interruptProcessesPre();
-      D->addMolecule(mol, B->getTag(indexB));
-      C->addMolecule(molA, A->getTag(indexA));
-      A->softRemoveMolecule(indexA);
-      removeMolecule(B, molB, indexB);
-      return true;
-    }
-  return false;
-}
-
-//A + B -> [C <- molB] + [D <- molA]
-bool DiffusionInfluencedReactionProcess::reactBtoC_AtoD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  interruptProcessesPre();
-  C->addMolecule(molB, B->getTag(indexB));
-  B->softRemoveMolecule(indexB);
-  removeMolecule(A, molA, indexA, D);
-  return true;
-}
-
-//A + B -> [C <- molB] + [D <- molN]
-bool DiffusionInfluencedReactionProcess::reactBtoC_NtoD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  Voxel* mol(getPopulatableVoxel(D, molA, molB));
-  if(mol)
-    {
-      interruptProcessesPre();
-      D->addMolecule(mol, A->getTag(indexA));
-      C->addMolecule(molB, B->getTag(indexB));
-      B->softRemoveMolecule(indexB);
-      removeMolecule(A, molA, indexA);
-      return true;
-    }
-  return false;
-}
-
-//A + B -> [C <- molN] + [D <- molN]
-bool DiffusionInfluencedReactionProcess::reactNtoC_NtoD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  Voxel* molC(getPopulatableVoxel(C, molA, molB));
-  if(molC)
-    {
-      Voxel* molD(getPopulatableVoxel(C, molA, molB, molC));
-      if(molD)
-        {
-          interruptProcessesPre();
-          C->addMolecule(molC, A->getTag(indexA));
-          D->addMolecule(molD, B->getTag(indexB));
-          A->removeMolecule(indexA);
-          removeMolecule(B, molB, indexB);
-          return true;
-        }
-    }
-  return false;
-}
-
-//A + B -> [C <- molN] + [D <- molB]
-bool DiffusionInfluencedReactionProcess::reactNtoC_BtoD(Voxel* molA,
-                                                        Voxel* molB,
-                                                        const unsigned indexA,
-                                                        const unsigned indexB)
-{
-  Voxel* mol(getPopulatableVoxel(C, molA, molB));
-  if(mol)
-    {
-      interruptProcessesPre();
-      C->addMolecule(mol, A->getTag(indexA));
-      D->addMolecule(molB, B->getTag(indexB));
-      A->removeMolecule(indexA);
-      removeMolecule(B, molB, indexB);
-      return true;
-    }
-  return false;
-}
-
-//A + B -> [A == C]
-bool DiffusionInfluencedReactionProcess::reactAeqC(Voxel* molA, Voxel* molB,
-                                                   const unsigned indexA,
-                                                   const unsigned indexB)
-{
-  interruptProcessesPre();
-  B->removeMolecule(indexB);
-  return true;
-}
-
-//A + B -> [B == C]
-bool DiffusionInfluencedReactionProcess::reactBeqC(Voxel* molA, Voxel* molB,
-                                                   const unsigned indexA,
-                                                   const unsigned indexB)
-{
-  interruptProcessesPre();
-  A->removeMolecule(indexA);
-  return true;
-}
-
-//A + B -> [C <- molA]
-bool DiffusionInfluencedReactionProcess::reactAtoC(Voxel* molA, Voxel* molB,
-                                                   const unsigned indexA,
-                                                   const unsigned indexB)
-{
-  interruptProcessesPre();
-  C->addMolecule(molA, A->getTag(indexA));
-  A->softRemoveMolecule(indexA);
-  removeMolecule(B, molB, indexB);
-  return true;
-}
-
-//A + B -> [C <- molB]
-bool DiffusionInfluencedReactionProcess::reactBtoC(Voxel* molA, Voxel* molB,
-                                                   const unsigned indexA,
-                                                   const unsigned indexB)
-{
-  interruptProcessesPre();
-  C->addMolecule(molB);
-  B->softRemoveMolecule(indexB);
-  removeMolecule(A, molA, indexA);
-  return true;
-}
-
-//A + B -> [C <- molB] + [tagC <- tagA]
-bool DiffusionInfluencedReactionProcess::reactBtoC_tagAtoC(Voxel* molA,
-                                                           Voxel* molB,
-                                                   const unsigned indexA,
-                                                   const unsigned indexB)
-{
-  interruptProcessesPre();
-  C->addMolecule(molB, A->getTag(indexA));
-  B->softRemoveMolecule(indexB);
-  removeMolecule(A, molA, indexA);
-  return true;
-}
-
-//A + B -> [C <- molB] + [tagC <- tagB]
-bool DiffusionInfluencedReactionProcess::reactBtoC_tagBtoC(Voxel* molA,
-                                                           Voxel* molB,
-                                                   const unsigned indexA,
-                                                   const unsigned indexB)
-{
-  interruptProcessesPre();
-  C->addMolecule(molB, B->getTag(indexB));
-  B->softRemoveMolecule(indexB);
-  removeMolecule(A, molA, indexA);
-  return true;
-}
-
-//A + B -> [C <- molN]
-bool DiffusionInfluencedReactionProcess::reactNtoC(Voxel* molA, Voxel* molB,
-                                                   const unsigned indexA,
-                                                   const unsigned indexB)
-{
-  Voxel* mol(getPopulatableVoxel(C, molA, molB));
-  if(mol)
-    {
-      interruptProcessesPre();
-      C->addMolecule(mol, A->getTag(indexA));
-      A->removeMolecule(indexA);
-      removeMolecule(B, molB, indexB);
-      return true;
-    }
-  return false;
-}
-
-void DiffusionInfluencedReactionProcess::setReactMethod()
-{
-  if(ForcedSequence)
-    {
-      setForcedSequenceReactMethod();
-    }
-  else
-    {
-      setFreeSequenceReactMethod();
-    }
-}
-
-void DiffusionInfluencedReactionProcess::setForcedSequenceReactMethod()
-{
-  if(C && D)
-    {
-      if(A->isReplaceable(C))
-        {
-          if(B->isReplaceable(D))
-            {
-              //A + B -> [C <- molA] + [D <- molB]
-              reactM = &DiffusionInfluencedReactionProcess::reactAtoC_BtoD;
-            }
-          else
-            {
-              //A + B -> [C <- molA] + [D <- molN]
-              reactM = &DiffusionInfluencedReactionProcess::reactAtoC_NtoD;
-            }
-        }
-      else
-        {
-          if(B->isReplaceable(D))
-            {
-              //A + B -> [C <- molN] + [D <- molB]
-              reactM = &DiffusionInfluencedReactionProcess::reactNtoC_BtoD;
-            }
-          else
-            {
-              //A + B -> [C <- molN] + [D <- molN]
-              reactM = &DiffusionInfluencedReactionProcess::reactNtoC_NtoD;
-            }
-        }
-    }
-}
-
-void DiffusionInfluencedReactionProcess::setFreeSequenceReactMethod()
-{
-  if(variableC && D)
-    {
-      if(A == D)
-        {
-          //A + B -> variableC + [A == D]
-          reactM = &DiffusionInfluencedReactionProcess::reactVarC_AeqD;
-        }
-      else if(B == D)
-        {
-          //A + B -> variableC + [B == D]
-          reactM = &DiffusionInfluencedReactionProcess::reactVarC_BeqD;
-        }
-      else
-        { 
-          if(A->isReplaceable(D))
-            {
-              //A + B -> variableC + [D <- molA]
-              reactM = &DiffusionInfluencedReactionProcess::reactVarC_AtoD;
-            }
-          else if(B->isReplaceable(D))
-            {
-              //A + B -> variableC + [D <- molB]
-              reactM = &DiffusionInfluencedReactionProcess::reactVarC_BtoD;
-            }
-          else
-            {
-              //A + B -> variableC + [D <- molN]
-              reactM = &DiffusionInfluencedReactionProcess::reactVarC_NtoD;
-            }
-        }
-    }
-  else if(variableD && C)
-    {
-      if(A == C)
-        {
-          //A + B -> variableD + [A == C]
-          reactM = &DiffusionInfluencedReactionProcess::reactVarD_AeqC;
-        }
-      else if(B == C)
-        {
-          //A + B -> variableD + [B == C]
-          reactM = &DiffusionInfluencedReactionProcess::reactVarD_BeqC;
-        }
-      else
-        { 
-          if(A->isReplaceable(C))
-            {
-              //A + B -> variableD + [C <- molA]
-              reactM = &DiffusionInfluencedReactionProcess::reactVarD_AtoC;
-            }
-          else if(B->isReplaceable(C))
-            {
-              //A + B -> variableD + [C <- molB]
-              reactM = &DiffusionInfluencedReactionProcess::reactVarD_BtoC;
-            }
-          else
-            {
-              //A + B -> variableD + [C <- molN]
-              reactM = &DiffusionInfluencedReactionProcess::reactVarD_NtoC;
-            }
-        }
-    }
-  else if(variableC)
-    {
+      Variable* HD_p(variableC);
+      Species* nonHD_p(D);
       if(variableD)
         {
-          //A + B -> variableC + variableD
-          reactM = &DiffusionInfluencedReactionProcess::reactVarC_VarD;
+          HD_p = variableD;
+          nonHD_p = C;
+        }
+      if(A->isReplaceable(moleculeA, nonHD_p))
+        {
+          moleculeP = moleculeA;
+          //Hard remove the B molecule, since nonHD_p is in a different Comp:
+          (*theIDs)[moleculeB] = B->getVacantID();
+        }
+      else if(B->isReplaceable(moleculeB, nonHD_p))
+        {
+          moleculeP = moleculeB;
+          //Hard remove the A molecule, since nonHD_p is in a different Comp:
+          (*theIDs)[moleculeA] = A->getVacantID();
+        }
+      else
+        { 
+          moleculeP = nonHD_p->getRandomAdjoin(moleculeA, SearchVacant);
+          //Only proceed if we can find an adjoin vacant voxel
+          //of A which can be occupied by C:
+          if(moleculeP == theNullMol)
+            {
+              moleculeP = nonHD_p->getRandomAdjoin(moleculeB, SearchVacant);
+              if(moleculeP == theNullMol)
+                {
+                  return false;
+                }
+            }
+          //Hard remove the A molecule, since nonHD_p is in a different Comp:
+          (*theIDs)[moleculeA] = A->getVacantID();
+          //Hard remove the B molecule, since nonHD_p is in a different Comp:
+          (*theIDs)[moleculeB] = B->getVacantID();
+        }
+      HD_p->addValue(1);
+      nonHD_p->addMol(moleculeP, A->getTag(indexA));
+      return true;
+    }
+  //nonHD_A + nonHD_B -> HD_C:
+  else if(variableC && !D && !variableD)
+    {
+
+      //Hard remove the A molecule, since nonHD_p is in a different Comp:
+      (*theIDs)[moleculeA] = A->getVacantID();
+      //Hard remove the B molecule, since nonHD_p is in a different Comp:
+      (*theIDs)[moleculeB] = B->getVacantID();
+      variableC->addValue(1);
+      return true;
+    }
+
+  if(A->isReplaceable(moleculeA, C))
+    {
+      moleculeC = moleculeA;
+      if(D)
+        {
+          if(B->isReplaceable(moleculeB, D))
+            {
+              moleculeD = moleculeB;
+            }
+          else
+            {
+              moleculeD = D->getRandomAdjoin(moleculeC, moleculeC,
+                                             SearchVacant);
+              if(moleculeD == theNullMol)
+                {
+                  return false;
+                }
+              (*theIDs)[moleculeB] = B->getVacantID();
+            }
+          D->addMol(moleculeD, B->getTag(indexB));
         }
       else
         {
-          //A + B -> variableC
-          reactM = &DiffusionInfluencedReactionProcess::reactVarC;
+          //Hard remove the B molecule since it is not used:
+          (*theIDs)[moleculeB] = B->getVacantID();
         }
     }
-  else if(D)
+  else if(B->isReplaceable(moleculeB, C))
     {
-      if(A == C && B == D)
+      moleculeC = moleculeB;
+      if(D)
         {
-          //A + B -> [A == C] + [B == D]
-          reactM = &DiffusionInfluencedReactionProcess::reactNone;
-        }
-      else if(B == C && A == D)
-        {
-          //A + B -> [B == C] + [A == D]
-          reactM = &DiffusionInfluencedReactionProcess::reactNone;
-        }
-      else if(A == C)
-        {
-          if(B->isReplaceable(D))
+          if(A->isReplaceable(moleculeA, D))
             {
-              //A + B -> [A == C] + [D <- molB]
-              reactM = &DiffusionInfluencedReactionProcess::reactAeqC_BtoD;
+              moleculeD = moleculeA;
             }
           else
             {
-              //A + B -> [A == C] + [D <- molN]
-              reactM = &DiffusionInfluencedReactionProcess::reactAeqC_NtoD;
-            }
-        }
-      else if(B == C)
-        {
-          if(A->isReplaceable(D))
-            {
-              //A + B -> [B == C] + [D <- molA]
-              reactM = &DiffusionInfluencedReactionProcess::reactBeqC_AtoD;
-            }
-          else
-            {
-              //A + B -> [B == C] + [D <- molN]
-              reactM = &DiffusionInfluencedReactionProcess::reactBeqC_NtoD;
-            }
-        }
-      else if(A == D)
-        {
-          if(B->isReplaceable(C))
-            {
-              //A + B -> [C <- molB] + [A == D]
-              reactM = &DiffusionInfluencedReactionProcess::reactBtoC_AeqD;
-            }
-          else
-            {
-              //A + B -> [C <- molN] + [A == D]
-              reactM = &DiffusionInfluencedReactionProcess::reactNtoC_AeqD;
-            }
-        }
-      else if(B == D)
-        {
-          if(A->isReplaceable(C))
-            {
-              if(C->getIsTagged() && A->getIsTagged())
+              moleculeD = D->getRandomAdjoin(moleculeC, moleculeC,
+                                             SearchVacant);
+              if(moleculeD == theNullMol)
                 {
-                  //A + B -> [C <- molA] + [tagC <- tagA] + [B == D]
-                  reactM = 
-                    &DiffusionInfluencedReactionProcess::reactAtoC_BeqD_tagAtoC;
+                  return false;
                 }
-              else
-                {
-                  //A + B -> [C <- molA] + [B == D]
-                  reactM = &DiffusionInfluencedReactionProcess::reactAtoC_BeqD;
-                }
+              (*theIDs)[moleculeA] = A->getVacantID();
             }
-          else
-            {
-              //A + B -> [C <- molN] + [B == D]
-              reactM = &DiffusionInfluencedReactionProcess::reactNtoC_BeqD;
-            }
+          D->addMol(moleculeD, B->getTag(indexB));
         }
       else
         {
-          if(A->isReplaceable(C))
-            {
-              if(B->isReplaceable(D))
-                {
-                  //A + B -> [C <- molA] + [D <- molB]
-                  reactM = &DiffusionInfluencedReactionProcess::reactAtoC_BtoD;
-                }
-              else
-                {
-                  //A + B -> [C <- molA] + [D <- molN]
-                  reactM = &DiffusionInfluencedReactionProcess::reactAtoC_NtoD;
-                }
-            }
-          else if(B->isReplaceable(C))
-            {
-              if(A->isReplaceable(D))
-                {
-                  //A + B -> [C <- molB] + [D <- molA]
-                  reactM = &DiffusionInfluencedReactionProcess::reactBtoC_AtoD;
-                }
-              else
-                {
-                  //A + B -> [C <- molB] + [D <- molN]
-                  reactM = &DiffusionInfluencedReactionProcess::reactBtoC_NtoD;
-                }
-            }
-          else
-            {
-              //A + B -> [C <- molN] + [D <- molN]
-              reactM = &DiffusionInfluencedReactionProcess::reactNtoC_NtoD;
-            }
-        }
-    }
-  //A + B -> C + E(0 coefficient, random comp voxel)
-  else if(E)
-    {
-      if(A == C)
-        {
-          throwException("reactAeqC_E");
-        }
-      else if(B == C)
-        {
-          throwException("reactBeqC_E");
-        }
-      else if(A->isReplaceable(C))
-        {
-          reactM = &DiffusionInfluencedReactionProcess::reactAtoC_compNtoE;
-        }
-      else
-        {
-          throwException("reactBtoC_E");
+          //Hard remove the A molecule since it is not used:
+          (*theIDs)[moleculeA] = A->getVacantID();
         }
     }
   else
     {
-      if(A == C)
+      moleculeC = C->getRandomAdjoin(moleculeA, SearchVacant);
+      if(moleculeC == theNullMol)
         {
-          //A + B -> [A == C]
-          reactM = &DiffusionInfluencedReactionProcess::reactAeqC;
-        }
-      else if(B == C)
-        {
-          //A + B -> [B == C]
-          reactM = &DiffusionInfluencedReactionProcess::reactBeqC;
-        }
-      else if(A->isReplaceable(C))
-        {
-          //A + B -> [C <- molA]
-          reactM = &DiffusionInfluencedReactionProcess::reactAtoC;
-        }
-      else if(B->isReplaceable(C))
-        {
-          if(C->getIsTagged())
+          moleculeC = C->getRandomAdjoin(moleculeB, SearchVacant);
+          if(moleculeC == theNullMol)
             {
-              if(B->getIsTagged())
-                {
-                  //A + B -> [C <- molB] + [tagC <- tagB]
-                  reactM = 
-                    &DiffusionInfluencedReactionProcess::reactBtoC_tagBtoC;
-                }
-              else
-                {
-                  //A + B -> [C <- molB] + [tagC <- tagA]
-                  reactM =
-                    &DiffusionInfluencedReactionProcess::reactBtoC_tagAtoC;
-                }
-            }
-          else
-            {
-              //A + B -> [C <- molB]
-              reactM = &DiffusionInfluencedReactionProcess::reactBtoC;
+              //Only proceed if we can find an adjoin vacant voxel
+              //of A or B which can be occupied by C:
+              return false;
             }
         }
-      else
+      if(D)
         {
-          //A + B -> [C <- molN]
-          reactM = &DiffusionInfluencedReactionProcess::reactNtoC;
+          moleculeD = D->getRandomAdjoin(moleculeC, moleculeC,
+                                                 SearchVacant);
+          if(moleculeD == theNullMol)
+            {
+              return false;
+            }
+          D->addMol(moleculeD, B->getTag(indexB));
         }
+      //Hard remove the A molecule since it is not used:
+      (*theIDs)[moleculeA] = A->getVacantID();
+      //Hard remove the B molecule since it is not used:
+      (*theIDs)[moleculeB] = B->getVacantID();
     }
-}
-
-void DiffusionInfluencedReactionProcess::throwException(String aString)
-{
-  THROW_EXCEPTION(ValueError, String(getPropertyInterface().getClassName()) +
-                  "[" + getFullID().asString() + "]: " + aString + " is not " +
-                  "yet implemented.");
+  C->addMol(moleculeC, A->getTag(indexA));
+  addMolE();
+  addMolF();
+  */
+  return true;
 }
 
 //positive-coefficient F
-void DiffusionInfluencedReactionProcess::addMoleculeF()
+void DiffusionInfluencedReactionProcess::addMolF()
 {
+  /*
   if(!F)
     {
       return;
     }
-  moleculeF = F->getRandomAdjoiningVoxel(moleculeC, SearchVacant);
-  if(moleculeF == NULL)
+  moleculeF = F->getRandomAdjoin(moleculeC, SearchVacant);
+  if(moleculeF == theNullMol)
     {
-      moleculeF = F->getRandomAdjoiningVoxel(moleculeD, SearchVacant);
-      if(moleculeF == NULL)
+      moleculeF = F->getRandomAdjoin(moleculeD, SearchVacant);
+      if(moleculeF == theNullMol)
         {
           return;
         }
     }
-  F->addMolecule(moleculeF);
+  F->addMol(moleculeF);
+  */
+}
+
+//zero-coefficient E
+//we create a molecule E at random location in the compartment to avoid
+//rebinding effect, useful to maintain the concentration of a substrate species
+//even after the reaction:
+void DiffusionInfluencedReactionProcess::addMolE()
+{
+  /*
+  if(!E)
+    {
+      return;
+    }
+  moleculeE = E->getRandomCompMol(1);
+  if(moleculeE == theNullMol)
+    {
+      std::cout << getFullID().asString() << " unable to add molecule E" <<
+        std::endl;
+      return;
+    }
+  E->addMol(moleculeE);
+  */
+}
+
+void DiffusionInfluencedReactionProcess::finalizeReaction()
+{
+  //The number of molecules may have changed for both reactant and product
+  //species. We need to update SpatiocyteNextReactionProcesses which are
+  //dependent on these species:
+  for(std::vector<SpatiocyteProcess*>::const_iterator 
+      i(theInterruptedProcesses.begin());
+      i!=theInterruptedProcesses.end(); ++i)
+    {
+      (*i)->substrateValueChanged(theSpatiocyteStepper->getCurrentTime());
+    }
 }
 
 void DiffusionInfluencedReactionProcess::calculateReactionProbability()
@@ -1106,25 +418,25 @@ void DiffusionInfluencedReactionProcess::printParameters()
 {
   String aProcess(String(getPropertyInterface().getClassName()) + 
                                       "[" + getFullID().asString() + "]");
-  cout << aProcess << std::endl;
-  cout << "  " << getIDString(A) << " + " <<  getIDString(B) << " -> ";
+  std::cout << aProcess << std::endl;
+  std::cout << "  " << getIDString(A) << " + " <<  getIDString(B) << " -> ";
   if(C)
     {
-      cout << getIDString(C);
+      std::cout << getIDString(C);
     }
   else
     {
-      cout << getIDString(variableC);
+      std::cout << getIDString(variableC);
     }
   if(D)
     {
-      cout << " + " << getIDString(D);
+      std::cout << " + " << getIDString(D);
     }
   else if(variableD)
     {
-      cout << " + " << getIDString(variableD);
+      std::cout << " + " << getIDString(variableD);
     }
-  cout << ": k=" << k << ", p=" << p << 
+  std::cout << ": k=" << k << ", p=" << p << 
     ", p_A=" << A->getReactionProbability(B->getID()) <<
     ", p_B=" << B->getReactionProbability(A->getID()) << std::endl; 
 }

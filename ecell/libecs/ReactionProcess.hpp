@@ -55,8 +55,6 @@ public:
     coefficientD(0),
     coefficientE(0),
     coefficientF(0),
-    coefficientG(0),
-    coefficientH(0),
     SearchVacant(-1),
     theOrder(0),
     k(-1),
@@ -67,54 +65,42 @@ public:
     D(NULL),
     E(NULL),
     F(NULL),
-    G(NULL),
-    H(NULL),
     variableA(NULL),
     variableB(NULL),
     variableC(NULL),
     variableD(NULL), 
     variableE(NULL),
-    variableF(NULL),
-    variableG(NULL),
-    variableH(NULL),
-    moleculeA(NULL),
-    moleculeB(NULL),
-    moleculeC(NULL),
-    moleculeD(NULL),
-    moleculeE(NULL),
-    moleculeF(NULL),
-    moleculeG(NULL),
-    moleculeH(NULL),
-    moleculeP(NULL),
-    moleculeS(NULL) {}
+    variableF(NULL)
+  {
+    moleculeA = theNullMol;
+    moleculeB = theNullMol;
+    moleculeC = theNullMol;
+    moleculeD = theNullMol;
+    moleculeE = theNullMol;
+    moleculeF = theNullMol;
+    moleculeP = theNullMol;
+    moleculeS = theNullMol;
+  }
   virtual ~ReactionProcess() {}
   SIMPLE_SET_GET_METHOD(Real, k);
   SIMPLE_SET_GET_METHOD(Real, p);
   SIMPLE_SET_GET_METHOD(Integer, SearchVacant);
+  virtual bool isInterrupted(ReactionProcess*)
+    {
+      return false;
+    }
   virtual void fire()
     {
+      const double aCurrentTime(theTime); // do this only for the Processes in Q
       requeue(); //theTop in thePriorityQueue is still this process since
       //we have not interrupted other processes to update their queue. 
       //So it is valid to call requeue, which only requeues theTop process, 
       //assuming it to be this process.
-      for(unsigned i(0); i != theInterruptedProcesses.size(); ++i)
-        { 
-          theSpatiocyteStepper->addInterruptedProcess(
-                                                theInterruptedProcesses[i]);
-        }
-    }
-  virtual void interruptProcessesPre()
-    {
-      for(unsigned i(0); i != theInterruptedProcessesPre.size(); ++i)
+      for(std::vector<SpatiocyteProcess*>::const_iterator 
+          i(theInterruptedProcesses.begin());
+          i!=theInterruptedProcesses.end(); ++i)
         {
-          theInterruptedProcessesPre[i]->interruptedPre(this);
-        }
-    }
-  virtual void interruptProcessesPost()
-    {
-      for(unsigned i(0); i != theInterruptedProcessesPost.size(); ++i)
-        {
-          theInterruptedProcessesPost[i]->interruptedPost(this);
+          (*i)->substrateValueChanged(aCurrentTime);
         }
     }
   GET_METHOD(Integer, Order)
@@ -142,36 +128,17 @@ public:
     {
       SpatiocyteProcess::initializeSecond();
       theInterruptedProcesses.resize(0);
-      theInterruptedProcessesPre.resize(0);
-      theInterruptedProcessesPost.resize(0);
     }
-  virtual void initializeLastOnce()
+  virtual void initializeFourth()
     {
-      /*
-      std::cout << getIDString() << std::endl;
-      std::cout << "\tinterruptedProcesses:" << std::endl;
-      for(unsigned i(0); i != theInterruptedProcesses.size(); ++i)
-        {
-          std::cout << "\t\t" << theInterruptedProcesses[i]->getIDString() << std::endl;
-        }
-      std::cout << "\tinterruptedProcessesPre:" << std::endl;
-      for(unsigned i(0); i != theInterruptedProcessesPre.size(); ++i)
-        {
-          std::cout << "\t\t" << theInterruptedProcessesPre[i]->getIDString() << std::endl;
-        }
-      std::cout << "\tinterruptedProcessesPost:" << std::endl;
-      for(unsigned i(0); i != theInterruptedProcessesPost.size(); ++i)
-        {
-          std::cout << "\t\t" << theInterruptedProcessesPost[i]->getIDString() << std::endl;
-        }
-        */
+      SpatiocyteProcess::initializeFourth();
     }
   //Only ReactionProcesses can interrupt other processes because only 
   //they can change the number of molecules. 
   //This method is called to set the list of processes which will be
   //interrupted by this process. To determine if this process
   //needs to interrupt another process X, this process will call the
-  //isDependentOn method of X with this process as the argument:
+  //isInterrupted method of X with this process as the argument:
   virtual void setInterruption(std::vector<Process*> const &aProcessList)
     {
       for(std::vector<Process*>::const_iterator i(aProcessList.begin());
@@ -181,73 +148,63 @@ public:
             aReactionProcess(dynamic_cast<ReactionProcess*>(*i));
           SpatiocyteProcess*
             aSpatiocyteProcess(dynamic_cast<SpatiocyteProcess*>(*i));
-          const Process* me(dynamic_cast<Process*>(this));
-          if(this != aReactionProcess && aSpatiocyteProcess->isDependentOn(me))
+          if(this != aReactionProcess && 
+             aSpatiocyteProcess->isInterrupted(this))
             {
               theInterruptedProcesses.push_back(aSpatiocyteProcess);
             }
-          //A ReactionProcess can interruptPre and interruptPost itself
-          //so we don't exclude this ReactionProcess here:
-          if(aSpatiocyteProcess->isDependentOnPre(me))
-            {
-              theInterruptedProcessesPre.push_back(aSpatiocyteProcess);
-            }
-          if(aSpatiocyteProcess->isDependentOnPost(me))
-            {
-              theInterruptedProcessesPost.push_back(aSpatiocyteProcess);
-            }
         }
     }
-  virtual Species* getA() const
+  virtual Species* getA()
     {
       return A;
     }
-  virtual Species* getB() const
+  virtual Species* getB()
     {
       return B;
     }
-  virtual Species* getC() const
+  virtual Species* getC()
     {
       return C;
     }
-  virtual Species* getD() const
+  virtual Species* getD()
     {
       return D;
     }
-  virtual Species* getE() const
+  virtual Species* getE()
     {
       return E;
     }
-  virtual Voxel* getMoleculeA()
+  virtual unsigned getMoleculeA()
     {
       return moleculeA;
     }
-  virtual Voxel* getMoleculeB()
+  virtual unsigned getMoleculeB()
     {
       return moleculeB;
     }
-  virtual Voxel* getMoleculeC()
+  virtual unsigned getMoleculeC()
     {
       return moleculeC;
     }
-  virtual Voxel* getMoleculeD()
+  virtual unsigned getMoleculeD()
     {
       return moleculeD;
     }
-  virtual Voxel* getMoleculeE()
+  virtual unsigned getMoleculeE()
     {
       return moleculeE;
     }
-  virtual Voxel* getMoleculeP()
+  virtual unsigned getMoleculeP()
     {
       return moleculeP;
     }
-  virtual Voxel* getMoleculeS()
+  virtual unsigned getMoleculeS()
     {
       return moleculeS;
     }
-  virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
-  virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
+  virtual void addSubstrateInterrupt(Species*, unsigned short) {}
+  virtual void removeSubstrateInterrupt(Species*, unsigned short) {}
 protected:
   virtual void calculateOrder();
 protected:
@@ -257,8 +214,6 @@ protected:
   int coefficientD;
   int coefficientE;
   int coefficientF;
-  int coefficientG;
-  int coefficientH;
   int SearchVacant;
   int theOrder;
   double k;
@@ -270,8 +225,6 @@ protected:
   Species* D;
   Species* E;
   Species* F;
-  Species* G;
-  Species* H;
   //Variables are for HD species:
   Variable* variableA;
   Variable* variableB;
@@ -279,21 +232,15 @@ protected:
   Variable* variableD;
   Variable* variableE;
   Variable* variableF;
-  Variable* variableG;
-  Variable* variableH;
-  Voxel* moleculeA;
-  Voxel* moleculeB;
-  Voxel* moleculeC;
-  Voxel* moleculeD;
-  Voxel* moleculeE;
-  Voxel* moleculeF;
-  Voxel* moleculeG;
-  Voxel* moleculeH;
-  Voxel* moleculeP;
-  Voxel* moleculeS;
+  unsigned moleculeA;
+  unsigned moleculeB;
+  unsigned moleculeC;
+  unsigned moleculeD;
+  unsigned moleculeE;
+  unsigned moleculeF;
+  unsigned moleculeP;
+  unsigned moleculeS;
   std::vector<SpatiocyteProcess*> theInterruptedProcesses;
-  std::vector<SpatiocyteProcess*> theInterruptedProcessesPre;
-  std::vector<SpatiocyteProcess*> theInterruptedProcessesPost;
 };
 
 }

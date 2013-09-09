@@ -43,6 +43,7 @@ public:
   LIBECS_DM_OBJECT(MoleculePopulateProcess, Process)
     {
       INHERIT_PROPERTIES(Process);
+      PROPERTYSLOT_SET_GET(Integer, Priority);
       PROPERTYSLOT_SET_GET(Real, OriginX);
       PROPERTYSLOT_SET_GET(Real, OriginY);
       PROPERTYSLOT_SET_GET(Real, OriginZ);
@@ -54,6 +55,7 @@ public:
       PROPERTYSLOT_SET_GET(Real, UniformRadiusZ);
     }
   MoleculePopulateProcess():
+    Priority(0),
     GaussianSigma(0),
     OriginX(0),
     OriginY(0),
@@ -64,6 +66,7 @@ public:
     UniformRadiusY(1),
     UniformRadiusZ(1) {}
   virtual ~MoleculePopulateProcess() {}
+  SIMPLE_SET_GET_METHOD(Integer, Priority);
   SIMPLE_SET_GET_METHOD(Real, OriginX);
   SIMPLE_SET_GET_METHOD(Real, OriginY);
   SIMPLE_SET_GET_METHOD(Real, OriginZ);
@@ -75,7 +78,6 @@ public:
   SIMPLE_SET_GET_METHOD(Real, UniformRadiusZ);
   virtual void initialize();
   virtual void initializeSecond();
-  virtual void initializeFourth();
   virtual void populateGaussian(Species*);
   virtual void populateUniformDense(Species*, unsigned int*, unsigned int*);
   virtual void populateUniformSparse(Species* aSpecies);
@@ -89,12 +91,13 @@ public:
       theTime = StartTime+theInterval; 
       thePriorityQueue->move(theQueueID);
     }
-  void checkProcess();
   virtual int getPriority()
     {
-      return SpatiocyteProcess::getPriority();
+      return Priority;
     }
+  void checkProcess();
 protected:
+  int Priority;
   double GaussianSigma;
   double OriginX;
   double OriginY;

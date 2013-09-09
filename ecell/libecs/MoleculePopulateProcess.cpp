@@ -45,7 +45,6 @@ namespace libecs
 
 LIBECS_DM_INIT_STATIC(MoleculePopulateProcess, Process); 
 
-
 void MoleculePopulateProcess::initialize()
 {
   if(isInitialized)
@@ -72,6 +71,7 @@ void MoleculePopulateProcess::initialize()
 void MoleculePopulateProcess::initializeSecond()
 {
   SpatiocyteProcess::initializeSecond();
+  checkProcess();
   for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
       i != theProcessSpecies.end(); ++i)
     {
@@ -79,9 +79,8 @@ void MoleculePopulateProcess::initializeSecond()
     }
 }
 
-void MoleculePopulateProcess::initializeFourth()
+void MoleculePopulateProcess::checkProcess()
 {
-  SpatiocyteProcess::initializeFourth();
   std::vector<Variable*> aVariables;
   std::vector<Process*> aProcesses(theSpatiocyteStepper->getProcessVector());
   for(std::vector<Process*>::const_iterator j(aProcesses.begin());
@@ -104,9 +103,7 @@ void MoleculePopulateProcess::initializeFourth()
   for(std::vector<Species*>::iterator i(theSpecies.begin());
       i !=theSpecies.end(); ++i)
     {
-      if(!(*i)->getIsVacant() && !(*i)->getIsInterface() &&
-         !(*i)->getIsPopulated() && (*i)->getVariable() &&
-         (*i)->getVariable()->getValue() != 0 &&
+      if((*i)->getVariable() && (*i)->getVariable()->getValue() != 0 &&
          std::find(aVariables.begin(), aVariables.end(),
                    (*i)->getVariable()) == aVariables.end())
         {
@@ -122,7 +119,7 @@ void MoleculePopulateProcess::fire()
   for(std::vector<Species*>::const_iterator i(theProcessSpecies.begin());
       i != theProcessSpecies.end(); ++i)
     {
-      (*i)->removeMolecules();
+      (*i)->removeMols();
       populateUniformSparse(*i);
     }
   theInterval = ResetTime;
@@ -136,17 +133,18 @@ void MoleculePopulateProcess::populateGaussian(Species* aSpecies)
 
 void MoleculePopulateProcess::populateUniformOnMultiscale(Species* aSpecies)
 {
-  cout << "    Populating uniformly on multiscale vacant:" <<
+  /*
+  std::cout << "    Populating uniformly on multiscale vacant:" <<
     getIDString(aSpecies) << " current size:" << aSpecies->size() <<
-    ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
+    ", populate size:" << aSpecies->getPopulateMolSize() << std::endl;
   if(!aSpecies->getIsPopulated())
     {
       if(UniformRadiusX == 1 && UniformRadiusY == 1 && UniformRadiusZ == 1 &&
          !OriginX && !OriginY && !OriginZ)
         {
           Species* aVacantSpecies(aSpecies->getVacantSpecies());
-          aVacantSpecies->updateMolecules();
-          unsigned int aSize(aSpecies->getPopulateCoordSize());
+          aVacantSpecies->updateMols();
+          unsigned int aSize(aSpecies->getPopulateMolSize());
           unsigned int aVacantSize(aVacantSpecies->getPopulatableSize());
           if(aVacantSize < aSize)
             {
@@ -163,12 +161,12 @@ void MoleculePopulateProcess::populateUniformOnMultiscale(Species* aSpecies)
             }
           for(unsigned int i(0); i != aSize; ++i)
             {
-              Voxel* aMolecule;
+              unsigned aMol;
               //After a molecule is added, the diffusive vacant species
               //molecule list is not updated, so we need to check if
               //it really is still vacant:
-              aMolecule = aVacantSpecies->getRandomPopulatableMolecule();
-              aSpecies->addMolecule(aMolecule);
+              aMol = aVacantSpecies->getRandomPopulatableMol();
+              aSpecies->addMol(aMol);
             }
         }
       else
@@ -177,22 +175,24 @@ void MoleculePopulateProcess::populateUniformOnMultiscale(Species* aSpecies)
         }
       aSpecies->setIsPopulated();
     }
+    */
 }
 
 void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
                                                                aSpecies)
 {
-  cout << "    Populating uniformly on diffusive vacant:" <<
+  /*
+  std::cout << "    Populating uniformly on diffusive vacant:" <<
     getIDString(aSpecies) << " current size:" << aSpecies->size() <<
-    ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
+    ", populate size:" << aSpecies->getPopulateMolSize() << std::endl;
   if(!aSpecies->getIsPopulated())
     {
       if(UniformRadiusX == 1 && UniformRadiusY == 1 && UniformRadiusZ == 1 &&
          !OriginX && !OriginY && !OriginZ)
         {
           Species* aVacantSpecies(aSpecies->getVacantSpecies());
-          aVacantSpecies->updateMolecules();
-          unsigned int aSize(aSpecies->getPopulateCoordSize());
+          aVacantSpecies->updateMols();
+          unsigned int aSize(aSpecies->getPopulateMolSize());
           unsigned int aVacantSize(aVacantSpecies->getPopulatableSize());
           if(aVacantSize < aSize)
             {
@@ -209,12 +209,12 @@ void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
             }
           for(unsigned int i(0); i != aSize; ++i)
             {
-              Voxel* aMolecule;
+              unsigned aMol;
               //After a molecule is added, the diffusive vacant species
               //molecule list is not updated, so we need to check if
               //it really is still vacant:
-              aMolecule = aVacantSpecies->getRandomPopulatableMolecule();
-              aSpecies->addMolecule(aMolecule);
+              aMol = aVacantSpecies->getRandomPopulatableMol();
+              aSpecies->addMol(aMol);
             }
         }
       else
@@ -223,31 +223,33 @@ void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
         }
       aSpecies->setIsPopulated();
     }
+    */
 }
 
 void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
                                               unsigned int* aList, 
                                               unsigned int* aCount)
 {
-  cout << "      Populating densely:" <<
+  /*
+  std::cout << "    Populating densely:" <<
     getIDString(aSpecies) << " current size:" << aSpecies->size() <<
-    ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
+    ", populate size:" << aSpecies->getPopulateMolSize() << std::endl;
   Species* aVacantSpecies(aSpecies->getVacantSpecies());
   if(!aSpecies->getIsPopulated())
     {
       if(UniformRadiusX == 1 && UniformRadiusY == 1 && UniformRadiusZ == 1 &&
          !OriginX && !OriginY && !OriginZ)
         {
-          unsigned int aSize(aSpecies->getPopulateCoordSize());
+          unsigned int aSize(aSpecies->getPopulateMolSize());
           for(unsigned int j(0); j != aSize; ++j)
             {
-              unsigned int aCoord;
+              unsigned int aMol;
               do
                 {
-                  aCoord = aVacantSpecies->getCoord(aList[(*aCount)++]); 
+                  aMol = aVacantSpecies->getMol(aList[(*aCount)++]); 
                 }
-              while(!aSpecies->isPopulatable(&(*theLattice)[aCoord]));
-              aSpecies->addMolecule(&(*theLattice)[aCoord]);
+              while((*theIDs)[aMol] != aVacantSpecies->getID());
+              aSpecies->addMol(aMol);
             }
         }
       else
@@ -256,31 +258,36 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
         }
       aSpecies->setIsPopulated();
     }
+    */
 }
 
 void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
 {
-  cout << "      Populating sparsely:" <<
+  std::cout << "    Populating sparsely:" <<
     getIDString(aSpecies) << " current size:" << aSpecies->size() <<
-    ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
+    ", populate size:" << aSpecies->getTotalPopulateMolSize() << std::endl;
   Species* aVacantSpecies(aSpecies->getVacantSpecies());
   if(!aSpecies->getIsPopulated())
     {
       if(UniformRadiusX == 1 && UniformRadiusY == 1 && UniformRadiusZ == 1 &&
          !OriginX && !OriginY && !OriginZ)
         {
-          unsigned int aSize(aSpecies->getPopulateCoordSize());
-          int availableVoxelSize(aVacantSpecies->size());
-          for(unsigned int j(0); j != aSize; ++j)
+          for(unsigned i(0); i != theIDs->size(); ++i)
+          //for(unsigned i(0); i != 1;  ++i)
             {
-              unsigned int aCoord;
-              do
+              unsigned int aSize(aSpecies->getPopulateMolSize(i));
+              int availableVoxelSize(aVacantSpecies->size(i));
+              for(unsigned int j(0); j != aSize; ++j)
                 {
-                  aCoord = aVacantSpecies->getCoord(gsl_rng_uniform_int(
+                  unsigned int aMol;
+                  do
+                    {
+                      aMol = aVacantSpecies->getMol(i, gsl_rng_uniform_int(
                                 getStepper()->getRng(), availableVoxelSize));
+                    }
+                  while((*theIDs)[i][aMol] != aVacantSpecies->getID());
+                  aSpecies->addMol(i, aMol);
                 }
-              while(!aSpecies->isPopulatable(&(*theLattice)[aCoord]));
-              aSpecies->addMolecule(&(*theLattice)[aCoord]);
             }
         }
       else
@@ -289,14 +296,15 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
         }
       aSpecies->setIsPopulated();
     }
-  aSpecies->updateMolecules();
+  aSpecies->updateMols();
 }
 
 void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
 {
-  cout << "        Populating uniformly ranged:" <<
+  /*
+  std::cout << "    Populating uniformly ranged:" <<
     getIDString(aSpecies) << " current size:" << aSpecies->size() <<
-    ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
+    ", populate size:" << aSpecies->getPopulateMolSize() << std::endl;
   Comp* aComp(aSpecies->getComp());
   Species* aVacantSpecies(aSpecies->getVacantSpecies());
   double deltaX(0);
@@ -325,22 +333,22 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
   minY = aComp->centerPoint.y + minY*aComp->lengthY/2*(1+deltaY);
   maxZ = aComp->centerPoint.z + maxZ*aComp->lengthZ/2*(1+deltaZ);
   minZ = aComp->centerPoint.z + minZ*aComp->lengthZ/2*(1+deltaZ);
-  std::vector<unsigned int> aCoords;
+  std::vector<unsigned int> aMols;
   unsigned int aVacantSize(aVacantSpecies->getPopulatableSize());
   for(unsigned int i(0); i != aVacantSize; ++i)
     {
-      unsigned int aCoord(aVacantSpecies->getPopulatableCoord(i));
-      Point aPoint(aVacantSpecies->coord2point(aCoord));
-      if(getID((*theLattice)[aCoord]) == aSpecies->getVacantID() &&
+      unsigned int aMol(aVacantSpecies->getPopulatableMol(i));
+      Point& aPoint((*theInfo)[aMol].point);
+      if((*theIDs)[aMol] == aSpecies->getVacantID() &&
          aPoint.x < maxX && aPoint.x > minX &&
          aPoint.y < maxY && aPoint.y > minY &&
          aPoint.z < maxZ && aPoint.z > minZ)
         {
-          aCoords.push_back(aCoord);
+          aMols.push_back(aMol);
         }
     }
-  unsigned int aSize(aSpecies->getPopulateCoordSize());
-  if(aCoords.size() < aSize)
+  unsigned int aSize(aSpecies->getPopulateMolSize());
+  if(aMols.size() < aSize)
     {
       THROW_EXCEPTION(ValueError, String(
                       getPropertyInterface().getClassName()) +
@@ -348,19 +356,20 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
                       int2str(aSize) + " " + getIDString(aSpecies) +
                       " molecules that must be uniformly populated in a " +
                       "given range,\n but there are only " +
-                      int2str(aCoords.size()) + " vacant voxels of " +
+                      int2str(aMols.size()) + " vacant voxels of " +
                       getIDString(aSpecies->getVacantSpecies()) +
                       " that can be populated.");
     }
-  std::random_shuffle(aCoords.begin(), aCoords.end());
-  for(unsigned int i(0); i != aCoords.size(); ++i)
+  std::random_shuffle(aMols.begin(), aMols.end());
+  for(unsigned int i(0); i != aMols.size(); ++i)
     {
-      Voxel* aVoxel(&(*theLattice)[aCoords[i]]);
-      if(aSpecies->size() < aSize && aSpecies->isPopulatable(aVoxel))
+      unsigned aMol(aMols[i]);
+      if(aSpecies->size() < aSize && aSpecies->isPopulatable(aMol))
         {
-          aSpecies->addMolecule(aVoxel);
+          aSpecies->addMol(aMol);
         }
     }
+    */
 }
 
 }

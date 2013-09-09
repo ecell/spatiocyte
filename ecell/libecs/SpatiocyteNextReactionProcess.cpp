@@ -39,48 +39,25 @@ LIBECS_DM_INIT_STATIC(SpatiocyteNextReactionProcess, Process);
 
 void SpatiocyteNextReactionProcess::fire()
 {
-  if(react())
-    {
-      interruptProcessesPost();
-      ReactionProcess::fire();
-      return;
-    }
-  requeue();
-}
-
-
-void SpatiocyteNextReactionProcess::updateSubstrates()
-{
   if(A)
     {
-      A->updateMolecules();
+      A->updateMols();
     }
   if(B)
     {
-      B->updateMolecules();
+      B->updateMols();
     }
-}
-
-bool SpatiocyteNextReactionProcess::react()
-{
-  updateSubstrates();
   if(theOrder == 0)
     {
       if(C)
         { 
-          if(C->getIsMultiscale())
+          moleculeC = C->getRandomCompMol(SearchVacant);
+          if(moleculeC == theNullMol)
             {
-              moleculeC = newMultiC();
+              requeue();
+              return;
             }
-          else
-            {
-              moleculeC = C->getRandomPopulatableVoxel(SearchVacant);
-            }
-          if(moleculeC == NULL)
-            {
-              return false;
-            }
-          C->addMolecule(moleculeC);
+          C->addMol(moleculeC);
         }
       else if(variableC)
         {
@@ -94,11 +71,14 @@ bool SpatiocyteNextReactionProcess::react()
         {
           if(BindingSite == -1)
             {
-              return reactACD(A, C, D);
+              if(!reactACD(A, C, D))
+                {
+                  return;
+                }
             }
-          else
+          else if(!reactACDbind(A, C, D))
             {
-              return reactACDbind(A, C, D);
+              return;
             }
         }
       //nonHD_A -> nonHD_C:
@@ -106,39 +86,29 @@ bool SpatiocyteNextReactionProcess::react()
         {
           if(BindingSite == -1)
             {
-              if(theDeoligomerIndex)
+              if(!reactAC(A, C))
                 {
-                  return reactDeoligomerize(A, C);
-                }
-              else if(isMultiAC)
-                {
-                  return reactMultiAC();
-                }
-              else
-                {
-                  return reactAC(A, C);
+                  return;
                 }
             }
-          else
+          else if(!reactACbind(A, C))
             {
-              return reactACbind(A, C);
+              return;
             }
         }
       //nonHD_A -> HD_C + HD_D:
       else if(A && variableC && variableD)
         {
-          moleculeA = A->getRandomMolecule();
-          interruptProcessesPre();
-          A->removeMolecule(moleculeA);
+          moleculeA = A->getRandomMol();
+          A->removeMol(moleculeA);
           variableC->addValue(coefficientC);
           variableD->addValue(coefficientD);
         }
       //nonHD_A -> HD_C:
       else if(A && variableC && !D && !variableD)
         {
-          moleculeA = A->getRandomMolecule();
-          interruptProcessesPre();
-          A->removeMolecule(moleculeA);
+          moleculeA = A->getRandomMol();
+          A->removeMol(moleculeA);
           variableC->addValue(coefficientC);
         }
       //nonHD_A -> nonHD_C + HD_D:
@@ -160,66 +130,68 @@ bool SpatiocyteNextReactionProcess::react()
              }
           else
             {
-              return false;
+              return;
             }
         }
       //HD_A -> nonHD_C:
       else if(variableA && C && !D && !variableD)
         {
           moleculeC = reactvAC(variableA, C);
-          if(moleculeC == NULL)
+          if(moleculeC == theNullMol)
             {
-              return false;
+              requeue();
+              return;
             }
           else
             {
               variableA->addValue(coefficientA);
-              C->addMolecule(moleculeC);
+              C->addMol(moleculeC);
             }
         }
       //HD_A -> nonHD_C + nonHD_D:
       else if(variableA && C && D)
         {
-          moleculeC = NULL;
-          moleculeD = NULL;
+          moleculeC = theNullMol;
+          moleculeD = theNullMol;
           Comp* compA(theSpatiocyteStepper->system2Comp(
                          variableA->getSuperSystem()));
           //Occupy C in a voxel of compartment C that adjoins compartment A
           //if A is a surface compartment:
           if(compA != C->getComp() && compA->dimension != 3)
             {
-              moleculeC = C->getRandomAdjoiningCompVoxel(compA, SearchVacant);
+              moleculeC = C->getRandomAdjoinCompMol(compA, SearchVacant);
               if(moleculeC)
                 {
-                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
+                  moleculeD = D->getRandomAdjoin(moleculeC, moleculeC,
                                                          SearchVacant);
                 }
             }
           else if(compA != D->getComp() && compA->dimension != 3)
             {
-              moleculeD = D->getRandomAdjoiningCompVoxel(compA, SearchVacant);
+              moleculeD = D->getRandomAdjoinCompMol(compA, SearchVacant);
               if(moleculeD)
                 {
-                  moleculeC = C->getRandomAdjoiningVoxel(moleculeD, moleculeD,
+                  moleculeC = C->getRandomAdjoin(moleculeD, moleculeD,
                                                          SearchVacant);
                 }
             }
           else
             {
-              moleculeC = C->getRandomPopulatableVoxel(SearchVacant);
+              moleculeC = C->getRandomCompMol(SearchVacant);
               if(moleculeC)
                 {
-                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
+                  moleculeD = D->getRandomAdjoin(moleculeC, moleculeC,
                                                          SearchVacant);
                 }
             }
-          if(moleculeC == NULL || moleculeD == NULL)
+          if(moleculeC == theNullMol || moleculeD == theNullMol)
             {
-              return false;
+              requeue();
+              return;
             }
           variableA->addValue(coefficientA);
-          C->addMolecule(moleculeC);
-          D->addMolecule(moleculeD);
+          C->addMol(moleculeC);
+          D->addMol(moleculeD);
         }
       //HD_A -> HD_C + HD_D:
       else if(variableA && variableC && variableD)
@@ -248,12 +220,13 @@ bool SpatiocyteNextReactionProcess::react()
               nonHD_p = C;
             }
           moleculeP = reactvAC(variableA, nonHD_p);
-          if(moleculeP == NULL)
+          if(moleculeP == theNullMol)
             {
-              return false;
+              requeue();
+              return;
             }
           variableA->addValue(coefficientA);
-          nonHD_p->addMolecule(moleculeP);
+          nonHD_p->addMol(moleculeP);
           HD_p->addValue(coefficient);
         }
     }
@@ -275,13 +248,14 @@ bool SpatiocyteNextReactionProcess::react()
           else if(C && !variableD && !D)
             { 
               moleculeC = reactvAvBC(C);
-              if(moleculeC == NULL)
+              if(moleculeC == theNullMol)
                 {
-                  return false;
+                  requeue();
+                  return;
                 }
               variableA->addValue(coefficientA);
               variableB->addValue(coefficientB);
-              C->addMolecule(moleculeC);
+              C->addMol(moleculeC);
             }
           //HD + HD -> HD + HD: 
           else if(variableC && variableD)
@@ -305,42 +279,44 @@ bool SpatiocyteNextReactionProcess::react()
                   nonHD_p = C;
                 }
               moleculeP = reactvAvBC(nonHD_p);
-              if(moleculeP == NULL)
+              if(moleculeP == theNullMol)
                 {
-                  return false;
+                  requeue();
+                  return;
                 }
               variableA->addValue(coefficientA);
               variableB->addValue(coefficientB);
-              nonHD_p->addMolecule(moleculeP);
+              nonHD_p->addMol(moleculeP);
               HD_p->addValue(coefficient);
             }
           //HD + HD -> nonHD + nonHD: 
           else if(C && D)
             {
               moleculeC = reactvAvBC(C);
-              moleculeD = NULL;
-              if(moleculeC == NULL)
+              moleculeD = theNullMol;
+              if(moleculeC == theNullMol)
                 {
                   moleculeD = reactvAvBC(D);
                   if(moleculeD)
                     {
-                      moleculeC = C->getRandomAdjoiningVoxel(moleculeD,
+                      moleculeC = C->getRandomAdjoin(moleculeD,
                                                      moleculeD, SearchVacant);
                     }
                 }
               else
                 { 
-                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
+                  moleculeD = D->getRandomAdjoin(moleculeC, moleculeC,
                                                          SearchVacant);
                 }
-              if(moleculeC == NULL || moleculeD == NULL)
+              if(moleculeC == theNullMol || moleculeD == theNullMol)
                 {
-                  return false;
+                  requeue();
+                  return;
                 }
               variableA->addValue(coefficientA);
               variableB->addValue(coefficientB);
-              C->addMolecule(moleculeC);
-              D->addMolecule(moleculeD);
+              C->addMol(moleculeC);
+              D->addMol(moleculeD);
             }
         }
       //HD + nonHD -> product(s)
@@ -362,7 +338,7 @@ bool SpatiocyteNextReactionProcess::react()
             { 
               if(!reactACD(nonHD, C, D))
                 {
-                  return false;
+                  return;
                 }
               HD->addValue(coefficient);
             }
@@ -372,7 +348,7 @@ bool SpatiocyteNextReactionProcess::react()
             {
               if(!reactAC(nonHD, C))
                 {
-                  return false;
+                  return;
                 }
               HD->addValue(coefficient);
             }
@@ -380,8 +356,8 @@ bool SpatiocyteNextReactionProcess::react()
           //HD + nonHD -> HD:
           else if(variableC && !D && !variableD)
             {
-              moleculeS = nonHD->getRandomMolecule();
-              nonHD->removeMolecule(moleculeS);
+              moleculeS = nonHD->getRandomMol();
+              nonHD->removeMol(moleculeS);
               HD->addValue(coefficient);
               variableC->addValue(coefficientC);
             }
@@ -402,7 +378,7 @@ bool SpatiocyteNextReactionProcess::react()
                 }
               if(!reactAC(nonHD, nonHD_p))
                 {
-                  return false;
+                  return;
                 }
               HD->addValue(coefficient);
               HD_p->addValue(coefficient_p);
@@ -412,133 +388,65 @@ bool SpatiocyteNextReactionProcess::react()
       else
         {
           //nonHD + nonHD -> nonHD + nonHD
-          if(C && D && !F)
+          if(C && D)
             {
-              //always true reaction:
               reactABCD();
-              if(variableG)
-                {
-                  variableG->addValue(coefficientG);
-                }
-              if(variableF)
-                {
-                  variableF->addValue(coefficientF);
-                }
             }
           //nonHD + nonHD -> nonHD
           else
             {
-              //nonHD + nonHD -> nonHD
-              //always true reaction:
-              reactABC();
+              //multiNonHD + nonHD -> nonHD
+              if(A->getIsMultiscale())
+                {
+                  if(!reactMultiABC())
+                    {
+                      return;
+                    }
+                }
             }
         }
     }
+  ReactionProcess::fire();
+}
+
+//MultiNonHD.nonHD -> nonHD
+//MultiA.B -> C
+bool SpatiocyteNextReactionProcess::reactMultiABC()
+{
+  std::cout << "react Multi ABC:" << nextIndexA << std::endl;
+  moleculeA = A->getMol(nextIndexA);
+  moleculeC = C->getRandomAdjoin(moleculeA, SearchVacant);
+  if(moleculeC == theNullMol)
+    {
+      requeue();
+      return false;
+    }
+  A->removeMolIndex(nextIndexA);
+  std::cout << "adding molecule" << std::endl;
+  C->addMol(moleculeC);
   return true;
-}
-
-
-Voxel* SpatiocyteNextReactionProcess::newMultiC()
-{
-  std::vector<unsigned> inMultiCnts;
-  moleculeC = C->getRandomPopulatableMulti(SearchVacant, inMultiCnts);
-  if(moleculeC == NULL)
-    {
-      return NULL;
-    }
-  if(E)
-    {
-      unsigned cnt(inMultiCnts[E->getID()]);
-      double prob(cnt*theRates[1]);
-      if(H)
-        {
-          cnt += inMultiCnts[H->getID()];
-          prob += inMultiCnts[H->getID()]*theRates[2];
-        }
-      prob += (C->getMultiCoordSize()-cnt)*theRates[0];
-      prob /= C->getMultiCoordSize();
-      if(theRng->Fixed() > prob)
-        {
-          return NULL;
-        }
-    }
-  return moleculeC;
-}
-
-//multiNonHD -> nonHD
-bool SpatiocyteNextReactionProcess::reactMultiAC()
-{
-  const unsigned indexA(theNextIndex);
-  moleculeA = A->getMolecule(indexA);
-  moleculeC = NULL;
-  if(A->getVacantID() == C->getVacantID() || A->getID() == C->getVacantID())
-    {
-      moleculeC = moleculeA;
-    }
-  else
-    {
-      moleculeC = C->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
-      if(moleculeC == NULL)
-        {
-          return false;
-        }
-    }
-  interruptProcessesPre();
-  if(A->getIsOnMultiscale() && C->getIsOnMultiscale())
-    {
-      C->addMoleculeInMulti(moleculeC, A->getTag(indexA).multiIdx);
-      A->softRemoveMolecule(indexA);
-    }
-  else
-    {
-      Tag tagA(A->getTag(indexA));
-      A->removeMolecule(indexA);
-      C->addMolecule(moleculeC, tagA);
-    }
-  return true;
-}
-
-
-//nonHD.nonHD -> nonHD
-//Both A and B are immobile nonHD
-void SpatiocyteNextReactionProcess::reactABC()
-{
-  const unsigned rand(theRng->Integer(theCoordsA.size()));
-  moleculeA = &(*theLattice)[theCoordsA[rand]];
-  moleculeB = A->getRandomDiffuseVoxel(moleculeA, B, 1);
-  interruptProcessesPre();
-  if(A != C)
-    {
-      unsigned indexA(A->getIndex(moleculeA));
-      Tag tagA(A->getTag(indexA));
-      A->removeMolecule(indexA);
-      C->addMolecule(moleculeA, tagA);
-    }
-  unsigned indexB(B->getIndex(moleculeB));
-  B->removeMolecule(indexB);
 }
 
 //nonHD.nonHD -> nonHD + nonHD
 //Both A and B are immobile nonHD
 void SpatiocyteNextReactionProcess::reactABCD()
 {
-  const unsigned rand(theRng->Integer(theCoordsA.size()));
-  moleculeA = &(*theLattice)[theCoordsA[rand]];
-  moleculeB = A->getRandomDiffuseVoxel(moleculeA, B, 1);
-  interruptProcessesPre();
+  unsigned rand(gsl_rng_uniform_int(getStepper()->getRng(), moleculesA.size()));
+  moleculeA = moleculesA[rand];
+  moleculeB = A->getRandomAdjoin(moleculeA, B, SearchVacant);
   if(A != C)
     {
-      unsigned indexA(A->getIndex(moleculeA));
+      unsigned indexA(A->getMolIndex(moleculeA));
       Tag tagA(A->getTag(indexA));
-      A->removeMolecule(indexA);
-      C->addMolecule(moleculeA, tagA);
+      A->removeMolIndex(indexA);
+      C->addMol(moleculeA, tagA);
     }
   if(B != D)
     { 
-      unsigned indexB(B->getIndex(moleculeB));
+      unsigned indexB(B->getMolIndex(moleculeB));
       Tag tagB(B->getTag(indexB));
-      B->removeMolecule(indexB);
-      D->addMolecule(moleculeB, tagB);
+      B->removeMolIndex(indexB);
+      D->addMol(moleculeB, tagB);
     }
 }
 
@@ -546,17 +454,16 @@ void SpatiocyteNextReactionProcess::reactABCD()
 bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
 {
   unsigned indexA(a->getRandomIndex());
-  moleculeA = a->getMolecule(indexA);
-  //This is needed when a is species B, used by interruptedPre:
-  moleculeB = moleculeA;
-  moleculeC = NULL;
-  moleculeD = NULL;
+  moleculeA = a->getMol(indexA);
+  moleculeC = theNullMol;
+  moleculeD = theNullMol;
   if(a->getVacantID() == c->getVacantID() || a->getID() == c->getVacantID())
     {
       moleculeC = moleculeA;
-      moleculeD = d->getRandomAdjoiningVoxel(A, C, moleculeA, SearchVacant);
-      if(moleculeD == NULL)
+      moleculeD = d->getRandomAdjoin(moleculeC, moleculeC, SearchVacant);
+      if(moleculeD == theNullMol)
         {
+          requeue();
           return false;
         }
     }
@@ -564,71 +471,36 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
           a->getID() == d->getVacantID())
     {
       moleculeD = moleculeA;
-      moleculeC = c->getRandomAdjoiningVoxel(A, D, moleculeA, SearchVacant);
-      if(moleculeC == NULL)
+      moleculeC = c->getRandomAdjoin(moleculeD, moleculeD,
+                                             SearchVacant);
+      if(moleculeC == theNullMol)
         {
+          requeue();
           return false;
         }
     }
   else
     {
-      moleculeC = c->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
-      if(moleculeC == NULL)
+      moleculeC = c->getRandomAdjoin(moleculeA, SearchVacant);
+      if(moleculeC == theNullMol)
         {
-          //Only proceed if we can find an adjoining vacant voxel
+          //Only proceed if we can find an adjoin vacant voxel
           //of nonND which can be occupied by C:
+          requeue();
           return false;
         }
-      moleculeD = d->getRandomAdjoiningVoxel(moleculeC, SearchVacant);
-      if(moleculeD == NULL)
+      moleculeD = d->getRandomAdjoin(moleculeC, moleculeC,
+                                             SearchVacant);
+      if(moleculeD == theNullMol)
         {
+          requeue();
           return false;
         }
     }
-  interruptProcessesPre();
   Tag tagA(a->getTag(indexA));
-  a->removeMolecule(indexA);
-  c->addMolecule(moleculeC, tagA);
-  d->addMolecule(moleculeD);
-  return true;
-}
-
-//nonHD (+ E) -> nonHD
-bool SpatiocyteNextReactionProcess::reactDeoligomerize(Species* a, Species* c)
-{
-  if(!A->getBoundCnt(theDeoligomerIndex))
-    {
-      return false;
-    }
-  unsigned indexA(a->getRandomOligomerIndex(theDeoligomerIndex));
-  moleculeA = a->getMolecule(indexA);
-  moleculeC = NULL;
-  if(a->getVacantID() == c->getVacantID() || a->getID() == c->getVacantID())
-    {
-      moleculeC = moleculeA;
-    }
-  else
-    {
-      moleculeC = c->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
-      if(moleculeC == NULL)
-        {
-          //Only proceed if we can find an adjoining vacant voxel
-          //of nonND which can be occupied by C:
-          return false;
-        }
-    }
-  interruptProcessesPre();
-  if(a->getIsOnMultiscale() && c->getIsOnMultiscale())
-    {
-      c->addMoleculeInMulti(moleculeC, a->getTag(indexA).multiIdx);
-      a->softRemoveMolecule(indexA);
-    }
-  else
-    {
-      Tag tagA(a->getTag(indexA));
-      a->removeMolecule(indexA);
-      c->addMolecule(moleculeC, tagA);
-    }
+  a->removeMolIndex(indexA);
+  c->addMol(moleculeC, tagA);
+  d->addMol(moleculeD);
   return true;
 }
 
@@ -636,144 +508,111 @@ bool SpatiocyteNextReactionProcess::reactDeoligomerize(Species* a, Species* c)
 bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
 {
   unsigned indexA(a->getRandomIndex());
-  moleculeA = a->getMolecule(indexA);
-  //This is needed when a is species B, used by interruptedPre:
-  moleculeB = moleculeA;
-  if(ImplicitUnbind && 
-     E->getRandomAdjoiningVoxel(moleculeA, E, SearchVacant) == NULL)
-    {
-      return false;
-    }
-  moleculeC = NULL;
+  moleculeA = a->getMol(indexA);
+  moleculeC = theNullMol;
   if(a->getVacantID() == c->getVacantID() || a->getID() == c->getVacantID())
     {
       moleculeC = moleculeA;
     }
   else
     {
-      moleculeC = c->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
-      if(moleculeC == NULL)
+      moleculeC = c->getRandomAdjoin(moleculeA, SearchVacant);
+      if(moleculeC == theNullMol)
         {
-          //Only proceed if we can find an adjoining vacant voxel
+          //Only proceed if we can find an adjoin vacant voxel
           //of nonND which can be occupied by C:
+          requeue();
           return false;
         }
     }
-  interruptProcessesPre();
-  if(a->getIsOnMultiscale() && c->getIsOnMultiscale())
-    {
-      c->addMoleculeInMulti(moleculeC, a->getTag(indexA).multiIdx);
-      a->softRemoveMolecule(indexA);
-    }
-  else
-    {
-      Tag tagA(a->getTag(indexA));
-      a->removeMolecule(indexA);
-      c->addMolecule(moleculeC, tagA);
-    }
-  removeMoleculeE();
+  Tag tagA(a->getTag(indexA));
+  a->removeMolIndex(indexA);
+  c->addMol(moleculeC, tagA);
+  removeMolE();
   return true;
 }
 
 //zero-coefficient E
 //we remove a molecule E at random location in the compartment to allow
-//rebinding effect of the dissociated nonHD molecule while maintaining (fixing)
-//the concentration of a substrate species even after the reaction:
-void SpatiocyteNextReactionProcess::removeMoleculeE()
+//rebinding effect of the dissociated nonHD molecule while maintain the 
+//concentration of a substrate species even after the reaction:
+void SpatiocyteNextReactionProcess::removeMolE()
 {
-  if(!E || ImplicitUnbind)
+  if(!E)
     {
       return;
     }
-  moleculeE = E->getRandomMolecule();
-  if(moleculeE == NULL)
+  moleculeE = E->getRandomMol();
+  if(moleculeE == theNullMol)
     {
-      cout << getFullID().asString() << " unable to remove molecule E" <<
+      std::cout << getFullID().asString() << " unable to remove molecule E" <<
         std::endl;
     }
-  E->removeMolecule(moleculeE);
+  E->removeMol(moleculeE);
 }
 
-//A (+Vacant[BindingSite]) -> nonHD[BindingSite]
+//nonHD (+Vacant[BindingSite]) -> nonHD[BindingSite]
 bool SpatiocyteNextReactionProcess::reactACbind(Species* a, Species* c)
 {
   unsigned indexA(a->getRandomIndex());
-  moleculeA = a->getMolecule(indexA);
-  moleculeC = c->getBindingSiteAdjoiningVoxel(moleculeA, BindingSite);
-  if(moleculeC == NULL)
+  moleculeA = a->getMol(indexA);
+  moleculeC = c->getBindingSiteAdjoin(moleculeA, BindingSite);
+  if(moleculeC == theNullMol)
     {
-      //Only proceed if we can find an adjoining vacant voxel
+      //Only proceed if we can find an adjoin vacant voxel
       //of nonND which can be occupied by C:
+      requeue();
       return false;
     }
-  interruptProcessesPre();
   Tag tagA(a->getTag(indexA));
-  a->removeMolecule(indexA);
-  c->addMolecule(moleculeC, tagA);
+  a->removeMolIndex(indexA);
+  c->addMol(moleculeC, tagA);
   return true;
 }
 
-//A (+Vacant[BindingSite] || +D[BindingSite]) -> 
-//[molA <- D_trailA] + (Vacant[BindingSite] || D[BindingSite] <- C)
+//nonHD(a) -> nonHD(c[BindingSite]) if vacant[BindingSite]
+//else if BindingSite is not vacant:
+//nonHD(a) -> nonHD(d)
 bool SpatiocyteNextReactionProcess::reactACDbind(Species* a, Species* c,
                                                  Species* d)
 {
   unsigned indexA(a->getRandomIndex());
-  moleculeA = a->getMolecule(indexA);
-  //Look for Vacant[BindingSite]:
-  moleculeC = c->getBindingSiteAdjoiningVoxel(moleculeA, BindingSite);
-  if(moleculeC == NULL)
+  moleculeA = a->getMol(indexA);
+  moleculeC = c->getBindingSiteAdjoin(moleculeA, BindingSite);
+  if(moleculeC == theNullMol)
     {
-      //Look for D[BindingSite]:
-      moleculeC = c->getBindingSiteAdjoiningVoxel(moleculeA, BindingSite, d);
-      if(moleculeC == NULL)
+      moleculeD = theNullMol;
+      moleculeD = d->getRandomAdjoin(moleculeA, SearchVacant);
+      if(moleculeD == theNullMol)
         {
+          requeue();
           return false;
         }
-      interruptProcessesPre();
       Tag tagA(a->getTag(indexA));
-      //molA <- D
-      if(a->isTrailSpecies(d))
-        {
-          a->softRemoveMolecule(indexA);
-          d->addMolecule(moleculeA);
-        }
-      else
-        {
-          a->removeMolecule(indexA);
-        }
-      //D[BindingSite] <- C
-      d->softRemoveMolecule(moleculeC);
-      c->addMolecule(moleculeC, tagA);
+      a->removeMolIndex(indexA);
+      d->addMol(moleculeD, tagA);
       return true;
     }
-  interruptProcessesPre();
   Tag tagA(a->getTag(indexA));
-  a->removeMolecule(indexA);
-  if(a->isTrailSpecies(d))
-    {
-      //molA <- D
-      d->addMolecule(moleculeA);
-    }
-  //Vacant[BindingSite] <- C
-  c->addMolecule(moleculeC, tagA);
+  a->removeMolIndex(indexA);
+  c->addMol(moleculeC, tagA);
   return true;
 }
 
 //HD -> nonHD
-Voxel* SpatiocyteNextReactionProcess::reactvAC(Variable* vA, Species* c)
+unsigned SpatiocyteNextReactionProcess::reactvAC(Variable* vA, Species* c)
 {
-  moleculeC = NULL;
+  moleculeC = theNullMol;
   Comp* compA(theSpatiocyteStepper->system2Comp(vA->getSuperSystem()));
   //Occupy C in a voxel of compartment C that adjoins compartment A
   //if A is a surface compartment:
   if(compA != c->getComp() && compA->dimension != 3)
     {
-      moleculeC = c->getRandomAdjoiningCompVoxel(compA, SearchVacant);
+      moleculeC = c->getRandomAdjoinCompMol(compA, SearchVacant);
     }
   else
     {
-      moleculeC = c->getRandomPopulatableVoxel(SearchVacant);
+      moleculeC = c->getRandomCompMol(SearchVacant);
     }
   return moleculeC;
 }
@@ -800,186 +639,166 @@ Comp* SpatiocyteNextReactionProcess::getComp2D(Species* c)
   return NULL;
 }
 
-Voxel* SpatiocyteNextReactionProcess::reactvAvBC(Species* c)
+unsigned SpatiocyteNextReactionProcess::reactvAvBC(Species* c)
 {
-  moleculeC = NULL;
+  moleculeC = theNullMol;
   Comp* aComp2D(getComp2D(c));
   if(aComp2D)
     {
-      moleculeC = C->getRandomAdjoiningCompVoxel(aComp2D, SearchVacant);
+      moleculeC = C->getRandomAdjoinCompMol(aComp2D, SearchVacant);
     }
   else
     {
-      moleculeC = C->getRandomPopulatableVoxel(SearchVacant);
+      moleculeC = C->getRandomCompMol(SearchVacant);
     }
   return moleculeC;
 }
 
 
-double SpatiocyteNextReactionProcess::getPropensityZerothOrder() 
+Real SpatiocyteNextReactionProcess::getPropensity_ZerothOrder() 
 {
   return p;
 }
 
-double SpatiocyteNextReactionProcess::getPropensityFirstOrder() 
+Real SpatiocyteNextReactionProcess::getPropensity_FirstOrder() 
 {
-  double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
-  if(sizeA < -coefficientA)
+  if(A)
     {
-      sizeA = 0;
+      A->updateMolSize();
     }
-  return p*sizeA;
-}
-
-double SpatiocyteNextReactionProcess::getPropensityFirstOrderMultiAC() 
-{
-  double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
-  if(sizeA < -coefficientA)
+  Real aValue(theVariableReferenceVector[0].getVariable()->getValue());
+  if(aValue > 0.0)
     {
-      sizeA = 0;
-    }
-  return p*sizeA;
-}
-
-double SpatiocyteNextReactionProcess::getPropensityFirstOrderReactAB() 
-{
-  double sizeA(theCoordsA.size());
-  if(sizeA < -coefficientA)
-    {
-      sizeA = 0;
-    }
-  return p*sizeA;
-}
-
-double SpatiocyteNextReactionProcess::getPropensityFirstOrderDeoligomerize() 
-{
-  return p*A->getBoundCnt(theDeoligomerIndex);
-}
-
-double SpatiocyteNextReactionProcess::getPropensitySecondOrderReactABvG() 
-{
-  double sizeA(theCoordsA.size());
-  if(sizeA < -coefficientA)
-    {
-      sizeA = 0;
+      //std::cout << "p1:" << p << " v:" << aValue << std::endl;
+      return p*aValue;
     }
   else
     {
-      sizeA = pow(sizeA, -coefficientA);
+      //std::cout << "p1:0" << std::endl;
+      return 0.0;
     }
-  double sizeG(variableG->getValue());
-  if(sizeG < -coefficientG)
-    {
-      sizeG = 0;
-    }
-  else
-    {
-      sizeG = pow(sizeG, -coefficientG);
-    }
-  return p*sizeA*sizeG;
 }
 
 //Need to solve homodimerization reaction of two substrate species (Size-1):
-double SpatiocyteNextReactionProcess::getPropensitySecondOrderHetero() 
+Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_TwoSubstrates() 
 {
   if(A)
     {
-      A->updateMoleculeSize();
+      A->updateMolSize();
     }
-  else if(B)
+  if(B)
     {
-      B->updateMoleculeSize();
+      B->updateMolSize();
     }
   double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
   double sizeB(theVariableReferenceVector[1].getVariable()->getValue());
-  //Required for HD species when substrate coefficient is < -1
-  if(sizeA < -coefficientA)
+  //Required for HD species when |coefficient| is != 1
+  if(variableA)
     {
-      sizeA = 0;
+      sizeA = pow(sizeA, sqrt(coefficientA*coefficientA));
+    }
+  if(variableB)
+    {
+      sizeB = pow(sizeB, sqrt(coefficientB*coefficientB));
+    }
+  if(sizeA > 0.0 && sizeB > 0.0)
+    {
+      return p*sizeA*sizeB;
     }
   else
     {
-      sizeA = pow(sizeA, -coefficientA);
+      return 0.0;
     }
-  if(sizeB < -coefficientB)
-    {
-      sizeB = 0;
-    }
-  else
-    {
-      sizeB = pow(sizeB, -coefficientB);
-    }
-  return p*sizeA*sizeB;
 }
 
-double SpatiocyteNextReactionProcess::getPropensitySecondOrderHomo() 
+double SpatiocyteNextReactionProcess::getIntervalUnbindMultiAB()
+{
+  if(!A->size() || !p)
+    {
+      return libecs::INF;
+    }
+  nextIndexA = 0;
+  double fraction(A->getMultiscaleBoundFraction(nextIndexA,
+                                            B->getVacantSpecies()->getID())); 
+  double rand(gsl_rng_uniform_pos(getStepper()->getRng()));
+  double denom((p*fraction)*(-log(rand)));
+  double nextInterval(libecs::INF);
+  if(denom)
+    {
+      nextInterval = 1.0/denom;
+    }
+  for(unsigned i(1); i != A->size(); ++i)
+    {
+      fraction = A->getMultiscaleBoundFraction(i,
+                                               B->getVacantSpecies()->getID());
+      rand = gsl_rng_uniform_pos(getStepper()->getRng());
+      denom = (p*fraction)*(-log(rand));
+      double interval(libecs::INF);
+      if(denom)
+        {
+          interval = 1.0/denom;
+        }
+      if(interval < nextInterval)
+        {
+          nextIndexA = i;
+          nextInterval = interval;
+        }
+    }
+  return nextInterval;
+}
+
+double SpatiocyteNextReactionProcess::getIntervalUnbindAB()
+{
+  A->updateMolSize();
+  B->updateMolSize();
+  if(A->getIsMultiscale())
+    {
+      return getIntervalUnbindMultiAB();
+    }
+  const double sizeB(updateSizesAB());
+  const double sizeA(moleculesA.size());
+  const double rand(gsl_rng_uniform_pos(getStepper()->getRng()));
+  const double denom((p*sizeA*sizeB)*(-log(rand)));
+  if(denom)
+    {
+      return 1.0/denom;
+    }
+  return libecs::INF;
+}
+
+unsigned SpatiocyteNextReactionProcess::updateSizesAB()
+{
+  unsigned sizeB(0);
+  moleculesA.resize(0);
+  for(unsigned i(0); i != A->size(); ++i)
+    {
+      moleculeA = A->getMol(i);
+      unsigned cnt(A->getAdjoinMolCnt(moleculeA, B));
+      if(cnt)
+        {
+          moleculesA.push_back(moleculeA);
+          sizeB += cnt;
+        }
+    }
+  return sizeB;
+}
+
+Real SpatiocyteNextReactionProcess::getPropensity_SecondOrder_OneSubstrate() 
 {
   if(A)
     {
-      A->updateMoleculeSize();
+      A->updateMolSize();
     }
-  double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
-  if(sizeA < -coefficientA)
-    {
-      sizeA = 1;
-    }
+  Real aValue(theVariableReferenceVector[0].getVariable()->getValue());
   //There must be two or more molecules:
-  return p*sizeA*(sizeA-1);
-}
-
-
-void SpatiocyteNextReactionProcess::preinitialize()
-{
-  ReactionProcess::preinitialize();
-  if(Deoligomerize)
+  if(aValue > 1.0)
     {
-      setDeoligomerIndex(Deoligomerize);
-      for(unsigned i(0); i != Deoligomerize-1; ++i)
-        {
-          const unsigned aDeoligomerIndex(i+1);
-          Process* aProcess(SpatiocyteStepper::createProcess(
-             getPropertyInterface().getClassName(),
-             String(getFullID().getID()+int2str(aDeoligomerIndex)),
-             getStepper()->getModel()->getSystem(getFullID().getSystemPath()),
-             getStepper()->getModel()));
-          aProcess->setStepper(getStepper());
-          aProcess->setPriority(getPriority());
-          SpatiocyteNextReactionProcess* aSNRP(
-                     dynamic_cast<SpatiocyteNextReactionProcess*>(aProcess));
-          if(theRates.size())
-            {
-              aSNRP->setk(theRates[i]);
-            }
-          else
-            {
-              aSNRP->setk(k/aDeoligomerIndex);
-            }
-          aSNRP->setSearchVacant(SearchVacant);
-          aSNRP->setDeoligomerIndex(aDeoligomerIndex);
-          aSNRP->setImplicitUnbind(ImplicitUnbind);
-          aSNRP->setVariableReferences(theVariableReferenceVector);
-          aProcess->preinitialize();
-        }
-      if(theRates.size())
-        {
-          setk(theRates[Deoligomerize-1]);
-        }
-      else
-        {
-          setk(k/Deoligomerize);
-        }
+      return p*aValue*(aValue-1.0);
     }
-}
-
-void SpatiocyteNextReactionProcess::setDeoligomerIndex(const unsigned anIndex)
-{
-  theDeoligomerIndex = anIndex;
-}
-
-void SpatiocyteNextReactionProcess::setVariableReferences(const 
-                          VariableReferenceVector& aVariableReferenceVector)
-{
-  theVariableReferenceVector = aVariableReferenceVector;
+  else
+    {
+      return 0.0;
+    }
 }
 
 void SpatiocyteNextReactionProcess::initializeSecond()
@@ -987,7 +806,7 @@ void SpatiocyteNextReactionProcess::initializeSecond()
   ReactionProcess::initializeSecond();
   //if second order, with A and B substrates, both of them
   //must be immobile, or A must be multiscale:
-  if(A && B)
+  if (A && B)
     {
       if(A->getDiffusionCoefficient() && !A->getIsMultiscale())
         { 
@@ -1018,21 +837,6 @@ void SpatiocyteNextReactionProcess::initializeSecond()
                             "instead.");
         }
     }
-  if(A && C)
-    {
-      if(Deoligomerize)
-        {
-          A->setIsDeoligomerize(C, Deoligomerize);
-        }
-      //nonHD -> nonHD + nonHD
-      //used by multiscale dissociation reaction
-      if(!B && D)
-        {
-          C->setProductPair(D);
-          D->setProductPair(C);
-        }
-    }
-  setPropensityMethod();
 }
 
 //Cannot put the setIsReactiveVacant in initializeSecond because some
@@ -1073,8 +877,9 @@ void SpatiocyteNextReactionProcess::initializeThird()
     }
 }
 
-void SpatiocyteNextReactionProcess::initializeBeforePopulate()
+void SpatiocyteNextReactionProcess::initializeFourth()
 {
+  ReactionProcess::initializeFourth();
   if(p != -1)
     {
       return;
@@ -1083,16 +888,14 @@ void SpatiocyteNextReactionProcess::initializeBeforePopulate()
   Comp* compB(NULL);
   Comp* compC(NULL);
   Comp* compD(NULL);
-  int secondCoefficient(coefficientB);
   if(A)
     {
       compA = A->getComp();
-      compB = compA;
     }
   else if(variableA)
     {
-      compA = theSpatiocyteStepper->system2Comp(variableA->getSuperSystem());
-      compB = compA;
+      compA = theSpatiocyteStepper->system2Comp(
+                         variableA->getSuperSystem());
     }
   if(B)
     {
@@ -1100,12 +903,8 @@ void SpatiocyteNextReactionProcess::initializeBeforePopulate()
     }
   else if(variableB)
     {
-      compB = theSpatiocyteStepper->system2Comp(variableB->getSuperSystem());
-    }
-  if(variableG)
-    {
-      compB = theSpatiocyteStepper->system2Comp(variableG->getSuperSystem());
-      secondCoefficient = coefficientG;
+      compB = theSpatiocyteStepper->system2Comp(
+                         variableB->getSuperSystem());
     }
   if(C)
     {
@@ -1127,7 +926,6 @@ void SpatiocyteNextReactionProcess::initializeBeforePopulate()
     }
   double aVolume(0);
   double anArea(0);
-  //Now let's determine the velocity, p (which has the unit 1/s)
   if(theOrder == 0)
     {
       double aSpace(0);
@@ -1151,7 +949,7 @@ void SpatiocyteNextReactionProcess::initializeBeforePopulate()
     }
   //Used also by A + B -> product(s) since A and B are in bound form, which
   //is a first order dissociation reaction:
-  else if(theOrder == 1 || (isReactAB && !variableG)) 
+  else if(theOrder == 1 || (A && B)) 
     {
       //Convert the unit m/s of k to 1/s for p if the reaction is a surface
       //adsorption reaction:
@@ -1242,10 +1040,8 @@ void SpatiocyteNextReactionProcess::initializeBeforePopulate()
                   pFormula << "[aVolume:compB.Volume:" << aVolume << "]";
                 }
             }
-          //unit of k is in (m^3)^(totalCoefficient-1)/s
-          //we need to convert k to p which has the unit 1/s
-          int totalCoefficient(coefficientA+secondCoefficient);
-          p = k/(pow(aVolume, fabs(totalCoefficient)-1));
+          //unit of k is in m^3/s
+          p = k/aVolume;
           pFormula << "[k/aVolume:" << k << "/" << aVolume << "]";
         }
       //If surface (+surface) <= k(surface)(surface) or
@@ -1284,10 +1080,8 @@ void SpatiocyteNextReactionProcess::initializeBeforePopulate()
                   pFormula << "[anArea:compB.Area:" << anArea << "]";
                 }
             }
-          //unit of k is in (m^2)^(totalCoefficient-1)/s
-          //we need to convert k to p which has the unit 1/s
-          int totalCoefficient(coefficientA+secondCoefficient);
-          p = k/(pow(anArea, fabs(totalCoefficient)-1));
+          //unit of k is in m^2/s
+          p = k/anArea;
           pFormula << "[k/anArea:" << k << "/" << anArea << "]";
         }
       else
@@ -1297,675 +1091,174 @@ void SpatiocyteNextReactionProcess::initializeBeforePopulate()
     }
 }
 
-void SpatiocyteNextReactionProcess::initializeFourth()
-{
-  ReactionProcess::initializeFourth();
-  //Done after populating molecules:
-  if(isReactAB)
-    {
-      for(unsigned i(0); i != A->size(); ++i)
-        {
-          const unsigned coordA(A->getCoord(i));
-          const Voxel* molA(A->getMolecule(i));
-          for(unsigned j(0); j != molA->diffuseSize; ++j)
-            {
-              const unsigned adjCoord(molA->adjoiningCoords[j]);
-              if(getID((*theLattice)[adjCoord]) == B->getID())
-                {
-                  theCoordsA.push_back(coordA);
-                }
-            }
-        }
-    }
-}
-
-/*
-getNewIntervalMultiAC()
-{
-  const double aCurrentTime(getStepper()->getCurrentTime());
-  double anInterval(libecs::INF);
-  for(unsigned i(0); i != theNextTimes.size(); ++i)
-    {
-      const double indexInterval(theNextTimes[i]-aCurrentTime);
-      if(anInterval > indexInterval)
-        {
-          anInterval = indexInterval;
-          theNextIndex = i;
-        }
-    }
-  return anInterval;
-}
-*/
-
-/*
-double SpatiocyteNextReactionProcess::getIntervalUnbindMultiAB()
-{
-  if(!A->size() || !p)
-    {
-      return libecs::INF;
-    }
-  nextIndexA = 0;
-  double fraction(A->getMultiscaleBoundFraction(nextIndexA,
-                                            B->getVacantSpecies()->getID())); 
-  double rand(theRng->FixedU());
-  double denom((p*fraction)*(-log(rand)));
-  double nextInterval(libecs::INF);
-  if(denom)
-    {
-      nextInterval = 1.0/denom;
-    }
-  for(unsigned i(1); i != A->size(); ++i)
-    {
-      fraction = A->getMultiscaleBoundFraction(i,
-                                               B->getVacantSpecies()->getID());
-      rand = theRng->FixedU();
-      denom = (p*fraction)*(-log(rand));
-      double interval(libecs::INF);
-      if(denom)
-        {
-          interval = 1.0/denom;
-        }
-      if(interval < nextInterval)
-        {
-          nextIndexA = i;
-          nextInterval = interval;
-        }
-    }
-  return nextInterval;
-}
-
-double SpatiocyteNextReactionProcess::getIntervalUnbindAB()
-{
-  A->updateMoleculeSize();
-  B->updateMoleculeSize();
-  if(A->getIsMultiscale())
-    {
-      return getIntervalUnbindMultiAB();
-    }
-  updateMoleculesA();
-  const double sizeA(moleculesA.size());
-  const double rand(theRng->FixedU());
-  const double denom((p*sizeA)*(-log(rand)));
-  if(denom)
-    {
-      return 1.0/denom;
-    }
-  return libecs::INF;
-}
-*/
-
-
 void SpatiocyteNextReactionProcess::printParameters()
 {
   String aProcess(String(getPropertyInterface().getClassName()) + 
                                       "[" + getFullID().asString() + "]");
-  cout << aProcess << " SearchVacant:" << SearchVacant << std::endl;
+  std::cout << aProcess << std::endl;
   if(A)
     {
-      cout << "  " << getIDString(A);
+      std::cout << "  " << getIDString(A);
     }
   else if(variableA)
     {
-      cout << "  " << getIDString(variableA);
+      std::cout << "  " << getIDString(variableA);
     }
   if(B)
     {
-      cout << " + " << getIDString(B);
+      std::cout << " + " << getIDString(B);
     }
   else if(variableB)
     {
-      cout << " + " << getIDString(variableB);
-    }
-  if(G)
-    {
-      cout << " + " << getIDString(G);
-    }
-  else if(variableG)
-    {
-      cout << " + " << getIDString(variableG);
+      std::cout << " + " << getIDString(variableB);
     }
   if(!A && !variableA)
     {
       if(C)
         {
-          cout << "0 -> " << getIDString(C);
+          std::cout << "0 -> " << getIDString(C);
         }
       else if(variableC)
         {
-          cout << "0 -> " << getIDString(variableC);
+          std::cout << "0 -> " << getIDString(variableC);
         }
     }
   else
     {
       if(C)
         {
-          cout << " -> " << getIDString(C);
+          std::cout << " -> " << getIDString(C);
         }
       else if(variableC)
         {
-          cout << " -> " << getIDString(variableC);
+          std::cout << " -> " << getIDString(variableC);
         }
     }
   if(D)
     {
-      cout << " + " << getIDString(D);
+      std::cout << " + " << getIDString(D);
     }
   else if(variableD)
     {
-      cout << " + " << getIDString(variableD);
+      std::cout << " + " << getIDString(variableD);
     }
-  if(F)
-    {
-      cout << " + " << getIDString(F);
-    }
-  else if(variableF)
-    {
-      cout << " + " << getIDString(variableF);
-    }
-  double interval(theTime-getStepper()->getCurrentTime());
-  double actualInterval(interval);
-  double propensity(thePropensity);
-  if(theTime == libecs::INF)
-    {
-      bool a(false);
-      bool b(false);
-      bool vA(false);
-      bool vB(false);
-      if(A && !A->getVariable()->getValue())
-        {
-          A->getVariable()->addValue(1);
-          a = true;
-        }
-      if(B && !B->getVariable()->getValue())
-        {
-          B->getVariable()->addValue(1);
-          b = true;
-        }
-      if(variableA && !variableA->getValue())
-        {
-          variableA->addValue(1);
-          vA = true;
-        }
-      if(variableB && !variableB->getValue())
-        {
-          variableB->addValue(1);
-          vB = true;
-        }
-      interval = getInitInterval();
-      propensity = thePropensity; 
-      if(a)
-        {
-          A->getVariable()->addValue(-1);
-        }
-      if(b)
-        {
-          B->getVariable()->addValue(-1);
-        }
-      if(vA)
-        {
-          variableA->addValue(-1);
-        }
-      if(vB)
-        {
-          variableB->addValue(-1);
-        }
-      actualInterval = getInitInterval();
-    }
-  cout << " k:" << k << " p = " << pFormula.str() << " = " << p
-    << " predicted nextTime:" << interval << " actual nextTime:" << 
-    actualInterval << " propensity:" << propensity;
-  if(theDeoligomerIndex)
-    {
-      cout << " DeoligomerIndex:" << theDeoligomerIndex;
-    }
-  cout << std::endl;
+  std::cout << " k:" << k << " p = " << pFormula.str() << " = " << p
+    << " nextTime:" << getInterval() << " propensity:" << getPropensity_R()
+    << std::endl;
 }
 
-double SpatiocyteNextReactionProcess::getNewInterval()
+double SpatiocyteNextReactionProcess::getInterval()
 {
-  if(isMultiAC)
+  if(A && B)
     {
-      if(theNextTimes.size())
-        {
-          return theNextTimes[theNextIndex]-getStepper()->getCurrentTime();
-        }
-      return libecs::INF;
-      //return theInterval;
+      double interval(getIntervalUnbindAB());
+      //std::cout << "interval:" << interval << std::endl;
+      return interval;
     }
-  if(getNewPropensity())
-    {
-      return -log(theRng->FixedU())/thePropensity;
-    }
-  return libecs::INF;
+  double step(getPropensity_R()*(-log(gsl_rng_uniform_pos(getStepper()->getRng()))));
+  //std::cout << getFullID().asString() << " " << theTime <<  " next:" << theTime+step << " interval:" << step << std::endl; 
+  return step;
 }
 
-double SpatiocyteNextReactionProcess::getInterval(double aCurrentTime)
-{
-  if(isMultiAC)
-    {
-      if(theNextTimes.size())
-        {
-          return theNextTimes[theNextIndex]-aCurrentTime;
-        }
-      return libecs::INF;
-    }
-  if(theTime == libecs::INF)
-    {
-      return getNewInterval();
-    }
-  const double oldPropensity(thePropensity);
-  if(getNewPropensity())
-    {
-      return oldPropensity/thePropensity*(theTime-aCurrentTime);
-    }
-  return libecs::INF;
-}
-
-double SpatiocyteNextReactionProcess::getNewPropensity()
-{
-  updateSubstrates();
-  thePropensity = (this->*thePropensityMethod)();
-  return thePropensity;
-}
-
-double SpatiocyteNextReactionProcess::getPropensity() const
-{
-  return thePropensity;
-}
-
-//Find out if this process is interrupted by the aProcess
-//by checking if any of the modified variables of aProcess is a
+//Find out if this process is interrupted by the aReactionProcess
+//by checking if any of the modified variables of aReactionProcess is a
 //substrate of this process:
-bool SpatiocyteNextReactionProcess::isDependentOn(const Process* aProcess) const
+bool SpatiocyteNextReactionProcess::isInterrupted(ReactionProcess*
+                                                  aReactionProcess)
 {
+  //First get the unique Variables of the aReactionProcess:
+  std::vector<Variable*> aVariables;
+  VariableReferenceVector
+    aVariableReferences(aReactionProcess->getVariableReferenceVector()); 
+  for(VariableReferenceVector::iterator i(aVariableReferences.begin());
+      i != aVariableReferences.end(); ++i)
+    {
+      Variable* aVariable((*i).getVariable());
+      if(std::find(aVariables.begin(), aVariables.end(), aVariable) ==
+         aVariables.end())
+        {
+          aVariables.push_back(aVariable);
+        }
+    }
+  //Find out if the values of the unique variables will be changed
+  //by the ReactionProcess aReactionProcess, i.e., netCoefficient != 0:
+  std::vector<int> aNetCoefficients;
+  aNetCoefficients.resize(aVariables.size());
+  for(std::vector<int>::iterator i(aNetCoefficients.begin());
+      i!=aNetCoefficients.end(); ++i)
+    {
+      (*i) = 0;
+    }
+  for(VariableReferenceVector::iterator i(aVariableReferences.begin());
+      i != aVariableReferences.end(); ++i)
+    {
+      for(std::vector<Variable*>::const_iterator j(aVariables.begin());
+          j != aVariables.end(); ++j)
+        {
+          if((*i).getVariable() == (*j))
+            {
+              aNetCoefficients[j-aVariables.begin()] += (*i).getCoefficient();
+            }
+        }
+    }
   //Check if any variable with netCoefficient != 0 is a substrate
   //of this process:
-  for(VariableReferenceVector::const_iterator
-      i(theVariableReferenceVector.begin());
+  for(VariableReferenceVector::iterator i(theVariableReferenceVector.begin());
       i != theVariableReferenceVector.end(); ++i)
     {
-      if((*i).getCoefficient() < 0)
+      if((*i).isAccessor())
         {
-          if(getVariableNetCoefficient(aProcess, (*i).getVariable()))
+          Species* aSpecies(theSpatiocyteStepper->variable2species(
+                                                 (*i).getVariable()));
+          if(aSpecies && aSpecies->getIsMultiscale())
             {
-              return true;
+              aSpecies->addInterruptedProcess(this);
             }
-        }
-    }
-  return false;
-}
-
-bool SpatiocyteNextReactionProcess::isDependentOnPre(const Process* aProcess)
-{
-  if(isReactAB)
-    {
-      if(getVariableNetCoefficient(aProcess, A->getVariable()) < 0 ||
-         getVariableNetCoefficient(aProcess, B->getVariable()) < 0)
-        {
-          return true;
-        }
-    }
-  return false;
-}
-
-bool SpatiocyteNextReactionProcess::isDependentOnPost(const Process* aProcess)
-{
-  if(isReactAB)
-    {
-      if(getVariableNetCoefficient(aProcess, A->getVariable()) > 0 ||
-         getVariableNetCoefficient(aProcess, B->getVariable()) > 0)
-        {
-          return true;
-        }
-    }
-  return false;
-}
-
-bool SpatiocyteNextReactionProcess::isDependentOnEndDiffusion(Species* aSpecies)
-{
-  if(isMultiAC)
-    {
-      if(A == aSpecies)
-        {
-          return true;
-        }
-    }
-  return false;
-}
-
-bool SpatiocyteNextReactionProcess::isDependentOnRemoveMolecule(Species*
-                                                                aSpecies)
-{
-  if(isMultiAC)
-    {
-      if(A == aSpecies)
-        {
-          return true;
-        }
-    }
-  return false;
-}
-
-bool SpatiocyteNextReactionProcess::isDependentOnAddMolecule(Species* aSpecies)
-{
-  if(isMultiAC)
-    {
-      if(A == aSpecies)
-        {
-          return true;
-        }
-    }
-  return false;
-}
-
-void SpatiocyteNextReactionProcess::interruptedEndDiffusion(Species* aSpecies)
-{
-  if(isMultiAC)
-    {
-      const double aCurrentTime(getStepper()->getCurrentTime());
-      theInterval = libecs::INF;
-      std::vector<unsigned> inMultiCnts;
-      inMultiCnts.resize(theSpecies.size());
-      for(unsigned i(0); i != A->size(); ++i)
-        {
-          A->getInMultiCnts(i, inMultiCnts);
-          unsigned cnt(inMultiCnts[E->getID()]);
-          inMultiCnts[E->getID()] = 0;
-          double fraction(cnt*theRates[1]);
-          if(H)
+          for(std::vector<Variable*>::const_iterator j(aVariables.begin());
+              j != aVariables.end(); ++j)
             {
-              const unsigned cntH(inMultiCnts[H->getID()]);
-              inMultiCnts[H->getID()] = 0;
-              cnt += cntH;
-              fraction += cntH*theRates[2];
-            }
-          fraction += (A->getMultiCoordSize()-cnt)*theRates[0];
-          fraction /= A->getMultiCoordSize();
-          const double aPropensity(p*fraction);
-          const double anInterval(thePropensities[i]/aPropensity*
-                                 (theNextTimes[i]-aCurrentTime));
-          thePropensities[i] = aPropensity;
-          theNextTimes[i] = anInterval+aCurrentTime;
-          if(anInterval < theInterval)
-            {
-              theInterval = anInterval;
-              theNextIndex = i;
-            }
-        }
-      theSpatiocyteStepper->addInterruptedProcess(
-                                      dynamic_cast<SpatiocyteProcess*>(this));
-    }
-}
-
-void SpatiocyteNextReactionProcess::interruptedAddMolecule(Species* aSpecies,
-                                                           const unsigned index)
-{
-  if(isMultiAC)
-    {
-      const double aCurrentTime(getStepper()->getCurrentTime());
-      theInterval = theTime-aCurrentTime;
-      std::vector<unsigned> inMultiCnts;
-      inMultiCnts.resize(theSpecies.size());
-      A->getInMultiCnts(index, inMultiCnts);
-      unsigned cnt(inMultiCnts[E->getID()]);
-      double fraction(cnt*theRates[1]);
-      if(H)
-        {
-          const unsigned cntH(inMultiCnts[H->getID()]);
-          cnt += cntH;
-          fraction += cntH*theRates[2];
-        }
-      fraction += (A->getMultiCoordSize()-cnt)*theRates[0];
-      fraction /= A->getMultiCoordSize();
-      const double aPropensity(p*fraction);
-      const double anInterval(-log(theRng->FixedU())/aPropensity);
-      thePropensities.push_back(aPropensity);
-      theNextTimes.push_back(anInterval+aCurrentTime);
-      if(anInterval < theInterval)
-        {
-          theInterval = anInterval;
-          theNextIndex = index;
-          theSpatiocyteStepper->addInterruptedProcess(
-                                      dynamic_cast<SpatiocyteProcess*>(this));
-        }
-    }
-}
-
-void SpatiocyteNextReactionProcess::interruptedRemoveMolecule(Species* aSpecies,
-                                                           const unsigned index)
-{
-  if(isMultiAC)
-    {
-      thePropensities[index] = thePropensities.back();
-      thePropensities.pop_back();
-      theNextTimes[index] = theNextTimes.back();
-      theNextTimes.pop_back();
-      if(index == theNextIndex)
-        {
-          theInterval = libecs::INF;
-          const double aCurrentTime(getStepper()->getCurrentTime());
-          for(unsigned i(0); i != theNextTimes.size(); ++i)
-            {
-              if(theNextTimes[i]-aCurrentTime < theInterval)
+              if((*i).getVariable() == (*j) && 
+                 aNetCoefficients[j-aVariables.begin()])
                 {
-                  theInterval = theNextTimes[i]-aCurrentTime;
-                  theNextIndex = i;
-                }
-            }
-          theSpatiocyteStepper->addInterruptedProcess(
-                                      dynamic_cast<SpatiocyteProcess*>(this));
-        }
-      else if(theNextIndex == theNextTimes.size())
-        {
-          theNextIndex = index;
-        }
-    }
-}
-
-void SpatiocyteNextReactionProcess::interruptedPre(ReactionProcess* aProcess)
-{
-  if(isReactAB)
-    {
-      Species* a(aProcess->getA());
-      Species* b(aProcess->getB());
-      if(a && aProcess->getA() != aProcess->getC())
-        {
-          if(a == A)
-            {
-              removeCoordsA(A->getCoord(A->getIndex(aProcess->getMoleculeA())));
-            }
-          else if(a == B)
-            {
-              removeAdjCoordsA(aProcess->getMoleculeA());
-            }
-        }
-      if(b && a != b && aProcess->getB() != aProcess->getD())
-        {
-          if(b == A)
-            {
-              removeCoordsA(A->getCoord(A->getIndex(aProcess->getMoleculeB())));
-            }
-          else if(b == B)
-            {
-              removeAdjCoordsA(aProcess->getMoleculeB());
-            }
-        }
-    }
-}
-
-void SpatiocyteNextReactionProcess::interruptedPost(ReactionProcess* aProcess)
-{
-  if(isReactAB)
-    {
-      Species* aC(aProcess->getC());
-      Species* aD(aProcess->getD());
-      unsigned coordA(theNullCoord);
-      if((aC == A && aProcess->getC() != aProcess->getA()) || 
-         (aD == A && aProcess->getD() != aProcess->getB()))
-        { 
-          addCoordsA(A, B, A->size()-1, coordA);
-          if(aC == aD && aProcess->getC() != aProcess->getA() &&
-             aProcess->getD() != aProcess->getB())
-            {
-              addCoordsA(A, B, A->size()-2, coordA);
-            }
-        }
-      if((aC == B && aC != aProcess->getA()) ||
-         (aD == B && aD != aProcess->getB()))
-        {
-          if(A != B)
-            { 
-              addCoordsA(B, A, B->size()-1, coordA);
-              if(aC == aD && aProcess->getC() != aProcess->getA() &&
-                 aProcess->getD() != aProcess->getB())
-                {
-                  addCoordsA(B, A, B->size()-2, coordA);
+                  return true;
                 }
             }
         }
     }
+  return false;
 }
 
-void SpatiocyteNextReactionProcess::removeCoordsA(const unsigned coordA)
+void SpatiocyteNextReactionProcess::calculateOrder()
 {
-  unsigned i(0);
-  while(i < theCoordsA.size())
-    {
-      while(theCoordsA[i] == coordA && i < theCoordsA.size())
-        {
-          theCoordsA[i] = theCoordsA.back();
-          theCoordsA.pop_back();
-        }
-      ++i;
-    }
-}
-
-void SpatiocyteNextReactionProcess::removeAdjCoordsA(Voxel* molB)
-{
-  for(unsigned i(0); i != molB->diffuseSize; ++i)
-    {
-      const unsigned adjCoord(molB->adjoiningCoords[i]);
-      if(getID((*theLattice)[adjCoord]) == A->getID())
-        {
-          removeSingleCoordsA(adjCoord);
-        }
-    }
-}
-
-void SpatiocyteNextReactionProcess::removeSingleCoordsA(const unsigned coordA)
-{
-  for(unsigned i(0); i != theCoordsA.size(); ++i)
-    {
-      if(theCoordsA[i] == coordA)
-        {
-          theCoordsA[i] = theCoordsA.back();
-          theCoordsA.pop_back();
-          return;
-        }
-    }
-}
-
-void SpatiocyteNextReactionProcess::addCoordsA(Species* a, Species* b,
-                                               const unsigned indexA,
-                                               unsigned& coordA)
-{
-  const unsigned coord(a->getCoord(indexA));
-  const Voxel& mol((*theLattice)[coord]);
-  for(unsigned i(0); i != mol.diffuseSize; ++i)
-    {
-      const unsigned adjCoord(mol.adjoiningCoords[i]);
-      if(getID((*theLattice)[adjCoord]) == b->getID())
-        {
-          if(a == A && coord != coordA)
-            {
-              theCoordsA.push_back(coord);
-            }
-          else if(adjCoord != coordA)
-            {
-              theCoordsA.push_back(adjCoord);
-            }
-        }
-    }
-  coordA = coord;
-}
-
-void SpatiocyteNextReactionProcess::setPropensityMethod()
-{
+  ReactionProcess::calculateOrder();
+  // set theGetPropensityMethodPtr
   if(theOrder == 0) // no substrate
     {
-      thePropensityMethod = &SpatiocyteNextReactionProcess::
-        getPropensityZerothOrder;
+      theGetPropensityMethodPtr = RealMethodProxy::create<
+        &SpatiocyteNextReactionProcess::getPropensity_ZerothOrder>();
     }
   else if(theOrder == 1) // one substrate, first order.
     {
-      if(theDeoligomerIndex)
-        {
-          thePropensityMethod = &SpatiocyteNextReactionProcess::
-            getPropensityFirstOrderDeoligomerize;
-        }
-      else if(A && A->getIsMultiscale() && C && !variableC && E)
-        {
-          isMultiAC = true;
-          thePropensityMethod = &SpatiocyteNextReactionProcess::
-            getPropensityFirstOrderMultiAC;
-        }
-      else
-        {
-          thePropensityMethod = &SpatiocyteNextReactionProcess::
-            getPropensityFirstOrder;
-        }
+      theGetPropensityMethodPtr = RealMethodProxy::create<
+        &SpatiocyteNextReactionProcess::getPropensity_FirstOrder>();
     }
   else
     { 
-      //nonHD.nonHD -> products
-      if(A && B)
-        {
-          isReactAB = true;
-          if(variableG)
-            {
-              thePropensityMethod = &SpatiocyteNextReactionProcess::
-                getPropensitySecondOrderReactABvG;
-            }
-          else
-            {
-              thePropensityMethod = &SpatiocyteNextReactionProcess::
-                getPropensityFirstOrderReactAB;
-            }
-        }
       //Two unique substrate species:
       //A + B -> products:
-      else if(getZeroVariableReferenceOffset() == 2)
-        {
-          thePropensityMethod = &SpatiocyteNextReactionProcess::
-            getPropensitySecondOrderHetero;
+      if(getZeroVariableReferenceOffset() == 2)
+        {  
+          theGetPropensityMethodPtr = RealMethodProxy::
+            create<&SpatiocyteNextReactionProcess::
+            getPropensity_SecondOrder_TwoSubstrates>();
         }
       //One substrate species, second order
       //A + A -> products:
       else
         {
-          thePropensityMethod = &SpatiocyteNextReactionProcess::
-            getPropensitySecondOrderHomo;
-        }
-    }
-}
-
-void SpatiocyteNextReactionProcess::checkExternStepperInterrupted()
-{
-  Model::StepperMap aStepperMap(getModel()->getStepperMap());  
-  for(Model::StepperMap::const_iterator i(aStepperMap.begin());
-      i != aStepperMap.end(); ++i )
-    {
-      if(i->second != getStepper())
-        {
-          std::vector<Process*> aProcessVector(i->second->getProcessVector());
-          for(std::vector<Process*>::const_iterator j(aProcessVector.begin());
-              j != aProcessVector.end(); ++j)
-            {
-              if(isDependentOn(*j))
-                {
-                  isExternInterrupted = true;
-                }
-            }
+          theGetPropensityMethodPtr = RealMethodProxy::
+            create<&SpatiocyteNextReactionProcess::
+            getPropensity_SecondOrder_OneSubstrate>();
         }
     }
 }
