@@ -12,7 +12,8 @@ DMTOOL_INCLUDE = -I@DMTOOL_INCLUDE_DIR@
 INCLTDL = @INCLTDL@
 LIBLTDL = @LIBLTDL@
 
-INCLUDES = -I$(top_srcdir)  -I$(top_srcdir)/.. -I$(srcdir)/RandomLib-1.6/include $(DMTOOL_INCLUDE) $(INCLTDL)
+RANDOMLIB = RandomLib-1.6
+INCLUDES = -I$(top_srcdir)  -I$(top_srcdir)/.. -I$(srcdir)/$(RANDOMLIB)/include $(DMTOOL_INCLUDE) $(INCLTDL)
 lib_LTLIBRARIES = libecs.la
 
 AM_CXXFLAGS = $(CXXFLAGS)
@@ -59,6 +60,7 @@ SpatiocyteVector.cpp\
 MassActionProcess.cpp\
 ReactionProcess.cpp\
 VisualizationLogProcess.cpp\
+SurfaceCompartmentProcess.cpp\
 CompartmentProcess.cpp\
 ErythrocyteProcess.cpp\
 IteratingLogProcess.cpp\
@@ -75,6 +77,18 @@ SpatiocyteTauLeapProcess.cpp\
 LifetimeLogProcess.cpp\
 MicrotubuleProcess.cpp\
 MultiscaleReactionProcess.cpp
+
+RANDOMLIB_INC=$(RANDOMLIB)/include/RandomLib
+randomdir=$(ECELL_INCLUDE_DIR)/RandomLib
+random_HEADERS=\
+$(RANDOMLIB_INC)/Random.hpp\
+$(RANDOMLIB_INC)/RandomCanonical.hpp\
+$(RANDOMLIB_INC)/RandomPower2.hpp\
+$(RANDOMLIB_INC)/RandomEngine.hpp\
+$(RANDOMLIB_INC)/RandomAlgorithm.hpp\
+$(RANDOMLIB_INC)/RandomMixer.hpp\
+$(RANDOMLIB_INC)/RandomSeed.hpp\
+$(RANDOMLIB_INC)/RandomType.hpp
 
 libecsdir=$(ECELL_INCLUDE_DIR)/libecs
 libecs_HEADERS=\
@@ -140,6 +154,7 @@ SpatiocyteProcess.hpp\
 SpatiocyteStepper.hpp\
 TagProcess.hpp\
 VisualizationLogProcess.hpp\
+SurfaceCompartmentProcess.hpp\
 SpatiocyteSpecies.hpp\
 SpatiocyteVector.hpp\
 SpatiocyteTauLeapProcess.hpp\

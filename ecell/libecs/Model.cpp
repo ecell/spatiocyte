@@ -77,6 +77,7 @@
 #include "SpatiocyteStepper.hpp"
 #include "TagProcess.hpp"
 #include "VisualizationLogProcess.hpp"
+#include "SurfaceCompartmentProcess.hpp"
 #include "MultiscaleReactionProcess.hpp"
 #include "MicrotubuleProcess.hpp"
 #include "LifetimeLogProcess.hpp"
@@ -528,6 +529,7 @@ void Model::registerBuiltinModules()
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, MassActionProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, ReactionProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, VisualizationLogProcess );
+    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, SurfaceCompartmentProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, SpatiocyteTauLeapProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, MultiscaleReactionProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, MicrotubuleProcess );
