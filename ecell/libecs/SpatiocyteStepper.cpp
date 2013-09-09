@@ -36,10 +36,10 @@
 #include <libecs/Process.hpp>
 #include <libecs/Stepper.hpp>
 #include <libecs/VariableReference.hpp>
-#include <SpatiocyteStepper.hpp>
-#include <SpatiocyteSpecies.hpp>
+#include <libecs/SpatiocyteStepper.hpp>
+#include <libecs/SpatiocyteSpecies.hpp>
 
-LIBECS_DM_INIT(SpatiocyteStepper, Stepper);
+LIBECS_DM_INIT_STATIC(SpatiocyteStepper, Stepper);
 
 void SpatiocyteStepper::initialize()
 {
