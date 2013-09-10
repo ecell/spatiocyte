@@ -133,7 +133,8 @@ ReactionProcess.hpp\
 DiffusionInfluencedReactionProcess.hpp\
 MoleculePopulateProcess.hpp\
 DiffusionProcess.hpp\
-SpatiocyteCommon.hpp
+SpatiocyteCommon.hpp\
+PriorityQueue.hpp
 
 
 noinst_HEADERS=\
