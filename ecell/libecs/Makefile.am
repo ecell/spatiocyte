@@ -132,7 +132,8 @@ VisualizationLogProcess.hpp\
 ReactionProcess.hpp\
 DiffusionInfluencedReactionProcess.hpp\
 MoleculePopulateProcess.hpp\
-DiffusionProcess.hpp
+DiffusionProcess.hpp\
+SpatiocyteCommon.hpp
 
 
 noinst_HEADERS=\
