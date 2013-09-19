@@ -1,5 +1,6 @@
+.NOTPARALLEL:
 noinst_LTLIBRARIES = libMechanocyte.la
-libMechanocyte_la_SOURCES= lupack.f mxlibswD.f iolibswN.f cmlibswD.f interface.f
+libMechanocyte_la_SOURCES= lupack.f iolibswN.f mxlibswD.f cmlibswD.f interface.f
 
 AM_CPPFLAGS=-I$(srcdir)/../include
 AM_CXXFLAGS = -g -Wall -Wextra -O2 \
