@@ -85,6 +85,7 @@ dnl
 
 dnl Checks for programs.
 
+AC_PROG_F77
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_CPP
@@ -332,6 +333,7 @@ AC_CONFIG_FILES([
     libecs/scripting/Makefile
     libecs/tests/Makefile
     libecs/RandomLib-1.6/src/Makefile
+    libecs/Mechanocyte/Makefile
     libemc/Makefile
     pyecell/Makefile
     pyecell/setup.py

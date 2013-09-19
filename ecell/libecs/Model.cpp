@@ -81,6 +81,7 @@
 #include "MultiscaleReactionProcess.hpp"
 #include "MicrotubuleProcess.hpp"
 #include "LifetimeLogProcess.hpp"
+#include "MechanicsProcess.hpp"
 
 namespace libecs
 {
@@ -546,7 +547,7 @@ void Model::registerBuiltinModules()
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, DiffusionProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, TagProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, PeriodicBoundaryDiffusionProcess );
-
+    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, MechanicsProcess );
 }
 
 void Model::step()
