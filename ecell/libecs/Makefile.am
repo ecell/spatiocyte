@@ -2,7 +2,7 @@ abs_top_builddir=@abs_top_builddir@
 
 libdir=@libdir@
 
-SUBDIRS = scripting RandomLib-1.6/src Mechanocyte . tests
+SUBDIRS = scripting RandomLib-1.6/src mechanocyte . tests
 
 ECELL_DIRNAME=@ECELL_DIRNAME@
 ECELL_INCLUDE_DIR=$(includedir)/$(ECELL_DIRNAME)
@@ -19,7 +19,7 @@ lib_LTLIBRARIES = libecs.la
 AM_CXXFLAGS = $(CXXFLAGS)
 
 libecs_la_LDFLAGS= -version-info 2:0:0 -no-undefined
-libecs_la_LIBADD=  $(LIBLTDL) $(GSL_LIBADD) scripting/libecs-scripting.la RandomLib-1.6/src/libRandom.la Mechanocyte/libMechanocyte.la -lgfortran
+libecs_la_LIBADD=  $(LIBLTDL) $(GSL_LIBADD) scripting/libecs-scripting.la RandomLib-1.6/src/libRandom.la mechanocyte/libMechanocyte.la -lgfortran
 libecs_la_SOURCES=\
 libecs.cpp\
 Util.cpp\
