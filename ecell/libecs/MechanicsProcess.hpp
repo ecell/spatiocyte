@@ -44,8 +44,9 @@ namespace libecs
 extern "C" void extractnumeric(char *ipf, int &idot);
 extern "C" void openfile(char *ipf,int &idiv,int &idot);
 extern "C" void timedump(double &delt,double &logInt);
-extern "C" double dscp[][12];
-extern "C" int idfrm,idphi,idvis,idvfx,idgam,idpsi,idsfr,idbfr,iddrg,idtrc,idhyc;
+extern "C" int idfrm,idphi,idvis,idvfx,idgam,idpsi,idsfr,idbfr,iddrg,idtrc,idhyc,nq,isoq[][4],
+iqos[],lqos[],kqos[],ns;
+extern "C" double dscp[][12],hvec[][3][12];
 extern "C" void initsvec();
 extern "C" void openunit12();
 extern "C" void initarea(double &area);
@@ -118,34 +119,60 @@ public:
   virtual void fire();
   virtual bool isOnAboveSurface(Point&);
   void assignQuad();
+  void assignNeigh();
+  void fitMechanotoSpatio();
+  void getBLTR();
+  void getSurfaceCoords();
+  void populateSurface();
 
-protected:
+private:
   String FileName;
-   char *idot1;
-   char *ipf;
-   int idot;
-   int idebug;
-   int isve;
-   int id1;
-   int id2;
-   double id3;
-   double surfaceDisplace;
-   double logInt;
-   double delt;
-   double area;
-   double *cmdt;
-   char *eul;
-   Comp* theComp;  
-   Point bottomLeft;
-   Point topRight;
-   Point surfaceNormal; 
-   Point AB;
-   Point AC;
-   std::vector<unsigned> surfaceCoords;
-   Variable* theVacantVariable;
-   Species* theVacantSpecies;
-   std::vector<Species*> theVacantCompSpecies;
-   //std::vector<unsigned> quadIndex;
+  char *idot1;
+  char *ipf;
+  char *eul;
+  int idot;
+  int idebug;
+  int isve;
+  int id1;
+  int id2;
+  double id3;
+  double surfaceDisplace;
+  double logInt;
+  double delt;
+  double area;
+  double *cmdt;
+  double realHvec[345][3][12];
+  double minhvecX;
+  double minhvecY;
+  double minhvecZ;
+  double maxhvecX;
+  double maxhvecY;
+  double maxhvecZ;
+  double voxelRadius; 
+  double normVoxelRadius; 
+  double lengthX;
+  double lengthY;
+  double lengthZ;
+  std::vector<unsigned> surfaceCoords;
+  std::vector<unsigned>row;
+  std::vector<unsigned>col;
+  std::vector<unsigned>lay;
+  std::vector<unsigned>corn;
+  std::vector<Species*> theVacantCompSpecies;
+  std::vector<Point> newNode;
+  std::vector<std::vector<int> > quadIndex;
+  std::vector<std::vector<int> > neigh;
+  Comp* theComp;  
+  Point bottomLeft;
+  Point topRight;
+  Point surfaceNormal; 
+  Point AB;
+  Point AC;
+  Point vectorCut;
+  Point planeCut;
+  Variable* theVacantVariable;
+  Species* theVacantSpecies;
+
 };
 
 

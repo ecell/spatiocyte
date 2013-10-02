@@ -37,7 +37,6 @@ LIBECS_DM_INIT_STATIC(MechanicsProcess, Process);
 
   void MechanicsProcess::initializeThird()
     {
-   //std::cout<<"1"<<std::endl;
    ipf = new char[10];
    ipf = "fitz.000";
    id1 = 11;
@@ -47,176 +46,16 @@ LIBECS_DM_INIT_STATIC(MechanicsProcess, Process);
    eul = new char[10];
    eul = "eulerian";
    surfaceDisplace = 0;
-   double VoxelRadius = theSpatiocyteStepper->getVoxelRadius();
-   double NormVoxelRadius = theSpatiocyteStepper->getNormalizedVoxelRadius();  
-
-   //std::cout<<"2"<<std::endl;
+   voxelRadius = theSpatiocyteStepper->getVoxelRadius();
+   normVoxelRadius = theSpatiocyteStepper->getNormalizedVoxelRadius();  
    Comp* theComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
-   //std::cout<<"3"<<std::endl;  
-   //theComp = aComp;
-   //std::cout<<"4"<<std::endl;
-   std::cout<<"lengthX: "<<theComp->lengthX<<std::endl;
-   std::cout<<"lengthY: "<<theComp->lengthY<<std::endl;
-   std::cout<<"lengthZ: "<<theComp->lengthZ<<std::endl;
-   std::cout<<"minRow: "<<theComp->minRow<<std::endl;
-   std::cout<<"minCol: "<<theComp->minCol<<std::endl;
-   std::cout<<"minLayer: "<<theComp->minLayer<<std::endl;
-   std::cout<<"maxRow: "<<theComp->maxRow<<std::endl;
-   std::cout<<"maxCol: "<<theComp->maxCol<<std::endl;
-   std::cout<<"maxLayer: "<<theComp->maxLayer<<std::endl;
-   std::cout<<"VoxelRad: "<<VoxelRadius<<std::endl;
-   std::cout<<"NormVoxelRad: "<<NormVoxelRadius<<std::endl;
+   lengthX = theComp->lengthX;
+   lengthY = theComp->lengthY;
+   lengthZ = theComp->lengthZ;
 
-   std::vector<Point> node;
-   std::vector<unsigned>row;
-   std::vector<unsigned>col;
-   std::vector<unsigned>lay;
-   std::vector<unsigned>corn;
-
-   node.resize(4);
-   node[0].x = 33;
-   node[0].y = 35;
-   node[0].z = 34;
-   node[1].x = 45;
-   node[1].y = 64;
-   node[1].z = 46;
-   node[2].x = 57;
-   node[2].y = 36;
-   node[2].z = 58;
-   node[3].x = 69;
-   node[3].y = 68;
-   node[3].z = 70;
-
-   row.resize(4);
-   col.resize(4);
-   lay.resize(4);
-   corn.resize(4);
-
-   for(unsigned i(0);i<3;i++)
-	{
-   	theSpatiocyteStepper->point2global(node[i], row[i], col[i], lay[i]);
-   	corn[i]=theSpatiocyteStepper->global2coord(row[i], col[i], lay[i]);
-	}
-
-
-   double minimumX=node[0].x;
-   double minimumY=node[0].y;
-   double minimumZ=node[0].z;
-   double maximumX=node[0].x;
-   double maximumY=node[0].y;
-   double maximumZ=node[0].z;
-
-   for(int a=1;a<3;a++)
-  {
-   minimumX=std::min(node[a].x,minimumX);
-   minimumY=std::min(node[a].y,minimumY);
-   minimumZ=std::min(node[a].z,minimumZ);
-   maximumX=std::max(node[a].x,maximumX);
-   maximumY=std::max(node[a].y,maximumY);
-   maximumZ=std::max(node[a].z,maximumZ);   
-  }
-
-  /*std::cout<<"minX: "<<minimumX<<std::endl;
-  std::cout<<"minY: "<<minimumY<<std::endl;
-  std::cout<<"minZ: "<<minimumZ<<std::endl;
-  std::cout<<"minX: "<<maximumX<<std::endl;
-  std::cout<<"minY: "<<maximumY<<std::endl;
-  std::cout<<"minZ: "<<maximumZ<<std::endl;*/
-   	
-   bottomLeft.x = minimumX-(NormVoxelRadius+theSpatiocyteStepper->getColLength());
-   bottomLeft.y = minimumY-(NormVoxelRadius+theSpatiocyteStepper->getLayerLength());
-   bottomLeft.z = minimumZ-(NormVoxelRadius+theSpatiocyteStepper->getRowLength());
-   topRight.x = maximumX+(NormVoxelRadius+theSpatiocyteStepper->getColLength());
-   topRight.y = maximumY+(NormVoxelRadius+theSpatiocyteStepper->getLayerLength());
-   topRight.z = maximumZ+(NormVoxelRadius+theSpatiocyteStepper->getRowLength());
-   if(topRight.x>theComp->lengthX)topRight.x=theComp->lengthX;
-   if(topRight.y>theComp->lengthY)topRight.y=theComp->lengthY;
-   if(topRight.z>theComp->lengthZ)topRight.z=theComp->lengthZ;
-   if(bottomLeft.x<0)bottomLeft.x=0;
-   if(bottomLeft.y<0)bottomLeft.y=0;
-   if(bottomLeft.z<0)bottomLeft.z=0;
-   std::cout<<"bottomLeft.x: "<<bottomLeft.x<<std::endl;
-   std::cout<<"bottomLeft.y: "<<bottomLeft.y<<std::endl;
-   std::cout<<"bottomLeft.z: "<<bottomLeft.z<<std::endl;
-   std::cout<<"topRight.x: "<<topRight.x<<std::endl;
-   std::cout<<"topRight.y: "<<topRight.y<<std::endl;
-   std::cout<<"topRight.z: "<<topRight.z<<std::endl;
-
-  unsigned blRow(0);
-  unsigned blLayer(0);
-  unsigned blCol(0);
-  theSpatiocyteStepper->point2global(bottomLeft, blRow, blLayer, blCol);
-  unsigned trRow(0);
-  unsigned trLayer(0);
-  unsigned trCol(0);
-  theSpatiocyteStepper->point2global(topRight, trRow, trLayer, trCol);
-   std::cout<<blRow<<std::endl;
-   std::cout<<blLayer<<std::endl;
-   std::cout<<blCol<<std::endl;
-   std::cout<<trRow<<std::endl;
-   std::cout<<trLayer<<std::endl;
-   std::cout<<trCol<<std::endl;
-
-for(unsigned d(blRow); d <= trRow; ++d)
-    {
-      for(unsigned e(blLayer); e <= trLayer; ++e)
-        {
-          for(unsigned f(blCol); f <= trCol; ++f)
-            {
-              unsigned m(theSpatiocyteStepper->global2coord(d, e, f));
-
-              //std::cout<<"Lattice Index: "<<m<<std::endl;
-              Point n(theSpatiocyteStepper->coord2point(m));
-              AB = sub(node[1],node[0]);
-              AC = sub(node[2],node[0]);
-              surfaceNormal = cross(AB,AC);
-              surfaceNormal = norm(surfaceNormal);
-              surfaceDisplace = dot(surfaceNormal, node[0]);
-              //isOnAboveSurface(n);   
-              if(isOnAboveSurface(n))
-		{ 
-              	Voxel& aVoxel((*theLattice)[m]);
-
-		//std::cout<<o.x<<std::endl;
-		//std::cout<<o.y<<std::endl;
-		//std::cout<<o.z<<std::endl;
-		for (unsigned i(0); i!=theAdjoiningCoordSize; i++)
-			{
-			unsigned coord(aVoxel.adjoiningCoords[i]);           	
-			//std::cout<<m<<"\t"<<coord<<std::endl;
-			Point o(theSpatiocyteStepper->coord2point(coord));
-                        //isOnAboveSurface(o);  
-			if(isOnAboveSurface(o)==false)
-			{
-			surfaceCoords.push_back(m); 
-                        break;
-			}
-			}
-	
-		}
-           }
-        }
-    }
-for(unsigned i(0);i<corn.size();i++)
-	{
-	theVacantCompSpecies[0]->addMolecule(&(*theLattice)[corn[i]]);
-	}
-
-for (unsigned count(0);count<surfaceCoords.size();count++)
-	{
-	std::cout<<count<<"\t"<<surfaceCoords[count]<<std::endl;
-     	theVacantSpecies->addCompVoxel(surfaceCoords[count]);
-	}
-theVacantSpecies->setIsPopulated();
-theVacantCompSpecies[0]->setIsPopulated();
-
-
-   std::cout<<(*theLattice).size()<<std::endl;
-   //std::cout<<ipf<<std::endl;
-   idot1=strchr(ipf,'.');
-   //std::cout<<idot1<<std::endl; 
+   
+   idot1=strchr(ipf,'.'); 
    idot=(idot1-ipf)+1;
-   //std::cout<<idot<<std::endl;
    if(idot<=0 || idot>20)
    std::cout<<"invalid inputfile name"<<std::endl;
 
@@ -225,10 +64,14 @@ theVacantCompSpecies[0]->setIsPopulated();
    logInt = 0;
    delt=dscp[idfrm-1][2];
    logInt=dscp[idfrm-1][3];
-   //cout<<delt<<"\n"<<logInt<<endl;
    timedump(delt,logInt);
-   //assignQuad();
-   
+   assignQuad();
+   assignNeigh();
+   fitMechanotoSpatio();
+   getBLTR();
+   getSurfaceCoords();
+   populateSurface();
+
    idphi=0; 
    idvis=0; 
    idvfx=0; 
@@ -242,36 +85,19 @@ theVacantCompSpecies[0]->setIsPopulated();
    initsvec(); 
    openunit12();
    idebug=1;
-        //for(int a=0;a<5;a++){
    initarea(area);
-   //std::cout<<"time1: "<<time_<<std::endl;
-   //std::cout<<"tstp1: "<<tstp<<std::endl;
    clchm(area);
-   //std::cout<<"time2: "<<time_<<std::endl;
-   //std::cout<<"tstp2: "<<tstp<<std::endl;
    cmstpsiz(cmdt,id3);
-   //std::cout<<"time3: "<<time_<<std::endl;
-   //std::cout<<"tstp3: "<<tstp<<std::endl;
    tstp=std::min(cmdt[1],cmdt[3]);
-   //std::cout<<"time4: "<<time_<<std::endl;
-   //std::cout<<"tstp4: "<<tstp<<std::endl;
    if(tstp>=(tnext-time_))
    {
 	tstp = tnext-time_;
 	isve = 1;
    }
    else isve=0;
-   //std::cout<<"time5: "<<time_<<std::endl;
-   //std::cout<<"tstp5: "<<tstp<<std::endl;
    dfdriver(eul);
-   //std::cout<<"time6: "<<time_<<std::endl;
-   //std::cout<<"tstp6: "<<tstp<<std::endl;
-   time_=time_+tstp;
-   //std::cout<<"time7: "<<time_<<std::endl;
-   //std::cout<<"tstp7: "<<tstp<<std::endl;
+   time_=time_+tstp; 
 
-   	//}
-  
     }
 
   void MechanicsProcess::initializeFifth()
@@ -285,11 +111,8 @@ theVacantCompSpecies[0]->setIsPopulated();
     {
 
    chksurmol();
-   //std::cout<<"time8: "<<time_<<std::endl;
-   //std::cout<<"tstp8: "<<tstp<<std::endl;
+
    wrfile(id2,isve,ipf,idot,delt,logInt);
-   //std::cout<<"time9: "<<time_<<std::endl;
-   //std::cout<<"tstp9: "<<tstp<<"\n\n"<<std::endl;
    initarea(area);
    clchm(area);
    cmstpsiz(cmdt,id3);
@@ -305,31 +128,7 @@ theVacantCompSpecies[0]->setIsPopulated();
    theInterval = tstp;
    theTime= time_; 
    thePriorityQueue->moveTop();
-/*
-      logSpecies();
-      theLogFile.flush();
-      if(LogInterval > 0)
-        {
-          theTime += LogInterval;
-          thePriorityQueue->moveTop();
-        }
-      else
-        {
-          //get the next step interval of the SpatiocyteStepper:
-          double aTime(theTime);
-          theTime = libecs::INF;
-          thePriorityQueue->moveTop();
-          if(thePriorityQueue->getTop() != 
-             dynamic_cast<SpatiocyteProcess*>(this))
-            {
-              theInterval = thePriorityQueue->getTop()->getTime() -
-                theSpatiocyteStepper->getCurrentTime();
-              setPriority(thePriorityQueue->getTop()->getPriority()-1);
-            }
-          theTime = aTime + theInterval;
-          thePriorityQueue->move(theQueueID);
-        }
-*/
+
     }
 
 bool MechanicsProcess::isOnAboveSurface(Point& aPoint)
@@ -342,12 +141,239 @@ bool MechanicsProcess::isOnAboveSurface(Point& aPoint)
   return false;
 }
 
-/*void MechanicsProcess::assignQuad()
+
+void MechanicsProcess::assignQuad()
 {
 	quadIndex.resize(nq);
-        std::cout<<"quadsize: "<<quadIndex.size()<<std::endl;
-	//for(unsigned i(0);i<quadIndex.size();i++)	
-	//quadIndex[i]	
-}*/
+	for (unsigned a=0;a<nq;a++)
+	{
+	  quadIndex[a].resize(4);
+	}
+	
+	for(int i(0);i<quadIndex.size();i++)	
+	{	
+		for (int k(0);k<4;k++)
+		{
+		quadIndex[i][k]=isoq[i][k];
+		}	 
+	}	
+
+}	
+
+
+void MechanicsProcess::assignNeigh()
+{
+	neigh.resize(nq);
+	for (unsigned a=0;a<nq;a++)
+	{
+	  neigh[a].reserve(15);
+	}
+
+	for(int i(0);i<quadIndex.size();i++)	
+	{		
+	  for (int j(0);j<4;j++)
+	    {
+		for (int k(0);k<quadIndex.size();k++)	
+		{
+		  for (int l(0);l<4;l++)
+		    {
+			int nodeID(quadIndex[k][l]);
+			if(nodeID==quadIndex[i][j])
+			{
+			  std::vector<int>::iterator it(std::find(neigh[i].begin(),
+			  neigh[i].end(), k));	
+			  if(k!=i && it==neigh[i].end())
+			  neigh[i].push_back(k);  
+			}
+		    }
+		}
+	    }
+	}
 
 }
+
+
+void MechanicsProcess::fitMechanotoSpatio()
+{
+
+	minhvecX=hvec[0][0][0];
+	minhvecY=hvec[0][0][1];
+	minhvecZ=hvec[0][0][2];
+	maxhvecX=hvec[0][0][0];
+	maxhvecY=hvec[0][0][1];
+	maxhvecZ=hvec[0][0][2];
+
+	for (int i(0);i<ns;i++)
+	  {
+	    for (int j(0);j<3;j++)
+	    	{
+			minhvecX=std::min(hvec[i][j][0],minhvecX);
+			minhvecY=std::min(hvec[i][j][1],minhvecY);
+			minhvecZ=std::min(hvec[i][j][2],minhvecZ);
+			maxhvecX=std::max(hvec[i][j][0],maxhvecX);
+			maxhvecY=std::max(hvec[i][j][1],maxhvecY);
+			maxhvecZ=std::max(hvec[i][j][2],maxhvecZ);
+		    
+		}
+	  }
+
+        double mechanocyteLengthX(maxhvecX-minhvecX);
+	double mechanocyteLengthY(maxhvecY-minhvecY);
+	double mechanocyteLengthZ(maxhvecZ-minhvecZ);
+	double lengthXunnormalized(lengthX*(2*voxelRadius));
+	double lengthYunnormalized(lengthY*(2*voxelRadius));
+	double lengthZunnormalized(lengthZ*(2*voxelRadius));
+	double scale(8*voxelRadius);
+	double ratioX((lengthXunnormalized-scale)/mechanocyteLengthX);
+	double ratioY((lengthYunnormalized-scale)/mechanocyteLengthY);
+	double ratioZ((lengthZunnormalized-scale)/mechanocyteLengthZ);
+	double translate(4*voxelRadius);
+
+	for (int i(0);i<ns;i++)
+	  {
+	    for (int j(0);j<3;j++)
+	    	{
+		realHvec[i][j][0] = hvec[i][j][0]+(-minhvecX);
+		realHvec[i][j][0]=(realHvec[i][j][0]*ratioX+translate)/(2*voxelRadius);
+
+		realHvec[i][j][1] = hvec[i][j][1]+(-minhvecY);
+		realHvec[i][j][1]=(realHvec[i][j][1]*ratioY+translate)/(2*voxelRadius);
+
+		realHvec[i][j][2] = hvec[i][j][2]+(-minhvecZ);
+		realHvec[i][j][2]=(realHvec[i][j][2]*ratioZ+translate)/(2*voxelRadius);
+		}
+	  }
+}
+
+
+void MechanicsProcess::getBLTR()
+{
+
+	newNode.resize(4);
+	newNode[0].x=realHvec[quadIndex[307][0]-1][0][0];
+	newNode[0].y=realHvec[quadIndex[307][0]-1][0][1];
+	newNode[0].z=realHvec[quadIndex[307][0]-1][0][2];
+	newNode[1].x=realHvec[quadIndex[307][1]-1][0][0];
+	newNode[1].y=realHvec[quadIndex[307][1]-1][0][1];
+	newNode[1].z=realHvec[quadIndex[307][1]-1][0][2];
+	newNode[2].x=realHvec[quadIndex[307][2]-1][0][0];
+	newNode[2].y=realHvec[quadIndex[307][2]-1][0][1];
+	newNode[2].z=realHvec[quadIndex[307][2]-1][0][2];
+	newNode[3].x=realHvec[quadIndex[307][3]-1][0][0];
+	newNode[3].y=realHvec[quadIndex[307][3]-1][0][1];
+	newNode[3].z=realHvec[quadIndex[307][3]-1][0][2];
+
+   	row.resize(4);
+   	col.resize(4);
+  	lay.resize(4);
+   	corn.resize(4);
+
+   	for(unsigned i(0);i<4;i++)
+	{
+   	theSpatiocyteStepper->point2global(newNode[i], row[i], col[i], lay[i]);
+   	corn[i]=theSpatiocyteStepper->global2coord(row[i], col[i], lay[i]);
+	}
+
+   	double minimumX=newNode[0].x;
+   	double minimumY=newNode[0].y;
+   	double minimumZ=newNode[0].z;
+  	double maximumX=newNode[0].x;
+   	double maximumY=newNode[0].y;
+   	double maximumZ=newNode[0].z;
+
+  	for(int a=1;a<4;a++)
+ 	{
+  	minimumX=std::min(newNode[a].x,minimumX);
+  	minimumY=std::min(newNode[a].y,minimumY);
+   	minimumZ=std::min(newNode[a].z,minimumZ);
+   	maximumX=std::max(newNode[a].x,maximumX);
+  	maximumY=std::max(newNode[a].y,maximumY);
+ 	maximumZ=std::max(newNode[a].z,maximumZ);   	
+ 	}
+
+
+   	bottomLeft.x = minimumX-(normVoxelRadius+theSpatiocyteStepper->getColLength());
+   	bottomLeft.y = minimumY-(normVoxelRadius+theSpatiocyteStepper->getLayerLength());
+   	bottomLeft.z = minimumZ-(normVoxelRadius+theSpatiocyteStepper->getRowLength());
+   	topRight.x = maximumX+(normVoxelRadius+theSpatiocyteStepper->getColLength());
+   	topRight.y = maximumY+(normVoxelRadius+theSpatiocyteStepper->getLayerLength());
+   	topRight.z = maximumZ+(normVoxelRadius+theSpatiocyteStepper->getRowLength());
+   	if(topRight.x>lengthX)topRight.x=lengthX;
+   	if(topRight.y>lengthY)topRight.y=lengthY;
+   	if(topRight.z>lengthZ)topRight.z=lengthZ;
+  	if(bottomLeft.x<0)bottomLeft.x=0;
+  	if(bottomLeft.y<0)bottomLeft.y=0;
+  	if(bottomLeft.z<0)bottomLeft.z=0;
+
+}
+
+
+void MechanicsProcess::getSurfaceCoords()
+{
+
+  	unsigned blRow(0);
+  	unsigned blLayer(0);
+  	unsigned blCol(0);
+  	theSpatiocyteStepper->point2global(bottomLeft, blRow, blLayer, blCol);
+  	unsigned trRow(0);
+  	unsigned trLayer(0);
+  	unsigned trCol(0);
+  	theSpatiocyteStepper->point2global(topRight, trRow, trLayer, trCol);
+
+
+	for(unsigned d(blRow); d <= trRow; ++d)
+   	{
+     	 for(unsigned e(blLayer); e <= trLayer; ++e)
+          {
+          for(unsigned f(blCol); f <= trCol; ++f)
+            {
+              unsigned m(theSpatiocyteStepper->global2coord(d, e, f));
+        	Point n(theSpatiocyteStepper->coord2point(m));
+        	AB = sub(newNode[1],newNode[0]);
+        	AC = sub(newNode[2],newNode[0]);
+        	surfaceNormal = cross(AB,AC);
+	        surfaceNormal = norm(surfaceNormal);
+	        surfaceDisplace = dot(surfaceNormal, newNode[0]);		
+
+        	if(isOnAboveSurface(n))
+		{ 
+              		Voxel& aVoxel((*theLattice)[m]);	
+			for (unsigned i(0); i!=theAdjoiningCoordSize; i++)
+	  		{
+			unsigned coord(aVoxel.adjoiningCoords[i]);           	
+			Point o(theSpatiocyteStepper->coord2point(coord));
+
+				if(isOnAboveSurface(o)==false)
+				{
+				surfaceCoords.push_back(m); 
+               			break;
+				}
+	  		}
+		}
+	      }
+	    }
+	  }
+}
+
+
+void MechanicsProcess::populateSurface()
+{
+	for(unsigned i(0);i<corn.size();i++)
+		{
+		theVacantCompSpecies[0]->addMolecule(&(*theLattice)[corn[i]]);
+		}
+
+	for (unsigned count(0);count<surfaceCoords.size();count++)
+		{
+     		theVacantSpecies->addCompVoxel(surfaceCoords[count]);
+		}
+	theVacantSpecies->setIsPopulated();
+	theVacantCompSpecies[0]->setIsPopulated();
+}
+
+
+
+}
+
+
+

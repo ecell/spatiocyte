@@ -46,17 +46,17 @@
       character(len=66)::mshtitle!(1st line of input file).
       character(len=66),dimension(NDM)::heads!=descriptor-headings.
       character(len=11),dimension(NKD,NDM)::names!descriptor-names.
-      real(8),dimension(NKN,3,NSM)::hvec=0!node hard vectors
+      real(c_double),dimension(NKN,3,NSM),bind(C)::hvec=0!node hard vectors
       real(8),dimension(NKS,3,NSM)::svec=0!node soft vectors
       real(8),dimension(NKL,NSM)::dvec=0!dorsal surface vectors.
       real(8),dimension(NKL,NSM)::vvec=0!ventral surface vectors.
       real(8),dimension(NKL,NLM)::evec=0!edge vectors.
       real(c_double),dimension(NKD,NDM),bind(C)::dscp=0!descriptive vectors 
-      integer,dimension(4,NSM)::isoq=0!index of ith stack of Qj
+      integer(C_INT),dimension(4,NSM),bind(C)::isoq=0!index of ith stack of Qj
       integer,dimension(2,NLM)::isol=0!index of ith stack of Lj
       integer,dimension(NLM)::ibol=0!index of edge bdy of Lj
-      integer::ns=0!number of stacks (must be less than NSM)
-      integer::nq=0!number of hexahedrons (must be less than NSM)
+      integer(C_INT),bind(C)::ns=0!number of stacks (must be less than NSM)
+      integer(C_INT),bind(C)::nq=0!number of hexahedrons (must be less than NSM)
       integer::nl=0!number of edges (must be less than NLM)
       integer::nd=0!number of descriptor vectors (must be less than NDM)
       real(c_double),bind(C)::time_=0!the current value of the time_
@@ -70,9 +70,9 @@
       integer,dimension(2,NSM)::ilos=0!index of edge neighbors stack j
       integer,dimension(NLM)::iqol=0!index of Q interior to L_j
       integer,dimension(NSM)::isos=0!index of stack interior to stack
-      integer,dimension(NSM)::kqos=0!number of elements containing stack 
-      integer,dimension(NSM)::iqos=0!starting point in lqos list for stack
-      integer,dimension(4*NSM)::lqos=0!list of elements in which stacks 
+      integer(C_INT),dimension(NSM),bind(C)::kqos=0!number of elements containing stack 
+      integer(C_INT),dimension(NSM),bind(C)::iqos=0!starting point in lqos list for stack
+      integer(C_INT),dimension(4*NSM),bind(C)::lqos=0!list of elements in which stacks 
                                       !belong:
                                       !lqos(iqos(is):iqos(is)+kqos(is)-1)
 !
@@ -705,7 +705,7 @@ c--write DATA DEFINED ON VERTEX NODES
 !
       implicit none
 !
-      integer istack,iq,isq,k
+      integer istack,iq,isq,k,i!,z,zz
 !
       k=1
       do istack=1,ns !loop over stacks
@@ -721,7 +721,13 @@ c--write DATA DEFINED ON VERTEX NODES
             enddo
          enddo
       enddo
-!
+      !do i=1,4
+      !z=iqos(isoq(i,0))
+      !zz=kqos(z)
+     
+      !print*,'sngsklgnskfbsjkdfsdklfnsldkf',zz
+      !enddo
+!     
       return
       end subroutine goqostop
 !
