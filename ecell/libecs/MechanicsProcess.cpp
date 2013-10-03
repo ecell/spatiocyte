@@ -76,8 +76,8 @@ LIBECS_DM_INIT_STATIC(MechanicsProcess, Process);
     {
      getBLTR(i);
      getSurfaceCoords();
-     populateSurface();
     }
+   populateSurface();
 
    idphi=0; 
    idvis=0; 
@@ -270,6 +270,12 @@ void MechanicsProcess::getBLTR(int i)
    	corn[i]=theSpatiocyteStepper->global2coord(row[i], col[i], lay[i]);
 	}
 
+	for(unsigned i(0);i<corn.size();i++)
+		{
+		theVacantCompSpecies[0]->addMolecule(&(*theLattice)[corn[i]]);
+		}
+
+
    	double minimumX=newNode[0].x;
    	double minimumY=newNode[0].y;
    	double minimumZ=newNode[0].z;
@@ -391,11 +397,6 @@ bool MechanicsProcess::isOnAboveSurface(Point& aPoint)
 
 void MechanicsProcess::populateSurface()
 {
-	for(unsigned i(0);i<corn.size();i++)
-		{
-		theVacantCompSpecies[0]->addMolecule(&(*theLattice)[corn[i]]);
-		}
-
 	for (unsigned count(0);count<surfaceCoords.size();count++)
 		{
      		theVacantSpecies->addCompVoxel(surfaceCoords[count]);
