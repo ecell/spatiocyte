@@ -167,7 +167,7 @@ void MoleculePopulateProcess::populateUniformOnMultiscale(Species* aSpecies)
               //After a molecule is added, the diffusive vacant species
               //molecule list is not updated, so we need to check if
               //it really is still vacant:
-              aMolecule = aVacantSpecies->getRandomPopulatableMolecule();
+              aMolecule = aVacantSpecies->getRandomValidMolecule();
               aSpecies->addMolecule(aMolecule);
             }
         }
@@ -213,7 +213,7 @@ void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
               //After a molecule is added, the diffusive vacant species
               //molecule list is not updated, so we need to check if
               //it really is still vacant:
-              aMolecule = aVacantSpecies->getRandomPopulatableMolecule();
+              aMolecule = aVacantSpecies->getRandomValidMolecule();
               aSpecies->addMolecule(aMolecule);
             }
         }

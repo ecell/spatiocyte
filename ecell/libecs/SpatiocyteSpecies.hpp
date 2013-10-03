@@ -2791,6 +2791,24 @@ public:
     {
       return theRng.Integer(theMoleculeSize);
     }
+  unsigned getRandomValidIndex()
+    {
+      const unsigned anIndex(getRandomIndex());
+      unsigned vacIndex(anIndex);
+      while(getID(theMolecules[vacIndex]) != theID)
+        {
+          ++vacIndex;
+          if(vacIndex == theMoleculeSize)
+            {
+              vacIndex = 0;
+            }
+          else if(vacIndex == anIndex)
+            {
+              return theMoleculeSize;
+            }
+        }
+      return anIndex;
+    }
   unsigned getRandomOligomerIndex(const unsigned boundCnt)
     {
       const unsigned start(theRng.Integer(theMoleculeSize));
@@ -3727,9 +3745,8 @@ public:
         }
       return theMoleculeSize;
     }
-  Voxel* getRandomPopulatableMolecule()
+  Voxel* getRandomValidMolecule()
     {
-      Voxel* aMolecule;
       if(isMultiscale)
         {
           unsigned index(0);
@@ -3738,17 +3755,17 @@ public:
               index = theRng.Integer(thePopulatableCoords.size());
             }
           while(getID(theLattice[thePopulatableCoords[index]]) != theID);
-          aMolecule =  &theLattice[thePopulatableCoords[index]];
+          return &theLattice[thePopulatableCoords[index]];
         }
       else
         {
-          aMolecule = getRandomMolecule();
-          while(getID(aMolecule) != theID)
+          const unsigned anIndex(getRandomValidIndex());
+          if(anIndex == theMoleculeSize)
             {
-              aMolecule = getRandomMolecule();
+              return NULL;
             }
+          return theMolecules[anIndex];
         }
-      return aMolecule;
     }
   unsigned getPopulatableCoord(unsigned index)
     {
