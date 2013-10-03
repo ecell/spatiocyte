@@ -37,15 +37,19 @@ LIBECS_DM_INIT_STATIC(MechanicsProcess, Process);
 
   void MechanicsProcess::initializeThird()
     {
-   ipf = new char[10];
-   ipf = "fitz.000";
+   ipf = new char[20];
+   for(int i(0);i<FileName.size();i++)
+   {
+     ipf[i] = FileName[i];
+   }
+   ipf[FileName.size()] = '\0';
    id1 = 11;
    id2 = 12;
-   id3 = 1*10^-2;
+   id3 = 1e-2;
    cmdt = new double[12];
    eul = new char[10];
    eul = "eulerian";
-   surfaceDisplace = 0;
+   fixsurfaceDisplace = 0;
    voxelRadius = theSpatiocyteStepper->getVoxelRadius();
    normVoxelRadius = theSpatiocyteStepper->getNormalizedVoxelRadius();  
    Comp* theComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
@@ -68,9 +72,12 @@ LIBECS_DM_INIT_STATIC(MechanicsProcess, Process);
    assignQuad();
    assignNeigh();
    fitMechanotoSpatio();
-   getBLTR();
-   getSurfaceCoords();
-   populateSurface();
+   for (int i(0);i<quadIndex.size();i++)
+    {
+     getBLTR(i);
+     getSurfaceCoords();
+     populateSurface();
+    }
 
    idphi=0; 
    idvis=0; 
@@ -82,8 +89,7 @@ LIBECS_DM_INIT_STATIC(MechanicsProcess, Process);
    iddrg=0; 
    idtrc=0; 
    idhyc=0; 
-   initsvec(); 
-   openunit12();
+   initsvec();
    idebug=1;
    initarea(area);
    clchm(area);
@@ -130,17 +136,6 @@ LIBECS_DM_INIT_STATIC(MechanicsProcess, Process);
    thePriorityQueue->moveTop();
 
     }
-
-bool MechanicsProcess::isOnAboveSurface(Point& aPoint)
-{
-  double disp(point2planeDisp(aPoint, surfaceNormal, surfaceDisplace));
-  if(disp >= 0)
-    {
-      return true;
-    }
-  return false;
-}
-
 
 void MechanicsProcess::assignQuad()
 {
@@ -227,6 +222,7 @@ void MechanicsProcess::fitMechanotoSpatio()
 	double ratioX((lengthXunnormalized-scale)/mechanocyteLengthX);
 	double ratioY((lengthYunnormalized-scale)/mechanocyteLengthY);
 	double ratioZ((lengthZunnormalized-scale)/mechanocyteLengthZ);
+	double minRatio(std::min(ratioX,(std::min(ratioY,ratioZ))));
 	double translate(4*voxelRadius);
 
 	for (int i(0);i<ns;i++)
@@ -234,39 +230,39 @@ void MechanicsProcess::fitMechanotoSpatio()
 	    for (int j(0);j<3;j++)
 	    	{
 		realHvec[i][j][0] = hvec[i][j][0]+(-minhvecX);
-		realHvec[i][j][0]=(realHvec[i][j][0]*ratioX+translate)/(2*voxelRadius);
+		realHvec[i][j][0]=(realHvec[i][j][0]*minRatio+translate)/(2*voxelRadius);
 
 		realHvec[i][j][1] = hvec[i][j][1]+(-minhvecY);
-		realHvec[i][j][1]=(realHvec[i][j][1]*ratioY+translate)/(2*voxelRadius);
+		realHvec[i][j][1]=(realHvec[i][j][1]*minRatio+translate)/(2*voxelRadius);
 
 		realHvec[i][j][2] = hvec[i][j][2]+(-minhvecZ);
-		realHvec[i][j][2]=(realHvec[i][j][2]*ratioZ+translate)/(2*voxelRadius);
+		realHvec[i][j][2]=(realHvec[i][j][2]*minRatio+translate)/(2*voxelRadius);
 		}
 	  }
 }
 
 
-void MechanicsProcess::getBLTR()
+void MechanicsProcess::getBLTR(int i)
 {
 
 	newNode.resize(4);
-	newNode[0].x=realHvec[quadIndex[307][0]-1][0][0];
-	newNode[0].y=realHvec[quadIndex[307][0]-1][0][1];
-	newNode[0].z=realHvec[quadIndex[307][0]-1][0][2];
-	newNode[1].x=realHvec[quadIndex[307][1]-1][0][0];
-	newNode[1].y=realHvec[quadIndex[307][1]-1][0][1];
-	newNode[1].z=realHvec[quadIndex[307][1]-1][0][2];
-	newNode[2].x=realHvec[quadIndex[307][2]-1][0][0];
-	newNode[2].y=realHvec[quadIndex[307][2]-1][0][1];
-	newNode[2].z=realHvec[quadIndex[307][2]-1][0][2];
-	newNode[3].x=realHvec[quadIndex[307][3]-1][0][0];
-	newNode[3].y=realHvec[quadIndex[307][3]-1][0][1];
-	newNode[3].z=realHvec[quadIndex[307][3]-1][0][2];
+	newNode[0].x=realHvec[quadIndex[i][0]-1][2][0];
+	newNode[0].y=realHvec[quadIndex[i][0]-1][2][1];
+	newNode[0].z=realHvec[quadIndex[i][0]-1][2][2];
+	newNode[1].x=realHvec[quadIndex[i][1]-1][2][0];
+	newNode[1].y=realHvec[quadIndex[i][1]-1][2][1];
+	newNode[1].z=realHvec[quadIndex[i][1]-1][2][2];
+	newNode[2].x=realHvec[quadIndex[i][2]-1][2][0];
+	newNode[2].y=realHvec[quadIndex[i][2]-1][2][1];
+	newNode[2].z=realHvec[quadIndex[i][2]-1][2][2];
+	newNode[3].x=realHvec[quadIndex[i][3]-1][2][0];
+	newNode[3].y=realHvec[quadIndex[i][3]-1][2][1];
+	newNode[3].z=realHvec[quadIndex[i][3]-1][2][2];
 
    	row.resize(4);
    	col.resize(4);
   	lay.resize(4);
-   	corn.resize(4);
+	corn.resize(4);
 
    	for(unsigned i(0);i<4;i++)
 	{
@@ -305,6 +301,11 @@ void MechanicsProcess::getBLTR()
   	if(bottomLeft.y<0)bottomLeft.y=0;
   	if(bottomLeft.z<0)bottomLeft.z=0;
 
+
+
+   	
+
+
 }
 
 
@@ -329,14 +330,12 @@ void MechanicsProcess::getSurfaceCoords()
             {
               unsigned m(theSpatiocyteStepper->global2coord(d, e, f));
         	Point n(theSpatiocyteStepper->coord2point(m));
-        	AB = sub(newNode[1],newNode[0]);
-        	AC = sub(newNode[2],newNode[0]);
-        	surfaceNormal = cross(AB,AC);
-	        surfaceNormal = norm(surfaceNormal);
-	        surfaceDisplace = dot(surfaceNormal, newNode[0]);		
-
-        	if(isOnAboveSurface(n))
-		{ 
+		calculateSurfaceNormal(newNode[0],newNode[1],newNode[2]);
+        	if(isOnAboveSurface(n) && isOnBelowSideSurface(newNode[0],newNode[1],n)
+		&& isOnBelowSideSurface(newNode[1],newNode[2],n) 
+		&& isOnBelowSideSurface(newNode[2],newNode[3],n)
+		&& isOnBelowSideSurface(newNode[3],newNode[0],n))
+		{ 	
               		Voxel& aVoxel((*theLattice)[m]);	
 			for (unsigned i(0); i!=theAdjoiningCoordSize; i++)
 	  		{
@@ -348,13 +347,47 @@ void MechanicsProcess::getSurfaceCoords()
 				surfaceCoords.push_back(m); 
                			break;
 				}
-	  		}
+		  	}
 		}
 	      }
 	    }
 	  }
 }
 
+void MechanicsProcess::calculateSurfaceNormal(Point& node1, Point& node2, Point& node3)
+{
+	AB = sub(node2,node1);
+	AC = sub(node3,node1);
+	fixsurfaceNormal = cross(AB,AC);
+	fixsurfaceNormal = norm(fixsurfaceNormal);
+	fixsurfaceDisplace = dot(fixsurfaceNormal, node1);		
+}	
+
+bool MechanicsProcess::isOnBelowSideSurface(Point& node1, Point& node2, Point& aPoint)
+{
+	Point sideSurfaceNormal;
+	double sideSurfaceDisplace(0);
+	AB = sub(node2,node1);
+	sideSurfaceNormal = cross(AB, fixsurfaceNormal);
+	sideSurfaceNormal = norm(sideSurfaceNormal);
+	sideSurfaceDisplace = dot(sideSurfaceNormal, node1);
+  	double disp(point2planeDisp(aPoint, sideSurfaceNormal, sideSurfaceDisplace));
+  	if(disp-normVoxelRadius <= 0)
+   	{
+     	return true;
+   	}
+ 	return false;
+}
+
+bool MechanicsProcess::isOnAboveSurface(Point& aPoint)
+{
+  double disp(point2planeDisp(aPoint, fixsurfaceNormal, fixsurfaceDisplace));
+  if(disp >= 0)
+    {
+      return true;
+    }
+  return false;
+}
 
 void MechanicsProcess::populateSurface()
 {

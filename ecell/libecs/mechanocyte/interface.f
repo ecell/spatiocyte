@@ -156,13 +156,6 @@ c--look for current dump position
       enddo
       end subroutine initsvec
 
-      subroutine openunit12() bind(C)
-      use iso_c_binding
-      open(unit=12,file='fitz.init')
-      call iowrfile(0,12)
-      close(12)
-      end subroutine openunit12
-
       subroutine initarea(area) bind(C)
       USE iolibsw
       use iso_c_binding

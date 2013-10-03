@@ -67,8 +67,7 @@ public:
       INHERIT_PROPERTIES(Process);
       PROPERTYSLOT_SET_GET(String, FileName);
     }
-  MechanicsProcess():
-    FileName("fitz.000") {}
+  MechanicsProcess() {}
   virtual ~MechanicsProcess() {}
   SIMPLE_SET_GET_METHOD(String, FileName); 
   virtual void prepreinitialize()
@@ -118,11 +117,13 @@ public:
   virtual void initializeFifth();
   virtual void fire();
   virtual bool isOnAboveSurface(Point&);
+  virtual bool isOnBelowSideSurface(Point&,Point&,Point&);
   void assignQuad();
   void assignNeigh();
   void fitMechanotoSpatio();
-  void getBLTR();
+  void getBLTR(int);
   void getSurfaceCoords();
+  void calculateSurfaceNormal(Point&,Point&,Point&);
   void populateSurface();
 
 private:
@@ -136,7 +137,7 @@ private:
   int id1;
   int id2;
   double id3;
-  double surfaceDisplace;
+  double fixsurfaceDisplace;
   double logInt;
   double delt;
   double area;
@@ -165,7 +166,7 @@ private:
   Comp* theComp;  
   Point bottomLeft;
   Point topRight;
-  Point surfaceNormal; 
+  Point fixsurfaceNormal; 
   Point AB;
   Point AC;
   Point vectorCut;
