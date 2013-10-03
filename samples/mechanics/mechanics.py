@@ -61,7 +61,7 @@ diffuser.D = 0
 
 mechanics = theSimulator.createEntity('MechanicsProcess', 'Process:/:mechanics')
 mechanics.VariableReferenceList = [['_', 'Variable:/:B','0']]
-mechanics.FileName = 'fitz.000'
+mechanics.FileName = 'mechanics.000'
 
 
 run(17809)
