@@ -87,7 +87,12 @@ LIBECS_DM_INIT_STATIC(MechanicsProcess, Process);
      getSurfaceCoords(newNode);
      }
    }
+   std::cout << "vacant size:" << theVacantSpecies->size() << std::endl;
+   std::cout << "first size:" << surfaceCoords.size() << std::endl;
    populateSurface();
+   
+   std::cout << "vacant size:" << theVacantSpecies->size() << std::endl;
+   std::cout << "vacant comp size:" << theVacantCompSpecies[0]->size() << std::endl;
 
    idphi=0; 
    idvis=0; 
@@ -348,7 +353,10 @@ void MechanicsProcess::getSurfaceCoords(std::vector<Point>& newNode)
 
 				if(isOnAboveSurface(o,fixsurfaceNormal,fixsurfaceDisplace)==false)
 				{
-				surfaceCoords.push_back(m); 
+					if(getID((*theLattice)[m]) != theVacantSpecies->getID())
+                                       		{  
+                                                  theVacantSpecies->addCompVoxel(m);
+}
                			break;
 				}
 		  	}
@@ -398,10 +406,12 @@ bool MechanicsProcess::isOnAboveSurface(Point& aPoint, Point& fixsurfaceNormal, 
 
 void MechanicsProcess::populateSurface()
 {
+/*
 	for (unsigned count(0);count<surfaceCoords.size();count++)
 		{
      		theVacantSpecies->addCompVoxel(surfaceCoords[count]);
 		}
+*/
 	theVacantSpecies->setIsPopulated();
 	theVacantCompSpecies[0]->setIsPopulated();
 }
