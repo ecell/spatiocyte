@@ -545,7 +545,11 @@ void SpatiocyteNextReactionProcess::reactABCD()
 //nonHD -> nonHD + nonHD
 bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
 {
-  unsigned indexA(a->getRandomIndex());
+  unsigned indexA(a->getRandomValidIndex());
+  if(indexA == a->size())
+    {
+      return false;
+    }
   moleculeA = a->getMolecule(indexA);
   //This is needed when a is species B, used by interruptedPre:
   moleculeB = moleculeA;
@@ -635,7 +639,11 @@ bool SpatiocyteNextReactionProcess::reactDeoligomerize(Species* a, Species* c)
 //nonHD (+ E) -> nonHD
 bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
 {
-  unsigned indexA(a->getRandomIndex());
+  unsigned indexA(a->getRandomValidIndex());
+  if(indexA == a->size())
+    {
+      return false;
+    }
   moleculeA = a->getMolecule(indexA);
   //This is needed when a is species B, used by interruptedPre:
   moleculeB = moleculeA;
@@ -697,7 +705,11 @@ void SpatiocyteNextReactionProcess::removeMoleculeE()
 //A (+Vacant[BindingSite]) -> nonHD[BindingSite]
 bool SpatiocyteNextReactionProcess::reactACbind(Species* a, Species* c)
 {
-  unsigned indexA(a->getRandomIndex());
+  unsigned indexA(a->getRandomValidIndex());
+  if(indexA == a->size())
+    {
+      return false;
+    }
   moleculeA = a->getMolecule(indexA);
   moleculeC = c->getBindingSiteAdjoiningVoxel(moleculeA, BindingSite);
   if(moleculeC == NULL)
@@ -718,7 +730,11 @@ bool SpatiocyteNextReactionProcess::reactACbind(Species* a, Species* c)
 bool SpatiocyteNextReactionProcess::reactACDbind(Species* a, Species* c,
                                                  Species* d)
 {
-  unsigned indexA(a->getRandomIndex());
+  unsigned indexA(a->getRandomValidIndex());
+  if(indexA == a->size())
+    {
+      return false;
+    }
   moleculeA = a->getMolecule(indexA);
   //Look for Vacant[BindingSite]:
   moleculeC = c->getBindingSiteAdjoiningVoxel(moleculeA, BindingSite);
@@ -1797,6 +1813,8 @@ void SpatiocyteNextReactionProcess::interruptedPost(ReactionProcess* aProcess)
 {
   if(isReactAB)
     {
+      A->updateMolecules();
+      B->updateMolecules();
       Species* aC(aProcess->getC());
       Species* aD(aProcess->getD());
       unsigned coordA(theNullCoord);
