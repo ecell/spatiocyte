@@ -116,14 +116,14 @@ public:
   virtual void initializeThird();
   virtual void initializeFifth();
   virtual void fire();
-  virtual bool isOnAboveSurface(Point&);
-  virtual bool isOnBelowSideSurface(Point&,Point&,Point&);
+  virtual bool isOnAboveSurface(Point&,Point&,double&);
+  virtual bool isOnBelowSideSurface(Point&,Point&,Point&,Point&);
   void assignQuad();
   void assignNeigh();
   void fitMechanotoSpatio();
-  void getBLTR(int);
-  void getSurfaceCoords();
-  void calculateSurfaceNormal(Point&,Point&,Point&);
+  void getBLTR(std::vector<Point>&);
+  void getSurfaceCoords(std::vector<Point>&);
+  void calculateSurfaceNormal(Point&,Point&,Point&,Point&,double&);
   void populateSurface();
 
 private:
@@ -137,7 +137,6 @@ private:
   int id1;
   int id2;
   double id3;
-  double fixsurfaceDisplace;
   double logInt;
   double delt;
   double area;
@@ -160,17 +159,11 @@ private:
   std::vector<unsigned>lay;
   std::vector<unsigned>corn;
   std::vector<Species*> theVacantCompSpecies;
-  std::vector<Point> newNode;
   std::vector<std::vector<int> > quadIndex;
   std::vector<std::vector<int> > neigh;
   Comp* theComp;  
   Point bottomLeft;
   Point topRight;
-  Point fixsurfaceNormal; 
-  Point AB;
-  Point AC;
-  Point vectorCut;
-  Point planeCut;
   Variable* theVacantVariable;
   Species* theVacantSpecies;
 
