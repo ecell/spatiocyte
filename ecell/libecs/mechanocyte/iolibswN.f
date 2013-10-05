@@ -53,11 +53,11 @@
       real(8),dimension(NKL,NLM)::evec=0!edge vectors.
       real(c_double),dimension(NKD,NDM),bind(C)::dscp=0!descriptive vectors 
       integer(C_INT),dimension(4,NSM),bind(C)::isoq=0!index of ith stack of Qj
-      integer,dimension(2,NLM)::isol=0!index of ith stack of Lj
+      integer(C_INT),dimension(2,NLM),bind(C)::isol=0!index of ith stack of Lj
       integer,dimension(NLM)::ibol=0!index of edge bdy of Lj
       integer(C_INT),bind(C)::ns=0!number of stacks (must be less than NSM)
       integer(C_INT),bind(C)::nq=0!number of hexahedrons (must be less than NSM)
-      integer::nl=0!number of edges (must be less than NLM)
+      integer(C_INT),bind(C)::nl=0!number of edges (must be less than NLM)
       integer::nd=0!number of descriptor vectors (must be less than NDM)
       real(c_double),bind(C)::time_=0!the current value of the time_
       real(c_double),bind(C)::tstp=0!the current value of the time_ step

@@ -75,7 +75,8 @@ void MechanicsProcess::initializeThird()
   delt=dscp[idfrm-1][2];
   logInt=dscp[idfrm-1][3];
   timedump(delt,logInt);
-  assignQuad();
+	assignQuad();
+	assignEdge();
   assignNeigh();
   fitMechanotoSpatio();
   for (int i(0);i<quadIndex.size();i++)
@@ -83,11 +84,40 @@ void MechanicsProcess::initializeThird()
       for (int j(0);j<3;j+=2)//level
         {
           for (int k(0);k<4;k++)//no. of nodes on 1 quad
-	    {
+	          {
               newNode[k].x=realHvec[quadIndex[i][k]-1][j][0];
               newNode[k].y=realHvec[quadIndex[i][k]-1][j][1];
-	      newNode[k].z=realHvec[quadIndex[i][k]-1][j][2];
-	    }
+	     			  newNode[k].z=realHvec[quadIndex[i][k]-1][j][2];
+	          }
+      getBLTR(newNode);
+      getSurfaceCoords(newNode);
+        }
+    }
+  for (int i(0);i<edgeIndex.size();i++)
+    {
+      for (int j(0);j<2;j++)//level
+        {
+          for (int k(0);k<2;k++)//no of nodes on 1 edge   
+            {
+              if (k==0)//stack 0 
+                {
+                  newNode[3].x=realHvec[edgeIndex[i][k]-1][j][0];
+                  newNode[3].y=realHvec[edgeIndex[i][k]-1][j][1];
+                  newNode[3].z=realHvec[edgeIndex[i][k]-1][j][2];
+                  newNode[0].x=realHvec[edgeIndex[i][k]-1][j+1][0];
+                  newNode[0].y=realHvec[edgeIndex[i][k]-1][j+1][1];
+                  newNode[0].z=realHvec[edgeIndex[i][k]-1][j+1][2];
+                }
+             else //stack 1
+                {
+                  newNode[2].x=realHvec[edgeIndex[i][k]-1][j][0];
+                  newNode[2].y=realHvec[edgeIndex[i][k]-1][j][1];
+                  newNode[2].z=realHvec[edgeIndex[i][k]-1][j][2];
+                  newNode[1].x=realHvec[edgeIndex[i][k]-1][j+1][0];
+                  newNode[1].y=realHvec[edgeIndex[i][k]-1][j+1][1];
+                  newNode[1].z=realHvec[edgeIndex[i][k]-1][j+1][2];
+                }
+            }
       getBLTR(newNode);
       getSurfaceCoords(newNode);
         }
@@ -170,11 +200,26 @@ void MechanicsProcess::assignQuad()
     {	
       for (int k(0);k<4;k++)
         {
-	  quadIndex[i][k]=isoq[i][k];
-	}	 
+	 	 	    quadIndex[i][k]=isoq[i][k];
+				}	 
     }	
 }	
 
+void MechanicsProcess::assignEdge()
+{
+	edgeIndex.resize(nl);
+	for (unsigned a(0);a<nl;a++)
+		{
+			edgeIndex[a].resize(2);
+		}
+	for(int i(0);i<edgeIndex.size();i++)
+		{
+			for (int k(0);k<2;k++)
+				{
+					edgeIndex[i][k]=isol[i][k];
+				}
+		}
+}
 
 void MechanicsProcess::assignNeigh()
 {
@@ -356,38 +401,38 @@ void MechanicsProcess::getSurfaceCoords(std::vector<Point>& newNode)
             {
               unsigned m(theSpatiocyteStepper->global2coord(d, e, f));
               Point n(theSpatiocyteStepper->coord2point(m));
-	      calculateSurfaceNormal(newNode[0],newNode[1],newNode
+              calculateSurfaceNormal(newNode[0],newNode[1],newNode
                                      [2],fixsurfaceNormal,
                                      fixsurfaceDisplace);
               if(isOnAboveSurface(n,fixsurfaceNormal,fixsurfaceDisplace) 
               && isOnBelowSideSurface(newNode[0],newNode
                                       [1],n,fixsurfaceNormal)
-	      && isOnBelowSideSurface(newNode[1],newNode
+              && isOnBelowSideSurface(newNode[1],newNode
                                       [2],n,fixsurfaceNormal) 
-	      && isOnBelowSideSurface(newNode[2],newNode
+              && isOnBelowSideSurface(newNode[2],newNode
                                       [3],n,fixsurfaceNormal)
-	      && isOnBelowSideSurface(newNode[3],newNode
+              && isOnBelowSideSurface(newNode[3],newNode
                                       [0],n,fixsurfaceNormal))
-	        { 	
+                { 	
               	  Voxel& aVoxel((*theLattice)[m]);	
-		  for (unsigned i(0); i!=theAdjoiningCoordSize; i++)
-	  	    {
-		      unsigned coord(aVoxel.adjoiningCoords[i]);           
-		      Point o(theSpatiocyteStepper->coord2point(coord));
-		      if(isOnAboveSurface(o,fixsurfaceNormal,
+                  for (unsigned i(0); i!=theAdjoiningCoordSize; i++)
+                    {
+                      unsigned coord(aVoxel.adjoiningCoords[i]);           
+                      Point o(theSpatiocyteStepper->coord2point(coord));
+                      if(isOnAboveSurface(o,fixsurfaceNormal,
                          fixsurfaceDisplace)==false)
-		        {
-			  if(getID((*theLattice)[m]) != theVacantSpecies
+                        {
+                          if(getID((*theLattice)[m]) != theVacantSpecies
                              ->getID())
                             {  
                               theVacantSpecies->addCompVoxel(m);
                             }
-               		  break;
-			}
-		    }
+                          break;
+                        }
+                    }
                 }
-	    }
-	}
+            }
+        }
     }    
 }
 

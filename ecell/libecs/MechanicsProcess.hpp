@@ -44,7 +44,7 @@ namespace libecs
   extern "C" void openfile(char *ipf,int &idiv,int &idot);
   extern "C" void timedump(double &delt,double &logInt);
   extern "C" int idfrm,idphi,idvis,idvfx,idgam,idpsi,idsfr,idbfr,iddrg,
-                 idtrc,idhyc,nq,isoq[][4],iqos[],lqos[],kqos[],ns;
+                 idtrc,idhyc,nq,nl,isoq[][4],isol[][2],ns;
   extern "C" double dscp[][12],hvec[][3][12];
   extern "C" void initsvec();
   extern "C" void openunit12();
@@ -117,6 +117,7 @@ namespace libecs
     virtual bool isOnAboveSurface(Point&,Point&,double&);
     virtual bool isOnBelowSideSurface(Point&,Point&,Point&,Point&);
     void assignQuad();
+		void assignEdge();
     void assignNeigh();
     void fitMechanotoSpatio();
     void getBLTR(std::vector<Point>&);
@@ -158,6 +159,7 @@ namespace libecs
     std::vector<unsigned>corn;
     std::vector<Species*> theVacantCompSpecies;
     std::vector<std::vector<int> > quadIndex;
+    std::vector<std::vector<int> > edgeIndex;
     std::vector<std::vector<int> > neigh;
     Comp* theComp;  
     Point bottomLeft;
