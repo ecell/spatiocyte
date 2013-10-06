@@ -3,7 +3,8 @@
 
       real(c_double),bind(C)::tnext      
       real(8) PIP2m,PIP3m,PIP3a,PI3Km,PTENm
-      real(8) tdump(100),idump
+      real(8) tdump(100)
+      integer idump
       real(c_double),bind(C)::tstop
       integer,dimension(1)::isuff
       character(len=20)::fnum
@@ -105,7 +106,7 @@
       use iso_c_binding
       implicit none
       real(c_double)::delt,logInt
-      real(8) ndump
+      integer ndump
 !--if delt is zero look for time of dumps in file tdump
       if (delt.eq.zero) then
          open(44,file='tdump',status='old')
