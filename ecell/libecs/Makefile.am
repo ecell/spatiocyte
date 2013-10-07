@@ -75,7 +75,8 @@ $(RANDOMLIB_INC)/RandomEngine.hpp\
 $(RANDOMLIB_INC)/RandomAlgorithm.hpp\
 $(RANDOMLIB_INC)/RandomMixer.hpp\
 $(RANDOMLIB_INC)/RandomSeed.hpp\
-$(RANDOMLIB_INC)/RandomType.hpp
+$(RANDOMLIB_INC)/RandomType.hpp\
+$(RANDOMLIB_INC)/Config.h
 
 libecsdir=$(ECELL_INCLUDE_DIR)/libecs
 libecs_HEADERS=\
