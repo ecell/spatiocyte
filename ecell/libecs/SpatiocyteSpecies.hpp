@@ -2392,6 +2392,14 @@ public:
       ++theMoleculeSize;
       theVariable->setValue(theMoleculeSize);
     }
+  void removeCompVoxel(const unsigned anIndex)
+    {
+      --theMoleculeSize;
+      (*theCompVoxels)[anIndex] = (*theCompVoxels)[theMoleculeSize];
+      (*theCompVoxels)[theMoleculeSize]->idx = theVacantID*theStride;
+      theCompVoxels->pop_back();
+      theVariable->setValue(theMoleculeSize);
+    }
   String getIDString(unsigned anID) const
     {
       return theSpecies[anID]->getIDString();
@@ -2793,16 +2801,16 @@ public:
     }
   unsigned getRandomValidIndex()
     {
-      const unsigned anIndex(getRandomIndex());
-      unsigned vacIndex(anIndex);
-      while(getID(theMolecules[vacIndex]) != theID)
+      unsigned anIndex(getRandomIndex());
+      const unsigned ranIndex(anIndex);
+      while(getID(theMolecules[anIndex]) != theID)
         {
-          ++vacIndex;
-          if(vacIndex == theMoleculeSize)
+          ++anIndex;
+          if(anIndex == theMoleculeSize)
             {
-              vacIndex = 0;
+              anIndex = 0;
             }
-          else if(vacIndex == anIndex)
+          else if(anIndex == ranIndex)
             {
               return theMoleculeSize;
             }
@@ -3731,7 +3739,7 @@ public:
         }
       //Required by populate dense because some comp vacant voxels would
       //have become interface species voxels and no longer populatable:
-      else if(isCompVacant)
+      else if(isVacant)
         {
           unsigned aSize(0);
           for(unsigned i(0); i != theMoleculeSize; ++i)

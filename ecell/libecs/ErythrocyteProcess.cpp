@@ -46,17 +46,8 @@ void ErythrocyteProcess::initializeThird()
       theSpectrinSpecies->setIsPopulated();
       theVertexSpecies->setIsPopulated();
       isCompartmentalized = true;
+      printParameters();
     }
-}
-
-void ErythrocyteProcess::populateMolecules()
-{
-  for(unsigned int i(0); i != filamentCoords.size(); ++i)
-    {
-      theSpectrinSpecies->addMolecule(&(*theLattice)[filamentCoords[i]]);
-    }
-  theSpectrinSpecies->setIsPopulated();
-  cout << "size of spectrin:" << theSpectrinSpecies->size() << std::endl;
 }
 
 void ErythrocyteProcess::initializeDirectionVectors()
@@ -125,24 +116,27 @@ void ErythrocyteProcess::initializeProtofilaments()
   for(unsigned int i(0); i != aVacant->size(); ++i)
     {
       unsigned int aCoord(aVacant->getCoord(i));
-      Point aPoint(theSpatiocyteStepper->coord2point(aCoord));
-      unsigned int cnt(getIntersectCount(aPoint, aCoord));
-      if(cnt == 1)
+      if(getID((*theLattice)[aCoord]) == aVacant->getID())
         {
-          theSpectrinSpecies->addMolecule(&(*theLattice)[aCoord]);
-        }
-      else if(cnt > 1)
-        {
-          theVertexSpecies->addMolecule(&(*theLattice)[aCoord]);
+          Point aPoint(theSpatiocyteStepper->coord2point(aCoord));
+          unsigned int cnt(getIntersectCount(aPoint, aCoord));
+          if(cnt == 1)
+            {
+              theSpectrinSpecies->addCompVoxel(aCoord);
+            }
+          else if(cnt > 1)
+            {
+              theVertexSpecies->addCompVoxel(aCoord);
+            }
         }
     }
   for(unsigned i(0); i != theSpectrinSpecies->size(); ++i)
     {
       Voxel* mol(theSpectrinSpecies->getMolecule(i));
       unsigned cnt(0);
-      for(unsigned i(0); i != mol->diffuseSize; ++i)
+      for(unsigned j(0); j != mol->diffuseSize; ++j)
         {
-          Voxel& adj((*theLattice)[mol->adjoiningCoords[i]]);
+          Voxel& adj((*theLattice)[mol->adjoiningCoords[j]]);
           if(getID(adj) == theSpectrinSpecies->getID())
             {
               ++cnt;
@@ -150,10 +144,24 @@ void ErythrocyteProcess::initializeProtofilaments()
         }
       if(cnt > 2)
         {
-          theSpectrinSpecies->removeMolecule(mol);
-          theVertexSpecies->addMolecule(mol);
+          const unsigned aCoord(theSpectrinSpecies->getCoord(i));
+          theSpectrinSpecies->removeCompVoxel(i);
+          --i;
+          theVertexSpecies->addCompVoxel(aCoord);
         }
     }
+}
+
+void ErythrocyteProcess::printParameters()
+{
+  cout << getPropertyInterface().getClassName() << "[" <<
+    getFullID().asString() << "]" << std::endl;
+  cout << "  " << getIDString(theSpectrinSpecies) << " total:" <<
+    theSpectrinSpecies->compVoxelSize() << " free:" <<
+    theSpectrinSpecies->size() << std::endl;
+  cout << "  " << getIDString(theVertexSpecies) << " total:" << 
+    theVertexSpecies->compVoxelSize() << " free:" << 
+    theVertexSpecies->size() << std::endl;
 }
 
 unsigned int ErythrocyteProcess::getIntersectCount(Point& aPoint,

@@ -111,7 +111,7 @@ public:
       TriangleAltitude = cos(M_PI/6)*EdgeLength;
     }
   virtual void initializeThird();
-  void populateMolecules();
+  //void populateMolecules();
   void initializeDirectionVectors();
   void initializeProtofilaments();
   void normalize(Point&);
@@ -121,6 +121,7 @@ public:
   bool isOnUpperPlanes(Point&, unsigned int, Point&);
   unsigned int getIntersectCount(Point&, unsigned int);
   void rotatePointAlongVector(Point&, Point&, Point&, double);
+  virtual void printParameters();
 protected:
   bool isCompartmentalized;
   double EdgeLength;

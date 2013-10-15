@@ -136,18 +136,20 @@ void MoleculePopulateProcess::populateGaussian(Species* aSpecies)
 
 void MoleculePopulateProcess::populateUniformOnMultiscale(Species* aSpecies)
 {
+  Species* aVacantSpecies(aSpecies->getVacantSpecies());
+  aVacantSpecies->updateMolecules();
+  const unsigned aSize(aSpecies->getPopulateCoordSize());
+  const unsigned aVacantSize(aVacantSpecies->getPopulatableSize());
   cout << "    Populating uniformly on multiscale vacant:" <<
-    getIDString(aSpecies) << " current size:" << aSpecies->size() <<
-    ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
+    getIDString(aVacantSpecies) << " available size:" << aVacantSize <<
+    std::endl;
+  cout << "       " << getIDString(aSpecies) << " current size:" <<
+    aSpecies->size() << ", populate size:" << aSize << std::endl;
   if(!aSpecies->getIsPopulated())
     {
       if(UniformRadiusX == 1 && UniformRadiusY == 1 && UniformRadiusZ == 1 &&
          !OriginX && !OriginY && !OriginZ)
         {
-          Species* aVacantSpecies(aSpecies->getVacantSpecies());
-          aVacantSpecies->updateMolecules();
-          unsigned int aSize(aSpecies->getPopulateCoordSize());
-          unsigned int aVacantSize(aVacantSpecies->getPopulatableSize());
           if(aVacantSize < aSize)
             {
               THROW_EXCEPTION(ValueError, String(
@@ -182,18 +184,20 @@ void MoleculePopulateProcess::populateUniformOnMultiscale(Species* aSpecies)
 void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
                                                                aSpecies)
 {
+  Species* aVacantSpecies(aSpecies->getVacantSpecies());
+  aVacantSpecies->updateMolecules();
+  const unsigned aSize(aSpecies->getPopulateCoordSize());
+  const unsigned aVacantSize(aVacantSpecies->getPopulatableSize());
   cout << "    Populating uniformly on diffusive vacant:" <<
-    getIDString(aSpecies) << " current size:" << aSpecies->size() <<
-    ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
+    getIDString(aVacantSpecies) << " available size:" << aVacantSize <<
+    std::endl;
+  cout << "       " << getIDString(aSpecies) << " current size:" <<
+    aSpecies->size() << ", populate size:" << aSize << std::endl;
   if(!aSpecies->getIsPopulated())
     {
       if(UniformRadiusX == 1 && UniformRadiusY == 1 && UniformRadiusZ == 1 &&
          !OriginX && !OriginY && !OriginZ)
         {
-          Species* aVacantSpecies(aSpecies->getVacantSpecies());
-          aVacantSpecies->updateMolecules();
-          unsigned int aSize(aSpecies->getPopulateCoordSize());
-          unsigned int aVacantSize(aVacantSpecies->getPopulatableSize());
           if(aVacantSize < aSize)
             {
               THROW_EXCEPTION(ValueError, String(
