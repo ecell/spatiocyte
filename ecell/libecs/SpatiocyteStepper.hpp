@@ -47,11 +47,17 @@ public:
     {
       INHERIT_PROPERTIES(Stepper);
       PROPERTYSLOT_SET_GET(Real, VoxelRadius);
+      PROPERTYSLOT_SET_GET(Integer, BoxCols);
+      PROPERTYSLOT_SET_GET(Integer, BoxLayers);
+      PROPERTYSLOT_SET_GET(Integer, BoxRows);
       PROPERTYSLOT_SET_GET(Integer, LatticeType);
       PROPERTYSLOT_SET_GET(Integer, SearchVacant);
       PROPERTYSLOT_SET_GET(Integer, ThreadSize);
     }
   SIMPLE_SET_GET_METHOD(Real, VoxelRadius); 
+  SIMPLE_SET_GET_METHOD(Integer, BoxCols); 
+  SIMPLE_SET_GET_METHOD(Integer, BoxLayers); 
+  SIMPLE_SET_GET_METHOD(Integer, BoxRows); 
   SIMPLE_SET_GET_METHOD(Integer, LatticeType); 
   SIMPLE_SET_GET_METHOD(Integer, SearchVacant); 
   SIMPLE_SET_GET_METHOD(Integer, ThreadSize); 
@@ -60,6 +66,9 @@ public:
     isPeriodicEdge(false),
     SearchVacant(false),
     LatticeType(HCP_LATTICE),
+    BoxCols(1),
+    BoxLayers(1),
+    BoxRows(1),
     theTotalBoxSize(8),
     ThreadSize(6),
     VoxelRadius(10e-9),
@@ -205,6 +214,9 @@ private:
   char flagA;
   char flagB;
   unsigned short theNullID;
+  unsigned BoxCols;
+  unsigned BoxLayers;
+  unsigned BoxRows;
   unsigned LatticeType; 
   unsigned nThreadsRunning;
   unsigned theAdjoinSize;
@@ -215,11 +227,11 @@ private:
   unsigned theTotalCols;
   unsigned theTotalLayers;
   unsigned theTotalRows;
-  unsigned ThreadSize;
   unsigned theBoxMaxSize;
   unsigned theBoxCols;
   unsigned theBoxRows;
   unsigned theBoxLayers;
+  unsigned ThreadSize;
   double VoxelRadius; //r_v
   double nVoxelRadius;
   double theHCPl;
