@@ -2402,6 +2402,10 @@ public:
     }
   void clearCompVoxels()
     {
+      for(unsigned i(0); i != theMoleculeSize; ++i)
+        {
+          (*theCompVoxels)[i]->idx = theVacantID*theStride;
+        }
       theMoleculeSize = 0;
       theCompVoxels->resize(0);
       theVariable->setValue(0);
