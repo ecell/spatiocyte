@@ -2400,6 +2400,12 @@ public:
       theCompVoxels->pop_back();
       theVariable->setValue(theMoleculeSize);
     }
+  void clearCompVoxels()
+    {
+      theMoleculeSize = 0;
+      theCompVoxels->resize(0);
+      theVariable->setValue(0);
+    }
   String getIDString(unsigned anID) const
     {
       return theSpecies[anID]->getIDString();
