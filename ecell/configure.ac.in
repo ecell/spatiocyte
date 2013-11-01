@@ -140,6 +140,10 @@ dnl
 AC_CHECK_LIB(c, open, LIBC="-lc")
 AC_SUBST(LIBC)
 dnl
+AC_CHECK_LIB(gfortran, clog10, LIBGFORTRAN="-lgfortran",
+	[AC_MSG_ERROR(libgfortran not found)])
+AC_SUBST(LIBGFORTRAN)
+dnl
 
 ECELL_CHECK_GSL
 if test "$enable_pyecell" = "yes"; then
