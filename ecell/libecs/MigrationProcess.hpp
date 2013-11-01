@@ -170,6 +170,7 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
     void initForces();
     void updateComp();
     void getCompartmentLength();
+    void setCenterPoint();
 
   private:
     String FileName;
@@ -203,6 +204,12 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
     double maxhvecX;
     double maxhvecY;
     double maxhvecZ;
+    double initminX;
+    double initminY;
+    double initminZ;
+    double initmaxX;
+    double initmaxY;
+    double initmaxZ;
     double voxelRadius; 
     double normVoxelRadius; 
     double lengthX;

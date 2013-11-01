@@ -69,6 +69,7 @@ void MigrationProcess::initializeThird()
   delt=dscp[idfrm-1][2];
   timedump(delt);
   setScalingFactor();
+  setCenterPoint();
   initForces();
   updateComp();
 }
@@ -590,10 +591,42 @@ void MigrationProcess::getCompartmentLength()
 {
   voxelRadius = theSpatiocyteStepper->getVoxelRadius();
   normVoxelRadius = theSpatiocyteStepper->getNormalizedVoxelRadius();  
-  Comp* theComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
-  lengthX = theComp->lengthX;
-  lengthY = theComp->lengthY;
-  lengthZ = theComp->lengthZ;
+  Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
+  *theComp = *aComp;
+  lengthX = aComp->lengthX;
+  lengthY = aComp->lengthY;
+  lengthZ = aComp->lengthZ;
+}
+
+void MigrationProcess::setCenterPoint()
+{
+  initminX=hvec[0][0][0];
+  initminY=hvec[0][0][1];
+  initminZ=hvec[0][0][2];
+  initmaxX=hvec[0][0][0];
+  initmaxY=hvec[0][0][1];
+  initmaxZ=hvec[0][0][2];
+  
+  for (int i(0);i<ns;i++)
+    {
+      for (int j(0);j<3;j++)
+        {
+          initminX=std::min(hvec[i][j][0],initminX);
+          initminY=std::min(hvec[i][j][1],initminY);
+          initminZ=std::min(hvec[i][j][2],initminZ);
+          initmaxX=std::max(hvec[i][j][0],initmaxX);
+          initmaxY=std::max(hvec[i][j][1],initmaxY);
+          initmaxZ=std::max(hvec[i][j][2],initmaxZ);    
+        }
+    }
+
+  theComp->lengthX = ((initmaxX-initminX)*scalingFactor)/(2*voxelRadius);
+  theComp->lengthY = ((initmaxY-initminY)*scalingFactor)/(2*voxelRadius);
+  theComp->lengthZ = ((initmaxZ-initminZ)*scalingFactor)/(2*voxelRadius);
+
+  theComp->centerPoint.x = ((initmaxX-initminX)*scalingFactor/2+translate)/(2*voxelRadius);
+  theComp->centerPoint.y = ((initmaxY-initminY)*scalingFactor/2+translate)/(2*voxelRadius);
+  theComp->centerPoint.z = ((initmaxZ-initminZ)*scalingFactor/2+translate)/(2*voxelRadius);
 }
 
 }
@@ -736,3 +769,15 @@ void MigrationProcess::assignEdge()
                             (2*voxelRadius);
 	      }
     }*/
+  /*std::cout<<"minX "<<initminX<<std::endl;
+  std::cout<<"minY "<<initminY<<std::endl;
+  std::cout<<"minZ "<<initminZ<<std::endl;
+  std::cout<<"maxX "<<initmaxX<<std::endl;
+  std::cout<<"maxY "<<initmaxY<<std::endl;
+  std::cout<<"maxZ "<<initmaxZ<<std::endl;
+  std::cout<<"length before scale "<<initmaxX-initminX<<std::endl;
+
+  std::cout<<"length before scale "<<((initmaxX-initminX)*scalingFactor)/2<<std::endl;
+  std::cout<<"cpX "<<theComp->centerPoint.x*(2*voxelRadius)<<std::endl;
+  std::cout<<"cpY "<<theComp->centerPoint.y*(2*voxelRadius)<<std::endl;
+  std::cout<<"cpZ "<<theComp->centerPoint.z*(2*voxelRadius)<<std::endl;*/
