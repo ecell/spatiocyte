@@ -233,7 +233,7 @@
       real(8) Qv(4,4,NSM),Qd(4,4,NSM)!ventral/dorsal stiffness matrices
       real(8) Qe(3,2,3,2,NLM)!edge surface stiffness matrices
       real(8) vldqd(4,NSM),vldqv(4,NSM)!ventral/dorsal load vector
-      real(8) vldqe(3,2,NLM)!edge surface load vector
+      real(8) vldqe(3,2,NSM)!edge surface load vector
 !
 !  Kstif=(2ns+nl x 2ns+nl) stiffness matrix, Kluf in LU decompositon
 !  con=(2ns+nl) concentration vectors, vload=(2ns+nl) load vector
@@ -1399,20 +1399,31 @@ c--edge contributions
       integer icyc,inode
 !
 !--compute the initial gradient field.
+      !do i=1,NSM
+      !print *,'wv',i,wv(i)
+      !enddo
       call cgsmxmul3(gv,Qv,Lc,wv)
       call cgsasmbl3(gv,vldqv,vldc)!gv(in)=gv(in)-vld(in)
+      do i=1,3*NSM
+      !print *,i,  gv(i)
+      enddo
 !--gv is now the residual e.g. gv=Q*wv-vld 
 !
       do inode=1,ns
          dv(inode)=-gv(inode)*C(inode)!init the search direction field.
+         !print *,'gv',inode,gv(inode)
+         !print *,'C',inode,C(inode)
+         !print *,'dv',inode,dv(inode)
       enddo
 !--dv is now the pre-conditioned residual
 !
       del0=0.0
       do inode=1,ns
          del0=del0-dv(inode)*gv(inode)!negative inner prod of dv*gv
+         !print *,inode,dv(inode),gv(inode)
+         !print *,'del0=',del0
       enddo
-!     print *,'del0=',del0
+!      print *,'del0=',del0
 !
       icyc=0!initialize the cycle count
    50 icyc=icyc+1!return here to start a new cycle.
@@ -1430,9 +1441,10 @@ c--edge contributions
       if(ddotf.le.vtiny*vtiny)return!exact solution,(normal but rare).
 !
       tau=del0/ddotf!compute tau
-!     print *,'del0,ddotf,tau=',del0,ddotf,tau
+!      print *,'del0,ddotf,tau=',del0,ddotf,tau
       do inode=1,ns
          wv(inode)=wv(inode)+tau*dv(inode)!new solution vector
+         !print *,'wv',wv(inode)
          gv(inode)=gv(inode)+tau*fv(inode)!new gradient field
       enddo
 !
@@ -1476,17 +1488,24 @@ c--edge contributions
       integer iq, isn,lvn,is,ilv,il,il2,nstack, inode
 !
       vv=0d0
-!--loop over ventral surfaces
+!--loop over ventral surfacs
+      !do i=1,NSM
+      !print *,i,w(i)
+      !enddo
       do iq=1,nq
          do isn=1,4
             nstack=isoq(isn,iq)
             inode=nstack
             wn=w(inode)
+            !print *,inode,wn
             do is=1,4
                vv(is,iq)=vv(is,iq)-Qv(is,isn,iq)*wn
+               !print *,'Qv',Qv(is,isn,iq)
+               !print *,'vv',vv(is,iq)
             enddo
          enddo
       enddo
+      !stop
 !--loop over contact line
       vc=0d0
       do il=1,nl
@@ -1565,6 +1584,7 @@ c--edge contributions
             istack=isoq(isn,iq)
             inode=istack
             C(inode)=C(inode)+Qsv(isn,isn,iq)
+            !print *,'1st C ',inode,C(inode)
          enddo
       enddo
 !--contact line contributions
@@ -1572,11 +1592,13 @@ c--edge contributions
          do isn=1,2
             inode=isol(isn,il) !contact line nodes are ventral
             C(inode)=C(inode)+Lc(isn,isn,il)
+            !print *,'2nd C ',inode,C(inode)
          enddo
       enddo
 !--invert (diagonal) matrix
       do inode=1,ns
          C(inode)=1d0/C(inode)
+         !print *,'last C',inode,C(inode)
       enddo
 !
       return
@@ -1628,8 +1650,10 @@ c--edge contributions
       do inode=1,3*ns
          do jx=1,3
             gvji=gv(jx,inode)
+            !print *,'gvji',gvji
             do ix=1,3
                dv(ix,inode)=dv(ix,inode)-C(ix,jx,inode)*gvji
+               !print *,'dv',dv(ix,inode)
             enddo
          enddo
       enddo
@@ -1638,6 +1662,7 @@ c--edge contributions
       do inode=1,3*ns
          do ix=1,3
             del0=del0-dv(ix,inode)*gv(ix,inode)!negative inner prod of dv*gv
+            !print *,del0,' ',dv(ix,inode),' ',gv(ix,inode)
          enddo
       enddo
 !
@@ -1657,6 +1682,7 @@ c--edge contributions
       do inode=1,3*ns
          do ix=1,3
             ddotf=ddotf+dv(ix,inode)*fv(ix,inode)
+            !print *,'ddotf',ddotf
          enddo
       enddo
 !     print *,'ddotf',ddotf
@@ -1761,6 +1787,8 @@ c--edge contributions
                   do jx=1,3
                      vv(jx,js,iq)=vv(jx,js,iq)-
      1                            Lv(jx,js,inx,isn,iq)*wni
+                     !print *,'wni', w(inx,inode)
+                     !print *,'vv ',vv(inx,isn,iq)
                   enddo
                enddo
             enddo
@@ -1824,6 +1852,7 @@ c--edge contributions
                inode=(nstack-1)*3+lvn
                do inx=1,3
                   vn(inx,inode)=vn(inx,inode)-vq(inx,lvn,isn,iq)
+                  !print *,'vn ',vn(inx,inode)
                enddo
             enddo
          enddo
@@ -1835,6 +1864,7 @@ c--edge contributions
             inode=(nstack-1)*3+1
             do inx=1,3
                vn(inx,inode)=vn(inx,inode)-vv(inx,isn,iq)
+               !print *,'vv ',vv(inx,isn,iq)
             enddo
             inode=(nstack-1)*3+3
             do inx=1,3
@@ -1890,6 +1920,7 @@ c--edge contributions
                   do jx=1,3
                      C(jx,ix,inode)=C(jx,ix,inode)+
      1                              Q(jx,lvn,isn,ix,lvn,isn,iq)
+                     !print *,  Q(jx,lvn,isn,ix,lvn,isn,iq)
                   enddo
                enddo
             enddo
@@ -1948,10 +1979,17 @@ c--edge contributions
 !--determinant 
          ddet=1d0/(C(1,1,inode)*cofac(1,1)+C(2,1,inode)*cofac(2,1)+
      1                                     C(3,1,inode)*cofac(3,1))
+         !print *,C(1,1,inode)
+         !print *,cofac(1,1)
+         !print *,C(2,1,inode)
+         !print *,cofac(2,1)
+         !print *,C(3,1,inode)
+         !print *,cofac(3,1)
 !--invert conditioning matrix
          do jx=1,3
             do ix=1,3
                C(ix,jx,inode)=ddet*cofac(jx,ix)
+               !print *,ddet
             enddo
          enddo
       enddo

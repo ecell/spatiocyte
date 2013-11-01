@@ -1,5 +1,5 @@
       MODULE iolibsw
-      USE iso_c_binding
+      USE ISO_C_BINDING
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 ! This module takes care of the I/O and of all the preliminary 
@@ -28,7 +28,7 @@
 !
 ! fixed parameters used for setting arithmetic roundoff control
       real(8),parameter::zero=0d0,tiny=1.0d-16,vtiny=1.0d-32
-      real(8),parameter::one=1d0,big=1.0d+16,vbig=1.0d+32
+      real(c_double),bind(C)::one=1d0,big=1.0d+16,vbig=1.0d+32
       real(8),parameter::half=0.5d0,quarter=0.25d0,two=2d0 
 !
 !-- Three Gauss point quadrature weight parameters 5/9,8/9,5/9
@@ -47,10 +47,10 @@
       character(len=66),dimension(NDM)::heads!=descriptor-headings.
       character(len=11),dimension(NKD,NDM)::names!descriptor-names.
       real(c_double),dimension(NKN,3,NSM),bind(C)::hvec=0!node hard vectors
-      real(8),dimension(NKS,3,NSM)::svec=0!node soft vectors
+      real(c_double),dimension(NKS,3,NSM),bind(C)::svec=0!node soft vectors
       real(8),dimension(NKL,NSM)::dvec=0!dorsal surface vectors.
       real(8),dimension(NKL,NSM)::vvec=0!ventral surface vectors.
-      real(8),dimension(NKL,NLM)::evec=0!edge vectors.
+      real(c_double),dimension(NKL,NLM),bind(C)::evec=0!edge vectors.
       real(c_double),dimension(NKD,NDM),bind(C)::dscp=0!descriptive vectors 
       integer(C_INT),dimension(4,NSM),bind(C)::isoq=0!index of ith stack of Qj
       integer(C_INT),dimension(2,NLM),bind(C)::isol=0!index of ith stack of Lj
@@ -68,7 +68,7 @@
       integer,dimension(NSM)::iloq=0!index of ith-L of Q_j
       integer,dimension(2,NLM)::ilol=0!index of neighbors of L_j
       integer,dimension(2,NSM)::ilos=0!index of edge neighbors stack j
-      integer,dimension(NLM)::iqol=0!index of Q interior to L_j
+      integer(C_INT),dimension(NLM),bind(C)::iqol=0!index of Q interior to L_j
       integer,dimension(NSM)::isos=0!index of stack interior to stack
       integer(C_INT),dimension(NSM),bind(C)::kqos=0!number of elements containing stack 
       integer(C_INT),dimension(NSM),bind(C)::iqos=0!starting point in lqos list for stack
@@ -137,11 +137,7 @@
       real(8),dimension(0:2,NLM)::cnn=0 !contact line normal at isol(1,il)
 ! line length, nx, ny (nz=0 because in plane).
 !
-      real(8),dimension(3,3,NSM)::vtg1=0!1st unit volume tangent vector
-      real(8),dimension(3,3,NSM)::vtg2=0!2nd unit volume tangent vector
-!
-      real(8),dimension(NLM)::ca=0!contact angle at node isol(1,il)
-!
+! x-y coord, line number corresponding to isol(1,il)
 ! idxxx = position of relevant parameters in descriptors dscp(:,idxxx)
       integer ::idmsh=0!index of 'MESH' descriptors
       integer(C_INT),bind(C)::idfrm=0!index of 'FRAME' descriptors
@@ -189,24 +185,24 @@
       real(8),dimension(NKS,NSM)::vxval=0!ext value at ventral surface
       real(8),dimension(NKS,NSM)::dxval=0!ext value at dorsal surface
       real(8),dimension(NKS,NLM)::exval=0!ext value at edge surface
-      real(8),dimension(NKS,NLM)::cxval=0!ext value at contact line (surf dif)
+      real(c_double),dimension(NKS,NLM),bind(C)::cxval=0!ext value at contact line (surf dif)
       real(8),dimension(NKS,NSM)::vxprm=0!permeability at ventral surf
       real(8),dimension(NKS,NSM)::dxprm=0!permeability at dorsal surf
       real(8),dimension(NKS,NLM)::exprm=0!permeability at edge surf
-      real(8),dimension(NKS,NLM)::cxprm=0!permeability at contact line (surf dif)
+      real(c_double),dimension(NKS,NLM),bind(C)::cxprm=0!permeability at contact line (surf dif)
 !
 !  Momentum
-      real(8),dimension(3,NSM)::vis=0!network shear viscosity
+      real(c_double),dimension(3,NSM),bind(C)::vis=0!network shear viscosity
       real(8),dimension(3,NSM)::lam=0!network pure dilation viscosity
-      real(8),dimension(3,NSM)::phi=0!network-solvent friction coefficent
-      real(8),dimension(3,NSM)::psi=0!network contractility
+      real(c_double),dimension(3,NSM),bind(C)::phi=0!network-solvent friction coefficent
+      real(c_double),dimension(3,NSM),bind(C)::psi=0!network contractility
       real(8),dimension(3,3,NSM)::bfr=0!network bodyforce vector
 !--surface tension
       real(8),dimension(NSM)::gamv=0!ventral
       real(8),dimension(NSM)::gamd=0!dorsal
       real(8),dimension(NLM)::game=0!edge
 !--fixed boundary velocities (xyz component, element or edge index)
-      real(8),dimension(3,NSM)::vfixv=0!ventral
+      real(c_double),dimension(3,NSM),bind(C)::vfixv=0!ventral
       real(8),dimension(3,NSM)::vfixd=0!dorsal
       real(8),dimension(3,NLM)::vfixe=0!edge
 ! external velocity components x,y,z at boundary (used if vfix ne 0)
@@ -244,7 +240,7 @@
       CONTAINS!the following are the subroutines of the io module
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+!
       subroutine iowrfile(ifrm,idiv)
 !
 ! Archives to disk a simulation file
@@ -463,7 +459,7 @@ c--write DATA DEFINED ON VERTEX NODES
          print *,'too many descriptors: nd, NDM',nd,NDM
          stop
       endif
-      time_=dscp(01,idfrm)!current value of time_ 
+      time_=dscp(01,idfrm)!current value of time 
       tstp=max(dscp(02,idfrm),tiny)!starting value of tstp ne.0
 !
 !--FORMAT STATEMENTS
@@ -705,7 +701,7 @@ c--write DATA DEFINED ON VERTEX NODES
 !
       implicit none
 !
-      integer istack,iq,isq,k,i!,z,zz
+      integer istack,iq,isq,k
 !
       k=1
       do istack=1,ns !loop over stacks
@@ -721,13 +717,7 @@ c--write DATA DEFINED ON VERTEX NODES
             enddo
          enddo
       enddo
-      !do i=1,4
-      !z=iqos(isoq(i,0))
-      !zz=kqos(z)
-     
-      !print*,'sngsklgnskfbsjkdfsdklfnsldkf',zz
-      !enddo
-!     
+!
       return
       end subroutine goqostop
 !
@@ -754,10 +744,6 @@ c--write DATA DEFINED ON VERTEX NODES
       call govnn(nxyz)
 ! compute contact line normals
       call gocnn(nxyz)
-! compute orthogonal pairs of (volume) tangent vectors for each surface node
-      call govtg(nxyz)
-! compute contact angles
-      call goca(nxyz)
 !
       return
       end subroutine godriver
@@ -1909,8 +1895,8 @@ c--write DATA DEFINED ON VERTEX NODES
 !
 !  given a point with coordinates x,y,z, and the nearest edge node ismin,
 !  lvmin=3, the subroutine searches the mesh for the quad surface element 
-!  kq nearest to it, returns the intrinsic coordinates xiq,etaq, of the 
-!  position on the surface closest to the point, and the distance DD. 
+!  kq nearest to it, returns the intrinsic coordinates xiq,etaq, of the position
+!  on the surface closest to the point, and the distance DD. 
 !
       implicit none
 !
@@ -2893,116 +2879,13 @@ c--contribution of this GP to 12 nodes
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
-      subroutine govtg(nxyz)
-!
-!  for every surface nodes, this subroutine computes a pair
-!  of orthogonal volume tangent vectors 
-!
-      implicit none
-!
-      real(8) nxyz(3,3,NSM) 
-!             xyz positions of nodes at levels 1,2,3; stacks 1-NSM
-!
-      integer isn,lvn
-      real(8) tgx, tgy, tgz,dtgnorm
-!
-      do isn=1,ns
-         if (ilos(1,isn).eq.0) then!not an edge stack
-            do lvn=1,3,2 !dorsal and surface nodes
-! pick which one of the x and y axis most perpendicular to
-               if (abs(vnn(1,lvn,isn)).lt.abs(vnn(2,lvn,isn))) then
-! vtg1 = vnn x e_x
-                  tgy=vnn(3,lvn,isn)
-                  tgz=-vnn(2,lvn,isn)
-                  dtgnorm=1d0/(sqrt(tgy*tgy+tgz*tgz))
-                  vtg1(1,lvn,isn)=0d0
-                  vtg1(2,lvn,isn)=tgy*dtgnorm
-                  vtg1(3,lvn,isn)=tgz*dtgnorm
-               else
-! vtg1 = vnn x e_y
-                  tgx=-vnn(3,lvn,isn)
-                  tgz=vnn(1,lvn,isn)
-                  dtgnorm=1d0/(sqrt(tgx*tgx+tgz*tgz))
-                  vtg1(1,lvn,isn)=tgx*dtgnorm
-                  vtg1(2,lvn,isn)=0d0
-                  vtg1(3,lvn,isn)=tgz*dtgnorm
-               endif
-! vtg2 = vnn x utg1
-               vtg2(1,lvn,isn)=+vnn(2,lvn,isn)*vtg1(3,lvn,isn)
-     1                         -vnn(3,lvn,isn)*vtg1(2,lvn,isn)
-               vtg2(2,lvn,isn)=-vnn(1,lvn,isn)*vtg1(3,lvn,isn)
-     1                         +vnn(3,lvn,isn)*vtg1(1,lvn,isn)
-               vtg2(3,lvn,isn)=+vnn(1,lvn,isn)*vtg1(2,lvn,isn)
-     1                         -vnn(2,lvn,isn)*vtg1(1,lvn,isn)
-            enddo
-         else !it is an edge stack
-            do lvn=1,3 !all three nodes on boundary
-               tgx=vnn(2,lvn,isn)
-               tgy=-vnn(1,lvn,isn)
-               dtgnorm=1d0/(sqrt(tgx*tgx+tgy*tgy))
-! vtg1 = vnn x e_z
-               vtg1(1,lvn,isn)=tgx*dtgnorm
-               vtg1(2,lvn,isn)=tgy*dtgnorm
-               vtg1(3,lvn,isn)=0d0
-            enddo
-         endif
-      enddo
-!
-      return
-      end subroutine govtg
-!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!
-      subroutine goca(nxyz)
-!
-! This subroutine computes the contact angle for each contact line node
-!
-      implicit none
-!
-      real(8) nxyz(3,3,NSM) 
-!             xyz positions of nodes at levels 1,2,3; stacks 1-NSM
-!
-      real(8),parameter::pi=3.141592d0
-      real(8) vnodes(3,3)  !v at nodes (component,level)
-      real(8) tg(3) !tangent vector
-      real(8) v(3),  d2vdzeta2(3) 
-      real(8) tgdotcnn,tgxy,tgz
-      integer il,is 
-!
-      do il=1,nl
-         is=isol(1,il)
-         vnodes(:,:)=nxyz(:,:,is)
-         call getv3(vnodes,-1d0,v,tg,d2vdzeta2)
-!--dot product with outward normal
-         tgdotcnn=tg(1)*cnn(1,il)+tg(2)*cnn(2,il)
-         tgxy=sqrt(tg(1)**2+tg(2)**2)
-         tgz=tg(3)
-         if (tgdotcnn.ge.0d0) then
-            if (tgz.ge.0d0) then
-               ca(il)=0.5d0*pi+atan(tgxy/(tgz+vtiny))
-            else
-               ca(il)=pi+atan(abs(tgz)/(tgxy+vtiny))
-            endif
-         else
-            if (tgz.ge.0d0) then
-               ca(il)=atan(tgz/(tgxy+vtiny))
-            else
-               ca(il)=-atan(abs(tgz)/(tgxy+vtiny))
-            endif
-         endif
-      enddo
-!
-      return
-      end subroutine goca               
-!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! 
-      subroutine govolint(cnode,volint)
+      subroutine govolint(cnode,volint) bind(C)
 !
 !--the routine computes the volume integral volint of scalar field cnode
 !
       implicit none
-      real(8) cnode(3,NSM),volint
+      real(c_double),dimension(3,NSM)::cnode
+      real(c_double)::volint
       real(8) fac
       integer iq,isg,lvg,isn,ksn,lvn
 !
@@ -3028,14 +2911,18 @@ c--contribution of this GP to 12 nodes
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
-      subroutine gosurfintn(cnode,surfintv,surfintd,surfinte)
+      subroutine gosurfintn(cnode,surfintv,surfintd,surfinte) bind(C)
 !
 !--this subroutine computes the dorsal, ventral, and edge surface 
 !   integral of a node field cnode.
-!   
-      real(8) cnode(3,NSM)
-      real(8) surfintd,surfintv,surfinte
+!      
+      implicit none
+      real(c_double),dimension(3,NSM)::cnode
+      real(c_double)::surfintd
+      real(c_double)::surfintv
+      real(c_double)::surfinte
       real(8) dAdn, dAvn, dAen
+      integer iq,isn,ksn,il,isg,lvg,lvn
 !
       surfintd=0.0d0
       surfintv=0.0d0
@@ -3219,7 +3106,7 @@ c--contribution of this GP to 12 nodes
       nvec(1:2,1:ns)=hvec(1:2,1,1:ns)
 !
       write(idiv,200)ifrm,mshtitle!write the frame# and title
-      dscp(1,idfrm)=time_
+      dscp(1,idfrm)=time
       dscp(2,idfrm)=tstp
 !
       write(idiv,210)score,score,score,score,score,score

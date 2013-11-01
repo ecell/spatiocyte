@@ -11,7 +11,7 @@
 
       CONTAINS
 
-      subroutine extractnumeric(ipf,idot) bind(C)
+      subroutine extractnumeric1(ipf,idot) bind(C)
       use iso_c_binding
       implicit none
       integer(C_INT)::idot
@@ -30,9 +30,9 @@
      1      (iachar(fnum(2:2))-48)*10+
      2       iachar(fnum(3:3))-48
       print *,'isuff=',isuff
-      end subroutine extractnumeric
+      end subroutine extractnumeric1
 
-      subroutine openfile(ipf,idiv,idot) bind(C)
+      subroutine openfile1(ipf,idiv,idot) bind(C)
       use iso_c_binding
       implicit none
       integer(C_INT)::idiv,idot
@@ -54,9 +54,9 @@
       datafile=newipf
       datafile(idot+1:idot+3)='dat'
       open(31,file=datafile,status='new')
-      end subroutine openfile
+      end subroutine openfile1
   
-      subroutine wrfile(idiv,isve,ipf,idot,delt,logInt) bind(C)
+      subroutine wrfile1(idiv,isve,ipf,idot,delt,logInt) bind(C)
       use iso_c_binding
       implicit none
       integer(C_INT),bind(C)::idiv,isve,idot
@@ -99,10 +99,10 @@
            endif
         endif
    90 format(i3.3)
-      end subroutine wrfile
+      end subroutine wrfile1
   
 
-      subroutine timedump(delt,logInt) bind(C)
+      subroutine timedump1(delt,logInt) bind(C)
       use iso_c_binding
       implicit none
       real(c_double)::delt,logInt
@@ -134,7 +134,7 @@ c--look for current dump position
          tnext=time_+logInt
       endif
       print *,'tnext,tstop',tnext,tstop
-      end subroutine timedump
+      end subroutine timedump1
 
       subroutine initsvec() bind(C)
       USE iolibsw
@@ -182,7 +182,7 @@ c--look for current dump position
       cnt = surfintv+surfintd+surfinte
       end subroutine getSurfaceMolecules
 
-      subroutine clchm(area) bind(C)
+      subroutine clchm1(area) bind(C)
       use iolibsw
       use iso_c_binding
       real(c_double)::area
@@ -280,7 +280,7 @@ c     1        "PIP2:",int(PIP2*area)
             endif
          enddo
       enddo
-      end subroutine clchm
+      end subroutine clchm1
 
       subroutine chksurmol() bind(C)
       use iso_c_binding

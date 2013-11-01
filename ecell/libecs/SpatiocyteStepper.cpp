@@ -1126,8 +1126,8 @@ void SpatiocyteStepper::setLatticeProperties()
 
 void SpatiocyteStepper::rotateCompartment(Comp* aComp)
 {
-  Point min = {-aComp->lengthX/2, -aComp->lengthY/2, -aComp->lengthZ/2};
-  Point max = {aComp->lengthX/2, aComp->lengthY/2, aComp->lengthZ/2};
+  Point min(-aComp->lengthX/2, -aComp->lengthY/2, -aComp->lengthZ/2);
+  Point max(aComp->lengthX/2, aComp->lengthY/2, aComp->lengthZ/2);
   rotateX(aComp->rotateX, &min);
   rotateY(aComp->rotateY, &min);
   rotateZ(aComp->rotateZ, &min);
@@ -1875,6 +1875,12 @@ unsigned SpatiocyteStepper::global2coord(unsigned aGlobalRow,
                                              unsigned aGlobalLayer,
                                              unsigned aGlobalCol)
 {
+  /*std::cout<<"inrow "<<aGlobalRow<<std::endl;
+  std::cout<<"inlayer "<<aGlobalLayer<<std::endl;
+  std::cout<<"incol "<<aGlobalCol<<std::endl;
+  std::cout<<"theRowsize "<<theRowSize<<std::endl;
+  std::cout<<"theLayersize "<<theLayerSize<<std::endl;
+  std::cout<<"returnvalue "<<aGlobalRow+theRowSize*aGlobalLayer+theRowSize*theLayerSize*aGlobalCol<<std::endl;*/
   return aGlobalRow+theRowSize*aGlobalLayer+theRowSize*theLayerSize*aGlobalCol;
 }
 
@@ -1886,6 +1892,7 @@ void SpatiocyteStepper::point2global(Point aPoint,
   double row(0);
   double layer(0);
   double col(0);
+      //std::cout<<"inSS1"<<std::endl;
   switch(LatticeType)
     {
     case HCP_LATTICE: 
@@ -1901,6 +1908,9 @@ void SpatiocyteStepper::point2global(Point aPoint,
       row = rint(aPoint.z/(2*theNormalizedVoxelRadius));
       break;
     }
+  //std::cout<<"inrow "<<aGlobalRow<<std::endl;
+  //std::cout<<"inlayer "<<aGlobalLayer<<std::endl;
+ // std::cout<<"incol "<<aGlobalCol<<std::endl;
   if(row < 0)
     {
       row = 0;
@@ -1913,9 +1923,13 @@ void SpatiocyteStepper::point2global(Point aPoint,
     {
       col = 0;
     }
+  //std::cout<<"row "<<row<<std::endl;
+  //std::cout<<"layer "<<layer<<std::endl;
+  //std::cout<<"col "<<col<<std::endl;
   aGlobalRow = (unsigned)row;
   aGlobalLayer = (unsigned)layer;
   aGlobalCol = (unsigned)col;
+  //std::cout<<"inSS3"<<std::endl;
   if(aGlobalCol >= theColSize)
     {
       aGlobalCol = theColSize-1;
@@ -1928,6 +1942,7 @@ void SpatiocyteStepper::point2global(Point aPoint,
     {
       aGlobalLayer = theLayerSize-1;
     }
+  //std::cout<<"inSS4"<<std::endl;
 }
 
 void SpatiocyteStepper::coord2global(unsigned aCoord,

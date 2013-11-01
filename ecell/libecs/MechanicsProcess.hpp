@@ -40,21 +40,21 @@
 
 namespace libecs
 {
-  extern "C" void extractnumeric(char *ipf, int &idot);
-  extern "C" void openfile(char *ipf,int &idiv,int &idot);
-  extern "C" void timedump(double &delt,double &logInt);
+  extern "C" void extractnumeric1(char *ipf, int &idot);
+  extern "C" void openfile1(char *ipf,int &idiv,int &idot);
+  extern "C" void timedump1(double &delt,double &logInt);
   extern "C" int idfrm,idphi,idvis,idvfx,idgam,idpsi,idsfr,idbfr,iddrg,
                  idtrc,idhyc,nq,nl,isoq[][4],isol[][2],ns;
   extern "C" double dscp[][12],hvec[][3][12];
   extern "C" void initsvec();
   extern "C" void openunit12();
   extern "C" void initarea(double &area);
-  extern "C" void clchm(double &area);
+  extern "C" void clchm1(double &area);
   extern "C" void cmstpsiz(double *tstep, double &j);
   extern "C" double tnext,time_,tstop,tstp;
   extern "C" void dfdriver(const char *eul);
   extern "C" void chksurmol();
-  extern "C" void wrfile(int &k,int &isve, char *ipf,int &idot, 
+  extern "C" void wrfile1(int &k,int &isve, char *ipf,int &idot, 
                          double &delt, double &logInt);
 
   LIBECS_DM_CLASS(MechanicsProcess, SpatiocyteProcess)

@@ -106,6 +106,10 @@ typedef ProcessPriorityQueue::ID ProcessID;
 
 struct Point 
 {
+  Point(const double a=0, const double b=0, const double c=0):
+  x(a),
+  y(b),
+  z(c) {}
   double x;
   double y;
   double z;
@@ -197,6 +201,30 @@ struct Origin
   long col;
 };
 
+/*struct Vector
+{
+  Vector(const double a=0, const double b=0, const double c=0):
+  x(a),
+  y(b),
+  z(c) {}
+  double x;
+  double y;
+  double z;
+};
+
+struct Quad
+{
+  Quad(const Vector A,const Vector B,const Vector C,const Vector D):
+  a(A.x,A.y,A.z),
+  b(B.x,B.y,B.z),
+  c(C.x,C.y,C.z),
+  d(D.x,D.y,D.z) {}
+  Vector a; 
+  Vector b;
+  Vector c;
+  Vector d;
+};*/
+
 /*
 struct Bend
 {
@@ -239,4 +267,29 @@ struct Subunit
 
 }
 
-#endif /* __SpatiocyteCommon_hpp */
+#endif /* __SpatiocyteCommo
+Furnishing : Partly Furnished
+Availability Date :
+Posted Date : 2013-09-13
+Facilities :
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ADVERTISEMENT
+
+
+
+
+LOCATION MAPn_hpp */

@@ -69,12 +69,12 @@ void MechanicsProcess::initializeThird()
   if(idot<=0 || idot>20)
   std::cout<<"invalid inputfile name"<<std::endl;
 
-  extractnumeric(ipf,idot);
-  openfile(ipf,id1,idot);
+  extractnumeric1(ipf,idot);
+  openfile1(ipf,id1,idot);
   logInt = 0;
   delt=dscp[idfrm-1][2];
   logInt=dscp[idfrm-1][3];
-  timedump(delt,logInt);
+  timedump1(delt,logInt);
 	assignQuad();
 	assignEdge();
   assignNeigh();
@@ -142,7 +142,7 @@ void MechanicsProcess::initializeThird()
   initsvec();
   idebug=1;
   initarea(area);
-  clchm(area);
+  clchm1(area);
   cmstpsiz(cmdt,id3);
   tstp=std::min(cmdt[1],cmdt[3]);
   if(tstp>=(tnext-time_))
@@ -168,9 +168,9 @@ void MechanicsProcess::initializeFifth()
 void MechanicsProcess::fire()
 {
   chksurmol();
-  wrfile(id2,isve,ipf,idot,delt,logInt);
+  wrfile1(id2,isve,ipf,idot,delt,logInt);
   initarea(area);
-  clchm(area);
+  clchm1(area);
   cmstpsiz(cmdt,id3);
   tstp=std::min(cmdt[1],cmdt[3]);
   if(tstp>=(tnext-time_))

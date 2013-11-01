@@ -77,7 +77,8 @@ SpatiocyteTauLeapProcess.cpp\
 LifetimeLogProcess.cpp\
 MicrotubuleProcess.cpp\
 MultiscaleReactionProcess.cpp\
-MechanicsProcess.cpp
+MechanicsProcess.cpp\
+MigrationProcess.cpp
 
 RANDOMLIB_INC=$(RANDOMLIB)/include/RandomLib
 randomdir=$(ECELL_INCLUDE_DIR)/RandomLib
@@ -164,7 +165,8 @@ MicrotubuleProcess.hpp\
 MultiscaleReactionProcess.hpp\
 SpatiocyteVisualizer.hpp\
 SpatiocyteDebug.hpp\
-MechanicsProcess.hpp
+MechanicsProcess.hpp\
+MigrationProcess.hpp
 
 
 noinst_HEADERS=\

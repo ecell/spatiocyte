@@ -48,8 +48,7 @@
       character(kind=c_char,len=1),dimension(18),intent(in)::oldopt !choices are "eul" or "lag"
       character(len=10)::opt
       integer,save::ichk=-1
-      integer::i
-!     
+!
       real(8) con(3*NSM),difcon ! node concentrations, diff. coeff.
 !
 !--volume diffusion arrays:
@@ -75,7 +74,6 @@
       real(8) C(NSM*3)! stiffness matrix conditioner
 !
       integer kom, nskind, js,jl,inode,il,k
-
       opt=" "
       loop_string: do i=1, 10
       if ( oldopt(i) == c_null_char ) then
@@ -84,7 +82,9 @@
          opt (i:i) = oldopt(i)
       end if
       end do loop_string
-!     
+
+      !print *,opt
+!
 !--do two checks to see if further calculation is necessary
       if(idsdc.le.0)return!no diffusion descriptors
       if(tstp.le.vtiny)return!no time interval  
@@ -112,6 +112,7 @@
          else
             con=0d0! initialize concentration vector
 !--nskind=1, volume variable, do volume diffusion
+            !print *,'nskind',nskind
             if (nskind.eq.1) then
                call dfbdymat(Lv,Ld,Le,kom)!assemble bdy permeability mx
                call dfqesmat(Qs,kom)!assemble Qs=stiffness mx
@@ -123,6 +124,7 @@
                   do jl=1,3
                      inode=(js-1)*3+jl
                      con(inode)=svec(kom,jl,js)
+                     !print *,js,'     ',con(inode)
                   enddo
                enddo
 !
@@ -141,6 +143,7 @@
      1                          con(inode),jl,js,kom
                      endif
                      svec(kom,jl,js)=max(con(inode),vtiny)
+                     !print *,js,'   ', svec(kom,jl,js)
                   enddo
                enddo
 !
@@ -172,8 +175,8 @@
 !
                do inode=1,2*ns+nl
                   if (con(inode).lt.0.0) then
-                     !print *,'negative surface concentration,inode,kom',
-                    !         con(inode),inode,kom
+!                     print *,'negative surface concentration,inode,kom',
+!     1                        con(inode),inode,kom
                   endif
                enddo 
 !--replace svec(kom,:,:) with new concentrations
@@ -201,6 +204,7 @@
                do js=1,ns
                   inode=js
                   con(inode)=svec(kom,1,js)
+                  !print *,inode,con(inode)
                enddo
 !--Solve for con(in) at t=t+dt [existing field will be overwritten!] 
 !
@@ -219,6 +223,7 @@
                do js=1,ns
                   inode=js
                   svec(kom,1,js)=max(con(inode),vtiny)
+                  !print *,'nskind3','  ',js,'  ',svec(kom,1,js)
                enddo
             endif
          endif
@@ -553,7 +558,9 @@ c--loop over j and k nodes by stack and level
       integer il,iq,isn,istack,lvn,ks,kl,js,jl
 !
       DC=dscp(kom,idsdc)!load diffusion const of svec(kom,*)
+      !print *,'DC',DC
       QDCOF=DC*tstp!diffusion const x time step.
+      !print *,'QDCOF',QDCOF
 !--ventral/dorsal
       do iq=1,nq
          DKv=0d0
@@ -561,11 +568,14 @@ c--loop over j and k nodes by stack and level
          do isn=1,4
             istack=isoq(isn,iq)
             DKv=DKv+0.25*sdkr(kom,1,istack)
+            !print *,'DKv',DKv
          enddo
          QMCOFv=1d0-DKv*tstp!1.0-decay rate x time step.
+         !print *,'QMCOFv',QMCOFv
          do ks=1,4
             do js=1,4
                Qsv(js,ks,iq)=QMCOFv*Qmv(js,ks,iq)+QDCOF*Qdv(js,ks,iq)
+               !print *,'Qsv',Qsv(js,ks,iq)
             enddo
          enddo
       enddo
@@ -664,6 +674,7 @@ c--loop over j and k nodes by stack and level
       Lc=0d0
       do il=1,nl
          Fc=cxprm(kom,il)*tstp
+         !print *,'Fc',il,kom,Fc,cxprm(kom,il),tstp
          Ladd=0.25d0*cnn(0,il)*Fc
          Lc(1,1,il)=Ladd
          Lc(2,1,il)=Ladd
@@ -957,12 +968,11 @@ c--loop over j and k nodes by stack and level
 ! This subroutine generates a timestep recommendation for
 ! svec evolution based on second derivative estimates
 ! i.e. sdot/sddot
-!     
-      use iso_c_binding
+!
       implicit none
 ! 
-      real(c_double),bind(C)::tstep(12)
-      real(c_double),bind(C)::accu
+      real(c_double)::tstep(NKN)
+      real(c_double)::accu
 !
       real(8),save::svec0(NKN,3,NSM)=0d0
       real(8),save::svec1(NKN,3,NSM)=0d0
@@ -972,6 +982,9 @@ c--loop over j and k nodes by stack and level
 !
       integer is,ilv,k,il,nskind,ismin3
       real(8) d2sdt2, dsdt, s0, step
+      !do i=1,12
+      !print *,tstep(i)
+      !enddo
 !
 ! shift 1 -> 2; 0 -> 1; current -> 0
       t2=t1
