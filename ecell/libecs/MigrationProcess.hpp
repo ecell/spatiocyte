@@ -134,13 +134,9 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
       {
         SpatiocyteProcess::initializeFirst();
         theComp = new Comp;
-        //theVacantSpecies->setIsCompVacant();
-        //theVacantSpecies->setIsOffLattice();
         theVacantSpecies->setComp(theComp);
         for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
           {
-            //theVacantCompSpecies[i]->setIsOffLattice();
-            //setVacantSpecies must be declared here since it needs
             //to be overwritten by DiffusionProcess in initializeSecond:
             theVacantCompSpecies[i]->setVacantSpecies(theVacantSpecies);
             theVacantCompSpecies[i]->setComp(theComp);
@@ -152,9 +148,6 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
     virtual void fire();
     virtual bool isOnAboveSurface(Point&,Point&,double&);
     virtual bool isOnBelowSideSurface(Point&,Point&,Point&,Point&);
-    //void assignQuad();
-		//void assignEdge();
-    //void assignNeigh();
     void setScalingFactor();
     void constructComp();
     void getBox(std::vector<Point>&,Point&,Point&);
@@ -171,6 +164,11 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
     void updateComp();
     void getCompartmentLength();
     void setCenterPoint();
+    void populateMolecules();
+    void advectSurfaceMolecule(Species*,unsigned);
+    void replaceMolecules(std::vector<unsigned>,std::vector<unsigned>,Voxel*,
+                         Voxel*,Species*,unsigned);
+    unsigned getSurfaceAdjCoord(unsigned);
 
   private:
     String FileName;
@@ -219,10 +217,6 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
     double scalingFactor;
     double translate;
     std::vector<unsigned> surfaceCoords;
-    std::vector<unsigned>row;
-    std::vector<unsigned>col;
-    std::vector<unsigned>lay;
-    std::vector<unsigned>corn;
     std::vector<Species*> theVacantCompSpecies;
     std::vector<std::vector<int> > quadIndex;
     std::vector<std::vector<int> > edgeIndex;

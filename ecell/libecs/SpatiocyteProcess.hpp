@@ -299,6 +299,14 @@ public:
     {
       return theID;
     }
+  Species* getSpecies(const Voxel* aVoxel) const
+    {
+      return theSpecies[getID(aVoxel)];
+    }
+  Species* getSpecies(const Voxel& aVoxel) const
+    {
+      return theSpecies[getID(aVoxel)];
+    }
 protected:
   String getIDString(Voxel*) const;
   String getIDString(Species*) const;

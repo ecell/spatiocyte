@@ -1587,6 +1587,11 @@ public:
       theMolecules[theMoleculeSize-1] = aVoxel;
       theVariable->setValue(theMoleculeSize);
     }
+  void softReplaceMolecule(const unsigned index, Voxel* aVoxel)
+    {
+      theMolecules[index] = aVoxel;
+      aVoxel->idx = index+theStride*theID;
+    }
   void addMoleculeDirect(Voxel* aVoxel)
     {
       Tag aTag = {0, 0, 0, 0, 0};
@@ -2405,6 +2410,19 @@ public:
       for(unsigned i(0); i != theMoleculeSize; ++i)
         {
           (*theCompVoxels)[i]->idx = theVacantID*theStride;
+        }
+      theMoleculeSize = 0;
+      theCompVoxels->resize(0);
+      theVariable->setValue(0);
+    }
+  void clearEmptyCompVoxels()
+    {
+      for(unsigned i(0); i != theMoleculeSize; ++i)
+        {
+          if(getID((*theCompVoxels)[i]) == getID())
+            {
+              (*theCompVoxels)[i]->idx = theVacantID*theStride;
+            }
         }
       theMoleculeSize = 0;
       theCompVoxels->resize(0);

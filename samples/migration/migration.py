@@ -18,14 +18,24 @@ theSimulator.createEntity('Variable', 'Variable:/Surface:DIMENSION').Value = 2
 theSimulator.createEntity('Variable', 'Variable:/Surface:VACANT')
 theSimulator.createEntity('Variable', 'Variable:/Surface:A').Value = 500
 theSimulator.createEntity('Variable', 'Variable:/Surface:As').Value = 0
-theSimulator.createEntity('Variable', 'Variable:/:B').Value = 0
+#theSimulator.createEntity('Variable', 'Variable:/:B').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/:C').Value = 1000
+theSimulator.createEntity('Variable', 'Variable:/:D').Value = 0
+theSimulator.createEntity('Variable', 'Variable:/:E').Value = 0
+theSimulator.createEntity('Variable', 'Variable:/:F').Value = 0
+theSimulator.createEntity('Variable', 'Variable:/:G').Value = 0
+theSimulator.createEntity('Variable', 'Variable:/:H').Value = 0
 
 logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:logger')
 logger.VariableReferenceList = [['_', 'Variable:/Surface:A']]
 logger.VariableReferenceList = [['_', 'Variable:/Surface:As']]
-logger.VariableReferenceList = [['_', 'Variable:/:B']]
+#logger.VariableReferenceList = [['_', 'Variable:/:B']]
 logger.VariableReferenceList = [['_', 'Variable:/:C']]
+logger.VariableReferenceList = [['_', 'Variable:/:D']]
+logger.VariableReferenceList = [['_', 'Variable:/:E']]
+logger.VariableReferenceList = [['_', 'Variable:/:F']]
+logger.VariableReferenceList = [['_', 'Variable:/:G']]
+logger.VariableReferenceList = [['_', 'Variable:/:H']]
 logger.VariableReferenceList = [['_', 'Variable:/:Vacant']]
 logger.LogInterval = 1.0
 
@@ -33,7 +43,7 @@ logger.LogInterval = 1.0
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
 populator.VariableReferenceList = [['_', 'Variable:/Surface:A']]
 populator.VariableReferenceList = [['_', 'Variable:/Surface:As']]
-populator.VariableReferenceList = [['_', 'Variable:/:B']]
+#populator.VariableReferenceList = [['_', 'Variable:/:B']]
 
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop2')
 populator.VariableReferenceList = [['_', 'Variable:/:C']]
@@ -68,11 +78,31 @@ diffuser.VariableReferenceList = [['_', 'Variable:/Surface:A']]
 diffuser.D = 1e-13
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseB')
-diffuser.VariableReferenceList = [['_', 'Variable:/:B']]
+diffuser.VariableReferenceList = [['_', 'Variable:/:C']]
+diffuser.D = 0
+
+diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseD')
+diffuser.VariableReferenceList = [['_', 'Variable:/:D']]
+diffuser.D = 0
+
+diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseE')
+diffuser.VariableReferenceList = [['_', 'Variable:/:E']]
+diffuser.D = 0
+
+diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseF')
+diffuser.VariableReferenceList = [['_', 'Variable:/:F']]
+diffuser.D = 0
+
+diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseG')
+diffuser.VariableReferenceList = [['_', 'Variable:/:G']]
+diffuser.D = 0
+
+diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseH')
+diffuser.VariableReferenceList = [['_', 'Variable:/:H']]
 diffuser.D = 0
 
 migration = theSimulator.createEntity('MigrationProcess', 'Process:/:migration')
-migration.VariableReferenceList = [['_', 'Variable:/:B','0']]
+#migration.VariableReferenceList = [['_', 'Variable:/:B','0']]
 migration.VariableReferenceList = [['_', 'Variable:/:C','0']]
 migration.minhvecX = -0.00155505
 migration.minhvecY = -0.00163323 

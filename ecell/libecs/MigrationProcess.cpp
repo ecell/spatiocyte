@@ -83,6 +83,10 @@ void MigrationProcess::initializeFifth()
 
 void MigrationProcess::fire()
 {
+  for (int i(0);i<5;i++)
+    {
+      theSpecies[i+2]->clearMolecules();
+    }
   updateComp();
   theInterval = tstp;
   theTime= time_; 
@@ -180,21 +184,6 @@ std::vector<Point> MigrationProcess::getEdgeQuad(int i, int j)
 void MigrationProcess::getBox(std::vector<Point>& aQuad,Point& bottomLeft, 
                               Point& topRight)
 {
-  row.resize(4);
-  col.resize(4);
-  lay.resize(4);
-  corn.resize(4);
-  for(unsigned i(0);i<4;i++)
-    {
-      theSpatiocyteStepper->point2global(aQuad[i], row[i], col[i],
-                                         lay[i]);
-      corn[i]=theSpatiocyteStepper->global2coord(row[i], col[i], lay[i]);
-    }
-
-  for(unsigned i(0);i<corn.size();i++)
-    {
-      theVacantCompSpecies[0]->addMolecule(&(*theLattice)[corn[i]]);
-    }
   double minimumX=aQuad[0].x;
   double minimumY=aQuad[0].y;
   double minimumZ=aQuad[0].z;
@@ -284,6 +273,160 @@ void MigrationProcess::setQuadVoxels(std::vector<Point>& aQuad,
     }    
 }
 
+void MigrationProcess::populateMolecules()
+{
+  for(int i(0); i !=theVacantCompSpecies.size(); ++i)
+    {
+      Species* aSpecies(theVacantCompSpecies[i]);
+      for(int j(0); j!=aSpecies->size(); ++j)
+        {
+          Voxel* aVoxel(aSpecies->getMolecule(j));
+          if(getID(aVoxel)== theVacantSpecies->getID())
+            {
+              //reassign molecule to aVoxel
+              aVoxel->idx = j+theStride*aSpecies->getID();
+            }
+        }
+    }
+
+ for (int i(0);i<theVacantCompSpecies.size();++i)
+    {
+      Species* aSpecies(theVacantCompSpecies[i]);
+      for (int j(0);j<aSpecies->size();++j)
+        {
+          Voxel* aVoxel(aSpecies->getMolecule(j));
+          if(getID(aVoxel) != aSpecies->getID())
+            {
+              advectSurfaceMolecule(aSpecies, j);
+            }
+        }
+    }
+}
+
+
+void MigrationProcess::advectSurfaceMolecule(Species* aSpecies,
+                                             unsigned lastIndex)
+{     
+  std::vector<unsigned> stageList;
+  std::vector<unsigned> stageIndex;
+  stageIndex.push_back(0);
+  stageList.push_back(aSpecies->getCoord(lastIndex));
+  stageIndex.push_back(stageList.size());
+  while (1)
+    {
+      for (int j(stageIndex[stageIndex.size()-2]); j != stageIndex.back(); ++j)
+        {
+          Voxel* currentMol(&(*theLattice)[stageList[j]]);
+          for (int k(0);k<theAdjoiningCoordSize;++k)
+            {
+              const unsigned adjCoord(currentMol->adjoiningCoords[k]);
+              Voxel* adj(&(*theLattice)[adjCoord]);
+              //check if adj is vacant
+              if(getSpecies(adj) == theVacantSpecies)
+                {
+                  replaceMolecules(stageList, stageIndex, adj, currentMol,
+                                   aSpecies, lastIndex);
+                  return;
+                }
+              //check if adj is on surface
+              if(getSpecies(adj)->getVacantSpecies() == 
+                 theVacantSpecies)
+                {
+                  if(std::find(stageList.begin(),stageList.end(),
+                                    adjCoord)==stageList.end())
+                    {
+                      stageList.push_back(adjCoord);
+                    }
+                }
+            }
+        }
+      if (stageList.size()==1)
+        {
+          stageList[0] = getSurfaceAdjCoord(stageList[0]);
+        }
+      else
+        {
+          stageIndex.push_back(stageList.size());
+        }
+    }
+}
+
+unsigned MigrationProcess::getSurfaceAdjCoord(unsigned aCoord)
+{
+  Voxel* aVoxel(&(*theLattice)[aCoord]);
+  for (int i(0);i<theAdjoiningCoordSize;++i)
+    {
+      const unsigned adjCoord(aVoxel->adjoiningCoords[i]);
+      Voxel* adj(&(*theLattice)[adjCoord]);
+      for (int j(0);j<theAdjoiningCoordSize;++j)
+        {
+          const unsigned adjadjCoord(adj->adjoiningCoords[j]);
+          Voxel* adjadj(&(*theLattice)[adjadjCoord]);                                     if (getSpecies(adjadj)==theVacantSpecies || 
+              getSpecies(adjadj)->getVacantSpecies()==theVacantSpecies)
+            {
+              return adjadjCoord;
+            }                    
+        }
+    }
+  std::cout<<"Error: Couldnt get surface adjacent coord."<<std::endl;
+}
+
+void MigrationProcess::replaceMolecules(std::vector<unsigned> stageList, 
+                                        std::vector<unsigned> stageIndex, 
+                                        Voxel* adj, Voxel* currentMol, 
+                                        Species* currSpecies, 
+                                        unsigned lastIndex)
+{
+  Species* aSpecies(getSpecies(currentMol));
+  if(stageIndex.size() == 2)
+    {
+      theSpecies[2]->softAddMolecule(currSpecies->getMolecule(lastIndex));
+      currSpecies->softReplaceMolecule(lastIndex, adj);
+      theSpecies[3]->softAddMolecule(adj);
+      return;
+    }
+  unsigned index(aSpecies->getIndex(currentMol));
+  aSpecies->softReplaceMolecule(index, adj);
+  adj = currentMol;
+  for (int i(stageIndex.size()-1);i>1;i--)
+    {
+      bool isAdded(false);
+      for (int j(stageIndex[i-2]);
+           j != stageIndex[i-1]; j++)
+        {
+          unsigned coord(stageList[j]);
+          for (int k(0);k<theAdjoiningCoordSize;++k)
+            {
+              if (adj->adjoiningCoords[k] == coord)
+                {
+                  currentMol = &(*theLattice)[coord];
+                  aSpecies = getSpecies(currentMol);
+                  if(i == 2)
+                    {
+                      theSpecies[4]->softAddMolecule(currSpecies->getMolecule
+                                                     (lastIndex));
+                      currSpecies->softReplaceMolecule(lastIndex, adj);
+                      theSpecies[5]->softAddMolecule(adj);
+                      return;
+                    }
+                  index = aSpecies->getIndex(currentMol);
+                  aSpecies->softReplaceMolecule(index, adj);
+                  adj = currentMol;
+                  isAdded = true;
+                  break;
+                }
+
+            }
+          if(isAdded)
+            {
+              break;
+            }
+        } 
+    }
+}
+
+
+
 void MigrationProcess::calculateSurfaceNormal(Point& node1, Point& node2, 
                                               Point& node3,
                                               Point& fixsurfaceNormal,
@@ -332,7 +475,6 @@ fixsurfaceNormal, double& fixsurfaceDisplace)
 void MigrationProcess::setPopulated()
 {
   theVacantSpecies->setIsPopulated();
-  theVacantCompSpecies[0]->setIsPopulated();
 }
 
 
@@ -410,15 +552,9 @@ void MigrationProcess::updateComp()
       openunit12();
     }
   writeNewFile();
-  for (int i(0);i<corn.size();i++)
-    {
-      theVacantCompSpecies[0]->clearMolecules();
-    }
-  while (theVacantSpecies->compVoxelSize() != 0)
-    {
-      theVacantSpecies->clearCompVoxels();
-    }
+  theVacantSpecies->clearCompVoxels();
   constructComp();
+  populateMolecules();
   setPopulated();
 }
 
@@ -631,153 +767,3 @@ void MigrationProcess::setCenterPoint()
 
 }
 
-
-  //To obtain the min and max hvec
-  /*std::cout<<"Input for minHvec(Use only for First mesh file): "<<std::endl;
-  std::cout<<"minHvecX: "<<minhvecX<<std::endl;
-  std::cout<<"minHvecY: "<<minhvecY<<std::endl;
-  std::cout<<"minHvecZ: "<<minhvecZ<<std::endl;
-  std::cout<<"Input for maxHvec(Use only for Last mesh file): "<<std::endl;
-  std::cout<<"maxHvecX: "<<maxhvecX<<std::endl;
-  std::cout<<"maxHvecY: "<<maxhvecY<<std::endl;
-  std::cout<<"maxHvecZ: "<<maxhvecZ<<std::endl;*/
-  //CheckSize
-  /*std::cout << "vacant size:" << theVacantSpecies->size() << std::endl;
-  std::cout << "first size:" << surfaceCoords.size() << std::endl;
-  setPopulated(); 
-  std::cout << "vacant size:" << theVacantSpecies->size() << std::endl;
-  std::cout << "vacant comp size:" << theVacantCompSpecies[0]->size() 
-  << std::endl;*/
-/*void MigrationProcess::assignQuad()
-{
-  quadIndex.resize(nq);
-  for (unsigned a=0;a<nq;a++)
-    {
-      quadIndex[a].resize(4);
-    }
-  for(int i(0);i<quadIndex.size();i++)	
-    {	
-      for (int k(0);k<4;k++)
-        {
-	 	 	    quadIndex[i][k]=isoq[i][k];
-				}	 
-    }	
-}	
-
-void MigrationProcess::assignEdge()
-{
-	edgeIndex.resize(nl);
-	for (unsigned a(0);a<nl;a++)
-		{
-			edgeIndex[a].resize(2);
-		}
-	for(int i(0);i<edgeIndex.size();i++)
-		{
-			for (int k(0);k<2;k++)
-				{
-					edgeIndex[i][k]=isol[i][k];
-				}
-		}
-}*/
-
-/*void MigrationProcess::assignNeigh()
-{
-  neigh.resize(nq);
-  for (unsigned a=0;a<nq;a++)
-    {
-      neigh[a].reserve(15);
-    }
-  for(int i(0);i<nq;i++)	
-    {		
-      for (int j(0);j<4;j++)
-        {
-	        for (int k(0);k<nq;k++)	
-            {
-	            for (int l(0);l<4;l++)
- 	              {
-		              int nodeID(isoq[k][l]);
-		              if(nodeID==isoq[i][j])
-		                {
-		                  std::vector<int>::iterator it(std::find(neigh[i].
-                                                    begin(),neigh[i].end(), k));	
-		                  if(k!=i && it==neigh[i].end())
-		                    {	
-			                    neigh[i].push_back(k);  
-			                  }
-		                }
-		            }
-	          }
-	      }
-    }
-}*/
-  /*for (int k(0);k<2;k++)//no of nodes on 1 edge   
-    {
-      if (k==0)//stack 0 
-        {
-          aQuad[3].x=((hvec[isol[i][k]-1][j][0]+(-minhvecX))*scalingFactor+translate)/(2*voxelRadius);
-          aQuad[3].y=((hvec[isol[i][k]-1][j][1]+(-minhvecY))*scalingFactor+translate)/(2*voxelRadius);
-          aQuad[3].z=((hvec[isol[i][k]-1][j][2]+(-minhvecZ))*scalingFactor+translate)/(2*voxelRadius);
-          aQuad[0].x=((hvec[isol[i][k]-1][j+1][0]+(-minhvecX))*scalingFactor+translate)/(2*voxelRadius);
-          aQuad[0].y=((hvec[isol[i][k]-1][j+1][1]+(-minhvecY))*scalingFactor+translate)/(2*voxelRadius);
-          aQuad[0].z=((hvec[isol[i][k]-1][j+1][2]+(-minhvecZ))*scalingFactor+translate)/(2*voxelRadius);
-        }
-      else //stack 1
-        {
-          aQuad[2].x=((hvec[isol[i][k]-1][j][0]+(-minhvecX))*scalingFactor+translate)/(2*voxelRadius);
-          aQuad[2].y=((hvec[isol[i][k]-1][j][1]+(-minhvecY))*scalingFactor+translate)/(2*voxelRadius);
-          aQuad[2].z=((hvec[isol[i][k]-1][j][2]+(-minhvecZ))*scalingFactor+translate)/(2*voxelRadius);
-          aQuad[1].x=((hvec[isol[i][k]-1][j+1][0]+(-minhvecX))*scalingFactor+translate)/(2*voxelRadius);
-          aQuad[1].y=((hvec[isol[i][k]-1][j+1][1]+(-minhvecY))*scalingFactor+translate)/(2*voxelRadius);
-          aQuad[1].z=((hvec[isol[i][k]-1][j+1][2]+(-minhvecZ))*scalingFactor+translate)/(2*voxelRadius);
-        }
-    }*/
-/*      aQuad[k].x=((hvec[isoq[i][k]-1][j][0]+(-minhvecX))*scalingFactor+translate)/(2*voxelRadius);
-      aQuad[k].y=((hvec[isoq[i][k]-1][j][1]+(-minhvecY))*scalingFactor+translate)/(2*voxelRadius);
-      aQuad[k].z=((hvec[isoq[i][k]-1][j][2]+(-minhvecZ))*scalingFactor+translate)/(2*voxelRadius);
-      std::cout<<"quad "<<aQuad[k].x<<std::endl;
-      std::cout<<"quad "<<aQuad[k].y<<std::endl;
-      std::cout<<"quad "<<aQuad[k].z<<std::endl;*/
-/*
-  for (unsigned count(0);count<surfaceCoords.size();count++)
-    {
-      theVacantSpecies->addCompVoxel(surfaceCoords[count]);
-    }
-*/
-  /*realHvec.resize(ns);
-  for (int i(0);i<ns;i++)
-    {
-      realHvec[i].resize(3);
-    Point bottomLeft;
-    Point topRight;
-      for (int j(0);j<3;j++)
-        {
-          realHvec[i][j].resize(3);
-        }
-    }
-  for (int i(0);i<ns;i++)
-    {
-      for (int j(0);j<3;j++)
-        {
-	        realHvec[i][j][0] = hvec[i][j][0]+(-minhvecX);
-	        realHvec[i][j][0]=(realHvec[i][j][0]*scalingFactor+translate)/
-                            (2*voxelRadius);
-      	  realHvec[i][j][1] = hvec[i][j][1]+(-minhvecY);
-      	  realHvec[i][j][1]=(realHvec[i][j][1]*scalingFactor+translate)/ 
-                            (2*voxelRadius);
-      	  realHvec[i][j][2] = hvec[i][j][2]+(-minhvecZ);
-      	  realHvec[i][j][2]=(realHvec[i][j][2]*scalingFactor+translate)/
-                            (2*voxelRadius);
-	      }
-    }*/
-  /*std::cout<<"minX "<<initminX<<std::endl;
-  std::cout<<"minY "<<initminY<<std::endl;
-  std::cout<<"minZ "<<initminZ<<std::endl;
-  std::cout<<"maxX "<<initmaxX<<std::endl;
-  std::cout<<"maxY "<<initmaxY<<std::endl;
-  std::cout<<"maxZ "<<initmaxZ<<std::endl;
-  std::cout<<"length before scale "<<initmaxX-initminX<<std::endl;
-
-  std::cout<<"length before scale "<<((initmaxX-initminX)*scalingFactor)/2<<std::endl;
-  std::cout<<"cpX "<<theComp->centerPoint.x*(2*voxelRadius)<<std::endl;
-  std::cout<<"cpY "<<theComp->centerPoint.y*(2*voxelRadius)<<std::endl;
-  std::cout<<"cpZ "<<theComp->centerPoint.z*(2*voxelRadius)<<std::endl;*/
