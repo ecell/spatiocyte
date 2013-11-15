@@ -1107,10 +1107,11 @@ void DiffusionInfluencedReactionProcess::printParameters()
   String aProcess(String(getPropertyInterface().getClassName()) + 
                                       "[" + getFullID().asString() + "]");
   cout << aProcess << std::endl;
-  cout << "  " << getIDString(A) << " + " <<  getIDString(B) << " -> ";
+  cout << "  " << getIDString(A) << "[dim:" << A->getDimension() << "]"  <<
+    " + " <<  getIDString(B) << "[dim:" << B->getDimension() << "]" << " -> ";
   if(C)
     {
-      cout << getIDString(C);
+      cout << getIDString(C) << "[dim:" << C->getDimension() << "]";
     }
   else
     {
@@ -1118,7 +1119,7 @@ void DiffusionInfluencedReactionProcess::printParameters()
     }
   if(D)
     {
-      cout << " + " << getIDString(D);
+      cout << " + " << getIDString(D) << "[dim:" << D->getDimension() << "]";
     }
   else if(variableD)
     {
