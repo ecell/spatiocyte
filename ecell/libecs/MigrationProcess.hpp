@@ -108,6 +108,8 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
       {
         SpatiocyteProcess::prepreinitialize();
         theVacantVariable = createVariable("Vacant");
+        theAddedVariable = createVariable("MigrationAdded");
+        theOverlapVariable = createVariable("MigrationOverlap");
       }
     virtual void initialize()
       {
@@ -116,7 +118,11 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
             return;
           }
         SpatiocyteProcess::initialize();
-        theVacantSpecies = theSpatiocyteStepper->addSpecies(theVacantVariable);
+        theVacantSpecies = theSpatiocyteStepper->addSpecies
+          (theVacantVariable);
+        theAddedSpecies = theSpatiocyteStepper->addSpecies(theAddedVariable);
+        theOverlapSpecies = theSpatiocyteStepper->addSpecies
+          (theOverlapVariable);
         for(VariableReferenceVector::iterator
             i(theVariableReferenceVector.begin());
             i != theVariableReferenceVector.end(); ++i)
@@ -135,12 +141,16 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
         SpatiocyteProcess::initializeFirst();
         theComp = new Comp;
         theVacantSpecies->setComp(theComp);
+        theAddedSpecies->setComp(theComp);
+        theOverlapSpecies->setComp(theComp);
         for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
           {
             //to be overwritten by DiffusionProcess in initializeSecond:
             theVacantCompSpecies[i]->setVacantSpecies(theVacantSpecies);
             theVacantCompSpecies[i]->setComp(theComp);
           }
+        theAddedSpecies->setVacantSpecies(theVacantSpecies);
+        theOverlapSpecies->setVacantSpecies(theVacantSpecies);
       }
 
     virtual void initializeThird();
@@ -149,9 +159,9 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
     virtual bool isOnAboveSurface(Point&,Point&,double&);
     virtual bool isOnBelowSideSurface(Point&,Point&,Point&,Point&);
     void setScalingFactor();
-    void constructComp();
+    void constructComp(bool);
     void getBox(std::vector<Point>&,Point&,Point&);
-    void setQuadVoxels(std::vector<Point>&,Point&,Point&);
+    void setQuadVoxels(std::vector<Point>&,Point&,Point&,bool);
     void calculateSurfaceNormal(Point&,Point&,Point&,Point&,double&);
     void setPopulated();
     void initValue();
@@ -169,6 +179,13 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
     void replaceMolecules(std::vector<unsigned>,std::vector<unsigned>,Voxel*,
                          Voxel*,Species*,unsigned);
     unsigned getSurfaceAdjCoord(unsigned);
+    void optimizeSurfaceVoxel();
+    unsigned getLatticeResizeCoord(unsigned);
+    void removeOldSurfaceVoxel();
+    void getNewSurfaceVoxel();
+    void fireOptimizeSurfaceVoxel(Voxel&);
+    void setVacantSpecies(unsigned,Point&,double,bool);
+    void initUpdateComp();
 
   private:
     String FileName;
@@ -216,6 +233,7 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
     double epsl;
     double scalingFactor;
     double translate;
+    std::vector<unsigned> tmpSurface;
     std::vector<unsigned> surfaceCoords;
     std::vector<Species*> theVacantCompSpecies;
     std::vector<std::vector<int> > quadIndex;
@@ -223,7 +241,11 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
     std::vector<std::vector<int> > neigh;
     Comp* theComp;  
     Variable* theVacantVariable;
+    Variable* theAddedVariable;
+    Variable* theOverlapVariable;
     Species* theVacantSpecies;
+    Species* theAddedSpecies;
+    Species* theOverlapSpecies;
   };
 }
 

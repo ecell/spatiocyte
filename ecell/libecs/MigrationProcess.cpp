@@ -71,7 +71,7 @@ void MigrationProcess::initializeThird()
   setScalingFactor();
   setCenterPoint();
   initForces();
-  updateComp();
+  initUpdateComp();
 }
 
 void MigrationProcess::initializeFifth()
@@ -83,10 +83,6 @@ void MigrationProcess::initializeFifth()
 
 void MigrationProcess::fire()
 {
-  for (int i(0);i<5;i++)
-    {
-      theSpecies[i+2]->clearMolecules();
-    }
   updateComp();
   theInterval = tstp;
   theTime= time_; 
@@ -106,11 +102,11 @@ void MigrationProcess::setScalingFactor()
   double ratioY((lengthYunnormalized-scale)/mechanocyteLengthY);
   double ratioZ((lengthZunnormalized-scale)/mechanocyteLengthZ);
   scalingFactor = std::min(ratioX,(std::min(ratioY,ratioZ)));
-  translate = 4*voxelRadius;
+  translate = 10*voxelRadius;
 }
 
 
-void MigrationProcess::constructComp()
+void MigrationProcess::constructComp(bool flagTmpSurface)
 {
   for (int i(0);i<nq;i++)
     {
@@ -120,7 +116,7 @@ void MigrationProcess::constructComp()
           Point bottomLeft;
           Point topRight;
           getBox(aQuad,bottomLeft,topRight);
-          setQuadVoxels(aQuad,bottomLeft,topRight);
+          setQuadVoxels(aQuad,bottomLeft,topRight,flagTmpSurface);
         }
     }
   for (int i(0);i<nl;i++)
@@ -131,7 +127,7 @@ void MigrationProcess::constructComp()
           Point bottomLeft;
           Point topRight;
           getBox(aQuad,bottomLeft,topRight);
-          setQuadVoxels(aQuad,bottomLeft,topRight);
+          setQuadVoxels(aQuad,bottomLeft,topRight,flagTmpSurface);
         }
     }
 }
@@ -222,7 +218,8 @@ void MigrationProcess::getBox(std::vector<Point>& aQuad,Point& bottomLeft,
 }
 
 void MigrationProcess::setQuadVoxels(std::vector<Point>& aQuad,
-                                     Point& bottomLeft, Point& topRight)
+                                     Point& bottomLeft, Point& topRight,
+                                     bool flagTmpSurface)
 {
   Point fixsurfaceNormal;
   double fixsurfaceDisplace(0);
@@ -251,26 +248,55 @@ void MigrationProcess::setQuadVoxels(std::vector<Point>& aQuad,
                  && isOnBelowSideSurface(aQuad[2],aQuad[3],n,fixsurfaceNormal)
                  && isOnBelowSideSurface(aQuad[3],aQuad[0],n,fixsurfaceNormal))
                 { 	
-              	  Voxel& aVoxel((*theLattice)[m]);	
-                  for (unsigned i(0); i!=theAdjoiningCoordSize; i++)
-                    {
-                      unsigned coord(aVoxel.adjoiningCoords[i]);           
-                      Point o(theSpatiocyteStepper->coord2point(coord));
-                      if(isOnAboveSurface(o,fixsurfaceNormal,
-                         fixsurfaceDisplace)==false)
-                        {
-                          if(getID((*theLattice)[m]) != theVacantSpecies
-                             ->getID())
-                            {  
-                              theVacantSpecies->addCompVoxel(m);
-                            }
-                          break;
-                        }
-                    }
+                  setVacantSpecies(m,fixsurfaceNormal,fixsurfaceDisplace,
+                                   flagTmpSurface);
                 }
             }
         }
     }    
+}
+
+void MigrationProcess::setVacantSpecies(unsigned m,Point& fixsurfaceNormal,
+                                        double fixsurfaceDisplace,
+                                        bool flagTmpSurface)
+{
+  Voxel* aVoxel(&(*theLattice)[m]);	
+  Species *aSpecies(getSpecies(aVoxel));
+  for (unsigned i(0); i!=theAdjoiningCoordSize; i++)
+    {
+      unsigned coord(aVoxel->adjoiningCoords[i]);           
+      Point o(theSpatiocyteStepper->coord2point(coord));
+      if(isOnAboveSurface(o,fixsurfaceNormal,
+         fixsurfaceDisplace)==false)
+        {
+          if (flagTmpSurface == true)
+            {
+              if (getID(aVoxel) != theOverlapSpecies->getID() &&
+                  getID(aVoxel) != theAddedSpecies->getID())
+                {
+                  tmpSurface.push_back(m);
+                  if (aSpecies->getComp() == theComp)
+                    {
+                      theOverlapSpecies->addMoleculeDirect(aVoxel); 
+                      return;
+                    }
+                  else 
+                    {
+                    theAddedSpecies->addMoleculeDirect(aVoxel);
+                    return;
+                    }                    
+                }
+            }
+          else 
+            {
+              if(getID(aVoxel) != theVacantSpecies->getID())
+                {  
+                  theVacantSpecies->addCompVoxel(m);
+                  return;
+                }
+            }            
+        }
+    }
 }
 
 void MigrationProcess::populateMolecules()
@@ -295,6 +321,8 @@ void MigrationProcess::populateMolecules()
       for (int j(0);j<aSpecies->size();++j)
         {
           Voxel* aVoxel(aSpecies->getMolecule(j));
+          //Unmoved aVoxel already reassigned as aSpecies.
+          //check the rest of aVoxel that move after 1 tstp.
           if(getID(aVoxel) != aSpecies->getID())
             {
               advectSurfaceMolecule(aSpecies, j);
@@ -368,7 +396,6 @@ unsigned MigrationProcess::getSurfaceAdjCoord(unsigned aCoord)
             }                    
         }
     }
-  std::cout<<"Error: Couldnt get surface adjacent coord."<<std::endl;
 }
 
 void MigrationProcess::replaceMolecules(std::vector<unsigned> stageList, 
@@ -380,9 +407,7 @@ void MigrationProcess::replaceMolecules(std::vector<unsigned> stageList,
   Species* aSpecies(getSpecies(currentMol));
   if(stageIndex.size() == 2)
     {
-      theSpecies[2]->softAddMolecule(currSpecies->getMolecule(lastIndex));
       currSpecies->softReplaceMolecule(lastIndex, adj);
-      theSpecies[3]->softAddMolecule(adj);
       return;
     }
   unsigned index(aSpecies->getIndex(currentMol));
@@ -403,10 +428,7 @@ void MigrationProcess::replaceMolecules(std::vector<unsigned> stageList,
                   aSpecies = getSpecies(currentMol);
                   if(i == 2)
                     {
-                      theSpecies[4]->softAddMolecule(currSpecies->getMolecule
-                                                     (lastIndex));
                       currSpecies->softReplaceMolecule(lastIndex, adj);
-                      theSpecies[5]->softAddMolecule(adj);
                       return;
                     }
                   index = aSpecies->getIndex(currentMol);
@@ -415,7 +437,6 @@ void MigrationProcess::replaceMolecules(std::vector<unsigned> stageList,
                   isAdded = true;
                   break;
                 }
-
             }
           if(isAdded)
             {
@@ -425,7 +446,75 @@ void MigrationProcess::replaceMolecules(std::vector<unsigned> stageList,
     }
 }
 
+unsigned MigrationProcess::getLatticeResizeCoord(unsigned aStarCoord)
+{
+  Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
+  *theComp = *aComp;
+  theComp->dimension = 2;
+  for (int i(0);i<theVacantCompSpecies.size();i++)
+    {
+      theVacantCompSpecies[i]->setDimension(theComp->dimension);
+      theVacantCompSpecies[i]->setIsFixedAdjoins(false);
+    }
+  theVacantSpecies->setDimension(theComp->dimension);
+  theVacantSpecies->setIsFixedAdjoins(false);
+}
 
+void MigrationProcess::optimizeSurfaceVoxel()
+{
+  Species* aSpecies(theVacantSpecies);
+  for (int j(0);j!=aSpecies->size();++j)
+    {
+      unsigned aCoord(aSpecies->getCoord(j));
+      Voxel& aVoxel((*theLattice)[aCoord]);
+      unsigned* forward(aVoxel.adjoiningCoords);
+      std::vector<unsigned> adjoiningCopy;
+      for(unsigned k(0); k != theAdjoiningCoordSize; ++k)
+        {
+          adjoiningCopy.push_back(forward[k]);
+        }
+      //Separate adjoining surface voxels and adjoining volume voxels.
+      //Put the adjoining surface voxels at the beginning of the
+      //adjoiningCoords list while the volume voxels are put at the end:
+      for(std::vector<unsigned>::iterator l(adjoiningCopy.begin());
+          l != adjoiningCopy.end(); ++l)
+        {
+          unsigned anID(getID((*theLattice)[*l]));
+          if(anID == theVacantSpecies->getID())
+            {
+              aVoxel.adjoiningCoords[l-adjoiningCopy.begin()]=*forward;
+              (*forward) = (*l);
+              ++forward;
+            }
+        } 
+      aVoxel.diffuseSize = forward-aVoxel.adjoiningCoords;
+    }    
+}
+
+void MigrationProcess::fireOptimizeSurfaceVoxel(Voxel& aVoxel)
+{
+  unsigned* forward(aVoxel.adjoiningCoords);
+  std::vector<unsigned> adjoiningCopy;
+  for(unsigned k(0); k != theAdjoiningCoordSize; ++k)
+    {
+      adjoiningCopy.push_back(forward[k]);
+    }
+  //Separate adjoining surface voxels and adjoining volume voxels.
+  //Put the adjoining surface voxels at the beginning of the
+  //adjoiningCoords list while the volume voxels are put at the end:
+  for(std::vector<unsigned>::iterator l(adjoiningCopy.begin());
+      l != adjoiningCopy.end(); ++l)
+    {
+      Species* aSpecies(getSpecies((*theLattice)[*l]));
+      if (aSpecies->getComp() == theComp)
+        {
+          aVoxel.adjoiningCoords[l-adjoiningCopy.begin()]=*forward;
+          (*forward) = (*l);
+          ++forward;
+        }
+    } 
+  aVoxel.diffuseSize = forward-aVoxel.adjoiningCoords;
+}
 
 void MigrationProcess::calculateSurfaceNormal(Point& node1, Point& node2, 
                                               Point& node3,
@@ -526,6 +615,38 @@ void MigrationProcess::initValue()
     }
 }
 
+void MigrationProcess::initUpdateComp()
+{
+  initVmaxCnwmin();
+  clchm();
+  vvec1();
+  bc();
+  cmstpsiz(cmdt,id3);
+  initAvdtTstp();
+  avgridmo(lag);
+  avfield(id4,nw); 
+  clphi();
+  clvis();
+  clpsi();
+  vvec1();
+  clsfr();
+  clgam(aratio);      
+  while(1)
+    {
+      modriver(icyc,epsl,idebug);
+      if(icyc<10)
+        {
+          break;
+        }
+      openunit12();
+    }
+  writeNewFile();
+  constructComp(false);
+  optimizeSurfaceVoxel();
+  populateMolecules();
+  setPopulated();
+}
+
 void MigrationProcess::updateComp()
 {
   initVmaxCnwmin();
@@ -552,10 +673,63 @@ void MigrationProcess::updateComp()
       openunit12();
     }
   writeNewFile();
-  theVacantSpecies->clearCompVoxels();
-  constructComp();
+  constructComp(true);
+  removeOldSurfaceVoxel();
+  getNewSurfaceVoxel();
   populateMolecules();
-  setPopulated();
+  setPopulated();    
+}
+
+void MigrationProcess::removeOldSurfaceVoxel()
+{
+  Species* aSpecies(theVacantSpecies);
+  for (int i(0);i<aSpecies->size();++i)
+    {
+      unsigned coord(aSpecies->getCoord(i));
+      Voxel& aVoxel((*theLattice)[coord]);
+      if(getID(aVoxel) != theOverlapSpecies->getID())
+        {
+          aSpecies->removeCompVoxel(i);
+          for (int j(0);j<theAdjoiningCoordSize;++j)
+            {
+              unsigned adjCoord(aVoxel.adjoiningCoords[j]);
+              Voxel& adj((*theLattice)[adjCoord]);
+              if (getID(adj) == theOverlapSpecies->getID() || 
+                  getID(adj) == theAddedSpecies->getID())
+                {
+                  fireOptimizeSurfaceVoxel(adj);
+                }
+            }
+          --i;
+        }
+    }
+}
+
+void MigrationProcess::getNewSurfaceVoxel()
+{
+  std::vector<unsigned> overlapList;
+  for (int i(0);i<theAddedSpecies->size();++i)
+    {
+      Voxel& aVoxel(*theAddedSpecies->getMolecule(i));
+      for (int j(0);j<theAdjoiningCoordSize;++j)
+        {
+          unsigned adjCoord(aVoxel.adjoiningCoords[j]);
+          Voxel& adj((*theLattice)[adjCoord]);
+          if (getID(adj) == theOverlapSpecies->getID())  
+            {
+              fireOptimizeSurfaceVoxel(adj);
+            }
+        }
+      fireOptimizeSurfaceVoxel(aVoxel);
+      theVacantSpecies->addCompVoxel(theAddedSpecies->getCoord(i));          
+    }
+  for (int i(0);i<theOverlapSpecies->size();++i)
+    {
+      Voxel* aVoxel(theOverlapSpecies->getMolecule(i));
+      aVoxel->idx = theVacantSpecies->getID()*theStride;
+    }
+  theOverlapSpecies->clearMolecules();
+  theAddedSpecies->clearMolecules();
 }
 
 void MigrationProcess::initForces()
@@ -727,11 +901,9 @@ void MigrationProcess::getCompartmentLength()
 {
   voxelRadius = theSpatiocyteStepper->getVoxelRadius();
   normVoxelRadius = theSpatiocyteStepper->getNormalizedVoxelRadius();  
-  Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
-  *theComp = *aComp;
-  lengthX = aComp->lengthX;
-  lengthY = aComp->lengthY;
-  lengthZ = aComp->lengthZ;
+  lengthX = theComp->lengthX;
+  lengthY = theComp->lengthY;
+  lengthZ = theComp->lengthZ;
 }
 
 void MigrationProcess::setCenterPoint()

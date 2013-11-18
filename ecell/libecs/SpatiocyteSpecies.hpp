@@ -2400,8 +2400,8 @@ public:
   void removeCompVoxel(const unsigned anIndex)
     {
       --theMoleculeSize;
+      (*theCompVoxels)[anIndex]->idx = theVacantID*theStride;
       (*theCompVoxels)[anIndex] = (*theCompVoxels)[theMoleculeSize];
-      (*theCompVoxels)[theMoleculeSize]->idx = theVacantID*theStride;
       theCompVoxels->pop_back();
       theVariable->setValue(theMoleculeSize);
     }
