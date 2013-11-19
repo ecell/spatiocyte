@@ -129,7 +129,11 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
           {
             Species* aSpecies(theSpatiocyteStepper->variable2species(
                                    (*i).getVariable())); 
-            if(!(*i).getCoefficient())
+            if(aSpecies == NULL)
+              {
+                theVacantCompVariables.push_back((*i).getVariable());
+              }
+            else if(!(*i).getCoefficient())
               {
                 theVacantCompSpecies.push_back(aSpecies);
               }
@@ -186,6 +190,7 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
     void fireOptimizeSurfaceVoxel(Voxel&);
     void setVacantSpecies(unsigned,Point&,double,bool);
     void initUpdateComp();
+    virtual void printParameters();
 
   private:
     String FileName;

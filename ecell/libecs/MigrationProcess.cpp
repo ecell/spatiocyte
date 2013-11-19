@@ -83,9 +83,11 @@ void MigrationProcess::initializeFifth()
 
 void MigrationProcess::fire()
 {
-  updateComp();
+  std::cout<<"time  tstp: "<<time_<<"  "<<tstp<<std::endl;
+  /*updateComp();
   theInterval = tstp;
-  theTime= time_; 
+  theTime= time_;*/
+  theTime = libecs::INF; 
   thePriorityQueue->moveTop();
 }
 
@@ -935,6 +937,24 @@ void MigrationProcess::setCenterPoint()
   theComp->centerPoint.x = ((initmaxX-initminX)*scalingFactor/2+translate)/(2*voxelRadius);
   theComp->centerPoint.y = ((initmaxY-initminY)*scalingFactor/2+translate)/(2*voxelRadius);
   theComp->centerPoint.z = ((initmaxZ-initminZ)*scalingFactor/2+translate)/(2*voxelRadius);
+}
+
+void MigrationProcess::printParameters()
+{
+  theComp->actualArea =  (72*pow(voxelRadius,2))*
+    theVacantSpecies->size()/(6*pow(2,0.5)+4*pow(3,0.5)+
+                                 3*pow(6, 0.5));
+  cout << getPropertyInterface().getClassName() << "[" <<
+    getFullID().asString() << "]" << std::endl;
+  cout << "  " << getIDString(theVacantSpecies) << 
+    " number:" << theVacantSpecies->size() << std::endl;
+  cout << "  [" << theComp->actualArea << " m^2] Actual surface area " <<
+    "{S = (72*r_v^2)*n_s/(6*2^0.5+4*3^0.5+3*6^0.5)}" << std::endl;
+  for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
+    {
+      cout << "    " << getIDString(theVacantCompSpecies[i]) <<
+        " number:" << theVacantCompSpecies[i]->size() << std::endl;
+    }
 }
 
 }
