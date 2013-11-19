@@ -115,14 +115,11 @@ void MigrationProcess::initializeThird()
   lag = "lagrangian";
   nw = new char [2];
   nw = "nw"; 
-  getCompartmentLength();
-
   std::ifstream checkFile("migration.dat");
   if(checkFile)
     {
       remove("migration.dat");
     }
-
   idot1=strchr(ipf,'.'); 
   idot=(idot1-ipf)+1;
   if(idot<=0 || idot>20)
@@ -131,6 +128,8 @@ void MigrationProcess::initializeThird()
   openfile(ipf,id1,idot);
   delt=dscp[idfrm-1][2];
   timedump(delt);
+
+  getCompartmentLength();
   setScalingFactor();
   setCenterPoint();
   initForces();

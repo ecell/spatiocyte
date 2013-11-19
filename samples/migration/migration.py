@@ -38,7 +38,7 @@ logger.VariableReferenceList = [['_', 'Variable:/Cell:PIP3m']]
 logger.VariableReferenceList = [['_', 'Variable:/Cell:PIP3a']]
 logger.VariableReferenceList = [['_', 'Variable:/Cell:PTENm']]
 logger.VariableReferenceList = [['_', 'Variable:/Cell:PI3Km']]
-logger.LogInterval = 1.0 
+logger.LogInterval = 20 
 
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/Cell:pop')
 populator.VariableReferenceList = [['_', 'Variable:/Cell:PIP2m']]
