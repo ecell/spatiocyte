@@ -203,8 +203,6 @@ public:
               alpha = 2.0/3;
             }
           theInterval = alpha*r_v*r_v*WalkProbability/D;
-          std::cout<<"Diffusion Species: "<<theDiffusionSpecies->getIDString()
-            <<" "<<theDiffusionSpecies->getDimension()<<std::endl;
         }
       else if(Interval > 0)
         {

@@ -106,8 +106,6 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
     SIMPLE_SET_GET_METHOD(Real, maxhvecZ); 
     virtual void prepreinitialize();
     virtual void preinitialize();
-    System* createSystem(String anID);
-    System* createSystem(String anID, System*);
     virtual void initialize();
     virtual void initializeFirst();
     virtual void initializeThird();
@@ -120,7 +118,6 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
     void getBox(std::vector<Point>&,Point&,Point&);
     void setQuadVoxels(std::vector<Point>&,Point&,Point&,bool);
     void calculateSurfaceNormal(Point&,Point&,Point&,Point&,double&);
-    void setPopulated();
     void initValue();
     void initVmaxCnwmin();
     void initAvdtTstp();
@@ -144,6 +141,8 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
     void setVacantSpecies(unsigned,Point&,double,bool);
     void initUpdateComp();
     virtual void printParameters();
+  private:
+    void updateArea();
 
   private:
     String FileName;
@@ -199,6 +198,7 @@ extern "C" void wrfile(int&,char *ipf,int&,double&,double&,double&,double&,
     std::vector<std::vector<int> > edgeIndex;
     std::vector<std::vector<int> > neigh;
     Comp* theComp;  
+    Comp* theSuperComp;  
     Variable* theVacantVariable;
     Variable* theAddedVariable;
     Variable* theOverlapVariable;

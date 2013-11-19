@@ -643,10 +643,7 @@ void SpatiocyteStepper::populateComps()
   for(std::vector<Comp*>::const_iterator i(theComps.begin());
       i != theComps.end(); ++i)
     {
-      if(!(*i)->isProcessComp)
-        {
-          populateComp(*i);
-        }
+      populateComp(*i);
     }
 }
 
@@ -655,10 +652,7 @@ void SpatiocyteStepper::clearComps()
   for(std::vector<Comp*>::const_iterator i(theComps.begin());
       i != theComps.end(); ++i)
     {
-      if(!(*i)->isProcessComp)
-        {
-          clearComp(*i);
-        }
+      clearComp(*i);
     }
 }
 
@@ -1172,7 +1166,7 @@ void SpatiocyteStepper::storeSimulationParameters()
   for(unsigned i(0); i != theComps.size(); ++i)
     {
       Comp* aComp(theComps[i]); 
-      if(!aComp->isProcessComp)
+      if(aComp->isProcessComp)
         {
           continue;
         }
@@ -1261,7 +1255,7 @@ void SpatiocyteStepper::printSimulationParameters()
   for(unsigned i(0); i != theComps.size(); ++i)
     {
       Comp* aComp(theComps[i]);
-      if(!aComp->isProcessComp)
+      if(aComp->isProcessComp)
         {
           continue;
         }

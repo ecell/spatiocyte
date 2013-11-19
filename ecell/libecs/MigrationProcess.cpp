@@ -38,7 +38,7 @@ LIBECS_DM_INIT_STATIC(MigrationProcess, Process);
 void MigrationProcess::prepreinitialize()
 {
   SpatiocyteProcess::prepreinitialize();
-  theSystem = createSystem(getFullID().getID());
+  theSystem = getSuperSystem();
   theVacantVariable = createVariable("VACANT", theSystem);
   createVariable("PROCESS_COMPARTMENT", theSystem);
   theAddedVariable = createVariable("AddedSurface", theSystem);
@@ -48,24 +48,6 @@ void MigrationProcess::prepreinitialize()
 void MigrationProcess::preinitialize()
 {
   SpatiocyteProcess::preinitialize();
-  theSystem->setStepperID(getStepper()->getID());
-}
-
-System* MigrationProcess::createSystem(String anID)
-{
-  return createSystem(anID, getSuperSystem());
-}
-
-System* MigrationProcess::createSystem(String anID, System* aSuperSystem)
-{
-  System* aSystem;
-  String anEntityType("System");
-  SystemPath aSystemPath(aSuperSystem->getSystemPath());
-  aSystemPath.push_back(aSuperSystem->getID());
-  FullID aFullID(anEntityType, aSystemPath, anID);
-  aSystem = reinterpret_cast<System*>(
-      getModel()->createEntity("System", aFullID));
-  return aSystem;
 }
 
 void MigrationProcess::initialize()
@@ -99,8 +81,9 @@ void MigrationProcess::initializeFirst()
 {
   SpatiocyteProcess::initializeFirst();
   theComp = theSpatiocyteStepper->system2Comp(theSystem);
-  theVacantSpecies->setVacantSpecies(
-      theSpatiocyteStepper->system2Comp(getSuperSystem())->vacantSpecies);
+  theSuperComp = theSpatiocyteStepper->system2Comp(
+      theSystem->getSuperSystem());
+  theVacantSpecies->setVacantSpecies(theSuperComp->vacantSpecies);
   theVacantSpecies->setComp(theComp);
   theAddedSpecies->setComp(theComp);
   theOverlapSpecies->setComp(theComp);
@@ -530,8 +513,6 @@ void MigrationProcess::replaceMolecules(std::vector<unsigned> stageList,
 
 unsigned MigrationProcess::getLatticeResizeCoord(unsigned aStarCoord)
 {
-  Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
-  *theComp = *aComp;
   theComp->dimension = 2;
   for (int i(0);i<theVacantCompSpecies.size();i++)
     {
@@ -643,11 +624,6 @@ fixsurfaceNormal, double& fixsurfaceDisplace)
   return false;
 }
 
-void MigrationProcess::setPopulated()
-{
-  theVacantSpecies->setIsPopulated();
-}
-
 
 void MigrationProcess::initValue()
 {
@@ -725,8 +701,13 @@ void MigrationProcess::initUpdateComp()
   writeNewFile();
   constructComp(false);
   optimizeSurfaceVoxel();
-  populateMolecules();
-  setPopulated();
+  updateArea();
+}
+
+void MigrationProcess::updateArea()
+{
+  theComp->actualArea =  (72*pow(voxelRadius,2))*
+    theVacantSpecies->size()/(6*pow(2,0.5)+4*pow(3,0.5)+3*pow(6, 0.5));
 }
 
 void MigrationProcess::updateComp()
@@ -758,8 +739,8 @@ void MigrationProcess::updateComp()
   constructComp(true);
   removeOldSurfaceVoxel();
   getNewSurfaceVoxel();
+  updateArea();
   populateMolecules();
-  setPopulated();    
 }
 
 void MigrationProcess::removeOldSurfaceVoxel()
@@ -983,9 +964,9 @@ void MigrationProcess::getCompartmentLength()
 {
   voxelRadius = theSpatiocyteStepper->getVoxelRadius();
   normVoxelRadius = theSpatiocyteStepper->getNormalizedVoxelRadius();  
-  lengthX = theComp->lengthX;
-  lengthY = theComp->lengthY;
-  lengthZ = theComp->lengthZ;
+  lengthX = theSuperComp->lengthX;
+  lengthY = theSuperComp->lengthY;
+  lengthZ = theSuperComp->lengthZ;
 }
 
 void MigrationProcess::setCenterPoint()
@@ -1021,9 +1002,6 @@ void MigrationProcess::setCenterPoint()
 
 void MigrationProcess::printParameters()
 {
-  theComp->actualArea =  (72*pow(voxelRadius,2))*
-    theVacantSpecies->size()/(6*pow(2,0.5)+4*pow(3,0.5)+
-                                 3*pow(6, 0.5));
   cout << getPropertyInterface().getClassName() << "[" <<
     getFullID().asString() << "]" << std::endl;
   cout << "  " << getIDString(theVacantSpecies) << 
