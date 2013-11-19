@@ -643,7 +643,10 @@ void SpatiocyteStepper::populateComps()
   for(std::vector<Comp*>::const_iterator i(theComps.begin());
       i != theComps.end(); ++i)
     {
-      populateComp(*i);
+      if(!(*i)->isProcessComp)
+        {
+          populateComp(*i);
+        }
     }
 }
 
@@ -652,7 +655,10 @@ void SpatiocyteStepper::clearComps()
   for(std::vector<Comp*>::const_iterator i(theComps.begin());
       i != theComps.end(); ++i)
     {
-      clearComp(*i);
+      if(!(*i)->isProcessComp)
+        {
+          clearComp(*i);
+        }
     }
 }
 
@@ -846,6 +852,7 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
   //We execute this function to register the System, and its subsystems
   //recursively.
   Comp* aComp(new Comp);
+  aComp->isProcessComp = false;
   aComp->minRow = UINT_MAX;
   aComp->minCol = UINT_MAX;
   aComp->minLayer = UINT_MAX;
@@ -872,65 +879,13 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
   aComp->geometry = 0;
   //Default is volume Comp:
   aComp->dimension = 3;
-  if(getVariable(aSystem, "DIMENSION"))
-    { 
-      const double aDimension(aSystem->getVariable("DIMENSION")->getValue());
-      aComp->dimension = aDimension;
-    }
-  if(aComp->dimension == 3)
+  if(getVariable(aSystem, "PROCESS_COMPARTMENT"))
     {
-      if(getVariable(aSystem, "GEOMETRY"))
-        { 
-          aComp->geometry = aSystem->getVariable("GEOMETRY")->getValue();
-        }
-      if(getVariable(aSystem, "LENGTHX"))
-        {
-          aComp->lengthX = aSystem->getVariable("LENGTHX")->getValue();
-        }
-      if(getVariable(aSystem, "LENGTHY"))
-        {
-          aComp->lengthY = aSystem->getVariable("LENGTHY")->getValue();
-        }
-      if(getVariable(aSystem, "LENGTHZ"))
-        {
-          aComp->lengthZ = aSystem->getVariable("LENGTHZ")->getValue();
-        }
-      if(getVariable(aSystem, "ORIGINX"))
-        {
-          aComp->originX = aSystem->getVariable("ORIGINX")->getValue();
-        }
-      if(getVariable(aSystem, "ORIGINY"))
-        {
-          aComp->originY = aSystem->getVariable("ORIGINY")->getValue();
-        }
-      if(getVariable(aSystem, "ORIGINZ"))
-        {
-          aComp->originZ = aSystem->getVariable("ORIGINZ")->getValue();
-        }
-      if(getVariable(aSystem, "ROTATEX"))
-        {
-          aComp->rotateX = aSystem->getVariable("ROTATEX")->getValue();
-        }
-      if(getVariable(aSystem, "ROTATEY"))
-        {
-          aComp->rotateY = aSystem->getVariable("ROTATEY")->getValue();
-        }
-      if(getVariable(aSystem, "ROTATEZ"))
-        {
-          aComp->rotateZ = aSystem->getVariable("ROTATEZ")->getValue();
-        }
-      if(getVariable(aSystem, "XYPLANE"))
-        {
-          aComp->xyPlane = aSystem->getVariable("XYPLANE")->getValue();
-        }
-      if(getVariable(aSystem, "XZPLANE"))
-        {
-          aComp->xzPlane = aSystem->getVariable("XZPLANE")->getValue();
-        }
-      if(getVariable(aSystem, "YZPLANE"))
-        {
-          aComp->yzPlane = aSystem->getVariable("YZPLANE")->getValue();
-        }
+      aComp->isProcessComp = true;
+    }
+  else
+    {
+      setCompAttributes(aSystem, aComp);
     }
   registerCompSpecies(aComp);
   //Systems contains all the subsystems of a System.
@@ -993,11 +948,79 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
   return aComp;
 }
 
+void SpatiocyteStepper::setCompAttributes(System* aSystem, Comp* aComp)
+{
+  if(getVariable(aSystem, "DIMENSION"))
+    { 
+      const double aDimension(
+          aSystem->getVariable("DIMENSION")->getValue());
+      aComp->dimension = aDimension;
+    }
+  if(aComp->dimension == 3)
+    {
+      if(getVariable(aSystem, "GEOMETRY"))
+        { 
+          aComp->geometry = aSystem->getVariable("GEOMETRY")->getValue();
+        }
+      if(getVariable(aSystem, "LENGTHX"))
+        {
+          aComp->lengthX = aSystem->getVariable("LENGTHX")->getValue();
+        }
+      if(getVariable(aSystem, "LENGTHY"))
+        {
+          aComp->lengthY = aSystem->getVariable("LENGTHY")->getValue();
+        }
+      if(getVariable(aSystem, "LENGTHZ"))
+        {
+          aComp->lengthZ = aSystem->getVariable("LENGTHZ")->getValue();
+        }
+      if(getVariable(aSystem, "ORIGINX"))
+        {
+          aComp->originX = aSystem->getVariable("ORIGINX")->getValue();
+        }
+      if(getVariable(aSystem, "ORIGINY"))
+        {
+          aComp->originY = aSystem->getVariable("ORIGINY")->getValue();
+        }
+      if(getVariable(aSystem, "ORIGINZ"))
+        {
+          aComp->originZ = aSystem->getVariable("ORIGINZ")->getValue();
+        }
+      if(getVariable(aSystem, "ROTATEX"))
+        {
+          aComp->rotateX = aSystem->getVariable("ROTATEX")->getValue();
+        }
+      if(getVariable(aSystem, "ROTATEY"))
+        {
+          aComp->rotateY = aSystem->getVariable("ROTATEY")->getValue();
+        }
+      if(getVariable(aSystem, "ROTATEZ"))
+        {
+          aComp->rotateZ = aSystem->getVariable("ROTATEZ")->getValue();
+        }
+      if(getVariable(aSystem, "XYPLANE"))
+        {
+          aComp->xyPlane = aSystem->getVariable("XYPLANE")->getValue();
+        }
+      if(getVariable(aSystem, "XZPLANE"))
+        {
+          aComp->xzPlane = aSystem->getVariable("XZPLANE")->getValue();
+        }
+      if(getVariable(aSystem, "YZPLANE"))
+        {
+          aComp->yzPlane = aSystem->getVariable("YZPLANE")->getValue();
+        }
+    }
+}
+
 void SpatiocyteStepper::setCompsProperties()
 {
   for(unsigned i(0); i != theComps.size(); ++i)
     {
-      setCompProperties(theComps[i]);
+      if(!theComps[i]->isProcessComp)
+        {
+          setCompProperties(theComps[i]);
+        }
     }
 }
 
@@ -1005,7 +1028,10 @@ void SpatiocyteStepper::setCompsCenterPoint()
 {
   for(unsigned i(0); i != theComps.size(); ++i)
     {
-      setCompCenterPoint(theComps[i]);
+      if(!theComps[i]->isProcessComp)
+        {
+          setCompCenterPoint(theComps[i]);
+        }
     }
 }
 
@@ -1146,6 +1172,10 @@ void SpatiocyteStepper::storeSimulationParameters()
   for(unsigned i(0); i != theComps.size(); ++i)
     {
       Comp* aComp(theComps[i]); 
+      if(!aComp->isProcessComp)
+        {
+          continue;
+        }
       if(aComp->dimension == 2)
         {
           aComp->actualArea =  (72*pow(VoxelRadius,2))*
@@ -1231,6 +1261,10 @@ void SpatiocyteStepper::printSimulationParameters()
   for(unsigned i(0); i != theComps.size(); ++i)
     {
       Comp* aComp(theComps[i]);
+      if(!aComp->isProcessComp)
+        {
+          continue;
+        }
       double aSpecVolume(aComp->specVolume);
       double aSpecArea(aComp->specArea);
       double anActualVolume(aComp->actualVolume);
@@ -2306,6 +2340,10 @@ void SpatiocyteStepper::setCompVoxelProperties()
   for(std::vector<Comp*>::iterator i(theComps.begin());
       i != theComps.end(); ++i)
     {
+      if((*i)->isProcessComp)
+        {
+          continue;
+        }
       switch ((*i)->dimension)
         {
         case 1:
@@ -2651,6 +2689,10 @@ void SpatiocyteStepper::setIntersectingPeers()
   for(std::vector<Comp*>::reverse_iterator i(theComps.rbegin());
       i != theComps.rend(); ++i)
     {
+      if((*i)->isProcessComp)
+        {
+          continue;
+        }
       //Only proceed if the volume is not enclosed:
       if(!(*i)->system->isRootSystem() && (*i)->dimension == 3)
         {
@@ -2665,6 +2707,10 @@ void SpatiocyteStepper::setIntersectingPeers()
           for(std::vector<Comp*>::reverse_iterator j(theComps.rbegin());
               j != theComps.rend(); ++j)
             {
+              if((*j)->isProcessComp)
+                {
+                  continue;
+                }
               //Only proceed if the volume of the peer is enclosed:
               if((*i) != (*j) && !(*j)->system->isRootSystem() &&
                  (*j)->dimension == 3)
@@ -2715,6 +2761,10 @@ void SpatiocyteStepper::setIntersectingParent()
   for(std::vector<Comp*>::iterator i(theComps.begin());
       i != theComps.end(); ++i)
     {
+      if((*i)->isProcessComp)
+        {
+          continue;
+        }
       (*i)->isIntersectRoot = false;
       (*i)->isIntersectParent = false;
       //only proceed if the volume is not enclosed:

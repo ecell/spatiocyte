@@ -137,6 +137,7 @@ struct Voxel
 
 struct Comp
 {
+  bool isProcessComp;
   bool isIntersectParent;
   bool isIntersectRoot;
   unsigned dimension;

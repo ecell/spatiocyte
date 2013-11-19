@@ -35,6 +35,86 @@ namespace libecs
 
 LIBECS_DM_INIT_STATIC(MigrationProcess, Process); 
 
+void MigrationProcess::prepreinitialize()
+{
+  SpatiocyteProcess::prepreinitialize();
+  theSystem = createSystem(getFullID().getID());
+  theVacantVariable = createVariable("VACANT", theSystem);
+  createVariable("PROCESS_COMPARTMENT", theSystem);
+  theAddedVariable = createVariable("AddedSurface", theSystem);
+  theOverlapVariable = createVariable("OverlapSurface", theSystem);
+}
+
+void MigrationProcess::preinitialize()
+{
+  SpatiocyteProcess::preinitialize();
+  theSystem->setStepperID(getStepper()->getID());
+}
+
+System* MigrationProcess::createSystem(String anID)
+{
+  return createSystem(anID, getSuperSystem());
+}
+
+System* MigrationProcess::createSystem(String anID, System* aSuperSystem)
+{
+  System* aSystem;
+  String anEntityType("System");
+  SystemPath aSystemPath(aSuperSystem->getSystemPath());
+  aSystemPath.push_back(aSuperSystem->getID());
+  FullID aFullID(anEntityType, aSystemPath, anID);
+  aSystem = reinterpret_cast<System*>(
+      getModel()->createEntity("System", aFullID));
+  return aSystem;
+}
+
+void MigrationProcess::initialize()
+{
+  if(isInitialized)
+    {
+      return;
+    }
+  SpatiocyteProcess::initialize();
+  theVacantSpecies = theSpatiocyteStepper->addSpecies(theVacantVariable);
+  theAddedSpecies = theSpatiocyteStepper->addSpecies(theAddedVariable);
+  theOverlapSpecies = theSpatiocyteStepper->addSpecies(theOverlapVariable);
+  for(VariableReferenceVector::iterator i(theVariableReferenceVector.begin());
+      i != theVariableReferenceVector.end(); ++i)
+    {
+      Species* aSpecies(theSpatiocyteStepper->variable2species(
+                             (*i).getVariable())); 
+      if(aSpecies == NULL)
+        {
+          theVacantCompVariables.push_back((*i).getVariable());
+        }
+      else if(!(*i).getCoefficient())
+        {
+          theVacantCompSpecies.push_back(aSpecies);
+        }
+    }
+  isPriorityQueued = true;
+}	
+
+void MigrationProcess::initializeFirst()
+{
+  SpatiocyteProcess::initializeFirst();
+  theComp = theSpatiocyteStepper->system2Comp(theSystem);
+  theVacantSpecies->setVacantSpecies(
+      theSpatiocyteStepper->system2Comp(getSuperSystem())->vacantSpecies);
+  theVacantSpecies->setComp(theComp);
+  theAddedSpecies->setComp(theComp);
+  theOverlapSpecies->setComp(theComp);
+  for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
+    {
+      //to be overwritten by DiffusionProcess in initializeSecond:
+      theVacantCompSpecies[i]->setVacantSpecies(theVacantSpecies);
+      theVacantCompSpecies[i]->setComp(theComp);
+    }
+  theAddedSpecies->setVacantSpecies(theVacantSpecies);
+  theOverlapSpecies->setVacantSpecies(theVacantSpecies);
+}
+
+
 void MigrationProcess::initializeThird()
 {
   ipf = new char[20];

@@ -1109,6 +1109,8 @@ void SpatiocyteNextReactionProcess::initializeBeforePopulate()
     {
       compA = theSpatiocyteStepper->system2Comp(variableA->getSuperSystem());
       compB = compA;
+      std::cout << getIDString(variableA) << std::endl;
+      std::cout <<" compA:" << compA->system->getFullID().asString() << std::endl;
     }
   if(B)
     {
@@ -1117,6 +1119,8 @@ void SpatiocyteNextReactionProcess::initializeBeforePopulate()
   else if(variableB)
     {
       compB = theSpatiocyteStepper->system2Comp(variableB->getSuperSystem());
+      std::cout << getIDString(variableB) << std::endl;
+      std::cout << " compB:" << compB->system->getFullID().asString() << std::endl;
     }
   if(variableG)
     {
@@ -1131,6 +1135,8 @@ void SpatiocyteNextReactionProcess::initializeBeforePopulate()
     {
       compC = theSpatiocyteStepper->system2Comp(
                          variableC->getSuperSystem());
+      std::cout << getIDString(variableC) << std::endl;
+      std::cout << " compC:" << compC->system->getFullID().asString() << std::endl;
     }
   if(D)
     {

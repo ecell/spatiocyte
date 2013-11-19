@@ -159,6 +159,7 @@ private:
   void setSystemSize(System*, double);
   void printSimulationParameters();
   void setCompProperties();
+  void setCompAttributes(System*, Comp*);
   void initSpecies();
   void readjustSurfaceBoundarySizes();
   void constructLattice();
