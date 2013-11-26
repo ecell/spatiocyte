@@ -146,10 +146,10 @@ void MigrationProcess::initializeFifth()
 void MigrationProcess::fire()
 {
   std::cout<<"time  tstp: "<<time_<<"  "<<tstp<<std::endl;
-  /*updateComp();
-  theInterval = tstp;
-  theTime= time_;*/
-  theTime = libecs::INF; 
+  updateComp();
+  theInterval = tstp*200;
+  theTime += theInterval;
+  //theTime = libecs::INF; 
   thePriorityQueue->moveTop();
 }
 

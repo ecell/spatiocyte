@@ -294,11 +294,12 @@ void LifetimeLogProcess::logTag(Species* aSpecies, Tag& aTag,
   ++logCnt;
   theLogFile << std::setprecision(15) << duration << "," <<
     distance(aPoint, anOrigin)*2*theSpatiocyteStepper->getVoxelRadius() << ","
-    << theTagTimes[aTag.id] << "," << aTime << "," << konCnt << "," <<
-    1/(totalDuration/logCnt) << std::endl;
+    << theTagTimes[aTag.id] << "," << aTime << "," << konCnt << "," << 
+    konCnt/aTime << "," << 1/(totalDuration/logCnt) << std::endl;
   if(Verbose)
     {
-      std::cout << "average koff:" << 1/(totalDuration/logCnt) << std::endl;
+      std::cout << "average kon:" << konCnt/aTime << 
+        " average koff:" << 1/(totalDuration/logCnt) << std::endl;
     }
 }
 
@@ -313,7 +314,8 @@ void LifetimeLogProcess::saveFileHeader(std::ofstream& aFile)
         }
     }
   aFile << "(s), Distance(m), Start time(s), End time(s), " <<
-    "kon counts (some still haven't koff), Average koff so far(1/s)" <<
+    "kon counts [#kon] (some still haven't koff), Average kon so far " <<
+    "[#kon/time](1/s), Average koff so far(1/s)" <<
     std::endl; 
 }
 

@@ -116,6 +116,7 @@ public:
     theInitCoordSize(anInitCoordSize),
     theMoleculeSize(0),
     theRotateSize(1),
+    theSpeciesCollisionCnt(0),
     D(0),
     nDiffuseRadius(0.5),
     theDiffuseRadius(voxelRadius),
@@ -807,11 +808,16 @@ public:
               const unsigned tarID(getID(target));
               if(theDiffusionInfluencedReactions[tarID])
                 {
+                  if(theCollision==3)
+                    { 
+                      ++theSpeciesCollisionCnt;
+                      return;
+                    }
                   //If it meets the reaction probability:
                   if(theReactionProbabilities[tarID] == 1 ||
                      theRng.Fixed() < theReactionProbabilities[tarID])
                     { 
-                      if(theCollision)
+                      if(theCollision && theCollision != 3)
                         { 
                           ++collisionCnts[i];
                           Species* targetSpecies(theSpecies[tarID]);
@@ -837,6 +843,11 @@ public:
                     }
                 }
             }
+        }
+      if(theCollision==3)
+        { 
+          std::cout << getIDString() << " collision/time:" << 
+            theSpeciesCollisionCnt/theStepper->getCurrentTime() << std::endl;
         }
     }
   void walkTrail()
@@ -3932,6 +3943,7 @@ private:
   unsigned theRegLatticeCoord;
   unsigned theStride;
   unsigned theRotateSize;
+  unsigned long theSpeciesCollisionCnt;
   unsigned theVacantIdx;
   unsigned vacCols;
   unsigned vacRows;
