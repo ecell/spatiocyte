@@ -870,6 +870,90 @@ public:
                   theTrailSpecies->addMolecule(source);
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
+                }
+            }
+          else if(getID(target) == theTrailSpecies->getID())
+            {
+              if(theWalkProbability == 1 || theRng.Fixed() < theWalkProbability)
+                {
+                  //Can be optimized by directly replacing source with target
+                  //voxel of theTrailSpecies:
+                  theTrailSpecies->addMolecule(source);
+                  theTrailSpecies->softRemoveMolecule(target);
+                  target->idx = i+theStride*theID;
+                  theMolecules[i] = target;
+                }
+            }
+          else
+            {
+              if(getID(target) == theComp->interfaceID)
+                {
+                  //Some interface voxels do not have pointers to the
+                  //off lattice subunits, so their adjoiningSize == diffuseSize:
+                  if(target->adjoiningSize == target->diffuseSize)
+                    {
+                      continue;
+                    }
+                  unsigned coord(theRng.Integer(target->adjoiningSize-
+                                                target->diffuseSize));
+                  coord = target->adjoiningCoords[coord+target->diffuseSize];
+                  target = &theLattice[coord];
+                }
+              const unsigned tarID(getID(target));
+              if(theDiffusionInfluencedReactions[tarID])
+                {
+                  //If it meets the reaction probability:
+                  if(theReactionProbabilities[tarID] == 1 ||
+                     theRng.Fixed() < theReactionProbabilities[tarID])
+                    { 
+                      if(theCollision)
+                        { 
+                          ++collisionCnts[i];
+                          Species* targetSpecies(theSpecies[tarID]);
+                          targetSpecies->addCollision(target);
+                          if(theCollision != 2)
+                            {
+                              return;
+                            }
+                        }
+                      unsigned aMoleculeSize(theMoleculeSize);
+                      react(source, target, i, target->idx%theStride, tarID);
+                      //If the reaction is successful, the last molecule of this
+                      //species will replace the pointer of i, so we need to 
+                      //decrement i to perform the diffusion on it. However, if
+                      //theMoleculeSize didn't decrease, that means the
+                      //currently walked molecule was a product of this
+                      //reaction and so we don't need to walk it again by
+                      //decrementing i.
+                      if(theMoleculeSize < aMoleculeSize)
+                        {
+                          --i;
+                        }
+                    }
+                }
+            }
+        }
+    }
+  void walkTrailNeighbor()
+    {
+      const unsigned beginMoleculeSize(theMoleculeSize);
+      unsigned size(theAdjoiningCoordSize);
+      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          if(!isFixedAdjoins)
+            {
+              size = source->diffuseSize;
+            }
+          Voxel* target(&theLattice[source->adjoiningCoords[
+                        theRng.Integer(size)]]);
+          if(getID(target) == theVacantID)
+            {
+              if(theWalkProbability == 1 || theRng.Fixed() < theWalkProbability)
+                {
+                  theTrailSpecies->addMolecule(source);
+                  target->idx = i+theStride*theID;
+                  theMolecules[i] = target;
                   for(unsigned j(target->diffuseSize); j != target->trailSize;
                       ++j)
                     {

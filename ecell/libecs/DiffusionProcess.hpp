@@ -56,6 +56,7 @@ public:
       PROPERTYSLOT_SET_GET(Real, WalkProbability);
     }
   DiffusionProcess():
+    isTrailNeighbor(false),
     Origins(0),
     RegularLattice(0),
     D(0),
@@ -128,6 +129,10 @@ public:
             }
           else
             {
+              if((*i).getCoefficient() == 2)
+                {
+                  isTrailNeighbor = true;
+                }
               if(theTrailSpecies)
                 {
                   THROW_EXCEPTION(ValueError, String(
@@ -276,7 +281,14 @@ public:
             {
               if(theTrailSpecies)
                 {
-                  theWalkMethod = &DiffusionProcess::walkTrail;
+                  if(isTrailNeighbor)
+                    {
+                      theWalkMethod = &DiffusionProcess::walkTrailNeighbor;
+                    }
+                  else
+                    {
+                      theWalkMethod = &DiffusionProcess::walkTrail;
+                    }
                 }
               else
                 {
@@ -313,6 +325,10 @@ public:
   void walkTrail() const
     {
       theDiffusionSpecies->walkTrail();
+    }
+  void walkTrailNeighbor() const
+    {
+      theDiffusionSpecies->walkTrailNeighbor();
     }
   void walkRegular() const
     {
@@ -365,6 +381,7 @@ public:
     }
     */
 protected:
+  bool isTrailNeighbor;
   unsigned Origins;
   unsigned RegularLattice;
   double D;
