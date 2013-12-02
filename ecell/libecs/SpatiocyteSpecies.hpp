@@ -870,6 +870,15 @@ public:
                   theTrailSpecies->addMolecule(source);
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
+                  for(unsigned j(target->diffuseSize); j != target->trailSize;
+                      ++j)
+                    {
+                      Voxel* trail(&theLattice[target->adjoiningCoords[j]]);
+                      if(getID(trail) == theVacantID)
+                        {
+                          theTrailSpecies->addMolecule(trail);
+                        }
+                    }
                 }
             }
           else if(getID(target) == theTrailSpecies->getID())
@@ -882,6 +891,15 @@ public:
                   theTrailSpecies->softRemoveMolecule(target);
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
+                  for(unsigned j(target->diffuseSize); j != target->trailSize;
+                      ++j)
+                    {
+                      Voxel* trail(&theLattice[target->adjoiningCoords[j]]);
+                      if(getID(trail) == theVacantID)
+                        {
+                          theTrailSpecies->addMolecule(trail);
+                        }
+                    }
                 }
             }
           else

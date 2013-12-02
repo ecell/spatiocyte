@@ -271,6 +271,7 @@ void CompartmentProcess::initializeThird()
       elongateFilaments(theVacantSpecies, subStartCoord, Filaments, Subunits,
                         nDiffuseRadius);
       connectFilaments(subStartCoord, Filaments, Subunits);
+      setDiffuseSize(subStartCoord, lipStartCoord);
       setGrid(theVacantSpecies, theVacGrid, subStartCoord);
       interfaceSubunits();
       initializeFilaments(lipidStart, LipidRows, LipidCols, nLipidRadius,
@@ -724,7 +725,6 @@ void CompartmentProcess::interfaceSubunits()
   enlistSubunitIntersectInterfaceVoxels();
   enlistPlaneIntersectInterfaceVoxels();
   enlistOrphanSubunitInterfaceVoxels();
-  setDiffuseSize(subStartCoord, lipStartCoord);
   enlistSubunitInterfaceAdjoins();
 }
 

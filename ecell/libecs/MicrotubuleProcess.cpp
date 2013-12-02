@@ -81,6 +81,9 @@ void MicrotubuleProcess::initializeThird()
       elongateFilaments(theVacantSpecies, subStartCoord, Filaments, Subunits,
                         nDiffuseRadius);
       connectFilaments(subStartCoord, Filaments, Subunits);
+      setDiffuseSize(subStartCoord, lipStartCoord);
+      connectTrailTubulins(subStartCoord, Filaments, Subunits);
+      setTrailSize(subStartCoord, lipStartCoord);
       setGrid(theVacantSpecies, theVacGrid, subStartCoord);
       interfaceSubunits();
       isCompartmentalized = true;
@@ -91,6 +94,14 @@ void MicrotubuleProcess::initializeThird()
   thePlusSpecies->setIsPopulated();
 }
 
+void MicrotubuleProcess::setTrailSize(unsigned start, unsigned end)
+{
+  for(unsigned i(start); i != end; ++i)
+    {
+      Voxel& subunit((*theLattice)[i]);
+      subunit.trailSize = subunit.adjoiningSize;
+    }
+}
 
 void MicrotubuleProcess::initializeVectors()
 { 
@@ -196,6 +207,23 @@ void MicrotubuleProcess::connectFilaments(unsigned aStartCoord,
               unsigned b(aStartCoord+j*aCols+aCols-1);
               connectSubunit(a, b, NORTH, SOUTH);
             }
+        }
+    }
+}
+
+// y:width:rows:filaments
+// z:length:cols:subunits
+void MicrotubuleProcess::connectTrailTubulins(unsigned aStartCoord,
+                                              unsigned aRows, unsigned aCols)
+{
+  for(unsigned i(0); i != aCols; ++i)
+    {
+      for(unsigned j(1); j != aRows; ++j)
+        { 
+          //NW-SW
+          unsigned a(aStartCoord+j*aCols+i);
+          unsigned b(aStartCoord+(j-1)*aCols+i);
+          connectSubunit(a, b, NW, SW);
         }
     }
 }

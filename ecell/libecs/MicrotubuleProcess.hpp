@@ -225,6 +225,8 @@ public:
   virtual void addPlaneIntersectInterfaceVoxel(Voxel&, Point&);
   virtual bool isInside(Point&);
   virtual bool isOnAboveSurface(Point&);
+  void connectTrailTubulins(unsigned, unsigned, unsigned);
+  void setTrailSize(unsigned, unsigned);
 protected:
   double MonomerPitch;
   double nMonomerPitch;
