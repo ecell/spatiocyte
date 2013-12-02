@@ -163,7 +163,6 @@ SpatiocyteTauLeapProcess.hpp\
 LifetimeLogProcess.hpp\
 MicrotubuleProcess.hpp\
 MultiscaleReactionProcess.hpp\
-SpatiocyteVisualizer.hpp\
 SpatiocyteDebug.hpp\
 MechanicsProcess.hpp\
 MigrationProcess.hpp
