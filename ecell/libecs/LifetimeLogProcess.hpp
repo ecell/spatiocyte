@@ -48,6 +48,7 @@ public:
   LifetimeLogProcess():
     konCnt(0),
     logCnt(0),
+    totalSize(0),
     totalDuration(0)
   {
     FileName = "LifetimeLog.csv";
@@ -78,6 +79,7 @@ private:
 private:
   unsigned konCnt;
   unsigned logCnt;
+  double totalSize;
   double totalDuration;
   std::vector<bool> isAddDimerReaction;
   std::vector<bool> isBindingSiteReaction;
@@ -89,6 +91,7 @@ private:
   std::vector<unsigned> availableTagIDs;
   std::vector<Tag> theDimerizingMonomerTags;
   std::vector<double> theTagTimes;
+  std::vector<double> trackedSpeciesSize;
 };
 
 }

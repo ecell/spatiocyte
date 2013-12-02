@@ -56,6 +56,7 @@ void LifetimeLogProcess::initializeFirst()
   isDedimerizationReaction.resize(getStepper()->getProcessVector().size(),
                                   false);
   isTrackedSpecies.resize(theSpecies.size(), false);
+  trackedSpeciesSize.resize(theSpecies.size(), 0);
   isTrackedDimerSpecies.resize(theSpecies.size(), false);
   unsigned cntTracked(0);
   for(VariableReferenceVector::iterator
@@ -298,8 +299,19 @@ void LifetimeLogProcess::logTag(Species* aSpecies, Tag& aTag,
     konCnt/aTime << "," << 1/(totalDuration/logCnt) << std::endl;
   if(Verbose)
     {
-      std::cout << "average kon:" << konCnt/aTime << 
-        " average koff:" << 1/(totalDuration/logCnt) << std::endl;
+      std::cout << "mean kon:" << konCnt/aTime << 
+        " mean koff:" << 1/(totalDuration/logCnt);
+      for(unsigned i(0); i != theSpecies.size(); ++i)
+        {
+          if(isTrackedSpecies[i])
+            {
+              trackedSpeciesSize[i] += theSpecies[i]->size();
+              std::cout << " " << theSpecies[i]->getIDString() <<
+                "[" << trackedSpeciesSize[i]/logCnt << "]";
+              totalSize += theSpecies[i]->size();
+            }
+        }
+      std::cout << " all[" << totalSize/logCnt << "]" << std::endl;
     }
 }
 
