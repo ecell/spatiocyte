@@ -109,7 +109,8 @@ void VisualizationLogProcess::logMolecules(int anIndex)
   Species* aSpecies(theLatticeSpecies[anIndex]);
   //No need to log lipid or non diffusing vacant molecules since we have
   //already logged them once during initialization:
-  if(aSpecies->getIsCompVacant())
+  if(aSpecies->getIsCompVacant() && !aSpecies->getIsDiffusiveVacant() &&
+     !aSpecies->getIsReactiveVacant())
     {
       return;
     }

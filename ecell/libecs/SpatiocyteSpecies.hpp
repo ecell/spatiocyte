@@ -1574,8 +1574,8 @@ public:
       theVariable->setValue(aSize);
     }
   //Even if it is a isCompVacant, this method will be called by
-  //VisualizationLogProcess, or SNRP if it is Reactive, or DiffusionProcess
-  //if it is Diffusive:
+  //VisualizationLogProcess (either Reactive or Diffusive),
+  //or SNRP if it is Reactive, or DiffusionProcess if it is Diffusive:
   void updateVacantMolecules()
     {
       theMoleculeSize = 0;
