@@ -32,98 +32,43 @@
 #ifndef __ErythrocyteProcess_hpp
 #define __ErythrocyteProcess_hpp
 
-#include <libecs/SpatiocyteProcess.hpp>
-#include <libecs/SpatiocyteSpecies.hpp>
+#include <sstream>
+#include <libecs/CompartmentProcess.hpp>
+#include <libecs/SpatiocyteSpecies.hpp>  
 
 namespace libecs
 {
 
-LIBECS_DM_CLASS(ErythrocyteProcess, SpatiocyteProcess)
+LIBECS_DM_CLASS(ErythrocyteProcess, CompartmentProcess)  
 {
 public:
   LIBECS_DM_OBJECT(ErythrocyteProcess, Process)
     {
-      INHERIT_PROPERTIES(Process);
+      INHERIT_PROPERTIES(CompartmentProcess);
       PROPERTYSLOT_SET_GET(Real, EdgeLength);
     }
   ErythrocyteProcess():
-    isCompartmentalized(false),
     EdgeLength(60e-9),
-    theVertexSpecies(NULL),
-    theSpectrinSpecies(NULL) {}
+    theEdgeSpecies(NULL),
+    theVertexSpecies(NULL) {}
   virtual ~ErythrocyteProcess() {}
   SIMPLE_SET_GET_METHOD(Real, EdgeLength);
-  virtual void initialize()
-    {
-      if(isInitialized)
-        {
-          return;
-        }
-      SpatiocyteProcess::initialize();
-      for(VariableReferenceVector::iterator
-          i(theSortedVariableReferences.begin());
-          i != theSortedVariableReferences.end(); ++i)
-        {
-          Species* aSpecies(theSpatiocyteStepper->variable2species(
-                                   (*i).getVariable())); 
-          if(!theSpectrinSpecies)
-            {
-              theSpectrinSpecies = aSpecies;
-            }
-          else if(!theVertexSpecies)
-            {
-              theVertexSpecies = aSpecies;
-            }
-          else
-            {
-              THROW_EXCEPTION(ValueError, String(
-                              getPropertyInterface().getClassName()) +
-                              "[" + getFullID().asString() + 
-                              "]: An ErythrocyteProcess requires only " +
-                              "two variable references as the spectrin and " +
-                              "vertex species of the Erythrocyte " + 
-                              "compartment but " +
-                              getIDString(theSpectrinSpecies) + ", " +
-                              getIDString(theVertexSpecies) + " and " +
-                              getIDString(aSpecies) + " are given."); 
-            }
-        }
-      if(!theSpectrinSpecies)
-        {
-          THROW_EXCEPTION(ValueError, String(
-                          getPropertyInterface().getClassName()) +
-                          "[" + getFullID().asString() + 
-                          "]: An ErythrocyteProcess requires one " +
-                          "nonHD variable reference coefficient as the " +
-                          "spectrin species, but none is given."); 
-        }
-      if(!theVertexSpecies)
-        {
-          THROW_EXCEPTION(ValueError, String(
-                          getPropertyInterface().getClassName()) +
-                          "[" + getFullID().asString() + 
-                          "]: An ErythrocyteProcess requires one " +
-                          "nonHD variable reference coefficient as the " +
-                          "vertex species, but none is given."); 
-        }
-      VoxelDiameter = theSpatiocyteStepper->getVoxelRadius()*2;
-      EdgeLength /= VoxelDiameter;
-      TriangleAltitude = cos(M_PI/6)*EdgeLength;
-    }
+  virtual void prepreinitialize();
+  virtual void initialize();
+  virtual void initializeFirst();
+  virtual unsigned getLatticeResizeCoord(unsigned);
+  virtual void initializeVectors();
+  virtual void initializeFilaments();
   virtual void initializeThird();
-  //void populateMolecules();
-  void initializeDirectionVectors();
-  void initializeProtofilaments();
-  void normalize(Point&);
-  bool isInsidePlane(Point&, Point&, Point&);
-  bool isOnPlane(Point&, Point&, Point&, unsigned int);
-  bool isOnLowerPlanes(Point&, unsigned int, Point&);
-  bool isOnUpperPlanes(Point&, unsigned int, Point&);
-  unsigned int getIntersectCount(Point&, unsigned int);
-  void rotatePointAlongVector(Point&, Point&, Point&, double);
+  virtual void normalize(Point&);
+  virtual bool isInsidePlane(Point&, Point&, Point&);
+  virtual bool isOnPlane(Point&, Point&, Point&, unsigned int);
+  virtual bool isOnLowerPlanes(Point&, unsigned int, Point&);
+  virtual bool isOnUpperPlanes(Point&, unsigned int, Point&);
+  virtual unsigned int getIntersectCount(Point&, unsigned int);
+  virtual void rotatePointAlongVector(Point&, Point&, Point&, double);
   virtual void printParameters();
 protected:
-  bool isCompartmentalized;
   double EdgeLength;
   double VoxelDiameter;
   double TriangleAltitude;
@@ -132,16 +77,13 @@ protected:
   Point R; //Direction vector along rotated north east
   Point L; //Direction vector along rotated north west
   Point C; //Center point
+  Species* theEdgeSpecies;
   Species* theVertexSpecies;
-  Species* theSpectrinSpecies;
-  Comp* theComp;
   std::vector<unsigned int> filamentCoords;
+  std::vector<Species*> theEdgeCompSpecies;
+  std::vector<Species*> theVertexCompSpecies;
 };
 
 }
 
 #endif /* __ErythrocyteProcess_hpp */
-
-
-
-

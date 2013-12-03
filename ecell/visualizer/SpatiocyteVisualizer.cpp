@@ -738,7 +738,7 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
     }
   if(showSurface)
     {
-      rotateMidAxisAbs(90, 0, 1, 0);
+      //rotateMidAxisAbs(90, 0, 1, 0);
     }
   if(showTime)
     {

@@ -35,38 +35,148 @@ namespace libecs
 
 LIBECS_DM_INIT_STATIC(ErythrocyteProcess, Process); 
 
+void ErythrocyteProcess::prepreinitialize()
+{
+  SpatiocyteProcess::prepreinitialize();
+  theVacantVariable = createVariable("Vacant");
+}
+
+void ErythrocyteProcess::initialize()
+{
+  if(isInitialized)
+    {
+      return;
+    }
+  SpatiocyteProcess::initialize();
+  for(VariableReferenceVector::iterator
+      i(theVariableReferenceVector.begin());
+      i != theVariableReferenceVector.end(); ++i)
+    {
+      Species* aSpecies(theSpatiocyteStepper->variable2species(
+                                               (*i).getVariable())); 
+      if((*i).getCoefficient() == -1)
+        {
+          if(theEdgeSpecies)
+            {
+              THROW_EXCEPTION(ValueError, String(
+                  getPropertyInterface().getClassName()) +		      
+                  "[" + getFullID().asString() + 
+                  "]: An ErythrocyteProcess requires only " +
+                  "one vacant variable reference with -1 " +
+                  "coefficient as the edge species of " + 
+                  "the erythrocyte compartment, but " +
+                  getIDString(theEdgeSpecies) + " and" +
+                  getIDString(aSpecies) + " are given."); 
+            }
+          theEdgeSpecies = aSpecies;
+        } 
+      else if((*i).getCoefficient() == -2)
+        {
+          if(theVertexSpecies)
+            {
+              THROW_EXCEPTION(ValueError, String(
+                  getPropertyInterface().getClassName()) +	      
+                  "[" + getFullID().asString() + 
+                  "]: An ErythrocyteProcess requires only " +
+                  "one vacant variable reference with -2 " +
+                  "coefficient as the vertex species of " + 
+                  "the erythrocyte compartment, but " +
+                  getIDString(theVertexSpecies) + " and" +
+                  getIDString(aSpecies) + " are given."); 
+            }
+          theVertexSpecies = aSpecies;
+        }
+      else if((*i).getCoefficient() == 1)
+        {
+          theEdgeCompSpecies.push_back(aSpecies);
+        }
+      else if((*i).getCoefficient() == 2)
+        {
+          theVertexCompSpecies.push_back(aSpecies);
+        }	      
+    }
+ if(!theEdgeSpecies)
+    {
+      THROW_EXCEPTION(ValueError, String(
+                      getPropertyInterface().getClassName()) +
+                      "[" + getFullID().asString() + 
+                      "]: An ErythrocyteProcess requires one " +
+                      "nonHD variable reference with -1 coefficient " +
+                      "as the edge species, but none is given."); 
+    }
+  if(!theVertexSpecies)
+    {
+      THROW_EXCEPTION(ValueError, String(
+                      getPropertyInterface().getClassName()) +
+                      "[" + getFullID().asString() + 
+                      "]: An ErythrocyteProcess requires one " +
+                      "nonHD variable reference with -2 coefficient " +
+                      "as the vertex species, but none is given."); 
+    }
+  VoxelDiameter = theSpatiocyteStepper->getVoxelRadius()*2;
+  EdgeLength /= VoxelDiameter;
+  TriangleAltitude = cos(M_PI/6)*EdgeLength;
+}
+
+void ErythrocyteProcess::initializeFirst()
+{
+  SpatiocyteProcess::initializeFirst();
+  theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
+  theVertexSpecies->setIsCompVacant();
+  theVertexSpecies->setComp(theComp);
+  theEdgeSpecies->setIsCompVacant();
+  theEdgeSpecies->setComp(theComp);
+  for(unsigned i(0); i != theEdgeCompSpecies.size(); i++)
+    {
+      theEdgeCompSpecies[i]->setVacantSpecies(theEdgeSpecies);
+      theEdgeCompSpecies[i]->setComp(theComp);
+    }
+  for(unsigned i(0); i != theVertexCompSpecies.size(); i++)
+    {
+      theVertexCompSpecies[i]->setVacantSpecies(theVertexSpecies);
+      theVertexCompSpecies[i]->setComp(theComp);
+    }
+}
+
+unsigned ErythrocyteProcess::getLatticeResizeCoord(unsigned aStartCoord)
+{
+  return 0;
+}
+
 void ErythrocyteProcess::initializeThird()
 {
   if(!isCompartmentalized)
     {
-      theComp = theSpatiocyteStepper->system2Comp(getSuperSystem());
-      C = theComp->centerPoint;
-      initializeDirectionVectors();
-      initializeProtofilaments();
-      theSpectrinSpecies->setIsPopulated();
-      theVertexSpecies->setIsPopulated();
+     initializeVectors();
+      initializeFilaments();
       isCompartmentalized = true;
       printParameters();
     }
+  theEdgeSpecies->setIsPopulated();
+  theVertexSpecies->setIsPopulated();
 }
 
-void ErythrocyteProcess::initializeDirectionVectors()
+void ErythrocyteProcess::initializeVectors()
 { 
+  C = theComp->centerPoint;  
+
   //Direction vector along rotated positive y-axis
   Point A;
   A.x = 0; 
   A.y = -theComp->lengthY/2;
   A.z = 0;
+
   theSpatiocyteStepper->rotateX(theComp->rotateX, &A, -1);
   theSpatiocyteStepper->rotateY(theComp->rotateY, &A, -1);
   theSpatiocyteStepper->rotateZ(theComp->rotateZ, &A, -1);
+
   A.x += C.x;
   A.y += C.y;
   A.z += C.z;
   Y.x = C.x-A.x;
   Y.y = C.y-A.y;
   Y.z = C.z-A.z;
-  normalize(Y);
+  normalize(Y); 
 
   //Direction vector along rotated positive x-axis
   A.x = -theComp->lengthX/2;; 
@@ -110,7 +220,7 @@ void ErythrocyteProcess::normalize(Point& P)
   P.z /= Norm;
 }
 
-void ErythrocyteProcess::initializeProtofilaments()
+void ErythrocyteProcess::initializeFilaments()
 {
   Species* aVacant(theComp->vacantSpecies);
   for(unsigned int i(0); i != aVacant->size(); ++i)
@@ -122,7 +232,7 @@ void ErythrocyteProcess::initializeProtofilaments()
           unsigned int cnt(getIntersectCount(aPoint, aCoord));
           if(cnt == 1)
             {
-              theSpectrinSpecies->addCompVoxel(aCoord);
+              theEdgeSpecies->addCompVoxel(aCoord);
             }
           else if(cnt > 1)
             {
@@ -130,22 +240,22 @@ void ErythrocyteProcess::initializeProtofilaments()
             }
         }
     }
-  for(unsigned i(0); i != theSpectrinSpecies->size(); ++i)
+  for(unsigned i(0); i != theEdgeSpecies->size(); ++i)
     {
-      Voxel* mol(theSpectrinSpecies->getMolecule(i));
+      Voxel* mol(theEdgeSpecies->getMolecule(i));
       unsigned cnt(0);
       for(unsigned j(0); j != mol->diffuseSize; ++j)
         {
           Voxel& adj((*theLattice)[mol->adjoiningCoords[j]]);
-          if(getID(adj) == theSpectrinSpecies->getID())
+          if(getID(adj) == theEdgeSpecies->getID())
             {
               ++cnt;
             }
         }
       if(cnt > 2)
         {
-          const unsigned aCoord(theSpectrinSpecies->getCoord(i));
-          theSpectrinSpecies->removeCompVoxel(i);
+          const unsigned aCoord(theEdgeSpecies->getCoord(i));
+          theEdgeSpecies->removeCompVoxel(i);
           --i;
           theVertexSpecies->addCompVoxel(aCoord);
         }
@@ -156,9 +266,9 @@ void ErythrocyteProcess::printParameters()
 {
   cout << getPropertyInterface().getClassName() << "[" <<
     getFullID().asString() << "]" << std::endl;
-  cout << "  " << getIDString(theSpectrinSpecies) << " total:" <<
-    theSpectrinSpecies->compVoxelSize() << " free:" <<
-    theSpectrinSpecies->size() << std::endl;
+  cout << "  " << getIDString(theEdgeSpecies) << " total:" <<
+    theEdgeSpecies->compVoxelSize() << " free:" <<
+    theEdgeSpecies->size() << std::endl;
   cout << "  " << getIDString(theVertexSpecies) << " total:" << 
     theVertexSpecies->compVoxelSize() << " free:" << 
     theVertexSpecies->size() << std::endl;

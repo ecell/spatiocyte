@@ -33,6 +33,128 @@
 
 LIBECS_DM_INIT_STATIC(CompartmentProcess, Process); 
 
+
+void CompartmentProcess::prepreinitialize()
+{
+  SpatiocyteProcess::prepreinitialize();
+  theInterfaceVariable = createVariable("Interface");
+  theVacantVariable = createVariable("Vacant");
+  if(LipidRadius)
+    {
+      if(LipidRadius < 0)
+        {
+          LipidRadius = 0;
+        }
+      else
+        {
+          theLipidVariable = createVariable("Lipid");
+        }
+    }
+}
+
+void CompartmentProcess::initialize()
+{
+  if(isInitialized)
+    {
+      return;
+    }
+  SpatiocyteProcess::initialize();
+  theInterfaceSpecies = theSpatiocyteStepper->addSpecies(
+                                                   theInterfaceVariable);
+  theInterfaceSpecies->setIsInterface();
+  theVacantSpecies = theSpatiocyteStepper->addSpecies(theVacantVariable);
+  if(LipidRadius)
+    {
+      theLipidSpecies = theSpatiocyteStepper->addSpecies(
+                                                   theLipidVariable);
+    }
+  for(VariableReferenceVector::iterator
+      i(theVariableReferenceVector.begin());
+      i != theVariableReferenceVector.end(); ++i)
+    {
+      Species* aSpecies(theSpatiocyteStepper->variable2species(
+                               (*i).getVariable())); 
+      if((*i).getCoefficient())
+        {
+          theLipidCompSpecies.push_back(aSpecies);
+        }
+      else
+        {
+          theVacantCompSpecies.push_back(aSpecies);
+        }
+      if(RegularLattice)
+        {
+          aSpecies->setIsRegularLattice(theDiffuseSize);
+        }
+      if(Periodic)
+        {
+          aSpecies->setIsPeriodic();
+        }
+    }
+  if(!DiffuseRadius)
+    {
+      if(SubunitRadius)
+        {
+          DiffuseRadius = SubunitRadius;
+        }
+      else
+        {
+          DiffuseRadius = theSpatiocyteStepper->getVoxelRadius();
+        }
+    }
+  if(!SubunitRadius)
+    {
+      SubunitRadius = DiffuseRadius;
+    }
+  //Lattice voxel radius:
+  VoxelRadius = theSpatiocyteStepper->getVoxelRadius();
+  //Normalized off-lattice voxel radius:
+  nDiffuseRadius = DiffuseRadius/(VoxelRadius*2);
+  //SubunitRadius is the actual radius of a molecule.
+  //For a normal molecule the SubunitRadius = DiffuseRadius.
+  //For a multiscale molecule, the SubunitRadius can be larger
+  //than the DiffuseRadius:
+  nSubunitRadius = SubunitRadius/(VoxelRadius*2);
+  //Normalized lipid voxel radius:
+  nLipidRadius = LipidRadius/(VoxelRadius*2);
+  nGridSize = 10*nDiffuseRadius;
+}
+
+void CompartmentProcess::initializeFirst()
+{
+  SpatiocyteProcess::initializeFirst();
+  theComp = new Comp;
+  theVacantSpecies->setIsCompVacant();
+  theVacantSpecies->setIsOffLattice();
+  theVacantSpecies->setComp(theComp);
+  if(theLipidSpecies)
+    {
+      theLipidSpecies->setIsCompVacant();
+      theLipidSpecies->setIsOffLattice();
+      theLipidSpecies->setComp(theComp);
+    }
+  for(unsigned i(0); i != theLipidCompSpecies.size(); ++i)
+    {
+      theLipidCompSpecies[i]->setIsOffLattice();
+      //setVacantSpecies must be declared here since it needs
+      //to be overwritten by DiffusionProcess in initializeSecond:
+      theLipidCompSpecies[i]->setVacantSpecies(theLipidSpecies);
+      theLipidCompSpecies[i]->setComp(theComp);
+    }
+  for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
+    {
+      theVacantCompSpecies[i]->setIsOffLattice();
+      //setVacantSpecies must be declared here since it needs
+      //to be overwritten by DiffusionProcess in initializeSecond:
+      theVacantCompSpecies[i]->setVacantSpecies(theVacantSpecies);
+      theVacantCompSpecies[i]->setComp(theComp);
+      if(theLipidSpecies)
+        {
+          theVacantCompSpecies[i]->setIsMultiscale();
+        }
+    }
+}
+
 unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
 {
   Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
