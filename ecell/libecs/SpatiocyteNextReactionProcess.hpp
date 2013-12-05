@@ -189,8 +189,8 @@ protected:
   void setDeoligomerIndex(const unsigned);
   void removeCoordsA(const unsigned);
   void removeSingleCoordsA(const unsigned);
-  void removeAdjCoordsA(Voxel*);
-  void addCoordsA(Species*, Species*, const unsigned, unsigned&);
+  void removeAdjCoordsA(const unsigned);
+  void addCoordsA(Species*, Species*, const unsigned);
   Voxel* newMultiC();
 protected:
   bool isMultiAC;

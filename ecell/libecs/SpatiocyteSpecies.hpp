@@ -1729,10 +1729,14 @@ public:
         {
           addBounds(aVoxel);
         }
+      //In future do this for even vacant species:
+      //Only call addMolecule or removeMolecule when you know that
+      //at the end of the reaction that molecule will not be overwritten
+      //by other species.
       for(unsigned i(0); i != theInterruptedProcessesAddMolecule.size(); ++i)
         {
-          theInterruptedProcessesAddMolecule[i]->interruptedAddMolecule(this, 
-                                                                        theMoleculeSize-1);
+          theInterruptedProcessesAddMolecule[i
+            ]->interruptedAddMolecule(this, theMoleculeSize-1);
         }
     }
   void addMolecule(Voxel* aVoxel, Tag& aTag)

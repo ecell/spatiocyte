@@ -51,6 +51,10 @@ void SpatiocyteNextReactionProcess::fire()
 
 void SpatiocyteNextReactionProcess::updateSubstrates()
 {
+  //Don't do the instructions below, if it doesn't work without them,
+  //use interrupedEndDiffusion or interrupedAddMolecule or 
+  //interruptedRemoveMolecule
+  /*
   if(A)
     {
       A->updateMolecules();
@@ -59,6 +63,7 @@ void SpatiocyteNextReactionProcess::updateSubstrates()
     {
       B->updateMolecules();
     }
+    */
 }
 
 bool SpatiocyteNextReactionProcess::react()
@@ -898,6 +903,10 @@ double SpatiocyteNextReactionProcess::getPropensitySecondOrderReactABvG()
 //Need to solve homodimerization reaction of two substrate species (Size-1):
 double SpatiocyteNextReactionProcess::getPropensitySecondOrderHetero() 
 {
+  //Don't do the instructions below, if it doesn't work without them,
+  //use interrupedEndDiffusion or interrupedAddMolecule or 
+  //interruptedRemoveMolecule
+  /*
   if(A)
     {
       A->updateMoleculeSize();
@@ -906,6 +915,7 @@ double SpatiocyteNextReactionProcess::getPropensitySecondOrderHetero()
     {
       B->updateMoleculeSize();
     }
+    */
   double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
   double sizeB(theVariableReferenceVector[1].getVariable()->getValue());
   //Required for HD species when substrate coefficient is < -1
@@ -930,10 +940,15 @@ double SpatiocyteNextReactionProcess::getPropensitySecondOrderHetero()
 
 double SpatiocyteNextReactionProcess::getPropensitySecondOrderHomo() 
 {
+  //Don't do the instructions below, if it doesn't work without them,
+  //use interrupedEndDiffusion or interrupedAddMolecule or 
+  //interruptedRemoveMolecule
+  /*
   if(A)
     {
       A->updateMoleculeSize();
     }
+    */
   double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
   if(sizeA < -coefficientA)
     {
@@ -1316,6 +1331,7 @@ void SpatiocyteNextReactionProcess::initializeBeforePopulate()
 void SpatiocyteNextReactionProcess::initializeFourth()
 {
   ReactionProcess::initializeFourth();
+  /*
   //Done after populating molecules:
   if(isReactAB)
     {
@@ -1333,6 +1349,7 @@ void SpatiocyteNextReactionProcess::initializeFourth()
             }
         }
     }
+    */
 }
 
 /*
@@ -1613,27 +1630,11 @@ bool SpatiocyteNextReactionProcess::isDependentOn(const Process* aProcess) const
 
 bool SpatiocyteNextReactionProcess::isDependentOnPre(const Process* aProcess)
 {
-  if(isReactAB)
-    {
-      if(getVariableNetCoefficient(aProcess, A->getVariable()) < 0 ||
-         getVariableNetCoefficient(aProcess, B->getVariable()) < 0)
-        {
-          return true;
-        }
-    }
   return false;
 }
 
 bool SpatiocyteNextReactionProcess::isDependentOnPost(const Process* aProcess)
 {
-  if(isReactAB)
-    {
-      if(getVariableNetCoefficient(aProcess, A->getVariable()) > 0 ||
-         getVariableNetCoefficient(aProcess, B->getVariable()) > 0)
-        {
-          return true;
-        }
-    }
   return false;
 }
 
@@ -1642,6 +1643,15 @@ bool SpatiocyteNextReactionProcess::isDependentOnEndDiffusion(Species* aSpecies)
   if(isMultiAC)
     {
       if(A == aSpecies)
+        {
+          return true;
+        }
+    }
+  else if(isReactAB)
+    {
+      if(aSpecies->getDiffusionCoefficient() && 
+         (aSpecies->getVacantSpecies() == A ||
+          aSpecies->getVacantSpecies() == B))
         {
           return true;
         }
@@ -1659,6 +1669,15 @@ bool SpatiocyteNextReactionProcess::isDependentOnRemoveMolecule(Species*
           return true;
         }
     }
+  else if(isReactAB)
+    {
+      if(A == aSpecies || B == aSpecies || 
+         aSpecies->getVacantSpecies() == A ||
+         aSpecies->getVacantSpecies() == B)
+        {
+          return true;
+        }
+    }
   return false;
 }
 
@@ -1667,6 +1686,15 @@ bool SpatiocyteNextReactionProcess::isDependentOnAddMolecule(Species* aSpecies)
   if(isMultiAC)
     {
       if(A == aSpecies)
+        {
+          return true;
+        }
+    }
+  else if(isReactAB)
+    {
+      if(A == aSpecies || B == aSpecies || 
+         aSpecies->getVacantSpecies() == A ||
+         aSpecies->getVacantSpecies() == B)
         {
           return true;
         }
@@ -1711,8 +1739,37 @@ void SpatiocyteNextReactionProcess::interruptedEndDiffusion(Species* aSpecies)
       theSpatiocyteStepper->addInterruptedProcess(
                                       dynamic_cast<SpatiocyteProcess*>(this));
     }
+  else if(isReactAB)
+    {
+      //do the following 
+      //if(aSpecies->getDiffusionCoefficient() && 
+      //   (aSpecies->getVacantSpecies() == A ||
+      //    aSpecies->getVacantSpecies() == B))
+      const unsigned prevSize(theCoordsA.size());
+      theCoordsA.resize(0);
+      for(unsigned i(0); i != A->size(); ++i)
+        {
+          const unsigned coordA(A->getCoord(i));
+          const Voxel* molA(A->getMolecule(i));
+          for(unsigned j(0); j != molA->diffuseSize; ++j)
+            {
+              const unsigned adjCoord(molA->adjoiningCoords[j]);
+              if(getID((*theLattice)[adjCoord]) == B->getID())
+                {
+                  theCoordsA.push_back(coordA);
+                }
+            }
+        }
+      if(prevSize != theCoordsA.size())
+        {
+          theSpatiocyteStepper->addInterruptedProcess(
+                                      dynamic_cast<SpatiocyteProcess*>(this));
+        }
+    }
 }
 
+//This method is called after the molecule pointed by the index is added
+//by aSpecies.
 void SpatiocyteNextReactionProcess::interruptedAddMolecule(Species* aSpecies,
                                                            const unsigned index)
 {
@@ -1745,8 +1802,37 @@ void SpatiocyteNextReactionProcess::interruptedAddMolecule(Species* aSpecies,
                                       dynamic_cast<SpatiocyteProcess*>(this));
         }
     }
+  else if(isReactAB)
+    {
+      const unsigned prevSize(theCoordsA.size());
+      if(aSpecies == A)
+        {
+          addCoordsA(A, B, aSpecies->getCoord(index));
+        }
+      else if(aSpecies == B)
+        { 
+          addCoordsA(B, A, aSpecies->getCoord(index));
+        }
+      //Cannot use "else if" here because B could be the vacant species of A
+      //and we need to update it accordingly:
+      if(aSpecies->getVacantSpecies() == A)
+        {
+          removeCoordsA(aSpecies->getCoord(index));
+        }
+      else if(aSpecies->getVacantSpecies() == B)
+        {
+          removeAdjCoordsA(aSpecies->getCoord(index));
+        }
+      if(prevSize != theCoordsA.size())
+        {
+          theSpatiocyteStepper->addInterruptedProcess(
+                                      dynamic_cast<SpatiocyteProcess*>(this));
+        }
+    }
 }
 
+//This method is called before the molecule pointed by the index is removed
+//by aSpecies.
 void SpatiocyteNextReactionProcess::interruptedRemoveMolecule(Species* aSpecies,
                                                            const unsigned index)
 {
@@ -1776,77 +1862,48 @@ void SpatiocyteNextReactionProcess::interruptedRemoveMolecule(Species* aSpecies,
           theNextIndex = index;
         }
     }
+  else if(isReactAB)
+    {
+      const unsigned prevSize(theCoordsA.size());
+      if(aSpecies == A)
+        {
+          removeCoordsA(aSpecies->getCoord(index));
+        }
+      else if(aSpecies == B)
+        {
+          removeAdjCoordsA(aSpecies->getCoord(index));
+        }
+      //Cannot use "else if" here because B could be the vacant species of A
+      //and we need to update it accordingly:
+      if(aSpecies->getVacantSpecies() == A)
+        {
+          addCoordsA(A, B, aSpecies->getCoord(index));
+        }
+      else if(aSpecies->getVacantSpecies() == B)
+        { 
+          addCoordsA(B, A, aSpecies->getCoord(index));
+        }
+      if(prevSize != theCoordsA.size())
+        {
+          theSpatiocyteStepper->addInterruptedProcess(
+                                      dynamic_cast<SpatiocyteProcess*>(this));
+        }
+    }
 }
 
 void SpatiocyteNextReactionProcess::interruptedPre(ReactionProcess* aProcess)
 {
-  if(isReactAB)
-    {
-      Species* a(aProcess->getA());
-      Species* b(aProcess->getB());
-      if(a && aProcess->getA() != aProcess->getC())
-        {
-          if(a == A)
-            {
-              removeCoordsA(A->getCoord(A->getIndex(aProcess->getMoleculeA())));
-            }
-          else if(a == B)
-            {
-              removeAdjCoordsA(aProcess->getMoleculeA());
-            }
-        }
-      if(b && a != b && aProcess->getB() != aProcess->getD())
-        {
-          if(b == A)
-            {
-              removeCoordsA(A->getCoord(A->getIndex(aProcess->getMoleculeB())));
-            }
-          else if(b == B)
-            {
-              removeAdjCoordsA(aProcess->getMoleculeB());
-            }
-        }
-    }
 }
 
 void SpatiocyteNextReactionProcess::interruptedPost(ReactionProcess* aProcess)
 {
-  if(isReactAB)
-    {
-      A->updateMolecules();
-      B->updateMolecules();
-      Species* aC(aProcess->getC());
-      Species* aD(aProcess->getD());
-      unsigned coordA(theNullCoord);
-      if((aC == A && aProcess->getC() != aProcess->getA()) || 
-         (aD == A && aProcess->getD() != aProcess->getB()))
-        { 
-          addCoordsA(A, B, A->size()-1, coordA);
-          if(aC == aD && aProcess->getC() != aProcess->getA() &&
-             aProcess->getD() != aProcess->getB())
-            {
-              addCoordsA(A, B, A->size()-2, coordA);
-            }
-        }
-      if((aC == B && aC != aProcess->getA()) ||
-         (aD == B && aD != aProcess->getB()))
-        {
-          if(A != B)
-            { 
-              addCoordsA(B, A, B->size()-1, coordA);
-              if(aC == aD && aProcess->getC() != aProcess->getA() &&
-                 aProcess->getD() != aProcess->getB())
-                {
-                  addCoordsA(B, A, B->size()-2, coordA);
-                }
-            }
-        }
-    }
 }
 
 void SpatiocyteNextReactionProcess::removeCoordsA(const unsigned coordA)
 {
   unsigned i(0);
+  //Use the while loop twice here because there could be multiple instances
+  //of coordA in the list theCoordsA
   while(i < theCoordsA.size())
     {
       while(theCoordsA[i] == coordA && i < theCoordsA.size())
@@ -1858,11 +1915,12 @@ void SpatiocyteNextReactionProcess::removeCoordsA(const unsigned coordA)
     }
 }
 
-void SpatiocyteNextReactionProcess::removeAdjCoordsA(Voxel* molB)
+void SpatiocyteNextReactionProcess::removeAdjCoordsA(const unsigned coordB)
 {
-  for(unsigned i(0); i != molB->diffuseSize; ++i)
+  const Voxel& molB((*theLattice)[coordB]);
+  for(unsigned i(0); i != molB.diffuseSize; ++i)
     {
-      const unsigned adjCoord(molB->adjoiningCoords[i]);
+      const unsigned adjCoord(molB.adjoiningCoords[i]);
       if(getID((*theLattice)[adjCoord]) == A->getID())
         {
           removeSingleCoordsA(adjCoord);
@@ -1884,27 +1942,24 @@ void SpatiocyteNextReactionProcess::removeSingleCoordsA(const unsigned coordA)
 }
 
 void SpatiocyteNextReactionProcess::addCoordsA(Species* a, Species* b,
-                                               const unsigned indexA,
-                                               unsigned& coordA)
+                                               const unsigned coord)
 {
-  const unsigned coord(a->getCoord(indexA));
   const Voxel& mol((*theLattice)[coord]);
   for(unsigned i(0); i != mol.diffuseSize; ++i)
     {
       const unsigned adjCoord(mol.adjoiningCoords[i]);
       if(getID((*theLattice)[adjCoord]) == b->getID())
         {
-          if(a == A && coord != coordA)
+          if(a == A)
             {
               theCoordsA.push_back(coord);
             }
-          else if(adjCoord != coordA)
+          else
             {
               theCoordsA.push_back(adjCoord);
             }
         }
     }
-  coordA = coord;
 }
 
 void SpatiocyteNextReactionProcess::setPropensityMethod()

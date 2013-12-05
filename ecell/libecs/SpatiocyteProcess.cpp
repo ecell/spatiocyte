@@ -86,6 +86,9 @@ String SpatiocyteProcess::getIDString(unsigned int id) const
     aVariable->getID()+"]["+int2str(id)+"]";
 }
 
+
+//Need to consider when aVariable is a vacant species of one of this processes'
+//variable references.
 int SpatiocyteProcess::getVariableNetCoefficient(const Process* aProcess,
                                                const Variable* aVariable) const
 {
