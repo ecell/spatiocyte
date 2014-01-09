@@ -80,38 +80,49 @@ public:
     }
   void logSpecies()
     {
+      theLogFile << getStepper()->getCurrentTime();
       for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
         {
-          theLogFile << getStepper()->getCurrentTime();
           logMolecules(i);
-          theLogFile << std::endl;
         }
+      theLogFile << std::endl;
     }
 protected:
   void initializeLog()
     {
       Point aCenterPoint(theSpatiocyteStepper->getCenterPoint());
       theLogFile
-        << "log interval=" << theInterval
-        << ",world width=" << aCenterPoint.z*2
-        << ",world height=" << aCenterPoint.y*2
-        << ",world length=" <<  aCenterPoint.x*2
-        << ",voxel radius=" <<  theSpatiocyteStepper->getVoxelRadius();
+        << "[log interval=" << theInterval << "]"
+        << ",[world lengthX=" <<  aCenterPoint.x*2 << " voxels]"
+        << ",[world lengthY=" << aCenterPoint.y*2 << " voxels]"
+        << ",[world lengthZ=" << aCenterPoint.z*2 << " voxels]"
+        << ",[voxel radius=" <<  theSpatiocyteStepper->getVoxelRadius()
+        << " m]";
+      theLogFile << std::endl;
+      theLogFile << "[time]";
       for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
         {
-          theLogFile << "," << getIDString(theProcessSpecies[i]) << "=" <<
-            theProcessSpecies[i]->getMoleculeRadius();
+          theLogFile << ";" << theProcessSpecies[i]->getIDString() << 
+            "[m1.x],[m1.y],[m1.z]," <<
+            "[m2.x],[m2.y],[m2.z],...";
         }
       theLogFile << std::endl;
     }
   void logMolecules(int anIndex)
     {
       Species* aSpecies(theProcessSpecies[anIndex]);
-      for(unsigned int i(0); i != aSpecies->size(); ++i)
+      for(unsigned int i(0); i < aSpecies->size(); ++i)
         {
           Point aPoint(aSpecies->getPoint(i));
-          theLogFile << "," << aPoint.x << "," << aPoint.y << "," <<
-            aPoint.z;
+          if(i)
+            {
+              theLogFile << ",";
+            }
+          else
+            {
+              theLogFile << ";";
+            }
+          theLogFile << aPoint.x << "," << aPoint.y << "," << aPoint.z;
         }
     }
 private:
