@@ -71,7 +71,7 @@ for i in range(len(fileNames)):
       logCnt = logCnt + 1
       lineCnt = 0
 
-os.system("ffmpeg -i " + fileNames[0] + ".%03d.png -sameq " + fileNames[0] + ".mp4")
+os.system("avconv -i " + fileNames[0] + ".%03d.png -vcodec qtrle " + fileNames[0] + ".mov")
 
 
 
