@@ -163,7 +163,7 @@ struct Comp
   double originY;
   double originZ;
   double rotateX;
-  double rotateY;
+  double rotateY;      
   double rotateZ;
   double specVolume;
   double specArea;
@@ -202,6 +202,61 @@ struct Origin
   long row;
   long layer;
   long col;
+};
+
+/*struct Stacks 
+{
+  Stacks():
+    isSet(false) {}
+  int nodeID[3];
+  bool isSet;
+};*/
+
+struct Node
+{
+  /*Nodes(double a, double b, double c)
+    {
+      x = a;
+      y = b;
+      z = c;
+    }*/
+  Point point;
+  std::vector<int> quadID;
+  std::vector<double> conc;
+  //std::vector<unsigned> count;
+  double area;
+  //int nodeID;
+};
+
+struct Quad
+{
+  int nodeID[4];
+  //double cenQuad[2];
+  Point cPoint[5];
+  std::vector<std::vector<unsigned> > voxel;
+  //Point cenLine[4];
+  //int nodeID;
+  /*Quads()
+    {}
+  Quads(unsigned a, unsigned b, unsigned c, unsigned d)
+    {
+    }*/
+  /*node1(a),
+  node2(b),
+  node3(c),
+  node4(d) {}
+  int node1;
+  int node2;
+  int node3;
+  int node4;a
+  Quads(int (&arr)[4]) 
+    : nodes(arr)
+   {}
+  int (&nodes)[4];
+  Quads(int (*p)[4])
+    : nodes(*p)
+   {}*/
+
 };
 
 /*struct Vector

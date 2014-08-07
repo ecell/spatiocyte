@@ -503,6 +503,15 @@ c--look for current dump position
       theta0=1d-3
       taum=1d0
       do isn=1,ns
+        do lvn=1,3
+          PIP2m = svec(12,lvn,isn)
+          PIP3m = svec(11,lvn,isn)
+          PIP3a = svec(10,lvn,isn)
+          PTENm = svec(9,lvn,isn)
+          PI3Km = svec(8,lvn,isn)
+        enddo
+      enddo
+      do isn=1,ns
          do lvn=1,3
             thetaeq=theta0*(svec(2,lvn,isn)+1d0)
             svec(3,lvn,isn)=thetaeq

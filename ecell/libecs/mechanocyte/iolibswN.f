@@ -132,7 +132,7 @@
 !
       real(8),dimension(3,NSM)::voln=0 !volume associated with each node
 !
-      real(8),dimension(3,NSM)::arean=0 !area associated with each node
+      real(c_double),dimension(3,NSM),bind(C)::arean=0 !area associated with each node
 !
       real(8),dimension(0:2,NLM)::cnn=0 !contact line normal at isol(1,il)
 ! line length, nx, ny (nz=0 because in plane).

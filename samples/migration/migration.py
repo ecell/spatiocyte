@@ -18,6 +18,13 @@ theSimulator.createEntity('Variable', 'Variable:/Cell:PIP3m').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/Cell:PIP3a').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/Cell:PTENm').Value = 309
 theSimulator.createEntity('Variable', 'Variable:/Cell:PI3Km').Value = 3096
+#theSimulator.createEntity('Variable', 'Variable:/Cell:A').Value = 0
+#theSimulator.createEntity('Variable', 'Variable:/Cell:B').Value = 0
+#theSimulator.createEntity('Variable', 'Variable:/Cell:C').Value = 0
+#theSimulator.createEntity('Variable', 'Variable:/Cell:D').Value = 0
+#theSimulator.createEntity('Variable', 'Variable:/Cell:E').Value = 0
+#theSimulator.createEntity('Variable', 'Variable:/Cell:F').Value = 0
+#theSimulator.createEntity('Variable', 'Variable:/Cell:VACANT')
 
 PIP2 = theSimulator.createEntity('Variable', 'Variable:/Cell:PIP2')
 PIP2.Value = 8054
@@ -32,12 +39,18 @@ PTEN.Value = 6194
 PTEN.Name = "HD"
 
 logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/Cell:logger')
-#logger.VariableReferenceList = [['_', 'Variable:/Cell:VACANT']]
 logger.VariableReferenceList = [['_', 'Variable:/Cell:PIP2m']]
 logger.VariableReferenceList = [['_', 'Variable:/Cell:PIP3m']]
 logger.VariableReferenceList = [['_', 'Variable:/Cell:PIP3a']]
 logger.VariableReferenceList = [['_', 'Variable:/Cell:PTENm']]
 logger.VariableReferenceList = [['_', 'Variable:/Cell:PI3Km']]
+#logger.VariableReferenceList = [['_', 'Variable:/Cell:F']]
+#logger.VariableReferenceList = [['_', 'Variable:/Cell:E']]
+#logger.VariableReferenceList = [['_', 'Variable:/Cell:D']]
+#logger.VariableReferenceList = [['_', 'Variable:/Cell:C']]
+#logger.VariableReferenceList = [['_', 'Variable:/Cell:B']]
+#logger.VariableReferenceList = [['_', 'Variable:/Cell:A']]
+#logger.VariableReferenceList = [['_', 'Variable:/Cell:VACANT']]
 logger.LogInterval = 20 
 
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/Cell:pop')
@@ -46,6 +59,12 @@ populator.VariableReferenceList = [['_', 'Variable:/Cell:PIP3m']]
 populator.VariableReferenceList = [['_', 'Variable:/Cell:PIP3a']]
 populator.VariableReferenceList = [['_', 'Variable:/Cell:PTENm']]
 populator.VariableReferenceList = [['_', 'Variable:/Cell:PI3Km']]
+#populator.VariableReferenceList = [['_', 'Variable:/Cell:A']]
+#populator.VariableReferenceList = [['_', 'Variable:/Cell:B']]
+#populator.VariableReferenceList = [['_', 'Variable:/Cell:C']]
+#populator.VariableReferenceList = [['_', 'Variable:/Cell:D']]
+#populator.VariableReferenceList = [['_', 'Variable:/Cell:E']]
+#populator.VariableReferenceList = [['_', 'Variable:/Cell:F']]
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/Cell:diffusePIP2')
 diffuser.VariableReferenceList = [['_', 'Variable:/Cell:PIP2m']]
@@ -66,6 +85,30 @@ diffuser.D = 1e-14
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/Cell:diffusePI3K')
 diffuser.VariableReferenceList = [['_', 'Variable:/Cell:PI3Km']]
 diffuser.D = 1e-14
+
+#diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseA')
+#diffuser.VariableReferenceList = [['_', 'Variable:/Cell:A']]
+#diffuser.D = 0
+
+#diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseB')
+#diffuser.VariableReferenceList = [['_', 'Variable:/Cell:B']]
+#diffuser.D = 0
+
+#diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseC')
+#diffuser.VariableReferenceList = [['_', 'Variable:/Cell:C']]
+#diffuser.D = 0
+
+#diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseD')
+#diffuser.VariableReferenceList = [['_', 'Variable:/Cell:D']]
+#diffuser.D = 0
+
+#diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseE')
+#diffuser.VariableReferenceList = [['_', 'Variable:/Cell:E']]
+#diffuser.D = 0
+
+#diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseF')
+#diffuser.VariableReferenceList = [['_', 'Variable:/Cell:F']]
+#diffuser.D = 0'
 
 react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/Cell:recruitPIP2')
 react.VariableReferenceList = [['_', 'Variable:/Cell:PIP2', '-1']]
@@ -148,6 +191,12 @@ mig.VariableReferenceList = [['_', 'Variable:/Cell:PI3Km','0']]
 mig.VariableReferenceList = [['_', 'Variable:/Cell:PIP2','0']]
 mig.VariableReferenceList = [['_', 'Variable:/Cell:PI3K','0']]
 mig.VariableReferenceList = [['_', 'Variable:/Cell:PTEN','0']]
+#mig.VariableReferenceList = [['_', 'Variable:/Cell:A','0']]
+#mig.VariableReferenceList = [['_', 'Variable:/Cell:B','0']]
+#mig.VariableReferenceList = [['_', 'Variable:/Cell:C','0']]
+#mig.VariableReferenceList = [['_', 'Variable:/Cell:D','0']]
+#mig.VariableReferenceList = [['_', 'Variable:/Cell:E','0']]
+#mig.VariableReferenceList = [['_', 'Variable:/Cell:F','0']]
 mig.minhvecX = -0.00155505
 mig.minhvecY = -0.00163323 
 mig.minhvecZ = 0
@@ -157,4 +206,4 @@ mig.maxhvecZ =0.000361489
 mig.FileName = 'migration.000'
 
 
-run(17809)
+run(178090000000)

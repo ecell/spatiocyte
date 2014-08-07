@@ -70,11 +70,29 @@ Point add(const Point& L, const Point& R)
   return V;
 }
 
+Point addDivide(const Point& L, const Point& R)
+{
+  Point V;
+  V.x = (L.x + R.x) / 2;
+  V.y = (L.y + R.y) / 2;
+  V.z = (L.z + R.z) / 2;
+  return V;
+}
+
 void add_(Point& L, const Point& R)
 {
   L.x += R.x;
   L.y += R.y;
   L.z += R.z;
+}
+
+Point divide(const Point& P, const int& Q)
+{
+  Point V;
+  V.x = P.x/Q;
+  V.y = P.y/Q;
+  V.z = P.z/Q;
+  return V;
 }
 
 Point norm(const Point& P)
@@ -93,6 +111,12 @@ void norm_(Point& P)
   P.x /= denom;
   P.y /= denom;
   P.z /= denom;
+}
+
+double mag(const Point& P)
+{
+  double denom(sqrt(P.x*P.x+P.y*P.y+P.z*P.z));
+  return denom;
 }
 
 Point disp(const Point& P, const Point& V, const double dist)

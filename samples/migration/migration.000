@@ -20,8 +20,8 @@
     4 NODE SOFT VECTOR PACK (1=interior, 2=surface)                     
  CNW         MSGR        THETAEQ     M4          BLANK       BLANK      
   1.0000E+00  1.0000E+00  1.0000E+00  3.0000E+00  0.0000E+00  0.0000E+00
- BLANK       BLANK       BLANK       BLANK       BLANK       BLANK      
-  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+ BLANK       PI3Km       PIP2m       PIP3a       PIP3m       PTENm      
+  0.0000E+00  2.0000E+00  2.0000E+00  2.0000E+00  2.0000E+00  2.0000E+00
     5 BOUNDARY VECTOR PACKS                                             
  BLANK       BLANK       BLANK       BLANK       N/A         N/A        
   1.1100E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00

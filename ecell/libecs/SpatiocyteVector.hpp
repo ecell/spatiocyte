@@ -41,6 +41,7 @@ Point cross(const Point& L, const Point& R);
 Point sub(const Point& L, const Point& R);
 void sub_(Point& L, const Point& R);
 Point add(const Point& L, const Point& R);
+Point addDivide(const Point& L, const Point& R);
 void add_(Point& L, const Point& R);
 Point norm(const Point& P);
 void norm_(Point& P);
@@ -49,6 +50,8 @@ void disp_(Point& P, const Point& V, const double dist);
 Point mult(const Point& P, const double dist);
 double dot(const Point& L, const Point& R);
 double distance(const Point& L, const Point& R);
+Point divide(const Point& P, const int& Q);
+double mag(const Point& P);
 
 //Get the shortest distance from a point, P to a plane given by normal N and
 //displacement, m:
