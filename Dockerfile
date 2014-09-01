@@ -4,6 +4,7 @@ ENV LD_LIBRARY_PATH /usr/local/lib
 
 RUN mkdir /var/run/sshd
 RUN echo 'root:screencast' |chpasswd
+RUN sed -ri 's/PermitRootLogin without-password/PermitRootLogin yes/g'
 
 EXPOSE 22
 CMD    ["/usr/sbin/sshd", "-D"]
