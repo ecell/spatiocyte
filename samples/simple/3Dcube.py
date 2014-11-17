@@ -16,8 +16,8 @@ theSimulator.createEntity('System', 'System:/:Surface').StepperID = 'SS'
 theSimulator.createEntity('Variable', 'Variable:/Surface:DIMENSION').Value = 2
 theSimulator.createEntity('Variable', 'Variable:/Surface:VACANT')
 
-theSimulator.createEntity('Variable', 'Variable:/:A').Value = 50
-theSimulator.createEntity('Variable', 'Variable:/:B').Value = 50
+theSimulator.createEntity('Variable', 'Variable:/:A').Value = 160000
+theSimulator.createEntity('Variable', 'Variable:/:B').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/:C').Value = 0
 
 logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:logger')
@@ -47,4 +47,4 @@ diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseC')
 diffuser.VariableReferenceList = [['_', 'Variable:/:C']]
 diffuser.D = 1e-13
 
-run(1)
+run(0.0001)

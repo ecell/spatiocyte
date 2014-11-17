@@ -93,9 +93,9 @@ protected:
       Point aCenterPoint(theSpatiocyteStepper->getCenterPoint());
       theLogFile
         << "log interval=" << theInterval
-        << ",world width=" << aCenterPoint.z*2
-        << ",world height=" << aCenterPoint.y*2
-        << ",world length=" <<  aCenterPoint.x*2
+        << ",world length_x=" <<  aCenterPoint.x*2
+        << ",world length_y=" << aCenterPoint.y*2
+        << ",world length_z=" << aCenterPoint.z*2
         << ",voxel radius=" <<  theSpatiocyteStepper->getVoxelRadius();
       for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
         {
