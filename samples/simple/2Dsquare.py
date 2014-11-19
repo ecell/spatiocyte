@@ -53,4 +53,9 @@ diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseA')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:A']]
 diffuser.D = 1e-13
 
+coord = theSimulator.createEntity('CoordinateLogProcess', 'Process:/:coord')
+coord.VariableReferenceList = [['_', 'Variable:/Surface:A', '-1' ]]
+coord.VariableReferenceList = [['_', 'Variable:/Surface:As', '-1' ]]
+coord.LogInterval = 0.03
+
 run(100)
