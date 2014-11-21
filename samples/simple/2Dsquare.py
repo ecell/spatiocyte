@@ -21,7 +21,6 @@ theSimulator.createEntity('Variable', 'Variable:/Surface:As').Value = 0
 
 logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:logger')
 logger.VariableReferenceList = [['_', 'Variable:/Surface:A'], ['_', 'Variable:/Surface:As']]
-logger.LogInterval = 0.01
 
 
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
@@ -33,7 +32,7 @@ binder.VariableReferenceList = [['_', 'Variable:/Surface:A','-1']]
 binder.VariableReferenceList = [['_', 'Variable:/Surface:A','-1']]
 binder.VariableReferenceList = [['_', 'Variable:/Surface:As','1']]
 binder.VariableReferenceList = [['_', 'Variable:/Surface:As','1']]
-binder.p = 0.0001
+binder.p = 0.1
 
 binder = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:reaction2')
 binder.VariableReferenceList = [['_', 'Variable:/Surface:A','-1']]
@@ -56,6 +55,5 @@ diffuser.D = 1e-13
 coord = theSimulator.createEntity('CoordinateLogProcess', 'Process:/:coord')
 coord.VariableReferenceList = [['_', 'Variable:/Surface:A', '-1' ]]
 coord.VariableReferenceList = [['_', 'Variable:/Surface:As', '-1' ]]
-coord.LogInterval = 0.03
 
-run(100)
+run(1)
