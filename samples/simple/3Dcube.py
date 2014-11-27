@@ -4,9 +4,9 @@ sim.SearchVacant = 0
 
 theSimulator.rootSystem.StepperID = 'SS'
 theSimulator.createEntity('Variable', 'Variable:/:GEOMETRY').Value = 0
-theSimulator.createEntity('Variable', 'Variable:/:LENGTHX').Value = 2e-7
-theSimulator.createEntity('Variable', 'Variable:/:LENGTHY').Value = 2e-7
-theSimulator.createEntity('Variable', 'Variable:/:LENGTHZ').Value = 2e-7
+theSimulator.createEntity('Variable', 'Variable:/:LENGTHX').Value = 1e-6
+theSimulator.createEntity('Variable', 'Variable:/:LENGTHY').Value = 1e-6
+theSimulator.createEntity('Variable', 'Variable:/:LENGTHZ').Value = 1e-6
 theSimulator.createEntity('Variable', 'Variable:/:VACANT')
 theSimulator.createEntity('Variable', 'Variable:/:XYPLANE').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/:XZPLANE').Value = 0
@@ -16,7 +16,7 @@ theSimulator.createEntity('System', 'System:/:Surface').StepperID = 'SS'
 theSimulator.createEntity('Variable', 'Variable:/Surface:DIMENSION').Value = 2
 theSimulator.createEntity('Variable', 'Variable:/Surface:VACANT')
 
-theSimulator.createEntity('Variable', 'Variable:/:A').Value = 160000
+theSimulator.createEntity('Variable', 'Variable:/:A').Value = 1600
 theSimulator.createEntity('Variable', 'Variable:/:B').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/:C').Value = 0
 
@@ -47,4 +47,4 @@ diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseC')
 diffuser.VariableReferenceList = [['_', 'Variable:/:C']]
 diffuser.D = 1e-13
 
-run(0.0001)
+run(0.01)
