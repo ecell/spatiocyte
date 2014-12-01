@@ -307,7 +307,8 @@ public:
                       "[" + getFullID().asString() + "]");
       cout << aProcess << std::endl;
       cout << "  " << getIDString(theDiffusionSpecies) << " ";
-      cout << ":" << std::endl << "  Diffusion interval=" <<
+      cout << ":" << std::endl << "  Dimension=" << 
+        theDiffusionSpecies->getDimension() << " Diffusion interval=" <<
         theInterval << ", D=" << D << ", Walk probability (P/rho)=" <<
         WalkProbability << std::endl;
     }
