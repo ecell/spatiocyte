@@ -779,82 +779,66 @@ public:
             {
               size = source->diffuseSize;
             }
-          bool isWalkedReacted(false);
-          std::vector<unsigned> rands;
-          while(!isWalkedReacted && rands.size() != size)
+          Voxel* target(&theLattice[source->adjoiningCoords[
+                        theRng.Integer(size)]]);
+          if(getID(target) == theVacantID)
             {
-              unsigned rand(theRng.Integer(size));
-              while(std::find(rands.begin(), rands.end(), rand) != rands.end())
+              if(theWalkProbability == 1 || theRng.Fixed() < theWalkProbability)
                 {
-                  rand = theRng.Integer(size);
+                  source->idx = target->idx;
+                  target->idx = i+theStride*theID;
+                  theMolecules[i] = target;
                 }
-              rands.push_back(rand);
-              Voxel* target(&theLattice[source->adjoiningCoords[rand]]);
-              if(getID(target) == theVacantID)
+            }
+          else
+            {
+              if(getID(target) == theComp->interfaceID)
                 {
-                  if(theWalkProbability == 1 || 
-                     theRng.Fixed() < theWalkProbability)
+                  //Some interface voxels do not have pointers to the
+                  //off lattice subunits, so their adjoiningSize == diffuseSize:
+                  if(target->adjoiningSize == target->diffuseSize)
                     {
-                      source->idx = target->idx;
-                      target->idx = i+theStride*theID;
-                      theMolecules[i] = target;
+                      continue;
                     }
-                  isWalkedReacted = true;
+                  unsigned coord(theRng.Integer(target->adjoiningSize-
+                                                target->diffuseSize));
+                  coord = target->adjoiningCoords[coord+target->diffuseSize];
+                  target = &theLattice[coord];
                 }
-              else
+              const unsigned tarID(getID(target));
+              if(theDiffusionInfluencedReactions[tarID])
                 {
-                  if(getID(target) == theComp->interfaceID)
-                    {
-                      //Some interface voxels do not have pointers to the
-                      //off lattice subunits, so their
-                      //adjoiningSize == diffuseSize:
-                      if(target->adjoiningSize == target->diffuseSize)
-                        {
-                          continue;
-                        }
-                      unsigned coord(theRng.Integer(target->adjoiningSize-
-                                                    target->diffuseSize));
-                      coord = target->adjoiningCoords[coord+
-                        target->diffuseSize];
-                      target = &theLattice[coord];
+                  if(theCollision==3)
+                    { 
+                      ++theSpeciesCollisionCnt;
+                      return;
                     }
-                  const unsigned tarID(getID(target));
-                  if(theDiffusionInfluencedReactions[tarID])
-                    {
-                      if(theCollision==3)
+                  //If it meets the reaction probability:
+                  if(theReactionProbabilities[tarID] == 1 ||
+                     theRng.Fixed() < theReactionProbabilities[tarID])
+                    { 
+                      if(theCollision && theCollision != 3)
                         { 
-                          ++theSpeciesCollisionCnt;
-                          return;
-                        }
-                      //If it meets the reaction probability:
-                      if(theReactionProbabilities[tarID] == 1 ||
-                         theRng.Fixed() < theReactionProbabilities[tarID])
-                        {
-                          isWalkedReacted = true;
-                          if(theCollision && theCollision != 3)
-                            { 
-                              ++collisionCnts[i];
-                              Species* targetSpecies(theSpecies[tarID]);
-                              targetSpecies->addCollision(target);
-                              if(theCollision != 2)
-                                {
-                                  return;
-                                }
-                            }
-                          unsigned aMoleculeSize(theMoleculeSize);
-                          react(source, target, i, target->idx%theStride,
-                                tarID);
-                          //If the reaction is successful, the last molecule of
-                          //this species will replace the pointer of i, so we
-                          //need to decrement i to perform the diffusion on it.
-                          //However, if theMoleculeSize didn't decrease, that
-                          //means the currently walked molecule was a product
-                          //of this reaction and so we don't need to walk it
-                          //again by decrementing i.
-                          if(theMoleculeSize < aMoleculeSize)
+                          ++collisionCnts[i];
+                          Species* targetSpecies(theSpecies[tarID]);
+                          targetSpecies->addCollision(target);
+                          if(theCollision != 2)
                             {
-                              --i;
+                              return;
                             }
+                        }
+                      unsigned aMoleculeSize(theMoleculeSize);
+                      react(source, target, i, target->idx%theStride, tarID);
+                      //If the reaction is successful, the last molecule of this
+                      //species will replace the pointer of i, so we need to 
+                      //decrement i to perform the diffusion on it. However, if
+                      //theMoleculeSize didn't decrease, that means the
+                      //currently walked molecule was a product of this
+                      //reaction and so we don't need to walk it again by
+                      //decrementing i.
+                      if(theMoleculeSize < aMoleculeSize)
+                        {
+                          --i;
                         }
                     }
                 }
@@ -4136,5 +4120,3 @@ private:
 }
 
 #endif /* __SpatiocyteSpecies_hpp */
-
-
