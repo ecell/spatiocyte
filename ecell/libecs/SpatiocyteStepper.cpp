@@ -869,6 +869,7 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
   aComp->system = aSystem;
   aComp->surfaceSub = NULL;
   aComp->diffusiveComp = NULL;
+  aComp->vacantSpecies = NULL;
   //Default Comp geometry is Cuboid:
   aComp->geometry = 0;
   //Default is volume Comp:
@@ -1056,6 +1057,12 @@ void SpatiocyteStepper::registerCompSpecies(Comp* aComp)
           (*j)->setDimension(aComp->dimension);
         }
     }
+  if(aComp->vacantSpecies == NULL) {
+    THROW_EXCEPTION(NotFound, "Variable VACANT of the compartment "
+                          + aSystem->getFullID().asString() + ", which "
+                          + "specifies the vacant species, "
+                          + "not defined." );
+  }
 }
 
 void SpatiocyteStepper::setLatticeProperties()

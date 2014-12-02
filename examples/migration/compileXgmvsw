@@ -1,5 +1,0 @@
-gfortran -c iolibswL.f
-gfortran gmvswU.f iolibswL.o
-mv a.out xgmvsw
-rm *.o
-rm *.mod
