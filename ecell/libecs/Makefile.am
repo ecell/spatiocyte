@@ -76,6 +76,7 @@ PeriodicBoundaryDiffusionProcess.cpp\
 SpatiocyteTauLeapProcess.cpp\
 LifetimeLogProcess.cpp\
 MicrotubuleProcess.cpp\
+FilamentProcess.cpp\
 MultiscaleReactionProcess.cpp\
 MechanicsProcess.cpp\
 MigrationProcess.cpp

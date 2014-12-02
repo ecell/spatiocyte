@@ -67,6 +67,7 @@
 #include "MassActionProcess.hpp"
 #include "MicroscopyTrackingProcess.hpp"
 #include "MicrotubuleProcess.hpp"
+#include "FilamentProcess.hpp"
 #include "MoleculePopulateProcess.hpp"
 #include "OscillationAnalysisProcess.hpp"
 #include "PeriodicBoundaryDiffusionProcess.hpp"
@@ -79,7 +80,6 @@
 #include "VisualizationLogProcess.hpp"
 #include "SurfaceCompartmentProcess.hpp"
 #include "MultiscaleReactionProcess.hpp"
-#include "MicrotubuleProcess.hpp"
 #include "LifetimeLogProcess.hpp"
 #include "MechanicsProcess.hpp"
 #include "MigrationProcess.hpp"
@@ -535,6 +535,7 @@ void Model::registerBuiltinModules()
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, SpatiocyteTauLeapProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, MultiscaleReactionProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, MicrotubuleProcess );
+    DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, FilamentProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, CompartmentProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, ErythrocyteProcess );
     DM_NEW_STATIC( &theEcsObjectMaker, EcsObject, IteratingLogProcess );
