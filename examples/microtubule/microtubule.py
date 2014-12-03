@@ -3,7 +3,7 @@ RotateAngle = 0
 MTRadius = 12.5e-9
 VoxelRadius = 0.4e-8
 KinesinRadius = 0.4e-8
-totalMTLength = 0.6e-6
+MTLength = 0.6e-6
 
 theSimulator.createStepper('SpatiocyteStepper', 'SS').VoxelRadius = VoxelRadius
 theSimulator.rootSystem.StepperID = 'SS'
@@ -100,7 +100,7 @@ Microtubule.RotateY = 0
 Microtubule.RotateZ = RotateAngle
 Microtubule.Radius = MTRadius
 Microtubule.SubunitRadius = KinesinRadius
-Microtubule.Length = totalMTLength
+Microtubule.Length = MTLength
 Microtubule.Filaments = Filaments
 Microtubule.Periodic = 0
 Microtubule.VariableReferenceList = [['_', 'Variable:/:MTKinesin' ]]

@@ -1,0 +1,4 @@
+To run the C++ model 2D.cpp:
+----------------------------
+1. g++ -O3 2D.cpp -I/home/satya/root/include/ecell-3.2/ -I/home/satya/root/include -L/home/satya/root/lib -lecs -o 2D
+2. ./2D
