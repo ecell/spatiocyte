@@ -33,117 +33,34 @@
 #define __FilamentProcess_hpp
 
 #include <sstream>
-#include <libecs/MicrotubuleProcess.hpp>
+#include <libecs/CompartmentProcess.hpp>
 
 namespace libecs
 {
 
-LIBECS_DM_CLASS(FilamentProcess, MicrotubuleProcess)
+LIBECS_DM_CLASS(FilamentProcess, CompartmentProcess)
 { 
 public:
   LIBECS_DM_OBJECT(FilamentProcess, Process)
     {
-      INHERIT_PROPERTIES(MicrotubuleProcess);
+      INHERIT_PROPERTIES(CompartmentProcess);
     }
-  FilamentProcess()
+  FilamentProcess():
+    theMinusSpecies(NULL),
+    thePlusSpecies(NULL)
   {
+    SurfaceDirection = 0;
+    Autofit = 0;
     Filaments = 1;
+    Subunits = 1;
+    RegularLattice = 0;
+    DiffuseRadius = 2.5e-9;
+    SubunitRadius = DiffuseRadius;
   }
   virtual ~FilamentProcess() {}
-  virtual void initialize()
-    {
-      if(isInitialized)
-        {
-          return;
-        }
-      SpatiocyteProcess::initialize();
-      theInterfaceSpecies = theSpatiocyteStepper->addSpecies(
-                                                       theInterfaceVariable);
-      theInterfaceSpecies->setIsInterface();
-      for(VariableReferenceVector::iterator
-          i(theVariableReferenceVector.begin());
-          i != theVariableReferenceVector.end(); ++i)
-        {
-          Species* aSpecies(theSpatiocyteStepper->variable2species(
-                                   (*i).getVariable())); 
-          if((*i).getCoefficient())
-            {
-              if((*i).getCoefficient() == -1)
-                {
-                  if(theVacantSpecies)
-                    {
-                      THROW_EXCEPTION(ValueError, String(
-                                      getPropertyInterface().getClassName()) +
-                                      "[" + getFullID().asString() + 
-                                      "]: A FilamentProcess requires only " +
-                                      "one vacant variable reference with -1 " +
-                                      "coefficient as the vacant species of " +
-                                      "the Filament compartment, but " +
-                                      getIDString(theVacantSpecies) + " and " +
-                                      getIDString(aSpecies) + " are given."); 
-                    }
-                  theVacantSpecies = aSpecies;
-                }
-            }
-          else
-            {
-              theFilamentSpecies.push_back(aSpecies);
-            }
-        }
-      if(!theFilamentSpecies.size())
-        {
-          THROW_EXCEPTION(ValueError, String(
-                          getPropertyInterface().getClassName()) +
-                          "[" + getFullID().asString() + 
-                          "]: A FilamentProcess requires at least one " +
-                          "nonHD variable reference with zero coefficient " +
-                          "as the filament species, but none is given."); 
-        }
-      if(!theVacantSpecies)
-        {
-          THROW_EXCEPTION(ValueError, String(
-                          getPropertyInterface().getClassName()) +
-                          "[" + getFullID().asString() + 
-                          "]: A FilamentProcess requires one " +
-                          "nonHD variable reference with negative " +
-                          "coefficient as the vacant species, " +
-                          "but none is given."); 
-        }
-      if(!DiffuseRadius)
-        {
-          if(SubunitRadius)
-            {
-              DiffuseRadius = SubunitRadius;
-            }
-          else
-            {
-              DiffuseRadius = theSpatiocyteStepper->getVoxelRadius();
-            }
-        }
-      if(!SubunitRadius)
-        {
-          SubunitRadius = DiffuseRadius;
-        }
-      VoxelRadius = theSpatiocyteStepper->getVoxelRadius();
-      //Normalized off-lattice voxel radius:
-      nSubunitRadius = SubunitRadius/(VoxelRadius*2);
-      nDiffuseRadius = DiffuseRadius/(VoxelRadius*2);
-      Radius = SubunitRadius;
-      nRadius = Radius/(VoxelRadius*2);
-      nGridSize = 10*nDiffuseRadius;
-    }
-  virtual void initializeFirst()
-    {
-      CompartmentProcess::initializeFirst();
-      for(unsigned i(0); i != theFilamentSpecies.size(); ++i)
-        {
-          theFilamentSpecies[i]->setIsOffLattice();
-          theFilamentSpecies[i]->setDimension(1);
-          theFilamentSpecies[i]->setVacantSpecies(theVacantSpecies);
-          theFilamentSpecies[i]->setComp(theComp);
-          theFilamentSpecies[i]->resetFixedAdjoins();
-        }
-    }
+  virtual void prepreinitialize();
+  virtual void initialize();
+  virtual void initializeFirst();
   virtual unsigned getLatticeResizeCoord(unsigned);
   virtual void setCompartmentDimension();
   virtual void initializeVectors();
@@ -157,10 +74,16 @@ public:
   virtual void addPlaneIntersectInterfaceVoxel(Voxel&, Point&);
   virtual bool isInside(Point&);
   virtual bool isOnAboveSurface(Point&);
-  void connectTrailTubulins(unsigned, unsigned, unsigned);
+  void connectTrailSubunits(unsigned, unsigned, unsigned);
   void setTrailSize(unsigned, unsigned);
 protected:
-  std::vector<Species*> theFilamentSpecies;
+  double nRadius;
+  double Radius;
+  Point Minus; //Minus end
+  Point Plus; //Plus end
+  Species* theMinusSpecies;
+  Species* thePlusSpecies;
+  std::vector<Species*> theBindingSpecies;
 };
 
 }

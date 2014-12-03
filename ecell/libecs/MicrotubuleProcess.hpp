@@ -33,209 +33,39 @@
 #define __MicrotubuleProcess_hpp
 
 #include <sstream>
-#include <libecs/CompartmentProcess.hpp>
-#include <libecs/SpatiocyteSpecies.hpp>
+#include <libecs/FilamentProcess.hpp>
 
 namespace libecs
 {
 
-LIBECS_DM_CLASS(MicrotubuleProcess, CompartmentProcess)
+LIBECS_DM_CLASS(MicrotubuleProcess, FilamentProcess)
 { 
 public:
   LIBECS_DM_OBJECT(MicrotubuleProcess, Process)
     {
-      INHERIT_PROPERTIES(CompartmentProcess);
+      INHERIT_PROPERTIES(FilamentProcess);
       PROPERTYSLOT_SET_GET(Real, MonomerPitch);
       //Radius is the radius of the microtubule:
       PROPERTYSLOT_SET_GET(Real, Radius);
     }
   MicrotubuleProcess():
-    MonomerPitch(4e-9),
-    theMinusSpecies(NULL),
-    thePlusSpecies(NULL)
+    MonomerPitch(4e-9)
   {
-    SurfaceDirection = 0;
     Filaments = 13;
-    Subunits = 1;
-    Autofit = 0;
-    RegularLattice = 0;
-    DiffuseRadius = 8e-9/2; //default value of DimerPitch*2
-    //SubunitRadius is the actual radius of a molecule.
-    //For a normal molecule the SubunitRadius = DiffuseRadius.
-    //For a multiscale molecule, the SubunitRadius can be larger
-    //than the DiffuseRadius:
+    DiffuseRadius = 8e-9/2;
     SubunitRadius = DiffuseRadius;
   }
   virtual ~MicrotubuleProcess() {}
   SIMPLE_SET_GET_METHOD(Real, MonomerPitch);
   SIMPLE_SET_GET_METHOD(Real, Radius);
-  virtual void prepreinitialize()
-    {
-      SpatiocyteProcess::prepreinitialize();
-      theInterfaceVariable = createVariable("Interface");
-    }
-  virtual void initialize()
-    {
-      if(isInitialized)
-        {
-          return;
-        }
-      SpatiocyteProcess::initialize();
-      theInterfaceSpecies = theSpatiocyteStepper->addSpecies(
-                                                       theInterfaceVariable);
-      theInterfaceSpecies->setIsInterface();
-      for(VariableReferenceVector::iterator
-          i(theVariableReferenceVector.begin());
-          i != theVariableReferenceVector.end(); ++i)
-        {
-          Species* aSpecies(theSpatiocyteStepper->variable2species(
-                                   (*i).getVariable())); 
-          if((*i).getCoefficient())
-            {
-              if((*i).getCoefficient() == -1)
-                {
-                  if(theVacantSpecies)
-                    {
-                      THROW_EXCEPTION(ValueError, String(
-                                      getPropertyInterface().getClassName()) +
-                                      "[" + getFullID().asString() + 
-                                      "]: A MicrotubuleProcess requires only " +
-                                      "one vacant variable reference with -1 " +
-                                      "coefficient as the vacant species of " +
-                                      "the microtubule compartment, but " +
-                                      getIDString(theVacantSpecies) + " and " +
-                                      getIDString(aSpecies) + " are given."); 
-                    }
-                  theVacantSpecies = aSpecies;
-                }
-              else if((*i).getCoefficient() == -2)
-                {
-                  if(theMinusSpecies)
-                    {
-                      THROW_EXCEPTION(ValueError, String(
-                                      getPropertyInterface().getClassName()) +
-                                      "[" + getFullID().asString() + 
-                                      "]: A MicrotubuleProcess requires only " +
-                                      "one variable reference with -2 " +
-                                      "coefficient as the minus end species " +
-                                      "of the microtubule compartment, but " +
-                                      getIDString(theMinusSpecies) + " and " +
-                                      getIDString(aSpecies) + " are given."); 
-                    }
-                  theMinusSpecies = aSpecies;
-                }
-              else if((*i).getCoefficient() == -3)
-                {
-                  if(thePlusSpecies)
-                    {
-                      THROW_EXCEPTION(ValueError, String(
-                                      getPropertyInterface().getClassName()) +
-                                      "[" + getFullID().asString() + 
-                                      "]: A MicrotubuleProcess requires only " +
-                                      "one variable reference with -3 " +
-                                      "coefficient as the plus end species " +
-                                      "of the microtubule compartment, but " +
-                                      getIDString(thePlusSpecies) + " and " +
-                                      getIDString(aSpecies) + " are given."); 
-                    }
-                  thePlusSpecies = aSpecies;
-                }
-            }
-          else
-            {
-              theKinesinSpecies.push_back(aSpecies);
-            }
-        }
-      if(!theKinesinSpecies.size())
-        {
-          THROW_EXCEPTION(ValueError, String(
-                          getPropertyInterface().getClassName()) +
-                          "[" + getFullID().asString() + 
-                          "]: A MicrotubuleProcess requires at least one " +
-                          "nonHD variable reference with zero coefficient " +
-                          "as the kinesin species, but none is given."); 
-        }
-      if(!theVacantSpecies)
-        {
-          THROW_EXCEPTION(ValueError, String(
-                          getPropertyInterface().getClassName()) +
-                          "[" + getFullID().asString() + 
-                          "]: A MicrotubuleProcess requires one " +
-                          "nonHD variable reference with negative " +
-                          "coefficient as the vacant species, " +
-                          "but none is given."); 
-        }
-      if(!theMinusSpecies)
-        {
-          theMinusSpecies = theVacantSpecies;
-        }
-      if(!thePlusSpecies)
-        {
-          thePlusSpecies = theVacantSpecies;
-        }
-      if(!DiffuseRadius)
-        {
-          if(SubunitRadius)
-            {
-              DiffuseRadius = SubunitRadius;
-            }
-          else
-            {
-              DiffuseRadius = theSpatiocyteStepper->getVoxelRadius();
-            }
-        }
-      if(!SubunitRadius)
-        {
-          SubunitRadius = DiffuseRadius;
-        }
-      VoxelRadius = theSpatiocyteStepper->getVoxelRadius();
-      //Normalized off-lattice voxel radius:
-      nSubunitRadius = SubunitRadius/(VoxelRadius*2);
-      nDiffuseRadius = DiffuseRadius/(VoxelRadius*2);
-      nMonomerPitch = MonomerPitch/(VoxelRadius*2);
-      nRadius = Radius/(VoxelRadius*2);
-      nGridSize = 10*nDiffuseRadius;
-    }
-  virtual void initializeFirst()
-    {
-      CompartmentProcess::initializeFirst();
-      theMinusSpecies->setIsOffLattice();
-      theMinusSpecies->setComp(theComp);
-      thePlusSpecies->setIsOffLattice();
-      thePlusSpecies->setComp(theComp);
-      for(unsigned i(0); i != theKinesinSpecies.size(); ++i)
-        {
-          theKinesinSpecies[i]->setIsOffLattice();
-          theKinesinSpecies[i]->setDimension(1);
-          theKinesinSpecies[i]->setVacantSpecies(theVacantSpecies);
-          theKinesinSpecies[i]->setComp(theComp);
-          theKinesinSpecies[i]->resetFixedAdjoins();
-        }
-    }
-  virtual unsigned getLatticeResizeCoord(unsigned);
-  virtual void setCompartmentDimension();
-  virtual void initializeVectors();
+  virtual void initialize();
+  virtual void setSubunitStart();
+  virtual void initializeThird();
   virtual void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
                                    unsigned);
-  virtual void initializeThird();
-  virtual void setSubunitStart();
-  virtual void connectFilaments(unsigned, unsigned, unsigned);
-  virtual void elongateFilaments(Species*, unsigned, unsigned, unsigned,
-                                 double);
-  virtual void addPlaneIntersectInterfaceVoxel(Voxel&, Point&);
-  virtual bool isInside(Point&);
-  virtual bool isOnAboveSurface(Point&);
-  void connectTrailTubulins(unsigned, unsigned, unsigned);
-  void setTrailSize(unsigned, unsigned);
 protected:
   double MonomerPitch;
   double nMonomerPitch;
-  double nRadius;
-  double Radius;
-  Point Minus; //Minus end
-  Point Plus; //Plus end
-  Species* theMinusSpecies;
-  Species* thePlusSpecies;
   std::vector<Species*> theKinesinSpecies;
 };
 

@@ -35,18 +35,162 @@ namespace libecs
 
 LIBECS_DM_INIT_STATIC(FilamentProcess, Process); 
 
-unsigned FilamentProcess::getLatticeResizeCoord(unsigned aStartCoord)
-{
-  const unsigned aSize(CompartmentProcess::getLatticeResizeCoord(aStartCoord));
-  for(unsigned i(0); i != theFilamentSpecies.size(); ++i)
+void FilamentProcess::prepreinitialize() {
+  SpatiocyteProcess::prepreinitialize();
+  theInterfaceVariable = createVariable("Interface");
+}
+
+void FilamentProcess::initialize() {
+  if(isInitialized)
     {
-      theFilamentSpecies[i]->setMoleculeRadius(DiffuseRadius);
+      return;
+    }
+  SpatiocyteProcess::initialize();
+  theInterfaceSpecies = theSpatiocyteStepper->addSpecies(
+                                                   theInterfaceVariable);
+  theInterfaceSpecies->setIsInterface();
+  for(VariableReferenceVector::iterator
+      i(theVariableReferenceVector.begin());
+      i != theVariableReferenceVector.end(); ++i)
+    {
+      Species* aSpecies(theSpatiocyteStepper->variable2species(
+                               (*i).getVariable())); 
+      if((*i).getCoefficient())
+        {
+          if((*i).getCoefficient() == -1)
+            {
+              if(theVacantSpecies)
+                {
+                  THROW_EXCEPTION(ValueError, String(
+                                  getPropertyInterface().getClassName()) +
+                                  "[" + getFullID().asString() + 
+                                  "]: This compartment requires only " +
+                                  "one vacant variable reference with -1 " +
+                                  "coefficient as the vacant species of " +
+                                  "the compartment, but " +
+                                  getIDString(theVacantSpecies) + " and " +
+                                  getIDString(aSpecies) + " are given."); 
+                }
+              theVacantSpecies = aSpecies;
+            }
+          else if((*i).getCoefficient() == -2)
+            {
+              if(theMinusSpecies)
+                {
+                  THROW_EXCEPTION(ValueError, String(
+                                  getPropertyInterface().getClassName()) +
+                                  "[" + getFullID().asString() + 
+                                  "]: This compartment requires only " +
+                                  "one variable reference with -2 " +
+                                  "coefficient as the minus end species " +
+                                  "of the compartment, but " +
+                                  getIDString(theMinusSpecies) + " and " +
+                                  getIDString(aSpecies) + " are given."); 
+                }
+              theMinusSpecies = aSpecies;
+            }
+          else if((*i).getCoefficient() == -3)
+            {
+              if(thePlusSpecies)
+                {
+                  THROW_EXCEPTION(ValueError, String(
+                                  getPropertyInterface().getClassName()) +
+                                  "[" + getFullID().asString() + 
+                                  "]: This compartment requires only " +
+                                  "one variable reference with -3 " +
+                                  "coefficient as the plus end species " +
+                                  "of the microtubule compartment, but " +
+                                  getIDString(thePlusSpecies) + " and " +
+                                  getIDString(aSpecies) + " are given."); 
+                }
+              thePlusSpecies = aSpecies;
+            }
+        }
+      else
+        {
+          theBindingSpecies.push_back(aSpecies);
+        }
+    }
+  if(!theBindingSpecies.size())
+    {
+      THROW_EXCEPTION(ValueError, String(
+                      getPropertyInterface().getClassName()) +
+                      "[" + getFullID().asString() + 
+                      "]: This compartment requires at least one " +
+                      "nonHD variable reference with zero coefficient " +
+                      "as the binding species, but none is given."); 
+    }
+  if(!theVacantSpecies)
+    {
+      THROW_EXCEPTION(ValueError, String(
+                      getPropertyInterface().getClassName()) +
+                      "[" + getFullID().asString() + 
+                      "]: This compartment requires one " +
+                      "nonHD variable reference with negative " +
+                      "coefficient as the vacant species, " +
+                      "but none is given."); 
+    }
+  if(!theMinusSpecies)
+    {
+      theMinusSpecies = theVacantSpecies;
+    }
+  if(!thePlusSpecies)
+    {
+      thePlusSpecies = theVacantSpecies;
+    }
+  if(!DiffuseRadius)
+    {
+      if(SubunitRadius)
+        {
+          DiffuseRadius = SubunitRadius;
+        }
+      else
+        {
+          DiffuseRadius = theSpatiocyteStepper->getVoxelRadius();
+        }
+    }
+  if(!SubunitRadius)
+    {
+      SubunitRadius = DiffuseRadius;
+    }
+  VoxelRadius = theSpatiocyteStepper->getVoxelRadius();
+  //Normalized off-lattice voxel radius:
+  nSubunitRadius = SubunitRadius/(VoxelRadius*2);
+  nDiffuseRadius = DiffuseRadius/(VoxelRadius*2);
+  nRadius = Radius/(VoxelRadius*2);
+  nGridSize = 10*nDiffuseRadius;
+}
+
+void FilamentProcess::initializeFirst() {
+  CompartmentProcess::initializeFirst();
+  theMinusSpecies->setIsOffLattice();
+  theMinusSpecies->setComp(theComp);
+  thePlusSpecies->setIsOffLattice();
+  thePlusSpecies->setComp(theComp);
+  for(unsigned i(0); i != theBindingSpecies.size(); ++i)
+    {
+      theBindingSpecies[i]->setIsOffLattice();
+      theBindingSpecies[i]->setDimension(1);
+      theBindingSpecies[i]->setVacantSpecies(theVacantSpecies);
+      theBindingSpecies[i]->setComp(theComp);
+      theBindingSpecies[i]->resetFixedAdjoins();
+    }
+}
+
+unsigned FilamentProcess::getLatticeResizeCoord(unsigned aStartCoord) {
+  const unsigned aSize(CompartmentProcess::getLatticeResizeCoord(aStartCoord));
+  theMinusSpecies->resetFixedAdjoins();
+  theMinusSpecies->setMoleculeRadius(DiffuseRadius);
+  thePlusSpecies->resetFixedAdjoins();
+  thePlusSpecies->setMoleculeRadius(DiffuseRadius);
+  for(unsigned i(0); i != theBindingSpecies.size(); ++i)
+    {
+      theBindingSpecies[i]->setMoleculeRadius(DiffuseRadius);
     }
   return aSize;
 }
 
-void FilamentProcess::setCompartmentDimension()
-{
+void FilamentProcess::setCompartmentDimension() {
   if(Length)
     {
       Subunits = (unsigned)rint(Length/(2*DiffuseRadius));
@@ -63,22 +207,20 @@ void FilamentProcess::setCompartmentDimension()
   allocateGrid();
 }
 
-
-void FilamentProcess::initializeThird()
-{
+void FilamentProcess::initializeThird() {
   if(!isCompartmentalized)
     {
       thePoints.resize(endCoord-subStartCoord);
       vacStartIndex = theVacantSpecies->size();
       intStartIndex = theInterfaceSpecies->size();
       initializeVectors();
-      initializeFilaments(subunitStart, Filaments, Subunits, nMonomerPitch,
+      initializeFilaments(subunitStart, Filaments, Subunits, 0,
                           theVacantSpecies, subStartCoord);
       elongateFilaments(theVacantSpecies, subStartCoord, Filaments, Subunits,
                         nDiffuseRadius);
       connectFilaments(subStartCoord, Filaments, Subunits);
       setDiffuseSize(subStartCoord, lipStartCoord);
-      connectTrailTubulins(subStartCoord, Filaments, Subunits);
+      connectTrailSubunits(subStartCoord, Filaments, Subunits);
       setTrailSize(subStartCoord, lipStartCoord);
       setGrid(theVacantSpecies, theVacGrid, subStartCoord);
       interfaceSubunits();
@@ -86,10 +228,11 @@ void FilamentProcess::initializeThird()
     }
   theVacantSpecies->setIsPopulated();
   theInterfaceSpecies->setIsPopulated();
+  theMinusSpecies->setIsPopulated();
+  thePlusSpecies->setIsPopulated();
 }
 
-void FilamentProcess::setTrailSize(unsigned start, unsigned end)
-{
+void FilamentProcess::setTrailSize(unsigned start, unsigned end) {
   for(unsigned i(start); i != end; ++i)
     {
       Voxel& subunit((*theLattice)[i]);
@@ -97,8 +240,7 @@ void FilamentProcess::setTrailSize(unsigned start, unsigned end)
     }
 }
 
-void FilamentProcess::initializeVectors()
-{ 
+void FilamentProcess::initializeVectors() { 
   //Minus end
   Minus.x = -nLength/2;
   Minus.y = 0;
@@ -136,26 +278,17 @@ void FilamentProcess::setSubunitStart()
 }
 
 void FilamentProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
-                                             unsigned aCols, double aRadius,
-                                             Species* aVacant,
-                                             unsigned aStartCoord)
-{
+                                          unsigned aCols, double aRadius,
+                                          Species* aVacant,
+                                          unsigned aStartCoord) {
   Voxel* aVoxel(addCompVoxel(0, 0, aStartPoint, aVacant, aStartCoord, aCols));
-  Point U(aStartPoint);
-  for(unsigned i(1); i < aRows; ++i)
-    {
-      double angle(2*M_PI/aRows);
-      rotatePointAlongVector(U, Minus, lengthVector, angle);
-      disp_(U, lengthVector, aRadius/(aRows-1));
-      aVoxel = addCompVoxel(i, 0, U, aVacant, aStartCoord, aCols);
-    }
+  theMinusSpecies->addMolecule(aVoxel);
 }
 
 // y:width:rows:filaments
 // z:length:cols:subunits
 void FilamentProcess::connectFilaments(unsigned aStartCoord,
-                                          unsigned aRows, unsigned aCols)
-{
+                                          unsigned aRows, unsigned aCols) {
   for(unsigned i(0); i != aCols; ++i)
     {
       for(unsigned j(0); j != aRows; ++j)
@@ -180,7 +313,7 @@ void FilamentProcess::connectFilaments(unsigned aStartCoord,
 
 // y:width:rows:filaments
 // z:length:cols:subunits
-void FilamentProcess::connectTrailTubulins(unsigned aStartCoord,
+void FilamentProcess::connectTrailSubunits(unsigned aStartCoord,
                                               unsigned aRows, unsigned aCols)
 {
   for(unsigned i(0); i != aCols; ++i)
@@ -209,6 +342,10 @@ void FilamentProcess::elongateFilaments(Species* aVacant,
         {
           disp_(A, lengthVector, aRadius*2);
           Voxel* aVoxel(addCompVoxel(i, j, A, aVacant, aStartCoord, aCols));
+          if(j == aCols-1)
+            {
+              thePlusSpecies->addMolecule(aVoxel);
+            }
         }
     }
 }
