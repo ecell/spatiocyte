@@ -1,0 +1,19 @@
+Install eGFRD:
+git clone https://github.com/ecell/epdp.git
+./autogen.sh
+./configure --prefix=/home/satya/root
+make -j4
+
+Diffusion benchmark
+-------------------
+LD_LIBRARY_PATH=$HOME/wrk/epdp PYTHONPATH=$HOME/wrk/epdp LOGLEVEL=FATAL python run_single.py
+
+LD_LIBRARY_PATH=$HOME/wrk/epdp PYTHONPATH=$HOME/wrk/epdp LOGLEVEL=FATAL python run_all.py
+
+LD_LIBRARY_PATH=$HOME/wrk/epdp PYTHONPATH=$HOME/wrk/epdp LOGLEVEL=FATAL python run_all_dense.py
+
+Reaction benchmark
+------------------
+LD_LIBRARY_PATH=$HOME/wrk/epdp PYTHONPATH=$HOME/wrk/epdp LOGLEVEL=FATAL python reaction.py
+
+LD_LIBRARY_PATH=$HOME/wrk/epdp PYTHONPATH=$HOME/wrk/epdp LOGLEVEL=FATAL python reaction_small_r.py

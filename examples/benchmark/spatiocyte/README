@@ -1,0 +1,23 @@
+Runtime for diffusion
+---------------------
+To run single:
+python run_single.py
+
+To run all:
+python run_all.py
+
+After running, to view the plot:
+python plot_diffusion.py
+
+Runtime for Michaelis-Menten reaction
+-------------------------------------
+Using benchmark model from Supporting Information Text S1 of 
+Andrews et al, PLoS Comp Biol 2010
+
+To run the reaction using ODE-based mass action:
+ecell3-session ode.py 
+
+To run the reaction with Spatiocyte:
+ecell3-session reaction.py 
+
+
