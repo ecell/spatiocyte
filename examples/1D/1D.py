@@ -20,7 +20,7 @@ react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process
 react.VariableReferenceList = [['_', 'Variable:/:A','-1']]
 react.VariableReferenceList = [['_', 'Variable:/:Subunit','-1']]
 react.VariableReferenceList = [['_', 'Variable:/:A_Filament','1']]
-react.k = 2.5863133e-18
+react.p = 1
 
 diffuse = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseA')
 diffuse.VariableReferenceList = [['_', 'Variable:/:A']]
@@ -31,11 +31,10 @@ react.VariableReferenceList = [['_', 'Variable:/:A_Filament','-1']]
 react.VariableReferenceList = [['_', 'Variable:/:Subunit','1']]
 react.VariableReferenceList = [['_', 'Variable:/:A','1']]
 react.SearchVacant = 1
-react.k = 10000
+react.k = 100
 
-diffuse = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffusePlus')
+diffuse = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseA_F')
 diffuse.VariableReferenceList = [['_', 'Variable:/:A_Filament']]
-diffuse.VariableReferenceList = [['_', 'Variable:/:Subunit', '1']]
 diffuse.D = 0.04e-10
 
 coord = theSimulator.createEntity('CoordinateLogProcess', 'Process:/:coord')
@@ -56,12 +55,12 @@ Filament.OriginY = 0
 Filament.OriginZ = 0
 Filament.RotateX = 0
 Filament.RotateY = 0
-Filament.RotateZ = 0.2
+Filament.RotateZ = 0
 Filament.SubunitRadius = 0.4e-8
 Filament.Length = 0.6e-6
 Filament.Periodic = 1
 Filament.VariableReferenceList = [['_', 'Variable:/:A_Filament' ]]
 Filament.VariableReferenceList = [['_', 'Variable:/:Subunit' , '-1']]
 
-run(0.01)
+run(0.005)
 
