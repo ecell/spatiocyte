@@ -6,8 +6,8 @@ theSimulator.createEntity('Variable', 'Variable:/:LENGTHY').Value = 0.15e-6
 theSimulator.createEntity('Variable', 'Variable:/:LENGTHZ').Value = 0.15e-6
 
 theSimulator.createEntity('Variable', 'Variable:/:VACANT')
-theSimulator.createEntity('Variable', 'Variable:/:A').Value = 0
-theSimulator.createEntity('Variable', 'Variable:/:A_Filament' ).Value = 2
+theSimulator.createEntity('Variable', 'Variable:/:A').Value = 20
+theSimulator.createEntity('Variable', 'Variable:/:A_Filament' ).Value = 0
 theSimulator.createEntity('Variable', 'Variable:/:A_FilamentATP' ).Value = 0
 theSimulator.createEntity('Variable', 'Variable:/:Subunit' ).Value = 0
 theSimulator.createEntity('Variable', 'Variable:/:SubunitM' ).Value = 0
@@ -30,7 +30,7 @@ react = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process
 react.VariableReferenceList = [['_', 'Variable:/:A','-1']]
 react.VariableReferenceList = [['_', 'Variable:/:Subunit','-1']]
 react.VariableReferenceList = [['_', 'Variable:/:A_Filament','1']]
-react.k = 2.5863133e-18
+react.p = 1
 
 diffuse = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseA')
 diffuse.VariableReferenceList = [['_', 'Variable:/:A']]
@@ -94,12 +94,12 @@ Filament.RotateY = 0
 Filament.RotateZ = 0
 Filament.SubunitRadius = 0.4e-8
 Filament.Length = 0.6e-6
-Filament.Periodic = 1
+Filament.Periodic = 0
 Filament.VariableReferenceList = [['_', 'Variable:/:A_Filament' ]]
 Filament.VariableReferenceList = [['_', 'Variable:/:A_FilamentATP' ]]
 Filament.VariableReferenceList = [['_', 'Variable:/:Subunit' , '-1']]
 Filament.VariableReferenceList = [['_', 'Variable:/:SubunitM' , '-2']]
 Filament.VariableReferenceList = [['_', 'Variable:/:SubunitP' , '-3']]
 
-run(0.01)
+run(0.005)
 

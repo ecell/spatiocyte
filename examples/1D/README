@@ -9,3 +9,15 @@ $ python plot.py
 
 We can use the VLC player to view the movie file:
 $ vlc CoordinateLog.csv.mov 
+
+To create high quality frames using Blender (warning, this will take a lot of computational time):
+$ blender --background --python blender.py
+Change the following lines in the blender.py file to increase resolution and quality:
+  bpy.context.scene.render.resolution_percentage = 100
+  bpy.context.scene.cycles.samples = 100
+
+To create a movie of those frames:
+$ avconv -i image%04d.png -vcodec qtrle blender.mov
+
+To run an example of biased 1D random walk on a filament:
+$ ecell3-session 1D_biased_walk.py
