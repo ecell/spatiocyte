@@ -344,6 +344,8 @@ if __name__ == "__main__":
   #Edit the following parameters
   #START
   total_frames = 100
+  resolution_percentage = 20
+  render_samples = 80
   lamp_shadow_size = 0.08
   lamp_strength = 1.5
   plane_scale = 5
@@ -364,8 +366,8 @@ if __name__ == "__main__":
   #bpy.data.scenes['Scene'].cycles.device = 'GPU'
   #bpy.data.scenes['Scene'].render.tile_x = 512
   #bpy.data.scenes['Scene'].render.tile_y = 768
-  bpy.context.scene.render.resolution_percentage = 20
-  bpy.context.scene.cycles.samples = 80
+  bpy.context.scene.render.resolution_percentage = resolution_percentage
+  bpy.context.scene.cycles.samples = render_samples
   #END
   f, world_vec, species_size = init_coord_file(filename)
   set_scene()
