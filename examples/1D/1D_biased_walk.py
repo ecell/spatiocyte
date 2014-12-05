@@ -53,19 +53,19 @@ react = theSimulator.createEntity('SpatiocyteTauLeapProcess', 'Process:/:phospho
 react.VariableReferenceList = [['_', 'Variable:/:A_Filament','-1']]
 react.VariableReferenceList = [['_', 'Variable:/:A_FilamentATP','1']]
 react.SearchVacant = 1
-react.k = 14500
+react.k = 1450
 
 react = theSimulator.createEntity('SpatiocyteTauLeapProcess', 'Process:/:ratchet')
 react.VariableReferenceList = [['_', 'Variable:/:A_Filament','-1']]
 react.VariableReferenceList = [['_', 'Variable:/:A_FilamentATP','1']]
 react.VariableReferenceList = [['_', 'Variable:/:Subunit','1']]
 react.BindingSite = 1
-react.k = 55000
+react.k = 5500
 
 diffuse = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffusePlus')
 diffuse.VariableReferenceList = [['_', 'Variable:/:A_Filament']]
 diffuse.VariableReferenceList = [['_', 'Variable:/:Subunit', '1']]
-diffuse.D = 0.04e-10
+diffuse.D = 0.01e-11
 
 coord = theSimulator.createEntity('CoordinateLogProcess', 'Process:/:coord')
 coord.VariableReferenceList = [['_', 'Variable:/:Subunit']]
@@ -74,7 +74,7 @@ coord.VariableReferenceList = [['_', 'Variable:/:SubunitP']]
 coord.VariableReferenceList = [['_', 'Variable:/:A']]
 coord.VariableReferenceList = [['_', 'Variable:/:A_Filament']]
 coord.VariableReferenceList = [['_', 'Variable:/:A_FilamentATP']]
-coord.LogInterval = 8e-6
+coord.LogInterval = 1e-3
 
 visualLogger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:visualLogger')
 visualLogger.VariableReferenceList = [['_', 'Variable:/:Subunit']]
@@ -83,12 +83,14 @@ visualLogger.VariableReferenceList = [['_', 'Variable:/:SubunitP']]
 visualLogger.VariableReferenceList = [['_', 'Variable:/:A']]
 visualLogger.VariableReferenceList = [['_', 'Variable:/:A_Filament']]
 visualLogger.VariableReferenceList = [['_', 'Variable:/:A_FilamentATP']]
-visualLogger.LogInterval = 8e-6
+visualLogger.LogInterval = 1e-3
 
-visualLogger = theSimulator.createEntity('MicroscopyTrackingProcess', 'Process:/:microLogger')
-visualLogger.VariableReferenceList = [['_', 'Variable:/:A', '1']]
-visualLogger.VariableReferenceList = [['_', 'Variable:/:A', '-1']]
-visualLogger.LogInterval = 1e-4
+microLogger = theSimulator.createEntity('MicroscopyTrackingProcess', 'Process:/:microLogger')
+microLogger.VariableReferenceList = [['_', 'Variable:/:A', '1']]
+microLogger.VariableReferenceList = [['_', 'Variable:/:A_Filament', '1']]
+microLogger.VariableReferenceList = [['_', 'Variable:/:A', '-1']]
+microLogger.VariableReferenceList = [['_', 'Variable:/:A_Filament', '-1']]
+microLogger.ExposureTime = 5e-3
 
 Filament = theSimulator.createEntity('FilamentProcess', 'Process:/:Filament')
 Filament.OriginX = 0
@@ -106,5 +108,5 @@ Filament.VariableReferenceList = [['_', 'Variable:/:Subunit' , '-1']]
 Filament.VariableReferenceList = [['_', 'Variable:/:SubunitM' , '-2']]
 Filament.VariableReferenceList = [['_', 'Variable:/:SubunitP' , '-3']]
 
-run(0.05)
+run(1)
 

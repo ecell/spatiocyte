@@ -25,3 +25,6 @@
 
 8. To run an example of biased 1D random walk on a filament:
    $ ecell3-session 1D_biased_walk.py
+
+9. To view microscopy snapshots of the biased walk with Spatiocyte Visualizer
+   $ spatiocyte MicroscopyLog.dat
