@@ -8,7 +8,7 @@
    (requires matplotlib and avconv preinstalled):
    $ python plot.py
 
-4. To view the movie, we can use the VLC player:
+4. To view the movie, we can use the VLC player (requires VLC preinstalled):
    $ vlc CoordinateLog.csv.mov 
 
 5. To create high quality frames using Blender, warning, this may take a lot of

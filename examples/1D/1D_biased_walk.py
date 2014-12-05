@@ -85,6 +85,11 @@ visualLogger.VariableReferenceList = [['_', 'Variable:/:A_Filament']]
 visualLogger.VariableReferenceList = [['_', 'Variable:/:A_FilamentATP']]
 visualLogger.LogInterval = 8e-6
 
+visualLogger = theSimulator.createEntity('MicroscopyTrackingProcess', 'Process:/:microLogger')
+visualLogger.VariableReferenceList = [['_', 'Variable:/:A', '1']]
+visualLogger.VariableReferenceList = [['_', 'Variable:/:A', '-1']]
+visualLogger.LogInterval = 1e-4
+
 Filament = theSimulator.createEntity('FilamentProcess', 'Process:/:Filament')
 Filament.OriginX = 0
 Filament.OriginY = 0
@@ -101,5 +106,5 @@ Filament.VariableReferenceList = [['_', 'Variable:/:Subunit' , '-1']]
 Filament.VariableReferenceList = [['_', 'Variable:/:SubunitM' , '-2']]
 Filament.VariableReferenceList = [['_', 'Variable:/:SubunitP' , '-3']]
 
-run(0.005)
+run(0.05)
 
