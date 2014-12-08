@@ -123,25 +123,25 @@ def make_material_glossy(mat_name, color):
   return mat
 
 materials = [
-    make_material_glossy('Red_gloss', [0.46,0.1,0.1,1]),
-    make_material_glossy('Blue_gloss',[0.24,0.41,0.7,1]),
-    make_material_glossy('Green_gloss', [0.27, 0.8, 0.21, 1]),
-    make_material_glossy('Yellow_gloss', [1.0,0.5,0.0,1]),
-    make_material_glossy('White_gloss', [1,1,1,1]),
-    make_material_glossy('WhiteGray_gloss', [0.9,0.9,0.9,1]),
-    make_material_glossy('BrightGreen_gloss', [0.4,1.0,0.14,1]),
-    make_material_glossy('WhiteMagenta_gloss',[0.8,0.48,1.0,1]),
-    make_material_glossy('WhiteYellow_gloss', [1.0,0.75,0.17,1]),
-    make_material_glossy('Orange_gloss', [1.0,0.37,0.05,1]),
-    make_material_glossy('BrightYellowGreen_gloss', [0.64,1.0,0.05,1]),
-    make_material_glossy('LightBlue_gloss', [0.32,0.42,1,1]),
-    make_material_glossy('BrightYellow_gloss', [1.0,0.67,0.0,1]),
-    make_material_glossy('Magenta_gloss', [0.72,0.29,1.0,1]),
-    make_material_glossy('Cyan_gloss', [0.1,1.0,0.6,1]),
-    make_material_glossy('WhitePurple_gloss', [0.67,0.6,1.0,1]),
-    make_material_glossy('Black_gloss', [0.1,0.1,0.1,1]),
-    make_material_glossy('Grey_gloss', [0.46,0.46,0.46,1]),
-    make_material_glossy('DarkOrange_gloss', [0.845,0.179,0.102,1]),
+    make_material_glossy('Red_glossy', [0.46,0.1,0.1,1]),
+    make_material_glossy('Blue_glossy',[0.24,0.41,0.7,1]),
+    make_material_glossy('Green_glossy', [0.27, 0.8, 0.21, 1]),
+    make_material_glossy('Yellow_glossy', [1.0,0.5,0.0,1]),
+    make_material_glossy('White_glossy', [1,1,1,1]),
+    make_material_glossy('WhiteGray_glossy', [0.9,0.9,0.9,1]),
+    make_material_glossy('BrightGreen_glossy', [0.4,1.0,0.14,1]),
+    make_material_glossy('WhiteMagenta_glossy',[0.8,0.48,1.0,1]),
+    make_material_glossy('WhiteYellow_glossy', [1.0,0.75,0.17,1]),
+    make_material_glossy('Orange_glossy', [1.0,0.37,0.05,1]),
+    make_material_glossy('BrightYellowGreen_glossy', [0.64,1.0,0.05,1]),
+    make_material_glossy('LightBlue_glossy', [0.32,0.42,1,1]),
+    make_material_glossy('BrightYellow_glossy', [1.0,0.67,0.0,1]),
+    make_material_glossy('Magenta_glossy', [0.72,0.29,1.0,1]),
+    make_material_glossy('Cyan_glossy', [0.1,1.0,0.6,1]),
+    make_material_glossy('WhitePurple_glossy', [0.67,0.6,1.0,1]),
+    make_material_glossy('Black_glossy', [0.1,0.1,0.1,1]),
+    make_material_glossy('Grey_glossy', [0.46,0.46,0.46,1]),
+    make_material_glossy('DarkOrange_glossy', [0.845,0.179,0.102,1]),
     make_material('Red', [0.46,0.1,0.1,1]),
     make_material('Blue',[0.24,0.41,0.7,1]),
     make_material('Green', [0.27, 0.8, 0.21, 1]),
@@ -366,9 +366,9 @@ def print_time(time, location, rotation):
 if __name__ == "__main__": 
   #Edit the following parameters
   #START
-  total_frames = 1
-  resolution_percentage = 100
-  render_samples = 100
+  total_frames = 100
+  resolution_percentage = 20
+  render_samples = 80
   lamp_shadow_size = 0.1
   lamp_strength = 1
   plane_scale = 1

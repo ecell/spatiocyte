@@ -79,28 +79,7 @@ def make_material(mat_name, color):
   mat.node_tree.links.new(outN, inN)
   return mat
 
-#materials = [
-#    make_material('Red', [0.46,0.1,0.1,1]),
-#    make_material('Blue',[0.24,0.41,0.7,1]),
-#    make_material('Green', [0.27, 0.8, 0.21, 1]),
-#    make_material('Yellow', [1.0,0.5,0.0,1]),
-#    make_material('White', [1,1,1,1]),
-#    make_material('WhiteGray', [0.9,0.9,0.9,1]),
-#    make_material('BrightGreen', [0.4,1.0,0.14,1]),
-#    make_material('WhiteMagenta',[0.8,0.48,1.0,1]),
-#    make_material('WhiteYellow', [1.0,0.75,0.17,1]),
-#    make_material('Orange', [1.0,0.37,0.05,1]),
-#    make_material('BrightYellowGreen', [0.64,1.0,0.05,1]),
-#    make_material('LightBlue', [0.32,0.42,1,1]),
-#    make_material('BrightYellow', [1.0,0.67,0.0,1]),
-#    make_material('Magenta', [0.72,0.29,1.0,1]),
-#    make_material('Cyan', [0.1,1.0,0.6,1]),
-#    make_material('WhitePurple', [0.67,0.6,1.0,1]),
-#    make_material('Black', [0.1,0.1,0.1,1]),
-#    make_material('Grey', [0.46,0.46,0.46,1]),
-#    make_material('DarkOrange', [0.845,0.179,0.102,1])]
-
-def make_material_cycles(mat_name, color):
+def make_material_glossy(mat_name, color):
   scn = bpy.context.scene
   # Set cycles render engine if not selected
   if not scn.render.engine == 'CYCLES':
@@ -144,26 +123,44 @@ def make_material_cycles(mat_name, color):
   return mat
 
 materials = [
-    make_material_cycles('Red', [0.46,0.1,0.1,1]),
-    make_material_cycles('Blue',[0.24,0.41,0.7,1]),
-    make_material_cycles('Green', [0.27, 0.8, 0.21, 1]),
-    make_material_cycles('Yellow', [1.0,0.5,0.0,1]),
+    make_material_glossy('Red_glossy', [0.46,0.1,0.1,1]),
+    make_material_glossy('Blue_glossy',[0.24,0.41,0.7,1]),
+    make_material_glossy('Green_glossy', [0.27, 0.8, 0.21, 1]),
+    make_material_glossy('Yellow_glossy', [1.0,0.5,0.0,1]),
+    make_material_glossy('White_glossy', [1,1,1,1]),
+    make_material_glossy('WhiteGray_glossy', [0.9,0.9,0.9,1]),
+    make_material_glossy('BrightGreen_glossy', [0.4,1.0,0.14,1]),
+    make_material_glossy('WhiteMagenta_glossy',[0.8,0.48,1.0,1]),
+    make_material_glossy('WhiteYellow_glossy', [1.0,0.75,0.17,1]),
+    make_material_glossy('Orange_glossy', [1.0,0.37,0.05,1]),
+    make_material_glossy('BrightYellowGreen_glossy', [0.64,1.0,0.05,1]),
+    make_material_glossy('LightBlue_glossy', [0.32,0.42,1,1]),
+    make_material_glossy('BrightYellow_glossy', [1.0,0.67,0.0,1]),
+    make_material_glossy('Magenta_glossy', [0.72,0.29,1.0,1]),
+    make_material_glossy('Cyan_glossy', [0.1,1.0,0.6,1]),
+    make_material_glossy('WhitePurple_glossy', [0.67,0.6,1.0,1]),
+    make_material_glossy('Black_glossy', [0.1,0.1,0.1,1]),
+    make_material_glossy('Grey_glossy', [0.46,0.46,0.46,1]),
+    make_material_glossy('DarkOrange_glossy', [0.845,0.179,0.102,1]),
+    make_material('Red', [0.46,0.1,0.1,1]),
+    make_material('Blue',[0.24,0.41,0.7,1]),
+    make_material('Green', [0.27, 0.8, 0.21, 1]),
+    make_material('Yellow', [1.0,0.5,0.0,1]),
     make_material('White', [1,1,1,1]),
-    make_material_cycles('WhiteGray', [0.9,0.9,0.9,1]),
-    make_material_cycles('BrightGreen', [0.4,1.0,0.14,1]),
-    make_material_cycles('WhiteMagenta',[0.8,0.48,1.0,1]),
-    make_material_cycles('WhiteYellow', [1.0,0.75,0.17,1]),
-    make_material_cycles('Orange', [1.0,0.37,0.05,1]),
-    make_material_cycles('BrightYellowGreen', [0.64,1.0,0.05,1]),
-    make_material_cycles('LightBlue', [0.32,0.42,1,1]),
-    make_material_cycles('BrightYellow', [1.0,0.67,0.0,1]),
-    make_material_cycles('Magenta', [0.72,0.29,1.0,1]),
-    make_material_cycles('Cyan', [0.1,1.0,0.6,1]),
-    make_material_cycles('WhitePurple', [0.67,0.6,1.0,1]),
-    make_material_cycles('Black', [0.1,0.1,0.1,1]),
-    make_material_cycles('Grey', [0.46,0.46,0.46,1]),
-    make_material_cycles('DarkOrange', [0.845,0.179,0.102,1])]
-
+    make_material('WhiteGray', [0.9,0.9,0.9,1]),
+    make_material('BrightGreen', [0.4,1.0,0.14,1]),
+    make_material('WhiteMagenta',[0.8,0.48,1.0,1]),
+    make_material('WhiteYellow', [1.0,0.75,0.17,1]),
+    make_material('Orange', [1.0,0.37,0.05,1]),
+    make_material('BrightYellowGreen', [0.64,1.0,0.05,1]),
+    make_material('LightBlue', [0.32,0.42,1,1]),
+    make_material('BrightYellow', [1.0,0.67,0.0,1]),
+    make_material('Magenta', [0.72,0.29,1.0,1]),
+    make_material('Cyan', [0.1,1.0,0.6,1]),
+    make_material('WhitePurple', [0.67,0.6,1.0,1]),
+    make_material('Black', [0.1,0.1,0.1,1]),
+    make_material('Grey', [0.46,0.46,0.46,1]),
+    make_material('DarkOrange', [0.845,0.179,0.102,1])]
 
 def remove_default_cube():
   if "Cube" in bpy.data.objects:
@@ -386,7 +383,7 @@ if __name__ == "__main__":
   bpy.data.scenes['Scene'].render.tile_y = 256
   plane_material_name = 'White'
   filename = 'CoordinateLog.csv'
-  species_material_names = ['Red','Yellow','Blue','BrightGreen','Magenta','DarkOrange','Cyan']
+  species_material_names = ['Red_glossy','Yellow_glossy','Blue_glossy','BrightGreen_glossy','Magenta_glossy','DarkOrange_glossy','Cyan_glossy']
   #Uncomment the following if you have a discrete GPU device
   #bpy.data.scenes['Scene'].cycles.device = 'GPU'
   #bpy.data.scenes['Scene'].render.tile_x = 512
