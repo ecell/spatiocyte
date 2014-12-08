@@ -369,11 +369,11 @@ def print_time(time, location, rotation):
 if __name__ == "__main__": 
   #Edit the following parameters
   #START
-  total_frames = 1
-  resolution_percentage = 20
-  render_samples = 80
+  total_frames = 1000
+  resolution_percentage = 100
+  render_samples = 100
   lamp_shadow_size = 0.08
-  lamp_strength = 2
+  lamp_strength = 1.5
   plane_scale = 5
   background_strength = 0.1
   visible_planes = [1, 1, 1, 0, 0, 0]
@@ -386,12 +386,11 @@ if __name__ == "__main__":
   bpy.data.scenes['Scene'].render.tile_y = 256
   plane_material_name = 'White'
   filename = 'CoordinateLog.csv'
-  species_material_names = ['Red','DarkOrange','DarkOrange','Yellow','Blue',
-      'Blue']
+  species_material_names = ['Red','Yellow','Blue']
   #Uncomment the following if you have a discrete GPU device
-  #bpy.data.scenes['Scene'].cycles.device = 'GPU'
-  #bpy.data.scenes['Scene'].render.tile_x = 512
-  #bpy.data.scenes['Scene'].render.tile_y = 768
+  bpy.data.scenes['Scene'].cycles.device = 'GPU'
+  bpy.data.scenes['Scene'].render.tile_x = 512
+  bpy.data.scenes['Scene'].render.tile_y = 512
   bpy.context.scene.render.resolution_percentage = resolution_percentage
   bpy.context.scene.cycles.samples = render_samples
   #END
