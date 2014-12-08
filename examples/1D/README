@@ -16,7 +16,7 @@
    $ blender --background --python blender.py
 
 6. To increase resolution and quality of the rendering, change the following
-   lines in the blender.py:
+   lines in blender.py:
    resolution_percentage = 100
    render_samples = 100
 
