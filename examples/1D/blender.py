@@ -69,39 +69,43 @@ def make_material(mat_name, color):
   node.label = 'Diffuse BSDF'
   node.inputs[0].default_value = color
 
+  node = nodes[get_node_index(nodes,'TOON_DIFFUSE')]
+  node.name = 'Diffuse BSDF'
+  node.label = 'Diffuse BSDF'
+  node.inputs[0].default_value = color
+
   outN = nodes['Diffuse BSDF'].outputs[0]
   inN = nodes['Material Output'].inputs[0]
   mat.node_tree.links.new(outN, inN)
   return mat
 
-materials = [
-    make_material('Red', [0.46,0.1,0.1,1]),
-    make_material('Blue',[0.24,0.41,0.7,1]),
-    make_material('Green', [0.27, 0.8, 0.21, 1]),
-    make_material('Yellow', [1.0,0.5,0.0,1]),
-    make_material('White', [1,1,1,1]),
-    make_material('WhiteGray', [0.9,0.9,0.9,1]),
-    make_material('BrightGreen', [0.4,1.0,0.14,1]),
-    make_material('WhiteMagenta',[0.8,0.48,1.0,1]),
-    make_material('WhiteYellow', [1.0,0.75,0.17,1]),
-    make_material('Orange', [1.0,0.37,0.05,1]),
-    make_material('BrightYellowGreen', [0.64,1.0,0.05,1]),
-    make_material('LightBlue', [0.32,0.42,1,1]),
-    make_material('BrightYellow', [1.0,0.67,0.0,1]),
-    make_material('Magenta', [0.72,0.29,1.0,1]),
-    make_material('Cyan', [0.1,1.0,0.6,1]),
-    make_material('WhitePurple', [0.67,0.6,1.0,1]),
-    make_material('Black', [0.1,0.1,0.1,1]),
-    make_material('Grey', [0.46,0.46,0.46,1]),
-    make_material('DarkOrange', [0.845,0.179,0.102,1])]
+#materials = [
+#    make_material('Red', [0.46,0.1,0.1,1]),
+#    make_material('Blue',[0.24,0.41,0.7,1]),
+#    make_material('Green', [0.27, 0.8, 0.21, 1]),
+#    make_material('Yellow', [1.0,0.5,0.0,1]),
+#    make_material('White', [1,1,1,1]),
+#    make_material('WhiteGray', [0.9,0.9,0.9,1]),
+#    make_material('BrightGreen', [0.4,1.0,0.14,1]),
+#    make_material('WhiteMagenta',[0.8,0.48,1.0,1]),
+#    make_material('WhiteYellow', [1.0,0.75,0.17,1]),
+#    make_material('Orange', [1.0,0.37,0.05,1]),
+#    make_material('BrightYellowGreen', [0.64,1.0,0.05,1]),
+#    make_material('LightBlue', [0.32,0.42,1,1]),
+#    make_material('BrightYellow', [1.0,0.67,0.0,1]),
+#    make_material('Magenta', [0.72,0.29,1.0,1]),
+#    make_material('Cyan', [0.1,1.0,0.6,1]),
+#    make_material('WhitePurple', [0.67,0.6,1.0,1]),
+#    make_material('Black', [0.1,0.1,0.1,1]),
+#    make_material('Grey', [0.46,0.46,0.46,1]),
+#    make_material('DarkOrange', [0.845,0.179,0.102,1])]
 
-def make_material_cycles():
+def make_material_cycles(mat_name, color):
   scn = bpy.context.scene
   # Set cycles render engine if not selected
   if not scn.render.engine == 'CYCLES':
     scn.render.engine = 'CYCLES'
 
-  mat_name = 'MixedSurfaceMaterial'
   mat = bpy.data.materials.new(mat_name)
   mat.use_nodes = True
   nodes = mat.node_tree.nodes
@@ -109,17 +113,17 @@ def make_material_cycles():
   node = nodes.new('ShaderNodeBsdfGlossy')
   node.name = 'Glossy_0'
   node.inputs[0].default_value = [0.8, 0.8, 0.8, 1]
-  node.inputs[1].default_value = 0.2
+  node.inputs[1].default_value = 0.102
   node.location = 10, 220
 
   node = nodes['Diffuse BSDF']
-  node.inputs[0].default_value = [0.009, 0, 0.8, 1]
+  node.inputs[0].default_value = color
   node.inputs[1].default_value = 0
   node.location = 10, 60
 
   node = nodes.new('ShaderNodeMixShader')
   node.name = 'Mix_0'
-  node.inputs[0].default_value = 0.5
+  node.inputs[0].default_value = 0.908
   node.location = 210, 60
 
   node = nodes['Material Output']
@@ -138,6 +142,28 @@ def make_material_cycles():
   inN = nodes['Material Output'].inputs[0]
   mat.node_tree.links.new(outN, inN)
   return mat
+
+materials = [
+    make_material_cycles('Red', [0.46,0.1,0.1,1]),
+    make_material_cycles('Blue',[0.24,0.41,0.7,1]),
+    make_material_cycles('Green', [0.27, 0.8, 0.21, 1]),
+    make_material_cycles('Yellow', [1.0,0.5,0.0,1]),
+    make_material('White', [1,1,1,1]),
+    make_material_cycles('WhiteGray', [0.9,0.9,0.9,1]),
+    make_material_cycles('BrightGreen', [0.4,1.0,0.14,1]),
+    make_material_cycles('WhiteMagenta',[0.8,0.48,1.0,1]),
+    make_material_cycles('WhiteYellow', [1.0,0.75,0.17,1]),
+    make_material_cycles('Orange', [1.0,0.37,0.05,1]),
+    make_material_cycles('BrightYellowGreen', [0.64,1.0,0.05,1]),
+    make_material_cycles('LightBlue', [0.32,0.42,1,1]),
+    make_material_cycles('BrightYellow', [1.0,0.67,0.0,1]),
+    make_material_cycles('Magenta', [0.72,0.29,1.0,1]),
+    make_material_cycles('Cyan', [0.1,1.0,0.6,1]),
+    make_material_cycles('WhitePurple', [0.67,0.6,1.0,1]),
+    make_material_cycles('Black', [0.1,0.1,0.1,1]),
+    make_material_cycles('Grey', [0.46,0.46,0.46,1]),
+    make_material_cycles('DarkOrange', [0.845,0.179,0.102,1])]
+
 
 def remove_default_cube():
   if "Cube" in bpy.data.objects:
@@ -343,11 +369,11 @@ def print_time(time, location, rotation):
 if __name__ == "__main__": 
   #Edit the following parameters
   #START
-  total_frames = 100
+  total_frames = 1
   resolution_percentage = 20
   render_samples = 80
   lamp_shadow_size = 0.08
-  lamp_strength = 1.5
+  lamp_strength = 2
   plane_scale = 5
   background_strength = 0.1
   visible_planes = [1, 1, 1, 0, 0, 0]

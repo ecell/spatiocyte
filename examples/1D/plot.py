@@ -14,6 +14,7 @@ legendTitles = []
 lines = ['-', '-', '-', '-']
 colors = ['y', 'r', 'b', 'm', 'c', 'g']
 
+max_frames = 600
 fig = P.figure(figsize=(10,6))
 ax = fig.add_subplot(111, projection='3d')
 box = ax.get_position()
@@ -39,7 +40,11 @@ for i in range(len(fileNames)):
   logCnt = 0
   lineCnt = 0
   markers = []
+  frameCnt = 0
   for line in f:
+    frameCnt = frameCnt + 1
+    if frameCnt > max_frames*speciesSize:
+      break
     coords = line.strip().split(",")
     time = float(coords[0])
     x = []
@@ -49,7 +54,7 @@ for i in range(len(fileNames)):
       x.append(float(coords[l*3+1])*scale)
       y.append(float(coords[l*3+2])*scale)
       z.append(float(coords[l*3+3])*scale)
-    ax.plot(x, z, y, 'o', color=colors[lineCnt])
+    ax.plot(x, z, y, linewidth=0, color=colors[lineCnt], marker='.')
     markers.append(P.Rectangle((0, 0), 1, 1, fc=colors[lineCnt]))
     lineCnt = lineCnt + 1
     if lineCnt == speciesSize:
@@ -57,9 +62,9 @@ for i in range(len(fileNames)):
       ax.set_ylabel('Y (m)')
       ax.set_zlabel('Z (m)')
       ax.set_title('t = %.2e s' %time)
-      ax.set_xlim(0, len_x*scale)
-      ax.set_ylim(0, len_y*scale)
-      ax.set_zlim(0, len_z*scale)
+      ax.set_xlim(0, len_x*scale+voxelRadius)
+      ax.set_ylim(0, len_y*scale+voxelRadius)
+      ax.set_zlim(0, len_z*scale+voxelRadius)
       ax.grid(False)
       leg = ax.legend(markers, speciesNames, bbox_to_anchor=(1.0,0.95),
           loc='upper left', labelspacing=0.2, handletextpad=0.2, fancybox=True)
