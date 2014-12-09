@@ -2,7 +2,7 @@ abs_top_builddir=@abs_top_builddir@
 
 libdir=@libdir@
 
-SUBDIRS = scripting RandomLib-1.6/src mechanocyte . tests
+SUBDIRS = scripting RandomLib-1.6/src . tests
 
 ECELL_DIRNAME=@ECELL_DIRNAME@
 ECELL_INCLUDE_DIR=$(includedir)/$(ECELL_DIRNAME)
@@ -19,7 +19,7 @@ lib_LTLIBRARIES = libecs.la
 AM_CXXFLAGS = $(CXXFLAGS)
 
 libecs_la_LDFLAGS= -version-info 2:0:0 -no-undefined
-libecs_la_LIBADD=  $(LIBLTDL) $(GSL_LIBADD) scripting/libecs-scripting.la RandomLib-1.6/src/libRandom.la mechanocyte/libMechanocyte.la -lgfortran
+libecs_la_LIBADD=  $(LIBLTDL) $(GSL_LIBADD) scripting/libecs-scripting.la RandomLib-1.6/src/libRandom.la 
 libecs_la_SOURCES=\
 libecs.cpp\
 Util.cpp\
@@ -77,9 +77,7 @@ SpatiocyteTauLeapProcess.cpp\
 LifetimeLogProcess.cpp\
 MicrotubuleProcess.cpp\
 FilamentProcess.cpp\
-MultiscaleReactionProcess.cpp\
-MechanicsProcess.cpp\
-MigrationProcess.cpp
+MultiscaleReactionProcess.cpp
 
 RANDOMLIB_INC=$(RANDOMLIB)/include/RandomLib
 randomdir=$(ECELL_INCLUDE_DIR)/RandomLib
@@ -164,9 +162,7 @@ SpatiocyteTauLeapProcess.hpp\
 LifetimeLogProcess.hpp\
 MicrotubuleProcess.hpp\
 MultiscaleReactionProcess.hpp\
-SpatiocyteDebug.hpp\
-MechanicsProcess.hpp\
-MigrationProcess.hpp
+SpatiocyteDebug.hpp
 
 
 noinst_HEADERS=\
