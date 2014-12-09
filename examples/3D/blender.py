@@ -366,26 +366,26 @@ def print_time(time, location, rotation):
 if __name__ == "__main__": 
   #Edit the following parameters
   #START
-  total_frames = 100
+  total_frames = 1
   resolution_percentage = 100
   render_samples = 20
   lamp_shadow_size = 0.1
-  lamp_strength = 1
-  plane_scale = 1
-  background_strength = 0.6
-  visible_planes = [1, 1, 1, 1, 1, 1]
-  camera_rotation = (144*math.pi/180.0,math.pi,90*math.pi/180.0)
-  camera_location = (72.13,54.06,160.79)
-  time_location = (36.3, 93.4, 75.9)
+  lamp_strength = 3
+  plane_scale = 5
+  background_strength = 0.3
+  visible_planes = [1, 1, 1, 0, 0, 0]
+  camera_rotation = (63.18*math.pi/180.0,0*math.pi/180.0,136.6*math.pi/180.0)
+  camera_location = (65.35, 69.33, 50.31)
+  time_location = (46.43, 15.87, 37.37)
   lamp_location = (7.88, 37.38, 73.27)
   lamp_rotation = (-7.82*math.pi/180.0,0.69*math.pi/180.0,92.31*math.pi/180.0)
   plane_disp = [1.0, 1.25, 1.5]
   #plane_disp = [0.5, 0, 0.5]
   bpy.data.scenes['Scene'].render.tile_x = 256
   bpy.data.scenes['Scene'].render.tile_y = 256
-  plane_material_name = 'Grey'
+  plane_material_name = 'White'
   filename = 'CoordinateLog.csv'
-  species_material_names = ['Red','Blue','Yellow','BrightGreen','Magenta','DarkOrange','Cyan']
+  species_material_names = ['Red_glossy','Green_glossy','Blue_glossy','BrightGreen_glossy','Magenta_glossy','DarkOrange_glossy','Cyan_glossy']
   #Uncomment the following if you have a discrete GPU device
   #bpy.data.scenes['Scene'].cycles.device = 'GPU'
   #bpy.data.scenes['Scene'].render.tile_x = 512

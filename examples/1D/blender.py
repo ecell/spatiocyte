@@ -167,14 +167,14 @@ def remove_default_cube():
     bpy.data.objects["Cube"].select = True
     bpy.ops.object.delete()
 
-def set_lamp(world_vec, shadow_size, strength):
+def set_lamp(world_vec, shadow_size, strength, location, rotation):
   scn = bpy.context.scene
   # Set cycles render engine if not selected
   if not scn.render.engine == 'CYCLES':
     scn.render.engine = 'CYCLES'
   bpy.data.objects["Lamp"].data.type = 'SUN'
-  #bpy.data.objects["Lamp"].location = (world_vec[0]*2,-
-      #world_vec[1]*2,world_vec[2]*2)
+  bpy.data.objects["Lamp"].location = location
+  bpy.data.objects["Lamp"].rotation_euler = rotation
   lamp = bpy.data.lamps['Lamp']
   lamp.shadow_soft_size = shadow_size
   lamp.use_nodes = True
@@ -367,16 +367,20 @@ if __name__ == "__main__":
   #Edit the following parameters
   #START
   total_frames = 100
-  resolution_percentage = 20
+  resolution_percentage = 100
   render_samples = 10
   lamp_shadow_size = 0.08
-  lamp_strength = 1.5
+  lamp_strength = 2
   plane_scale = 5
   background_strength = 0.1
   visible_planes = [1, 1, 1, 0, 0, 0]
   camera_rotation = (70.4*math.pi/180.0,0*math.pi/180.0,135.8*math.pi/180.0)
   camera_location = (95.2, 49.6, 30.7)
   time_location = (82.52, 15.87, 26.43)
+  #lamp_location = (4.08, 1.0, 5.9)
+  #lamp_rotation = (37.26*math.pi/180.0,3.16*math.pi/180.0,106.94*math.pi/180.0)
+  lamp_location = (7.88, 37.38, 73.27)
+  lamp_rotation = (-7.82*math.pi/180.0,0.69*math.pi/180.0,92.31*math.pi/180.0)
   #plane_disp = [1.0, 1.25, 1.5]
   plane_disp = [0.5, 0, 0.5]
   bpy.data.scenes['Scene'].render.tile_x = 256
@@ -394,7 +398,8 @@ if __name__ == "__main__":
   f, world_vec, species_size = init_coord_file(filename)
   set_scene()
   set_background(background_strength)
-  set_lamp(world_vec, lamp_shadow_size, lamp_strength)
+  set_lamp(world_vec, lamp_shadow_size, lamp_strength, lamp_location,
+      lamp_rotation)
   spheres = init_spheres(species_size, species_material_names)
   print_planes(world_vec, visible_planes, plane_scale, plane_disp,
       plane_material_name)
