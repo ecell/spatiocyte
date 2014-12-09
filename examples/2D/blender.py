@@ -368,7 +368,7 @@ if __name__ == "__main__":
   #START
   total_frames = 100
   resolution_percentage = 20
-  render_samples = 80
+  render_samples = 20
   lamp_shadow_size = 0.1
   lamp_strength = 1
   plane_scale = 1

@@ -100,6 +100,14 @@ int main()
   dif.registerVariableReference("_", libecs::String("Variable:/Surface:A"), 0);
   dif.loadProperty("D", libecs::Polymorph(1e-13));
 
+  libecs::Process& m(createProcess(model, "MicroscopyTrackingProcess",
+                                   "Process:/:micro"));
+  m.registerVariableReference("_", libecs::String("Variable:/Surface:A"), 1);
+  m.registerVariableReference("_", libecs::String("Variable:/Surface:As"), 1);
+  m.registerVariableReference("_", libecs::String("Variable:/Surface:A"), -1);
+  m.registerVariableReference("_", libecs::String("Variable:/Surface:As"), -1);
+  m.loadProperty("ExposureTime", libecs::Polymorph(0.5));
+
   model.initialize();
   double t(model.getCurrentTime());
   while(t < 100)

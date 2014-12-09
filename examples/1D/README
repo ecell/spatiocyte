@@ -15,8 +15,9 @@
    computational time (requires Blender preinstalled):
    $ blender --background --python blender.py
 
-6. To create a movie of those frames:
+6. To create a movie of those frames and view it:
    $ avconv -i image%04d.png -vcodec qtrle blender.mov
+   $ vlc blender.mov
 
 7. To increase resolution and quality of the rendering, change the following
    lines in blender.py:
