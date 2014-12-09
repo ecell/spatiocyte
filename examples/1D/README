@@ -15,13 +15,14 @@
    computational time (requires Blender preinstalled):
    $ blender --background --python blender.py
 
-6. To increase resolution and quality of the rendering, change the following
+6. To create a movie of those frames:
+   $ avconv -i image%04d.png -vcodec qtrle blender.mov
+
+7. To increase resolution and quality of the rendering, change the following
    lines in blender.py:
    resolution_percentage = 100
    render_samples = 100
-
-7. To create a movie of those frames:
-   $ avconv -i image%04d.png -vcodec qtrle blender.mov
+   $ blender --background --python blender.py
 
 8. To run an example of biased 1D random walk on a filament:
    $ ecell3-session 1D_biased_walk.py

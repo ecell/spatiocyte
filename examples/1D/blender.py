@@ -366,9 +366,9 @@ def print_time(time, location, rotation):
 if __name__ == "__main__": 
   #Edit the following parameters
   #START
-  total_frames = 1
+  total_frames = 100
   resolution_percentage = 20
-  render_samples = 80
+  render_samples = 10
   lamp_shadow_size = 0.08
   lamp_strength = 1.5
   plane_scale = 5
