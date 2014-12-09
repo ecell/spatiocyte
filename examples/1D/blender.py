@@ -374,9 +374,9 @@ if __name__ == "__main__":
   plane_scale = 5
   background_strength = 0.1
   visible_planes = [1, 1, 1, 0, 0, 0]
-  camera_rotation = (66*math.pi/180.0,0*math.pi/180.0,131*math.pi/180.0)
-  camera_location = (107.9, 60, 40.36)
-  time_location = (86.6, 15.87, 31.15)
+  camera_rotation = (70.4*math.pi/180.0,0*math.pi/180.0,135.8*math.pi/180.0)
+  camera_location = (95.2, 49.6, 30.7)
+  time_location = (82.52, 15.87, 26.43)
   #plane_disp = [1.0, 1.25, 1.5]
   plane_disp = [0.5, 0, 0.5]
   bpy.data.scenes['Scene'].render.tile_x = 256
