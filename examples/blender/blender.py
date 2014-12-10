@@ -32,6 +32,7 @@
 import bpy
 import random
 import math
+from blender_parameters import *
 
 def get_node_index(nodes, data_type):
   idx = 0
@@ -126,7 +127,7 @@ materials = [
     make_material_glossy('DarkRed_glossy', [0.46,0.1,0.1,1]),
     make_material_glossy('DarkGreen_glossy', [0.1,0.5,0.1,1]),
     make_material_glossy('DarkBlue_glossy',[0.1,0.2,0.5,1]),
-    make_material_glossy('Red_glossy', [0.7,0.41,0.24,1]),
+    make_material_glossy('Red_glossy', [0.8,0.1,0.1,1]),
     make_material_glossy('Green_glossy', [0.27, 0.8, 0.21, 1]),
     make_material_glossy('Blue_glossy',[0.24,0.41,0.7,1]),
     make_material_glossy('Yellow_glossy', [1.0,0.5,0.0,1]),
@@ -148,7 +149,7 @@ materials = [
     make_material('DarkRed', [0.46,0.1,0.1,1]),
     make_material('DarkGreen',[0.1,0.5,0.1,1]),
     make_material('DarkBlue',[0.1,0.2,0.5,1]),
-    make_material('Red',[0.7,0.41,0.24,1]),
+    make_material('Red',[0.8,0.1,0.1,1]),
     make_material('Green', [0.27,0.8,0.21,1]),
     make_material('Blue',[0.24,0.41,0.7,1]),
     make_material('Yellow', [1.0,0.5,0.0,1]),
@@ -370,36 +371,12 @@ def print_time(time, location, rotation):
   ob.active_material = bpy.data.materials['White']
 
 if __name__ == "__main__": 
-  #Edit the following parameters
-  #START
-  start_frame = 0
-  end_frame = 1000
-  resolution_percentage = 100
-  render_samples = 300
-  lamp_shadow_size = 0.1
-  lamp_strength = 3
-  plane_scale = 5
-  background_strength = 0.3
-  visible_planes = [1, 1, 1, 0, 0, 0]
-  camera_rotation = (63.18*math.pi/180.0,0*math.pi/180.0,136.6*math.pi/180.0)
-  camera_location = (65.35, 69.33, 50.31)
-  time_location = (46.43, 15.87, 37.37)
-  lamp_location = (7.88, 37.38, 73.27)
-  lamp_rotation = (-7.82*math.pi/180.0,0.69*math.pi/180.0,92.31*math.pi/180.0)
-  plane_disp = [1.0, 1.25, 1.5]
-  #plane_disp = [0.5, 0, 0.5]
-  bpy.data.scenes['Scene'].render.tile_x = 256
-  bpy.data.scenes['Scene'].render.tile_y = 256
-  plane_material_name = 'White'
-  filename = 'CoordinateLog.csv'
-  species_material_names = ['DarkRed_glossy','DarkBlue_glossy','Green_glossy', 'BrightGreen_glossy','Magenta_glossy','DarkOrange_glossy','Cyan_glossy']
-  #Uncomment the following if you have a discrete GPU device
-  bpy.data.scenes['Scene'].cycles.device = 'GPU'
-  bpy.data.scenes['Scene'].render.tile_x = 512
-  bpy.data.scenes['Scene'].render.tile_y = 512
+  if GPU_device: 
+    bpy.data.scenes['Scene'].cycles.device = 'GPU'
+  bpy.data.scenes['Scene'].render.tile_x = tile_x
+  bpy.data.scenes['Scene'].render.tile_y = tile_y
   bpy.context.scene.render.resolution_percentage = resolution_percentage
   bpy.context.scene.cycles.samples = render_samples
-  #END
   f, world_vec, species_size = init_coord_file(filename)
   set_scene()
   set_background(background_strength)
@@ -419,7 +396,6 @@ if __name__ == "__main__":
     for j in range(species_size):
       time, c = load_coords(f)
       if len(c):
-        loc = (c[0], c[1], c[2])
         for k in range(0, int(len(c)/3)):
           print_sphere((c[k*3],c[k*3+1],c[k*3+2]), spheres[j], materials[j])
     update_time(time)

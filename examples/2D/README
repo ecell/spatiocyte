@@ -13,16 +13,17 @@
 
 5. To create high quality frames using Blender, warning, this may take a lot of
    computational time (requires Blender preinstalled):
-   $ blender --background --python blender.py
+   $ blender --background --python ../blender/blender.py
 
 6. To create a movie of those frames and view it:
    $ avconv -i image%04d.png -vcodec qtrle blender.mov
    $ vlc blender.mov
 
 7. To increase resolution and quality of the rendering, change the following
-   lines in blender.py:
+   lines in blender_parameters.py:
    resolution_percentage = 100
    render_samples = 100
+   $ blender --background --python ../blender/blender.py
 
 8. To run a C++ 2D reaction-diffusion model 2D.cpp:
    $ g++ -O3 2D.cpp -I$HOME/root/include/ecell-3.2/ -I$HOME/root/include -L$HOME/root/lib -lecs -o 2D
