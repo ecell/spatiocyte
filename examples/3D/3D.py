@@ -38,6 +38,7 @@ binder = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Proces
 binder.VariableReferenceList = [['_', 'Variable:/:A','-1']]
 binder.VariableReferenceList = [['_', 'Variable:/:B','-1']]
 binder.VariableReferenceList = [['_', 'Variable:/:C','1']]
+binder.VariableReferenceList = [['_', 'Variable:/:C','1']]
 binder.p = 1
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseA')

@@ -123,9 +123,12 @@ def make_material_glossy(mat_name, color):
   return mat
 
 materials = [
-    make_material_glossy('Red_glossy', [0.46,0.1,0.1,1]),
-    make_material_glossy('Blue_glossy',[0.24,0.41,0.7,1]),
+    make_material_glossy('DarkRed_glossy', [0.46,0.1,0.1,1]),
+    make_material_glossy('DarkGreen_glossy', [0.1,0.5,0.1,1]),
+    make_material_glossy('DarkBlue_glossy',[0.1,0.2,0.5,1]),
+    make_material_glossy('Red_glossy', [0.7,0.41,0.24,1]),
     make_material_glossy('Green_glossy', [0.27, 0.8, 0.21, 1]),
+    make_material_glossy('Blue_glossy',[0.24,0.41,0.7,1]),
     make_material_glossy('Yellow_glossy', [1.0,0.5,0.0,1]),
     make_material_glossy('White_glossy', [1,1,1,1]),
     make_material_glossy('WhiteGray_glossy', [0.9,0.9,0.9,1]),
@@ -142,9 +145,12 @@ materials = [
     make_material_glossy('Black_glossy', [0.1,0.1,0.1,1]),
     make_material_glossy('Grey_glossy', [0.46,0.46,0.46,1]),
     make_material_glossy('DarkOrange_glossy', [0.845,0.179,0.102,1]),
-    make_material('Red', [0.46,0.1,0.1,1]),
+    make_material('DarkRed', [0.46,0.1,0.1,1]),
+    make_material('DarkGreen',[0.1,0.5,0.1,1]),
+    make_material('DarkBlue',[0.1,0.2,0.5,1]),
+    make_material('Red',[0.7,0.41,0.24,1]),
+    make_material('Green', [0.27,0.8,0.21,1]),
     make_material('Blue',[0.24,0.41,0.7,1]),
-    make_material('Green', [0.27, 0.8, 0.21, 1]),
     make_material('Yellow', [1.0,0.5,0.0,1]),
     make_material('White', [1,1,1,1]),
     make_material('WhiteGray', [0.9,0.9,0.9,1]),
@@ -366,9 +372,10 @@ def print_time(time, location, rotation):
 if __name__ == "__main__": 
   #Edit the following parameters
   #START
-  total_frames = 1
+  start_frame = 0
+  end_frame = 1000
   resolution_percentage = 100
-  render_samples = 20
+  render_samples = 300
   lamp_shadow_size = 0.1
   lamp_strength = 3
   plane_scale = 5
@@ -385,11 +392,11 @@ if __name__ == "__main__":
   bpy.data.scenes['Scene'].render.tile_y = 256
   plane_material_name = 'White'
   filename = 'CoordinateLog.csv'
-  species_material_names = ['Red_glossy','Green_glossy','Blue_glossy','BrightGreen_glossy','Magenta_glossy','DarkOrange_glossy','Cyan_glossy']
+  species_material_names = ['DarkRed_glossy','DarkBlue_glossy','Green_glossy', 'BrightGreen_glossy','Magenta_glossy','DarkOrange_glossy','Cyan_glossy']
   #Uncomment the following if you have a discrete GPU device
-  #bpy.data.scenes['Scene'].cycles.device = 'GPU'
-  #bpy.data.scenes['Scene'].render.tile_x = 512
-  #bpy.data.scenes['Scene'].render.tile_y = 512
+  bpy.data.scenes['Scene'].cycles.device = 'GPU'
+  bpy.data.scenes['Scene'].render.tile_x = 512
+  bpy.data.scenes['Scene'].render.tile_y = 512
   bpy.context.scene.render.resolution_percentage = resolution_percentage
   bpy.context.scene.cycles.samples = render_samples
   #END
@@ -405,7 +412,10 @@ if __name__ == "__main__":
   set_default_camera_view()
   time = 0
   print_time(time, time_location, camera_rotation)
-  for i in range(total_frames):
+  for i in range(start_frame):
+    for j in range(species_size):
+      time, c = load_coords(f)
+  for i in range(start_frame, end_frame):
     for j in range(species_size):
       time, c = load_coords(f)
       if len(c):
