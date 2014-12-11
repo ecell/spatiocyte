@@ -43,7 +43,7 @@ def get_node_index(nodes, data_type):
   return 1
 
 def set_background(strength):
-  world = bpy.context.scene.world
+  world = bpy.data.worlds['World']
   world.use_nodes = True
   nodes = world.node_tree.nodes
   node = nodes[get_node_index(nodes,'BACKGROUND')]
@@ -123,51 +123,52 @@ def make_material_glossy(mat_name, color):
   mat.node_tree.links.new(outN, inN)
   return mat
 
-materials = [
-    make_material_glossy('DarkRed_glossy', [0.46,0.1,0.1,1]),
-    make_material_glossy('DarkGreen_glossy', [0.1,0.5,0.1,1]),
-    make_material_glossy('DarkBlue_glossy',[0.1,0.2,0.5,1]),
-    make_material_glossy('Red_glossy', [0.8,0.1,0.1,1]),
-    make_material_glossy('Green_glossy', [0.27, 0.8, 0.21, 1]),
-    make_material_glossy('Blue_glossy',[0.24,0.41,0.7,1]),
-    make_material_glossy('Yellow_glossy', [1.0,0.5,0.0,1]),
-    make_material_glossy('White_glossy', [1,1,1,1]),
-    make_material_glossy('WhiteGray_glossy', [0.9,0.9,0.9,1]),
-    make_material_glossy('BrightGreen_glossy', [0.4,1.0,0.14,1]),
-    make_material_glossy('WhiteMagenta_glossy',[0.8,0.48,1.0,1]),
-    make_material_glossy('WhiteYellow_glossy', [1.0,0.75,0.17,1]),
-    make_material_glossy('Orange_glossy', [1.0,0.37,0.05,1]),
-    make_material_glossy('BrightYellowGreen_glossy', [0.64,1.0,0.05,1]),
-    make_material_glossy('LightBlue_glossy', [0.32,0.42,1,1]),
-    make_material_glossy('BrightYellow_glossy', [1.0,0.67,0.0,1]),
-    make_material_glossy('Magenta_glossy', [0.72,0.29,1.0,1]),
-    make_material_glossy('Cyan_glossy', [0.1,1.0,0.6,1]),
-    make_material_glossy('WhitePurple_glossy', [0.67,0.6,1.0,1]),
-    make_material_glossy('Black_glossy', [0.1,0.1,0.1,1]),
-    make_material_glossy('Grey_glossy', [0.46,0.46,0.46,1]),
-    make_material_glossy('DarkOrange_glossy', [0.845,0.179,0.102,1]),
-    make_material('DarkRed', [0.46,0.1,0.1,1]),
-    make_material('DarkGreen',[0.1,0.5,0.1,1]),
-    make_material('DarkBlue',[0.1,0.2,0.5,1]),
-    make_material('Red',[0.8,0.1,0.1,1]),
-    make_material('Green', [0.27,0.8,0.21,1]),
-    make_material('Blue',[0.24,0.41,0.7,1]),
-    make_material('Yellow', [1.0,0.5,0.0,1]),
-    make_material('White', [1,1,1,1]),
-    make_material('WhiteGray', [0.9,0.9,0.9,1]),
-    make_material('BrightGreen', [0.4,1.0,0.14,1]),
-    make_material('WhiteMagenta',[0.8,0.48,1.0,1]),
-    make_material('WhiteYellow', [1.0,0.75,0.17,1]),
-    make_material('Orange', [1.0,0.37,0.05,1]),
-    make_material('BrightYellowGreen', [0.64,1.0,0.05,1]),
-    make_material('LightBlue', [0.32,0.42,1,1]),
-    make_material('BrightYellow', [1.0,0.67,0.0,1]),
-    make_material('Magenta', [0.72,0.29,1.0,1]),
-    make_material('Cyan', [0.1,1.0,0.6,1]),
-    make_material('WhitePurple', [0.67,0.6,1.0,1]),
-    make_material('Black', [0.1,0.1,0.1,1]),
-    make_material('Grey', [0.46,0.46,0.46,1]),
-    make_material('DarkOrange', [0.845,0.179,0.102,1])]
+def make_materials():
+  materials = [
+      make_material_glossy('DarkRed_glossy', [0.46,0.1,0.1,1]),
+      make_material_glossy('DarkGreen_glossy', [0.1,0.5,0.1,1]),
+      make_material_glossy('DarkBlue_glossy',[0.1,0.2,0.5,1]),
+      make_material_glossy('Red_glossy', [0.8,0.1,0.1,1]),
+      make_material_glossy('Green_glossy', [0.27, 0.8, 0.21, 1]),
+      make_material_glossy('Blue_glossy',[0.24,0.41,0.7,1]),
+      make_material_glossy('Yellow_glossy', [1.0,0.5,0.0,1]),
+      make_material_glossy('White_glossy', [1,1,1,1]),
+      make_material_glossy('WhiteGray_glossy', [0.9,0.9,0.9,1]),
+      make_material_glossy('BrightGreen_glossy', [0.4,1.0,0.14,1]),
+      make_material_glossy('WhiteMagenta_glossy',[0.8,0.48,1.0,1]),
+      make_material_glossy('WhiteYellow_glossy', [1.0,0.75,0.17,1]),
+      make_material_glossy('Orange_glossy', [1.0,0.37,0.05,1]),
+      make_material_glossy('BrightYellowGreen_glossy', [0.64,1.0,0.05,1]),
+      make_material_glossy('LightBlue_glossy', [0.32,0.42,1,1]),
+      make_material_glossy('BrightYellow_glossy', [1.0,0.67,0.0,1]),
+      make_material_glossy('Magenta_glossy', [0.72,0.29,1.0,1]),
+      make_material_glossy('Cyan_glossy', [0.1,1.0,0.6,1]),
+      make_material_glossy('WhitePurple_glossy', [0.67,0.6,1.0,1]),
+      make_material_glossy('Black_glossy', [0.1,0.1,0.1,1]),
+      make_material_glossy('Grey_glossy', [0.46,0.46,0.46,1]),
+      make_material_glossy('DarkOrange_glossy', [0.845,0.179,0.102,1]),
+      make_material('DarkRed', [0.46,0.1,0.1,1]),
+      make_material('DarkGreen',[0.1,0.5,0.1,1]),
+      make_material('DarkBlue',[0.1,0.2,0.5,1]),
+      make_material('Red',[0.8,0.1,0.1,1]),
+      make_material('Green', [0.27,0.8,0.21,1]),
+      make_material('Blue',[0.24,0.41,0.7,1]),
+      make_material('Yellow', [1.0,0.5,0.0,1]),
+      make_material('White', [1,1,1,1]),
+      make_material('WhiteGray', [0.9,0.9,0.9,1]),
+      make_material('BrightGreen', [0.4,1.0,0.14,1]),
+      make_material('WhiteMagenta',[0.8,0.48,1.0,1]),
+      make_material('WhiteYellow', [1.0,0.75,0.17,1]),
+      make_material('Orange', [1.0,0.37,0.05,1]),
+      make_material('BrightYellowGreen', [0.64,1.0,0.05,1]),
+      make_material('LightBlue', [0.32,0.42,1,1]),
+      make_material('BrightYellow', [1.0,0.67,0.0,1]),
+      make_material('Magenta', [0.72,0.29,1.0,1]),
+      make_material('Cyan', [0.1,1.0,0.6,1]),
+      make_material('WhitePurple', [0.67,0.6,1.0,1]),
+      make_material('Black', [0.1,0.1,0.1,1]),
+      make_material('Grey', [0.46,0.46,0.46,1]),
+      make_material('DarkOrange', [0.845,0.179,0.102,1])]
 
 def remove_default_cube():
   if "Cube" in bpy.data.objects:
@@ -175,14 +176,13 @@ def remove_default_cube():
     bpy.ops.object.delete()
 
 def set_lamp(world_vec, shadow_size, strength, location, rotation):
-  scn = bpy.context.scene
-  # Set cycles render engine if not selected
-  if not scn.render.engine == 'CYCLES':
-    scn.render.engine = 'CYCLES'
-  bpy.data.objects["Lamp"].data.type = 'SUN'
-  bpy.data.objects["Lamp"].location = location
-  bpy.data.objects["Lamp"].rotation_euler = rotation
-  lamp = bpy.data.lamps['Lamp']
+  lamp_data = bpy.data.lamps.new(name='NewLamp', type='SUN')
+  lamp_object = bpy.data.objects.new(name='NewLamp', object_data=lamp_data)
+  bpy.context.scene.objects.link(lamp_object)
+  bpy.data.objects['NewLamp'].data.type = 'SUN'
+  bpy.data.objects['NewLamp'].location = location
+  bpy.data.objects['NewLamp'].rotation_euler = rotation
+  lamp = bpy.data.lamps['NewLamp']
   lamp.shadow_soft_size = shadow_size
   lamp.use_nodes = True
   nodes = lamp.node_tree.nodes
@@ -194,12 +194,16 @@ def set_lamp(world_vec, shadow_size, strength, location, rotation):
   lamp.node_tree.links.new(outN, inN)
 
 def set_camera(world_vec, location, rotation):
-  bpy.data.objects["Camera"].location = location
-  bpy.data.objects["Camera"].rotation_euler = rotation
+  camera = bpy.data.cameras.new(name='NewCamera')
+  camera_object = bpy.data.objects.new(name='NewCamera', object_data=camera)
+  bpy.context.scene.objects.link(camera_object)
+  bpy.context.scene.camera = camera_object
+  bpy.data.objects['NewCamera'].location = location
+  bpy.data.objects['NewCamera'].rotation_euler = rotation
   #bpy.data.objects["Camera"].lock_location = (True, True, True)
   x,y,z = world_vec[0], world_vec[1], world_vec[2]
   #bpy.data.cameras["Camera"].clip_end = 200
-  bpy.data.cameras["Camera"].clip_end = max(200, math.sqrt(x*x+y*y+z*z)*2)
+  bpy.data.cameras['NewCamera'].clip_end = max(200, math.sqrt(x*x+y*y+z*z)*2)
   #bpy.ops.view3d.camera_to_view_selected()
 
 def print_planes(world_vec, show_planes, scale, disp, mat_name):
@@ -263,24 +267,16 @@ def set_horizon():
   bpy.context.scene.world.horizon_color = (1,1,1)
 
 def set_default_camera_view():
-  for scrn in bpy.data.screens:
-    if scrn.name == 'Default':
-      bpy.context.window.screen = scrn
-      for area in scrn.areas:
-        if area.type == 'VIEW_3D':
-          for space in area.spaces:
-            if space.type == 'VIEW_3D':
-              space.viewport_shade = 'MATERIAL'
-              reg = space.region_3d
-              reg.view_perspective = 'CAMERA'
-      break
-  return
-
-def set_scene():
-  remove_default_cube()
-  #set_horizon()
-  bpy.context.scene.render.engine = 'CYCLES'
-  #bpy.context.scene.render.resolution_percentage = 60
+  for window in bpy.context.window_manager.windows:
+    screen = window.screen
+    for area in screen.areas:
+      if area.type == 'VIEW_3D':
+        for space in area.spaces:
+          if space.type == 'VIEW_3D':
+            space.viewport_shade = 'MATERIAL'
+            reg = space.region_3d
+            reg.view_perspective = 'CAMERA'
+            break
 
 def init_spheres(species_size, species_material_names): 
   delta = 0.01
@@ -302,12 +298,11 @@ def init_spheres(species_size, species_material_names):
     size = size+delta
   return spheres
 
-def print_sphere(location, sphere, mat): 
+def print_sphere(location, sphere): 
   ob = sphere.copy()
   ob.name = "Sphere (%d, %d, %d)" % (location[0], location[1], location[2])
   ob.location = location
   ob.data = sphere.data.copy()
-  #ob.active_material = mat
   ob.select = False
   ob.hide_render = False
   bpy.context.scene.objects.link(ob)
@@ -339,7 +334,7 @@ def save(filename):
   bpy.ops.wm.save_as_mainfile(filepath=filename)
 
 def render(filename):
-  bpy.data.scenes['Scene'].render.filepath = filename
+  bpy.data.scenes[0].render.filepath = filename
   bpy.ops.render.render(write_still=True)
 
 def remove_molecules():
@@ -364,21 +359,32 @@ def update_time(time):
   bpy.ops.font.text_insert(text=text)
   bpy.ops.object.mode_set(mode='OBJECT')
 
-def print_time(time, location, rotation):
+def print_time(location, rotation):
   bpy.ops.object.text_add(enter_editmode=True, location=location,
       rotation=rotation)
   ob = bpy.context.active_object
   ob.active_material = bpy.data.materials['White']
 
-if __name__ == "__main__": 
+def delete_home_scenes():
+  names = []
+  for i in range(len(bpy.data.scenes)):
+    names.append(bpy.data.scenes[i].name)
+  bpy.ops.scene.new(type='EMPTY')
+  for i in range(len(names)):
+    bpy.data.scenes.remove(bpy.data.scenes[names[i]])
+  #print(list(bpy.data.scenes))
+  #print(list(bpy.data.worlds))
+
+def set_new_scene():
+  bpy.context.screen.scene=bpy.data.scenes[0]
   if GPU_device: 
-    bpy.data.scenes['Scene'].cycles.device = 'GPU'
-  bpy.data.scenes['Scene'].render.tile_x = tile_x
-  bpy.data.scenes['Scene'].render.tile_y = tile_y
+    bpy.data.scenes[0].cycles.device = 'GPU'
+  bpy.data.scenes[0].render.tile_x = tile_x
+  bpy.data.scenes[0].render.tile_y = tile_y
   bpy.context.scene.render.resolution_percentage = resolution_percentage
   bpy.context.scene.cycles.samples = render_samples
-  f, world_vec, species_size = init_coord_file(filename)
-  set_scene()
+  bpy.context.scene.render.engine = 'CYCLES'
+  make_materials()
   set_background(background_strength)
   set_lamp(world_vec, lamp_shadow_size, lamp_strength, lamp_location,
       lamp_rotation)
@@ -387,19 +393,23 @@ if __name__ == "__main__":
       plane_material_name)
   set_camera(world_vec, camera_location, camera_rotation)
   set_default_camera_view()
-  time = 0
-  print_time(time, time_location, camera_rotation)
+  print_time(time_location, camera_rotation)
+  return spheres
+
+if __name__ == "__main__": 
+  f, world_vec, species_size = init_coord_file(filename)
   for i in range(start_frame):
     for j in range(species_size):
       time, c = load_coords(f)
   for i in range(start_frame, end_frame):
+    bpy.ops.wm.read_homefile()
+    delete_home_scenes()
+    spheres = set_new_scene()
     for j in range(species_size):
       time, c = load_coords(f)
       if len(c):
         for k in range(0, int(len(c)/3)):
-          print_sphere((c[k*3],c[k*3+1],c[k*3+2]), spheres[j], materials[j])
+          print_sphere((c[k*3],c[k*3+1],c[k*3+2]), spheres[j])
     update_time(time)
     render('image%04d.png' %i)
-    remove_molecules()
-  #save('/home/satya/wrk/blender/test.blend')
 
