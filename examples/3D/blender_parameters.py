@@ -31,7 +31,9 @@
 import math
 
 start_frame = 0
-end_frame = 1000
+end_frame = 350
+resolution_x = 1920
+resolution_y = 1080
 resolution_percentage = 20
 render_samples = 10
 lamp_shadow_size = 0.1

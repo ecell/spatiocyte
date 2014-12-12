@@ -381,6 +381,8 @@ def set_new_scene():
     bpy.data.scenes[0].cycles.device = 'GPU'
   bpy.data.scenes[0].render.tile_x = tile_x
   bpy.data.scenes[0].render.tile_y = tile_y
+  bpy.context.scene.render.resolution_x = resolution_x
+  bpy.context.scene.render.resolution_y = resolution_y
   bpy.context.scene.render.resolution_percentage = resolution_percentage
   bpy.context.scene.cycles.samples = render_samples
   bpy.context.scene.render.engine = 'CYCLES'

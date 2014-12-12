@@ -1,4 +1,4 @@
-1. To run an example of GFP-tagged surface molecules dimerizing to become slower species on a planar surface:
+1. To run an example tracking fluorescent-tagged surface molecules dimerizing to become slower species on a planar surface:
    $ ecell3-session particle_tracking.py
 
 2. To view the simulation results wth the Spatiocyte Visualizer:
@@ -11,7 +11,7 @@
 4. To view the movie, we can use the VLC player (requires VLC preinstalled):
    $ vlc CoordinateLog.csv.mov 
 
-5. To create high quality frames using Blender, warning, this may take a lot of
+5. To create high quality frames with Blender, warning, this may take a lot of
    computational time (requires Blender preinstalled):
    $ blender --background --python ../blender/blender.py
 
@@ -25,8 +25,5 @@
    render_samples = 100
    $ blender --background --python ../blender/blender.py
 
-8. To run an example of biased 1D random walk on a filament:
-   $ ecell3-session 1D_biased_walk.py
-
-9. To view microscopy snapshots of the biased walk with Spatiocyte Visualizer
+8. To view microscopy snapshots of the biased walk with Spatiocyte Visualizer
    $ spatiocyte MicroscopyLog.dat
