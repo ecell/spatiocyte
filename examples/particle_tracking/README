@@ -1,5 +1,5 @@
-1. To run an example of 2D reaction-diffusion on a planar surface:
-   $ ecell3-session 2D.py
+1. To run an example of GFP-tagged surface molecules dimerizing to become slower species on a planar surface:
+   $ ecell3-session particle_tracking.py
 
 2. To view the simulation results wth the Spatiocyte Visualizer:
    $ spatiocyte
@@ -25,10 +25,8 @@
    render_samples = 100
    $ blender --background --python ../blender/blender.py
 
-8. To run a C++ 2D reaction-diffusion model 2D.cpp:
-   $ g++ -O3 2D.cpp -I$HOME/root/include/ecell-3.2/ -I$HOME/root/include -L$HOME/root/lib -lecs -o 2D
-   $ ./2D
+8. To run an example of biased 1D random walk on a filament:
+   $ ecell3-session 1D_biased_walk.py
 
-9. To view microscopy snapshots of the 2D reaction-diffusion with Spatiocyte
-   Visualizer:
+9. To view microscopy snapshots of the biased walk with Spatiocyte Visualizer
    $ spatiocyte MicroscopyLog.dat
