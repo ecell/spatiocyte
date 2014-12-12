@@ -57,7 +57,6 @@ AC_CONFIG_HEADERS([config.h:config-h.in])
 ## ------------------ ##
 ## C compiler checks. ##
 ## ------------------ ##
-AC_PROG_F77
 AC_PROG_CC
 AC_C_CONST
 AC_C_INLINE
