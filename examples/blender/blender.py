@@ -169,6 +169,7 @@ def make_materials():
       make_material('WhitePurple', [0.67,0.6,1.0,1]),
       make_material('Black', [0.1,0.1,0.1,1]),
       make_material('Grey', [0.46,0.46,0.46,1]),
+      make_material('LightGrey', [0.6,0.6,0.6,1]),
       make_material('DarkOrange', [0.845,0.179,0.102,1])]
 
 def remove_default_cube():

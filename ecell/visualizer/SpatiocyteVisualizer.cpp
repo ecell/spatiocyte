@@ -1243,7 +1243,7 @@ void GLScene::plot3DHCPMolecules()
 {
   unsigned int col, layer, row;
   double x,y,z;
-  for( unsigned int j(0); j!=theTotalLatticeSpSize; ++j )
+  for(int j(theTotalLatticeSpSize-1); j!=-1; --j )
     {
       if( theSpeciesVisibility[j] )
         {

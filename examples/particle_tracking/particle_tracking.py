@@ -35,7 +35,7 @@ coord = theSimulator.createEntity('CoordinateLogProcess', 'Process:/:coord')
 coord.VariableReferenceList = [['_', 'Variable:/Surface:A']]
 coord.VariableReferenceList = [['_', 'Variable:/Surface:As']]
 coord.VariableReferenceList = [['_', 'Variable:/Surface:GFP']]
-coord.LogInterval = 0.03
+coord.LogInterval = 0.01
 coord.LogEnd = 10
 
 micro = theSimulator.createEntity('MicroscopyTrackingProcess', 'Process:/:micro')
