@@ -25,8 +25,12 @@
    render_samples = 100
    $ blender --background --python ../blender/blender.py
 
-8. To run an example of biased 1D random walk on a filament:
+8. To save a rendered frame session as a Blender file for future modification
+   with Blender:
+   $ blender --background --python ../blender/save_blender_file.py
+
+9. To run an example of biased 1D random walk on a filament:
    $ ecell3-session 1D_biased_walk.py
 
-9. To view microscopy snapshots of the biased walk with Spatiocyte Visualizer
+10. To view microscopy snapshots of the biased walk with Spatiocyte Visualizer
    $ spatiocyte MicroscopyLog.dat

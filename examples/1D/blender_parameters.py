@@ -30,20 +30,20 @@
 
 import math
 
-start_frame = 0
-end_frame = 100
+start_frame = 284
+end_frame = 1000
 resolution_x = 1920
 resolution_y = 1080
 resolution_percentage = 100
-render_samples = 10
+render_samples = 300
 lamp_shadow_size = 0.08
 lamp_strength = 2
 plane_scale = 5
-background_strength = 0.1
+background_strength = 0.00
 visible_planes = [1, 1, 1, 0, 0, 0]
 camera_rotation = (70.4*math.pi/180.0,0*math.pi/180.0,135.8*math.pi/180.0)
 camera_location = (95.2, 49.6, 30.7)
-time_location = (82.52, 15.87, 26.43)
+time_location = (77.48, 3.24, 25.38)
 lamp_location = (7.88, 37.38, 73.27)
 lamp_rotation = (-7.82*math.pi/180.0,0.69*math.pi/180.0,92.31*math.pi/180.0)
 #lamp_location = (4.08, 1.0, 5.9)
@@ -51,10 +51,11 @@ lamp_rotation = (-7.82*math.pi/180.0,0.69*math.pi/180.0,92.31*math.pi/180.0)
 #plane_disp = [1.0, 1.25, 1.5]
 plane_disp = [0.5, 0, 0.5]
 #set True if using GPU device to render
-GPU_device = False
+GPU_device = True
 #for GPU device, set tile_x = 512, tile_y = 512
-tile_x = 256
-tile_y = 256
+tile_x = 512
+tile_y = 512
+time_material_name = 'Black'
 plane_material_name = 'White'
 filename = 'CoordinateLog.csv'
 species_material_names = ['DarkRed_glossy','Yellow_glossy','Blue_glossy',

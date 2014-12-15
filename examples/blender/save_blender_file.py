@@ -13,6 +13,7 @@ def get_node_index(nodes, data_type):
 
 def set_background(strength):
   world = bpy.data.worlds['World']
+  bpy.context.scene.world = world
   world.use_nodes = True
   nodes = world.node_tree.nodes
   node = nodes[get_node_index(nodes,'BACKGROUND')]
@@ -328,11 +329,11 @@ def update_time(time):
   bpy.ops.font.text_insert(text=text)
   bpy.ops.object.mode_set(mode='OBJECT')
 
-def print_time(location, rotation):
+def print_time(location, rotation, mat):
   bpy.ops.object.text_add(enter_editmode=True, location=location,
       rotation=rotation)
   ob = bpy.context.active_object
-  ob.active_material = bpy.data.materials['White']
+  ob.active_material = bpy.data.materials[mat]
 
 def remove_objects():
   if "Cube" in bpy.data.objects:
@@ -375,7 +376,7 @@ def set_new_scene():
       plane_material_name)
   set_camera(world_vec, camera_location, camera_rotation)
   set_default_camera_view()
-  print_time(time_location, camera_rotation)
+  print_time(time_location, camera_rotation, time_material_name)
   return spheres
 
 if __name__ == "__main__": 
@@ -383,12 +384,15 @@ if __name__ == "__main__":
   for i in range(start_frame):
     for j in range(species_size):
       time, c = load_coords(f)
-  remove_objects()
+  delete_home_scenes()
   spheres = set_new_scene()
+  i = 0
   for j in range(species_size):
     time, c = load_coords(f)
     if len(c):
       for k in range(0, int(len(c)/3)):
         print_sphere((c[k*3],c[k*3+1],c[k*3+2]), spheres[j])
   update_time(time)
+  save('frame.blend')
+  print('Saved frame.blend file')
 
