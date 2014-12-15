@@ -28,7 +28,7 @@ logger.LogInterval = 0.01
 #Tag 10 molecules of A with GFP, to get A-GFP. A-GFP can transition to As-GFP:
 tagger = theSimulator.createEntity('TagProcess', 'Process:/:tagger')
 tagger.VariableReferenceList = [['_', 'Variable:/Surface:GFP', '-1' ]]
-tagger.VariableReferenceList = [['_', 'Variable:/Surface:A', '10' ]]
+tagger.VariableReferenceList = [['_', 'Variable:/Surface:A', '5' ]]
 tagger.VariableReferenceList = [['_', 'Variable:/Surface:As']]
 
 coord = theSimulator.createEntity('CoordinateLogProcess', 'Process:/:coord')
@@ -36,7 +36,7 @@ coord.VariableReferenceList = [['_', 'Variable:/Surface:A']]
 coord.VariableReferenceList = [['_', 'Variable:/Surface:As']]
 coord.VariableReferenceList = [['_', 'Variable:/Surface:GFP']]
 coord.LogInterval = 0.01
-coord.LogEnd = 10
+coord.LogEnd = 100
 
 micro = theSimulator.createEntity('MicroscopyTrackingProcess', 'Process:/:micro')
 micro.VariableReferenceList = [['_', 'Variable:/Surface:GFP', '1']]
@@ -52,12 +52,12 @@ binder.VariableReferenceList = [['_', 'Variable:/Surface:A','-1']]
 binder.VariableReferenceList = [['_', 'Variable:/Surface:A','-1']]
 binder.VariableReferenceList = [['_', 'Variable:/Surface:As','1']]
 binder.VariableReferenceList = [['_', 'Variable:/Surface:As','1']]
-binder.p = 0.01
+binder.p = 0.02
 
 binder = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:reaction2')
 binder.VariableReferenceList = [['_', 'Variable:/Surface:As','-1']]
 binder.VariableReferenceList = [['_', 'Variable:/Surface:A','1']]
-binder.k = 0.5
+binder.k = 0.1
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseA')
 diffuser.VariableReferenceList = [['_', 'Variable:/Surface:A']]
