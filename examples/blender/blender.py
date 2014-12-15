@@ -376,7 +376,18 @@ def delete_home_scenes():
   #print(list(bpy.data.scenes))
   #print(list(bpy.data.worlds))
 
-def set_new_scene():
+def remove_objects():
+  if "Cube" in bpy.data.objects:
+    bpy.data.objects["Cube"].select = True
+    bpy.ops.object.delete()
+  if "Camera" in bpy.data.objects:
+    bpy.data.objects["Camera"].select = True
+    bpy.ops.object.delete()
+  if "Lamp" in bpy.data.objects:
+    bpy.data.objects["Lamp"].select = True
+    bpy.ops.object.delete()
+
+def set_new_scene(world_vec, species_size):
   bpy.context.screen.scene=bpy.data.scenes[0]
   if GPU_device: 
     bpy.data.scenes[0].cycles.device = 'GPU'
@@ -407,7 +418,7 @@ if __name__ == "__main__":
   for i in range(start_frame, end_frame):
     bpy.ops.wm.read_homefile()
     delete_home_scenes()
-    spheres = set_new_scene()
+    spheres = set_new_scene(world_vec, species_size)
     for j in range(species_size):
       time, c = load_coords(f)
       if len(c):
