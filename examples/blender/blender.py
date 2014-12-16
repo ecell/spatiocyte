@@ -354,10 +354,9 @@ def update_time(time):
   elif time < 60:
     text = "t = %.2f s" % (time) 
   elif time < 3600:
-    text = "t = %d m %d s" % int(time/60), int(aTime)%60
+    text = "t = %d m %d s" %(int(time/60), int(time)%60)
   else:
-    text = "t = %d h %d m %d s" % int(time/3600), int(aTime)%3600/60,
-    int(time)%3600%60
+    text = "t = %d h %d m %d s" %(int(time/3600), int(time)%3600/60, int(time)%3600%60)
   bpy.ops.font.text_insert(text=text)
   bpy.ops.object.mode_set(mode='OBJECT')
 
