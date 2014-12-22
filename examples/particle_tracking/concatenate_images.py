@@ -39,7 +39,10 @@ left_interval = 0.01
 right_interval = 0.5
 right_frame_cnt = int(right_interval/left_interval)
 
-for i in range(int(len(left)/right_frame_cnt)):
+start_frame = int(5000/right_frame_cnt)
+end_frame = int(len(left)/right_frame_cnt)
+
+for i in range(start_frame, end_frame):
 #for i in range(int(1000/right_frame_cnt)):
   for j in range(right_frame_cnt):
     idx = i*right_frame_cnt+j

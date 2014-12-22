@@ -30,7 +30,7 @@
 
 import math
 
-start_frame = 284
+start_frame = 1
 end_frame = 1000
 resolution_x = 1920
 resolution_y = 1080
