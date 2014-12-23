@@ -302,7 +302,7 @@ def init_spheres(species_size, species_material_names):
 
 def print_sphere(location, sphere): 
   ob = sphere.copy()
-  ob.name = "Sphere (%d, %d, %d)" % (location[0], location[1], location[2])
+  ob.name = "Sphere (%f, %f, %f)" % (location[0], location[1], location[2])
   ob.location = location
   ob.data = sphere.data.copy()
   ob.select = False
