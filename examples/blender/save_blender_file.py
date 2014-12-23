@@ -43,12 +43,12 @@ if __name__ == "__main__":
       f.readline()
   delete_home_scenes()
   spheres = set_new_scene(world_vec, species_size)
-  i = 0
-  for j in range(species_size):
+  for i in range(species_size):
     time, c = load_coords(f)
     if len(c):
       for k in range(0, int(len(c)/3)):
-        print_sphere((c[k*3],c[k*3+1],c[k*3+2]), spheres[j])
+        print("loading species",i,"molecule",k)
+        print_sphere((c[k*3],c[k*3+1],c[k*3+2]), spheres[i])
   update_time(time)
   save('frame.blend')
   print('Saved frame.blend file')
