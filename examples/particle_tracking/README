@@ -27,3 +27,9 @@
 
 8. To view microscopy snapshots of the biased walk with Spatiocyte Visualizer
    $ spatiocyte MicroscopyLog.dat
+
+avconv -i concatenated%04d.png -s 2048x1150 -c:v libvpx -b:v 15M -crf 4 -qmin 0 -qmax 50 -threads 6 -pass 1 -an -f webm -y output.webm
+avconv -i concatenated%04d.png -s 2048x1150 -c:v libvpx -b:v 15M -crf 4 -qmin 0 -qmax 50 -threads 6 -pass 2 -an -f webm -y output.webm
+
+avconv -r 100 -i output.webm -s 2048x1150 -c:v libvpx -b:v 15M -crf 4 -qmin 0 -qmax 50 -threads 6 -pass 1 -an -f webm -y -r 100 output_r100.webm
+avconv -r 100 -i output.webm -s 2048x1150 -c:v libvpx -b:v 15M -crf 4 -qmin 0 -qmax 50 -threads 6 -pass 2 -an -f webm -y -r 100 output_r100.webm

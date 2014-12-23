@@ -414,7 +414,7 @@ if __name__ == "__main__":
   f, world_vec, species_size = init_coord_file(filename)
   for i in range(start_frame):
     for j in range(species_size):
-      time, c = load_coords(f)
+      f.readline()
   for i in range(start_frame, end_frame):
     bpy.ops.wm.read_homefile()
     delete_home_scenes()
