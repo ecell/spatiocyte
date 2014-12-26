@@ -64,9 +64,9 @@ void IteratingLogProcess::initializeFifth()
   exposureCnt = unsigned(ExposureTime/LogInterval);
   if(!LogStart)
     {
-      LogStart = theInterval;
+      LogStart = getStepper()->getMinStepInterval();
     }
-  theTime = std::max(LogStart-theInterval, getStepper()->getMinStepInterval());
+  theTime = LogStart;
   thePriorityQueue->move(theQueueID);
   if(theFileCnt-FileStartCount)
     {
@@ -76,6 +76,14 @@ void IteratingLogProcess::initializeFifth()
 
 void IteratingLogProcess::initializeLastOnce()
 {
+  if(!RebindTime && LogEnd == libecs::INF)
+    {
+      THROW_EXCEPTION(ValueError, String(
+                      getPropertyInterface().getClassName()) +
+                      "[" + getFullID().asString() + 
+                      "]: LogEnd must be specified for " + 
+                      "IteratingLogProcess."); 
+    }
   if(SeparateFiles)
     {
       SaveCounts = 0;
@@ -111,18 +119,31 @@ void IteratingLogProcess::initializeLastOnce()
 
 void IteratingLogProcess::saveFileHeader(std::ofstream& aFile)
 {
+  Point aCenterPoint(theSpatiocyteStepper->getCenterPoint());
+  aFile << "log interval=" << theInterval
+    << ",world length_x=" <<  aCenterPoint.x*2
+    << ",world length_y=" << aCenterPoint.y*2
+    << ",world length_z=" << aCenterPoint.z*2
+    << ",voxel radius=" <<  theSpatiocyteStepper->getVoxelRadius();
+  for(unsigned i(0); i != theProcessSpecies.size(); ++i)
+    {
+      aFile << "," << getIDString(theProcessSpecies[i]) << "=" <<
+        theProcessSpecies[i]->getMoleculeRadius();
+    }
+  for(unsigned i(0); i != theProcessVariables.size(); ++i)
+    {
+      aFile << "," << getIDString(theProcessVariables[i]) << "=0";
+    }
+  aFile << std::endl;
 }
 
 void IteratingLogProcess::fire()
 {
-  if(theTime < LogStart)
+  if(theTime == LogStart)
     {
       doPreLog();
-      theTime = LogStart;
-      thePriorityQueue->moveTop();
-      return;
     }
-  else if(theTime >= LogStart && theTime <= LogEnd)
+  if(theTime <= LogEnd)
     {
       logValues();
       //If all survival species are dead, go on to the next iteration:
@@ -138,7 +159,7 @@ void IteratingLogProcess::fire()
     }
   if(theTotalIterations == 1 && !(logCnt%exposureCnt))
     {
-      saveATimePoint(theLogFile, theTime+theInterval, 1, timePointCnt-1);
+      saveATimePoint(theLogFile, theTime, 1, timePointCnt-1);
       if(theTime >= LogEnd)
         {
           theLogFile.close();

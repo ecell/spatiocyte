@@ -60,8 +60,7 @@ public:
         }
       theLogFile.open(FileName.c_str(), std::ios::trunc);
       theStartCoord = theSpatiocyteStepper->getStartCoord();
-      initializeLog();
-      logSpecies();
+      saveFileHeader(theLogFile);
     }
   virtual void fire()
     {
@@ -88,22 +87,6 @@ public:
         }
     }
 protected:
-  void initializeLog()
-    {
-      Point aCenterPoint(theSpatiocyteStepper->getCenterPoint());
-      theLogFile
-        << "log interval=" << theInterval
-        << ",world length_x=" <<  aCenterPoint.x*2
-        << ",world length_y=" << aCenterPoint.y*2
-        << ",world length_z=" << aCenterPoint.z*2
-        << ",voxel radius=" <<  theSpatiocyteStepper->getVoxelRadius();
-      for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
-        {
-          theLogFile << "," << getIDString(theProcessSpecies[i]) << "=" <<
-            theProcessSpecies[i]->getMoleculeRadius();
-        }
-      theLogFile << std::endl;
-    }
   void logMolecules(int anIndex)
     {
       Species* aSpecies(theProcessSpecies[anIndex]);

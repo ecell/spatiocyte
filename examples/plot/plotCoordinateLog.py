@@ -8,7 +8,6 @@ tickFontSize = 14
 legendFontSize = 14
 lineFontSize = 14
 
-files = []
 fileNames = ["CoordinateLog.csv"]
 legendTitles = []
 lines = ['-', '-', '-', '-']

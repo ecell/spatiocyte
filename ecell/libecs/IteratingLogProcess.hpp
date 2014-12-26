@@ -129,10 +129,6 @@ public:
               theProcessSpecies[i]->setIsCentered();
             }
         }
-      if(!LogStart)
-        {
-          LogStart = LogInterval;
-        }
       timePointCnt = 0;
       logCnt = 0;
       exposureCnt = 0;
