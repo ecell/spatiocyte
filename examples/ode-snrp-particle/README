@@ -1,0 +1,9 @@
+1. To run an example multi-algorithm model using Spatiocyte next reaction method, mass action and lattice-based partice reaction-diffusion process:
+   $ ecell3-session ode-snrp-particle.py
+
+2. To view the simulation results wth the Spatiocyte Visualizer:
+   $ spatiocyte
+
+3. To see the time-series data of each species:
+   $ python ../plot/plotIterateLog.py
+

@@ -4,7 +4,7 @@
 2. To view the simulation results wth the Spatiocyte Visualizer:
    $ spatiocyte
 
-3. To see the evolution of the molecule numbers:
+3. To see the time-series data of all species:
    $ python ../plot/plotIterateLog.py
 
 4. snrp-particle.em is the equivalent model file written in E-Cell 3 model

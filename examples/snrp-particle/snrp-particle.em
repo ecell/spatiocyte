@@ -4,9 +4,7 @@
 #compartment. B is a individually diffused species by the particle simulator.
 #This model executes the reaction A + B -> C using Spatiocyte next reaction #method.
 
-Stepper SpatiocyteStepper(SS) { 
-  VoxelRadius 4.4e-9;
-  SearchVacant 0; }
+Stepper SpatiocyteStepper(SS) { VoxelRadius 4.4e-9; }
 System System(/) {
   StepperID SS;
   Variable Variable(GEOMETRY) { Value 0; }
