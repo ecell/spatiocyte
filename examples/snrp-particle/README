@@ -1,10 +1,10 @@
-1. To run an example multi-algorithm model using Spatiocyte next reaction method with lattice-based partice reaction-diffusion process:
+1. To run an example multi-algorithm model with Spatiocyte next-reaction and lattice-based partice reaction-diffusion methods:
    $ ecell3-session snrp-particle.py
 
 2. To view the simulation results wth the Spatiocyte Visualizer:
    $ spatiocyte
 
-3. To see the time-series data of all species:
+3. To see the time-series data of each species:
    $ python ../plot/plotIterateLog.py
 
 4. snrp-particle.em is the equivalent model file written in E-Cell 3 model
