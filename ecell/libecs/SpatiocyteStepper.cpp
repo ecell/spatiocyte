@@ -1148,8 +1148,9 @@ void SpatiocyteStepper::setLatticeProperties()
       theLayerSize += 2;
       readjustSurfaceBoundarySizes(); 
     }
-  double mem_required(((theRowSize*theLayerSize*theColSize+1)*sizeof(Voxel))/
+  double mem_required(((theRowSize*theLayerSize*theColSize+1)*144.0)/
                       (1024.0*1024.0*1024.0));
+  std::cout << "er:" << sizeof(Voxel) << std::endl;
   double mem_available(get_total_system_memory()/(1024.0*1024.0*1024.0));
   std::cout << "   Total memory required (GB): " << mem_required 
     << std::endl;
