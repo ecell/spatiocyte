@@ -23,7 +23,7 @@ def run_single(T, V, N, R, D):
   timing = pickle.load(f)
   f.close()
   os.remove(filename)
-  print 'TIMING:\n', timing, '\n'
+  print 'total runtime:', timing, '\n'
   return timing
 
 if __name__ == '__main__':

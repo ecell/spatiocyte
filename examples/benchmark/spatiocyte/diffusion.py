@@ -47,6 +47,6 @@ gc.enable()
 duration = end-start
 f = open(filename, 'w')
 pickle.dump(duration, f)
-print duration
+#print duration
 f.close()
 

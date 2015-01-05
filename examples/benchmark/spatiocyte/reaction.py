@@ -60,17 +60,17 @@ react.VariableReferenceList = [['_', 'Variable:.:E', '1']]
 react.VariableReferenceList = [['_', 'Variable:.:P', '1']]
 react.k = 0.1
 
-#log = theSimulator.createEntity('IteratingLogProcess', 'Process:/:log')
-#log.VariableReferenceList = [['_', 'Variable:.:E']]
-#log.VariableReferenceList = [['_', 'Variable:.:S']]
-#log.VariableReferenceList = [['_', 'Variable:.:ES']]
-#log.VariableReferenceList = [['_', 'Variable:.:P']]
-#log.LogInterval = 0.01
-#log.LogEnd = 100
-#log.FileName = "spatiocyte.csv"
+log = theSimulator.createEntity('IteratingLogProcess', 'Process:/:log')
+log.VariableReferenceList = [['_', 'Variable:.:E']]
+log.VariableReferenceList = [['_', 'Variable:.:S']]
+log.VariableReferenceList = [['_', 'Variable:.:ES']]
+log.VariableReferenceList = [['_', 'Variable:.:P']]
+log.LogInterval = 0.01
+log.LogEnd = 100
+log.FileName = "spatiocyte.csv"
 
 run(0.0001)
 start = time.time()
 run(100)
 end = time.time()
-print end-start
+print "total runtime:", end-start

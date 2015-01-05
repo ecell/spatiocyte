@@ -1,20 +1,12 @@
-This sample script runs a model composed of a single, non-reactive species.
-After each run, the script prints the real time it took to run the simulation
-in seconds. This script may be useful for a simple benchmarking purpose.
+Reaction and diffusion benchmark of Spatiocyte against eGFRD and Smoldyn methods
+--------------------------------------------------------------------------------
 
-T: time when simulation is stopped.
-V: the volume of the space used in the simulation.
-N: the number of particles in the simulator volume.
-D: Diffusion coefficient = 1e-12 [m^2/s]
-R: Radius of particles = 2.5e-9 [m]
+1. Perform diffusion and reaction simulations with each method according to the
+   instructions provided in README inside each subdirectory
 
-Periodic boundary
-After N particles are randomly placed, the simulator runs for some small 
-duration of time (stirTime in the script) to stir. After that, the simulator is
-re-initialized, and run for T to take the benchmark.
+2. To plot the results of reaction benchmark:
+   $ python plot_reaction.py
 
-To compare the output of reactions:
-python plot_reaction.py
+3. To plot the results of diffusion benchmark:
+   $ python plot_diffusion.py
 
-To compare the output of diffusion:
-python plot_diffusion.py
