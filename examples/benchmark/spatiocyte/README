@@ -19,7 +19,7 @@ Runtime for diffusion
    $ python run_all.py
 
 3. To run all instances of the diffusion benchmark model of low concentration
-   case:
+   case (warning, this model requires about 35 GB of memory):
    $ python run_all_dillute.py
 
 4. After running, to view the plot:
