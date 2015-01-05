@@ -30,6 +30,7 @@
 
 
 #include <time.h>
+#include <unistd.h>
 #include <gsl/gsl_randist.h>
 #include <libecs/Model.hpp>
 #include <libecs/System.hpp>
@@ -40,6 +41,13 @@
 #include <libecs/SpatiocyteSpecies.hpp>
 
 LIBECS_DM_INIT_STATIC(SpatiocyteStepper, Stepper);
+
+size_t get_total_system_memory()
+{
+    long pages = sysconf(_SC_PHYS_PAGES);
+    long page_size = sysconf(_SC_PAGE_SIZE);
+    return pages * page_size;
+}
 
 void SpatiocyteStepper::initialize()
 {
@@ -1140,6 +1148,20 @@ void SpatiocyteStepper::setLatticeProperties()
       theLayerSize += 2;
       readjustSurfaceBoundarySizes(); 
     }
+  double mem_required(((theRowSize*theLayerSize*theColSize+1)*sizeof(Voxel))/
+                      (1024.0*1024.0*1024.0));
+  double mem_available(get_total_system_memory()/(1024.0*1024.0*1024.0));
+  std::cout << "   Total memory required (GB): " << mem_required 
+    << std::endl;
+  std::cout << "   Total memory available (GB): " << mem_available <<
+    std::endl;
+  if (mem_required > mem_available) {
+    THROW_EXCEPTION(InitializationFailed,
+                    getPropertyInterface().getClassName() + 
+                    ": Not enough system memory to support the total " +
+                    "number of voxels. Try increasing the VoxelRadius to " +
+                    "reduce the number of voxels.");
+  }
 
   //You should only resize theLattice once here. You should never
   //push or readjust the capacity of theLattice since all the pointers
