@@ -2,7 +2,10 @@ Reaction and diffusion benchmark of Spatiocyte against eGFRD and Smoldyn methods
 --------------------------------------------------------------------------------
 
 1. Perform diffusion and reaction simulations with each method according to the
-   instructions provided in README inside each subdirectory
+   instructions provided in README inside the subdirectories:
+   a. egfrd
+   b. smoldyn
+   c. spatiocyte
 
 2. To plot the results of reaction benchmark:
    $ python plot_reaction.py
