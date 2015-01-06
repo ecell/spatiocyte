@@ -1,27 +1,34 @@
-tar xzvf smoldyn-2.32.tgz
-cd smoldyn-2.32
-cmake -DCMAKE_INSTALL_PREFIX:PATH=/home/satya/root -DOPTION_USE_OPENGL=OFF -DOPTION_USE_LIBTIFF=OFF -DOPTION_USE_ZLIB=OFF
-make -j4
-make install
-
-Runtime for diffusion
----------------------
-To run single:
-python run_single.py
-
-To run all:
-python run_all.py
-
-After running, to view the plot:
-python plot_diffusion.py
+Installing Smoldyn
+-------------------
+$ tar xzvf smoldyn-2.32.tgz
+$ cd smoldyn-2.32
+$ cmake -DCMAKE_INSTALL_PREFIX:PATH=$HOME/root -DOPTION_USE_OPENGL=OFF -DOPTION_USE_LIBTIFF=OFF -DOPTION_USE_ZLIB=OFF
+$ make -j4
+$ make install
 
 Runtime for Michaelis-Menten reaction
 -------------------------------------
-Using benchmark model from Supporting Information Text S1 of 
-Andrews et al, PLoS Comp Biol 2010
+The reaction model is a modified version of the benchmark Michaelis-Menten 
+model provided in Supporting Information Text S1 of Andrews et al, PLoS Comp 
+Biol 2010.
 
-To run the reaction with Smoldyn:
-python reaction.py 
+1. To run the reaction with Smoldyn:
+   $ python reaction.py 
 
-To view the output of Smoldyn:
-python plot_reaction.py
+2. To run the reaction using small step-interval with Smoldyn:
+   $ python reaction_small_dt.py 
+
+3. To plot and view the results:
+   $ python ../plot_reaction.py
+
+Runtime for diffusion
+---------------------
+1. To run single instance of the diffusion benchmark model:
+   $ python run_single.py
+
+2. To run all instances of the diffusion benchmark model:
+   $ python run_all.py
+
+3. To view the plot after running the models:
+   $ python ../plot_diffusion.py
+

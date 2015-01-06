@@ -4,11 +4,17 @@ The reaction model is a modified version of the benchmark Michaelis-Menten
 model provided in Supporting Information Text S1 of Andrews et al, PLoS Comp 
 Biol 2010.
 
-1. To run the reaction using ODE-based mass action:
+1. To run the reaction with ODE-based mass action:
    $ ecell3-session ode.py 
 
 2. To run the reaction with Spatiocyte:
    $ ecell3-session reaction.py 
+
+3. To run the reaction using small step-interval with Spatiocyte:
+   $ ecell3-session reaction_small_dt.py 
+
+4. To plot and view the results:
+   $ python ../plot_reaction.py
 
 Runtime for diffusion
 ---------------------
@@ -18,10 +24,10 @@ Runtime for diffusion
 2. To run all instances of the diffusion benchmark model:
    $ python run_all.py
 
-3. To run all instances of the diffusion benchmark model of low concentration
-   case (warning, this model requires about 35 GB of memory):
+3. To run all instances of the diffusion benchmark model with low concentration
+   diffusing molecules (warning, this model requires about 35 GB of memory):
    $ python run_all_dillute.py
 
-4. After running, to view the plot:
-   $ python plot_diffusion.py
+4. To view the plot after running the models:
+   $ python ../plot_diffusion.py
 

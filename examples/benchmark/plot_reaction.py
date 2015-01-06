@@ -1,3 +1,5 @@
+import os
+import sys
 import numpy
 import csv
 import math
@@ -17,6 +19,9 @@ labelFontSize = 15
 legendFontSize = 14
 lineFontSize = 15
 
+path, file = os.path.split(os.path.abspath(__file__))
+path = path+os.sep
+
 fileNames = ['egfrd/egfrd.csv', 'egfrd/egfrd_small_r.csv','smoldyn/smoldyn.csv','smoldyn/smoldyn_small_dt.csv','spatiocyte/spatiocyte.csv','spatiocyte/spatiocyte_small_dt.csv','spatiocyte/ode.csv',]
 legendTitles = ['eGFRD ($r=10\ \mathrm{nm},\ T=2914\ \mathrm{s}$)','eGFRD ($r=1\ \mathrm{nm},\ T=2272\ \mathrm{s}$)','Smoldyn ($\Delta t=1\ \mathrm{ms},\ T=21\ \mathrm{s}$)','Smoldyn ($\Delta t=67\ \mathrm{\mu s},\ T=302\ \mathrm{s}$)','Spatiocyte ($\Delta t=1\ \mathrm{ms},\ r=38.73\ \mathrm{nm},\ T=8\ \mathrm{s}$)','Spatiocyte ($\Delta t=67\ \mathrm{\mu s},\ r=10\ \mathrm{nm},\ T=238\ \mathrm{s}$)','Mass Action']
 speciesList = ['E','S','ES','P']
@@ -24,16 +29,17 @@ lines = ['-','--','-','--','-','--','-']
 colors = ['b', 'b', 'g', 'g', 'r', 'r','k']
 
 for f in range(len(fileNames)):
-  deli = ','
-  if (f == 2 or f == 3):
-    deli = ' '
-  data = genfromtxt(fileNames[f], delimiter=deli).T
-  colSize = len(data)-1
-  for i in range(colSize):
-    if (i == 0):
-      plot(data[0], data[i+1], ls=lines[f], color=colors[f], label=legendTitles[f], linewidth=1)
-    else:
-      plot(data[0], data[i+1], ls=lines[f], color=colors[f], linewidth=1)
+  if (os.path.isfile(path+fileNames[f])):
+    deli = ','
+    if (f == 2 or f == 3):
+      deli = ' '
+    data = genfromtxt(path+fileNames[f], delimiter=deli, skip_header=1).T
+    colSize = len(data)-1
+    for i in range(colSize):
+      if (i == 0):
+        plot(data[0], data[i+1], ls=lines[f], color=colors[f], label=legendTitles[f], linewidth=1)
+      else:
+        plot(data[0], data[i+1], ls=lines[f], color=colors[f], linewidth=1)
 
 annotate('ES', xy=(90, 0),  xycoords='data', xytext=(-29, 10), textcoords='offset points', color='k', size=16)
 

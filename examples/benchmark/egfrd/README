@@ -1,19 +1,38 @@
-Install eGFRD:
-git clone https://github.com/ecell/epdp.git
-./autogen.sh
-./configure --prefix=/home/satya/root
-make -j4
+Installing eGFRD
+----------------
+$ git clone https://github.com/ecell/epdp.git
+$ cd epdp
+$ ./autogen.sh
+$ ./configure --prefix=$HOME/root
+$ make -j4
 
-Diffusion benchmark
--------------------
-LD_LIBRARY_PATH=$HOME/wrk/epdp PYTHONPATH=$HOME/wrk/epdp LOGLEVEL=FATAL python run_single.py
+Runtime for Michaelis-Menten reaction
+-------------------------------------
+The reaction model is a modified version of the benchmark Michaelis-Menten 
+model provided in Supporting Information Text S1 of Andrews et al, PLoS Comp 
+Biol 2010.
 
-LD_LIBRARY_PATH=$HOME/wrk/epdp PYTHONPATH=$HOME/wrk/epdp LOGLEVEL=FATAL python run_all.py
+1. To run the reaction with eGFRD:
+   $ LD_LIBRARY_PATH=$HOME/wrk/epdp PYTHONPATH=$HOME/wrk/epdp LOGLEVEL=FATAL python reaction.py 
 
-LD_LIBRARY_PATH=$HOME/wrk/epdp PYTHONPATH=$HOME/wrk/epdp LOGLEVEL=FATAL python run_all_dense.py
+2. To run the reaction using small molecule radius with eGFRD:
+   $ LD_LIBRARY_PATH=$HOME/wrk/epdp PYTHONPATH=$HOME/wrk/epdp LOGLEVEL=FATAL python reaction_small_r.py 
 
-Reaction benchmark
-------------------
-LD_LIBRARY_PATH=$HOME/wrk/epdp PYTHONPATH=$HOME/wrk/epdp LOGLEVEL=FATAL python reaction.py
+3. To plot and view the results:
+   $ python ../plot_reaction.py
 
-LD_LIBRARY_PATH=$HOME/wrk/epdp PYTHONPATH=$HOME/wrk/epdp LOGLEVEL=FATAL python reaction_small_r.py
+Runtime for diffusion
+---------------------
+1. To run single instance of the diffusion benchmark model:
+   $ LD_LIBRARY_PATH=$HOME/wrk/epdp PYTHONPATH=$HOME/wrk/epdp LOGLEVEL=FATAL python run_single.py
+
+2. To run all instances of the diffusion benchmark model:
+   $ LD_LIBRARY_PATH=$HOME/wrk/epdp PYTHONPATH=$HOME/wrk/epdp LOGLEVEL=FATAL python run_all.py
+
+3. To run all instances of the diffusion benchmark model with high concentration
+   diffusing molecules:
+   $ LD_LIBRARY_PATH=$HOME/wrk/epdp PYTHONPATH=$HOME/wrk/epdp LOGLEVEL=FATAL python run_all_dense.py
+
+4. To view the plot after running the models:
+   $ python ../plot_diffusion.py
+

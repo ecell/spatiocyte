@@ -1,7 +1,7 @@
 #!/usr/bin/env/python
 
 import sys
-
+import os
 import numpy
 import imp
 import scipy.io
@@ -22,54 +22,64 @@ lineFontSize = 15
 
 def plot_data(N, T, fmt):
     T = numpy.array(T)
-
     mean = T.mean(1)
     std_err = T.std()/math.sqrt(len(T))
-
     #errorbar(N, mean, yerr=std_err, fmt=fmt)
     print N, mean
     loglog(N, mean, fmt)
 
-
-imp.load_source('spatiocyte_out', 'spatiocyte/spatiocyte_out.py')
-from spatiocyte_out import *
-imp.load_source('spatiocyte_dillute_out', 'spatiocyte/spatiocyte_dillute_out.py')
-from spatiocyte_dillute_out import *
-imp.load_source('egfrd_out', 'egfrd/egfrd_out.py')
-from egfrd_out import *
-imp.load_source('egfrd_dense_out', 'egfrd/dense_back.py')
-from egfrd_dense_out import *
-imp.load_source('smoldyn_out', 'smoldyn/smoldyn_out.py')
-from smoldyn_out import *
-imp.load_source('smoldyn_dillute_out', 'smoldyn/smoldyn_dillute_out.py')
-from smoldyn_dillute_out import *
-
-imp.load_source('run_all', 'spatiocyte/run_all.py')
-from run_all import Nv
-
 axes([.12,.14,.86,.83])
+path, file = os.path.split(os.path.abspath(__file__))
+path = path+os.sep
 
+filename = path+'spatiocyte/run_all.py'
+imp.load_source('run_all', filename)
+from run_all import Nv
 X = numpy.array(Nv)
 
-plot(Nv, egfrd_dense_data,'bs', label=r'eGFRD ($V=3\ \mathrm{\mu m}^{3}$)')
-loglog(X, 2e-2*X**(5.0/3.0), 'b--')
-annotate(r'$T\propto N^{\mathsf{\frac{5}{3}}}$', xy=(X[2], egfrd_dense_data[2][0]),  xycoords='data', xytext=(-20, 15), textcoords='offset points', color='b', size=14)
+filename = path+'spatiocyte/spatiocyte_out.py'
+if (os.path.isfile(filename)):
+  imp.load_source('spatiocyte_out', filename)
+  from spatiocyte_out import *
+  plot(Nv, spatiocyte_data,'r<', label=r'Spatiocyte ($V=3\ \mathrm{\mu m}^{3}$)')
+  loglog(X, 0.4*X, 'r--')
+  annotate(r'$T\propto N$', xy=(X[5], spatiocyte_data[5][0]),  xycoords='data', xytext=(-15, 12), textcoords='offset points', color='r', size=14)
 
-plot(Nv, egfrd_data,'bo', label=r'eGFRD ($V=3000\ \mathrm{\mu m}^{3}$)')
-loglog(X, 2.05e-4*X**(5.0/3.0), 'b--')
-annotate(r'$T\propto N^{\mathsf{\frac{5}{3}}}$', xy=(X[3], egfrd_data[3][0]),  xycoords='data', xytext=(-15, -25), textcoords='offset points', color='b', size=14)
+filename = path+'egfrd/dense_back.py'
+if (os.path.isfile(filename)):
+  imp.load_source('egfrd_dense_out', filename)
+  from egfrd_dense_out import *
+  plot(Nv, egfrd_dense_data,'bs', label=r'eGFRD ($V=3\ \mathrm{\mu m}^{3}$)')
+  loglog(X, 2e-2*X**(5.0/3.0), 'b--')
+  annotate(r'$T\propto N^{\mathsf{\frac{5}{3}}}$', xy=(X[2], egfrd_dense_data[2][0]),  xycoords='data', xytext=(-20, 15), textcoords='offset points', color='b', size=14)
 
-plot(Nv, smoldyn_data,'g^', label=r'Smoldyn ($V=3\ \mathrm{\mu m}^{3}$)')
-loglog(X, 2e-1*X, 'g--')
-#loglog(X, 8e-2*X**1.15, 'g-')
-annotate(r'$T\propto N$', xy=(X[1], smoldyn_data[1][0]),  xycoords='data', xytext=(-25, -23), textcoords='offset points', color='g', size=14)
-plot(Nv, smoldyn_dillute_data,'gv', label=r'Smoldyn ($V=30\ \mathrm{\mu m}^{3}$)')
+filename = path+'egfrd/egfrd_out.py'
+if (os.path.isfile(filename)):
+  imp.load_source('egfrd_out', filename)
+  from egfrd_out import *
+  plot(Nv, egfrd_data,'bo', label=r'eGFRD ($V=3000\ \mathrm{\mu m}^{3}$)')
+  loglog(X, 2.05e-4*X**(5.0/3.0), 'b--')
+  annotate(r'$T\propto N^{\mathsf{\frac{5}{3}}}$', xy=(X[3], egfrd_data[3][0]),  xycoords='data', xytext=(-15, -25), textcoords='offset points', color='b', size=14)
 
-plot(Nv, spatiocyte_data,'r<', label=r'Spatiocyte ($V=3\ \mathrm{\mu m}^{3}$)')
-loglog(X, 0.4*X, 'r--')
-#loglog(X, 0.24*X**1.05, 'r-')
-annotate(r'$T\propto N$', xy=(X[5], spatiocyte_data[5][0]),  xycoords='data', xytext=(-15, 12), textcoords='offset points', color='r', size=14)
-plot(Nv, spatiocyte_dillute_data,'r>', label=r'Spatiocyte ($V=30\ \mathrm{\mu m}^{3}$)')
+filename = path+'smoldyn/smoldyn_out.py'
+if (os.path.isfile(filename)):
+  imp.load_source('smoldyn_out', filename)
+  from smoldyn_out import *
+  plot(Nv, smoldyn_data,'g^', label=r'Smoldyn ($V=3\ \mathrm{\mu m}^{3}$)')
+  loglog(X, 2e-1*X, 'g--')
+  annotate(r'$T\propto N$', xy=(X[1], smoldyn_data[1][0]),  xycoords='data', xytext=(-25, -23), textcoords='offset points', color='g', size=14)
+
+filename = path+'smoldyn/smoldyn_dillute_out.py'
+if (os.path.isfile(filename)):
+  imp.load_source('smoldyn_dillute_out', filename)
+  from smoldyn_dillute_out import *
+  plot(Nv, smoldyn_dillute_data,'gv', label=r'Smoldyn ($V=30\ \mathrm{\mu m}^{3}$)')
+
+filename = path+'spatiocyte/spatiocyte_dillute_out.py'
+if (os.path.isfile(filename)):
+  imp.load_source('spatiocyte_dillute_out', filename)
+  from spatiocyte_dillute_out import *
+  plot(Nv, spatiocyte_dillute_data,'r>', label=r'Spatiocyte ($V=30\ \mathrm{\mu m}^{3}$)')
 
 
 annotate('B', xy=(0, 1),  xycoords='axes fraction', xytext=(-60,-20), textcoords='offset points', color='k', size=30)
