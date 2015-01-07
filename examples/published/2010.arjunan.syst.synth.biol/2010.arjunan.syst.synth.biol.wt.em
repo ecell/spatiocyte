@@ -25,16 +25,16 @@ System System(/) {
                           [_ Variable:/Surface:MinDEED]
                           [_ Variable:/Surface:MinD];
     LogInterval 0.5; } # s
-#  Process MicroscopyTrackingProcess(track) {
-#    VariableReferenceList [_ Variable:/Surface:MinEE 2]
-#                          [_ Variable:/Surface:MinDEE 3]
-#                          [_ Variable:/Surface:MinDEED 4]
-#                          [_ Variable:/Surface:MinD 1]
-#                          [_ Variable:/Surface:MinEE -2]
-#                          [_ Variable:/Surface:MinDEED -2]
-#                          [_ Variable:/Surface:MinEE -1]
-#                          [_ Variable:/Surface:MinDEED -4]
-#                          [_ Variable:/Surface:MinD -1]; }
+  Process MicroscopyTrackingProcess(track) {
+    VariableReferenceList [_ Variable:/Surface:MinEE 2]
+                          [_ Variable:/Surface:MinDEE 3]
+                          [_ Variable:/Surface:MinDEED 4]
+                          [_ Variable:/Surface:MinD 1]
+                          [_ Variable:/Surface:MinEE -2]
+                          [_ Variable:/Surface:MinDEED -2]
+                          [_ Variable:/Surface:MinEE -1]
+                          [_ Variable:/Surface:MinDEED -4]
+                          [_ Variable:/Surface:MinD -1]; }
   Process HistogramLogProcess(histogram) {
     VariableReferenceList [_ Variable:/Surface:MinEE]
                           [_ Variable:/Surface:MinD]
@@ -55,8 +55,8 @@ System System(/) {
                           [_ Variable:/Surface:MinD]
                           [_ Variable:/Surface:MinDEE]
                           [_ Variable:/Surface:MinDEED];
-    LogInterval 1e-3;
-    LogEnd 1; }
+    LogInterval 1e-2;
+    LogEnd 180; }
   Process MoleculePopulateProcess(populate) {
     VariableReferenceList [_ Variable:/:MinDatp]
                           [_ Variable:/:MinDadp]
