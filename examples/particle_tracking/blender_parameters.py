@@ -30,12 +30,12 @@
 
 import math
 
-start_frame = 6000
+start_frame = 1
 end_frame = 10000
 resolution_x = 960
 resolution_y = 1080
-resolution_percentage = 100
-render_samples = 100
+resolution_percentage = 50
+render_samples = 30
 lamp_shadow_size = 0.1
 lamp_strength = 0.8
 plane_scale = 1
@@ -51,10 +51,10 @@ lamp_rotation = (55.17*math.pi/180.0, -12.99*math.pi/180.0, 91.69*math.pi/180.0)
 plane_disp = [1.0, 1.25, 1.5]
 #plane_disp = [0.5, 0, 0.5]
 #set True if using GPU device to render
-GPU_device = True
+GPU_device = False
 #for GPU device, set tile_x = 512, tile_y = 512
-tile_x = 512
-tile_y = 512
+tile_x = 256
+tile_y = 256
 plane_material_name = 'LightGrey'
 time_material_name = 'Black'
 filename = 'CoordinateLog.csv'

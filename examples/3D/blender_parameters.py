@@ -30,12 +30,12 @@
 
 import math
 
-start_frame = 0
+start_frame = 1
 end_frame = 350
 resolution_x = 1920
 resolution_y = 1080
-resolution_percentage = 20
-render_samples = 10
+resolution_percentage = 50
+render_samples = 20
 lamp_shadow_size = 0.1
 lamp_strength = 3
 plane_scale = 5
