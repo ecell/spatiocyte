@@ -157,7 +157,7 @@ if test "$enable_pyecell" = "yes"; then
 fi
 
 if test "$enable_visualyzer" = "yes"; then
-  PKG_CHECK_MODULES(VISUALIZER, [libpng gtkmm-2.4 gtkglextmm-x11-1.2])
+  PKG_CHECK_MODULES(ENABLE_VISUALIZER, [libpng gtkmm-2.4 gtkglextmm-x11-1.2])
 fi
 
 dnl Checks for header files.
