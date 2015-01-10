@@ -4,7 +4,12 @@ brew doctor
 brew prune
 brew update
 brew tap homebrew/python homebrew/boneyard
-brew install wget automake autoconf libtool pkg-config gsl pygtk gcc boost-python homebrew/science/hdf5 --with-cxx numpy scipy matplotlib libav glibmm
+brew install wget
+wget http://xquartz.macosforge.org/downloads/SL/XQuartz-2.7.7.dmg
+hdiutil mount XQuartz-2.7.7.dmg
+sudo installer -package /Volumes/XQuartz-2.7.7/XQuartz.pkg -target /
+wget http://xquartz.macosforge.org/downloads/SL/XQuartz-2.7.7.dmg
+brew install automake autoconf libtool pkg-config gsl pygtk gcc boost-python homebrew/science/hdf5 --with-cxx numpy scipy matplotlib libav glibmm
 wget https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py
 python ez_setup.py
 rm ez_setup.py
