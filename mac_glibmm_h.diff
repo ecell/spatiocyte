@@ -1,0 +1,14 @@
+--- ori.h	2015-01-10 15:59:08.000000000 +0900
++++ glibmm.h	2015-01-10 15:05:05.000000000 +0900
+@@ -84,9 +84,9 @@
+ 
+ //Include this first because we need it to be the first thing to include <glib.h>, 
+ //so we can do an undef trick to still use deprecated API in the header: 
+-#include <glibmm/thread.h>
++//#include <glibmm/thread.h>
+ 
+-#include <glibmm/threads.h>
++//#include <glibmm/threads.h>
+ 
+ #include <glibmm/arrayhandle.h>
+ #include <glibmm/balancedtree.h>

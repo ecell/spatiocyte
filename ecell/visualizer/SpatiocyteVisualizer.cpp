@@ -45,6 +45,7 @@
 #endif
 
 #include <png.h>
+#include <zlib.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 
