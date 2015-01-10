@@ -32,6 +32,11 @@
 import bpy
 import random
 import math
+import os
+import sys
+
+sys.path.append(os.getcwd())
+
 from blender_parameters import *
 
 def get_node_index(nodes, data_type):

@@ -31,6 +31,9 @@
 
 #include <time.h>
 #include <unistd.h>
+#ifdef __APPLE__
+#include <sys/sysctl.h>
+#endif
 #include <gsl/gsl_randist.h>
 #include <libecs/Model.hpp>
 #include <libecs/System.hpp>
@@ -44,9 +47,18 @@ LIBECS_DM_INIT_STATIC(SpatiocyteStepper, Stepper);
 
 size_t get_total_system_memory()
 {
-    long pages = sysconf(_SC_PHYS_PAGES);
-    long page_size = sysconf(_SC_PAGE_SIZE);
-    return pages * page_size;
+  long mem_size;
+#ifdef __APPLE__
+  size_t len(sizeof(mem_size));
+  int ret(-1);
+  /* Note hw.memsize is in bytes, so no need to multiply by page size. */
+  sysctlbyname("hw.memsize", &mem_size, &len, NULL, 0);
+#else
+  long pages = sysconf(_SC_PHYS_PAGES);
+  long page_size = sysconf(_SC_PAGE_SIZE);
+  mem_size = pages * page_size;
+#endif
+  return mem_size;
 }
 
 void SpatiocyteStepper::initialize()
