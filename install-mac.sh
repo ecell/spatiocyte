@@ -28,6 +28,6 @@ cd spatiocyte
 patch /usr/local/Cellar/glibmm/2.42.0/include/glibmm-2.4/glibmm.h mac_glibmm_h.diff
 brew install gtkglextmm
 ./autogen.sh
-./configure --prefix=$HOME/root --disable-gui
+./configure --prefix=$HOME/root
 make -j4
 make install
