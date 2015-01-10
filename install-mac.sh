@@ -29,5 +29,5 @@ patch /usr/local/Cellar/glibmm/2.42.0/include/glibmm-2.4/glibmm.h mac_glibmm_h.d
 brew install gtkglextmm
 ./autogen.sh
 ./configure --prefix=$HOME/root --disable-gui
-make
+make -j4
 make install
