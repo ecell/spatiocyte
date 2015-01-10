@@ -12,7 +12,7 @@ rm -rf setuptools*.zip
 wget https://raw.github.com/pypa/pip/master/contrib/get-pip.py
 python get-pip.py
 rm get-pip.py
-sudo pip install ply
+pip install ply
 echo "alias blender=/Applications/Blender/blender.app/Contents/MacOS/blender" >> ~/.profile
 echo "alias vlc=/Applications/VLC.app/Contents/MacOS/VLC" >> ~/.profile
 echo "export PATH=$HOME/root/bin:$PATH" >> ~/.profile
