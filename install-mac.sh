@@ -4,20 +4,19 @@ brew doctor
 brew prune
 brew update
 brew tap homebrew/python homebrew/boneyard
-brew install wget
-wget http://xquartz.macosforge.org/downloads/SL/XQuartz-2.7.7.dmg
-hdiutil mount XQuartz-2.7.7.dmg
-sudo installer -package /Volumes/XQuartz-2.7.7/XQuartz.pkg -target /
-wget http://xquartz.macosforge.org/downloads/SL/XQuartz-2.7.7.dmg
-brew install automake autoconf libtool pkg-config gsl pygtk gcc boost-python homebrew/science/hdf5 --with-cxx numpy scipy matplotlib libav glibmm
+brew install Caskroom/cask/xquartz
+#wget http://xquartz.macosforge.org/downloads/SL/XQuartz-2.7.7.dmg
+#hdiutil mount XQuartz-2.7.7.dmg
+#sudo installer -package /Volumes/XQuartz-2.7.7/XQuartz.pkg -target /
+brew install wget automake autoconf libtool pkg-config gsl pygtk gcc boost-python homebrew/science/hdf5 --with-cxx numpy scipy matplotlib libav glibmm
 wget https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py
-python ez_setup.py
+sudo python ez_setup.py
 rm ez_setup.py
-rm -rf setuptools*.zip
+sudo rm -rf setuptools*.zip
 wget https://raw.github.com/pypa/pip/master/contrib/get-pip.py
-python get-pip.py
+sudo python get-pip.py
 rm get-pip.py
-pip install ply
+sudo pip install ply
 echo "alias blender=/Applications/Blender/blender.app/Contents/MacOS/blender" >> ~/.profile
 echo "alias vlc=/Applications/VLC.app/Contents/MacOS/VLC" >> ~/.profile
 echo "export PATH=$HOME/root/bin:$PATH" >> ~/.profile
