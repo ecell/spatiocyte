@@ -32,4 +32,4 @@ brew install homebrew/boneyard/gtkglextmm
 ./configure --prefix=$HOME/root
 make -j4
 make install
-echo "Close and reopen this terminal before proceding"
+echo "Close and reopen this terminal before proceeding"
