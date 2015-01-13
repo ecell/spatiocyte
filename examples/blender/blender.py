@@ -285,8 +285,7 @@ def set_default_camera_view():
             reg.view_perspective = 'CAMERA'
             break
 
-def init_spheres(species_size, species_material_names): 
-  delta = 0.01
+def init_spheres(species_size, species_material_names, species_radius_delta): 
   size = 0.5
   location = (-10,-10,-10)
   spheres = []
@@ -302,7 +301,7 @@ def init_spheres(species_size, species_material_names):
     spheres[i].select = False
     spheres[i].hide_render = True
     spheres[i].active_material = bpy.data.materials[species_material_names[i]]
-    size = size+delta
+    size = size+species_radius_delta
   return spheres
 
 def print_sphere(location, sphere): 
@@ -407,7 +406,8 @@ def set_new_scene(world_vec, species_size):
   set_background(background_strength)
   set_lamp(world_vec, lamp_shadow_size, lamp_strength, lamp_location,
       lamp_rotation)
-  spheres = init_spheres(species_size, species_material_names)
+  spheres = init_spheres(species_size, species_material_names,
+      species_radius_delta)
   print_planes(world_vec, visible_planes, plane_scale, plane_disp,
       plane_material_name)
   set_camera(world_vec, camera_location, camera_rotation)

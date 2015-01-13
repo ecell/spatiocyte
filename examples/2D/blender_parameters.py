@@ -40,6 +40,7 @@ lamp_shadow_size = 0.1
 lamp_strength = 1
 plane_scale = 1
 background_strength = 0.6
+species_radius_delta = 0.01
 visible_planes = [1, 1, 1, 1, 1, 1]
 camera_rotation = (140.79*math.pi/180.0,math.pi,90*math.pi/180.0)
 camera_location = (68.26, 58.1, 140.81)
