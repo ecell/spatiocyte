@@ -1,4 +1,7 @@
-Spatiocyte runs on Ubuntu Linux and Mac OS X Yosemite systems. On a fresh Ubuntu or a Mac OS X system, Spatiocyte requires several additional packages to run. To install these packages and Spatiocyte, open a terminal and execute the following instructions.
+Spatiocyte runs on Ubuntu Linux and Mac OS X Yosemite systems. On a fresh
+Ubuntu or a Mac OS X system, Spatiocyte requires several additional packages to
+run. To install these packages and Spatiocyte, open a terminal and execute the
+following instructions.
 
 Ubuntu Linux:
 $ ./install-spatiocyte-ubuntu.sh 
@@ -6,4 +9,11 @@ $ ./install-spatiocyte-ubuntu.sh
 Mac OS X:
 $ ./install-spatiocyte-mac.sh 
 
-Enter your password when requested since some packages require the administrator privilege to install. If you have any issues during install, post the error messages to the Spatiocyte Users forum. On Mac, the installation script will take a longer time to finish executing because more packages need to be downloaded. We can use Blender to render simulation snapshots and VLC to view movies of the snapshots. Since the installation script does not install them on Mac, you can download and install them yourself from http://www.blender.org/ and http://www.videolan.org/.
+Enter your password when requested since some packages require the administrator
+privilege to install. If you have any issues during install, post the error
+messages to the Spatiocyte Users forum. On Mac, the installation script will
+take a longer time to finish executing because more packages need to be
+downloaded. We can use Blender to render simulation snapshots and VLC to view
+movies of the snapshots. Since the installation script does not install them on
+Mac, you can download and install them yourself from http://www.blender.org/
+and http://www.videolan.org/.
