@@ -158,6 +158,9 @@ public:
       theVacantIdx = theStride*theVacantID;
       theNullTag.origin = theNullCoord;
       theNullTag.id = theNullID;
+      theNullTag.rotIndex = 0;
+      theNullTag.multiIdx = 0;
+      theNullTag.boundCnt = 0;
       cout.setLevel(theStepper->getDebugLevel());
     }
   void setDiffusionInfluencedReaction(DiffusionInfluencedReactionProcess*
@@ -550,6 +553,7 @@ public:
                   break;
                 }
             }
+          //Is GFP tagged:
           if(isTagged)
             {
               for(unsigned i(0); i != theMoleculeSize; ++i)
@@ -1686,16 +1690,15 @@ public:
     }
   void softAddMolecule(Voxel* aVoxel)
     {
-      Tag aTag = {0, 0, 0, 0, 0};
       ++theMoleculeSize; 
       if(theMoleculeSize > theMolecules.size())
         {
           theMolecules.resize(theMoleculeSize);
-          theTags.push_back(aTag);
+          theTags.push_back(theNullTag);
         }
       else
         {
-          theTags[theMoleculeSize-1] = aTag;
+          theTags[theMoleculeSize-1] = theNullTag;
         }
       theMolecules[theMoleculeSize-1] = aVoxel;
       theVariable->setValue(theMoleculeSize);
@@ -1707,17 +1710,16 @@ public:
     }
   void addMoleculeDirect(Voxel* aVoxel)
     {
-      Tag aTag = {0, 0, 0, 0, 0};
       aVoxel->idx = theMoleculeSize+theStride*theID;
       ++theMoleculeSize; 
       if(theMoleculeSize > theMolecules.size())
         {
           theMolecules.resize(theMoleculeSize);
-          theTags.push_back(aTag);
+          theTags.push_back(theNullTag);
         }
       else
         {
-          theTags[theMoleculeSize-1] = aTag;
+          theTags[theMoleculeSize-1] = theNullTag;
         }
       theMolecules[theMoleculeSize-1] = aVoxel;
       theVariable->setValue(theMoleculeSize);
@@ -1756,22 +1758,27 @@ public:
     }
   void setIsTagged()
     {
+      //Is GFP tagged:
       isTagged = true;
     }
   void addMoleculeTagged(Voxel* aVoxel, Tag& aTag)
     {
       addMoleculeTagless(aVoxel);
+      //Is GFP tagged:
       if(isTagged)
         {
-          //If it is theNullTag:
+          //If it is theNullTag, the molecule of this species is first time
+          //being tagged:
           if(aTag.origin == theNullCoord)
             {
-              Tag aNewTag = {getCoord(theMoleculeSize-1), theNullID, 0};
-              theTags[theMoleculeSize-1] = aNewTag;
+              theTags[theMoleculeSize-1].origin = getCoord(theMoleculeSize-1);
             }
+          //Previous tag exists in another species and being transferred to
+          //the molecule of this species:
           else
             {
-              theTags[theMoleculeSize-1] = aTag;
+              theTags[theMoleculeSize-1].origin = aTag.origin;
+              theTags[theMoleculeSize-1].id = aTag.id;
             }
         }
     }

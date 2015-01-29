@@ -783,6 +783,7 @@ void DiffusionInfluencedReactionProcess::setFreeSequenceReactMethod()
           reactM = &DiffusionInfluencedReactionProcess::reactVarC;
         }
     }
+  //A + B -> C + D
   else if(D)
     {
       if(A == C && B == D)

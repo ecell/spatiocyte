@@ -14,6 +14,7 @@ from matplotlib.pylab import *
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 rc('text', usetex=True)
 matplotlib.rcParams['text.latex.preamble'].append(r'\usepackage{amsmath}')
+matplotlib.rcParams['text.latex.preamble'].append(r'\usepackage{upgreek}')
 matplotlib.rcParams['text.latex.preamble'].append(r'\usepackage[helvet]{sfmath}')
 
 labelFontSize = 15
