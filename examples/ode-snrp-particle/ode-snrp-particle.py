@@ -1,5 +1,5 @@
 # This model performs multi-algorithm simulation using Spatiocyte next reaction,
-# mass-action and lattice-based particle reaction-diffusion algorithms.
+# mass-action and lattice-based particle reaction-diffusion methods.
 
 # The following reactions are performed simultaneously:
 # With mass action ODE solver:
