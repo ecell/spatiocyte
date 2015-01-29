@@ -2632,6 +2632,7 @@ public:
       if(!aTag.boundCnt)
         {
           Voxel* aVoxel(theMolecules[index]);
+          Tag& aTag(theTags[index]);
           if(isOnMultiscale)
             {
               theDeoligomerizedProduct->addMoleculeInMulti(aVoxel,
@@ -2641,7 +2642,7 @@ public:
           else
             {
               removeMoleculeDirect(index);
-              theDeoligomerizedProduct->addMolecule(aVoxel);
+              theDeoligomerizedProduct->addMolecule(aVoxel, aTag);
             }
         }
       else
