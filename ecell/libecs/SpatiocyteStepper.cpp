@@ -1867,9 +1867,9 @@ double SpatiocyteStepper::getCuboidSpecArea(Comp* aComp)
 
 Point SpatiocyteStepper::coord2point(unsigned aCoord)
 {
-  unsigned aGlobalCol;
-  unsigned aGlobalLayer;
   unsigned aGlobalRow;
+  unsigned aGlobalLayer;
+  unsigned aGlobalCol;
   coord2global(aCoord, aGlobalRow, aGlobalLayer, aGlobalCol);
   //the center point of a voxel 
   Point aPoint;
@@ -1888,6 +1888,33 @@ Point SpatiocyteStepper::coord2point(unsigned aCoord)
       break;
     }
   return aPoint;
+};
+
+void SpatiocyteStepper::coord2origin(const unsigned aCoord, Origin& anOrigin)
+{
+  unsigned aGlobalRow;
+  unsigned aGlobalLayer;
+  unsigned aGlobalCol;
+  coord2global(aCoord, aGlobalRow, aGlobalLayer, aGlobalCol);
+  anOrigin.row = aGlobalRow;
+  anOrigin.layer = aGlobalLayer;
+  anOrigin.col = aGlobalCol;
+  //the center point of a voxel 
+  Point& aPoint(anOrigin.point);
+  switch(LatticeType)
+    {
+    case HCP_LATTICE: 
+      aPoint.y = (aGlobalCol%2)*theHCPl+theHCPy*aGlobalLayer;
+      aPoint.z = aGlobalRow*2*theNormalizedVoxelRadius+
+        ((aGlobalLayer+aGlobalCol)%2)*theNormalizedVoxelRadius;
+      aPoint.x = aGlobalCol*theHCPx;
+      break;
+    case CUBIC_LATTICE:
+      aPoint.y = aGlobalLayer*2*theNormalizedVoxelRadius;
+      aPoint.z = aGlobalRow*2*theNormalizedVoxelRadius;
+      aPoint.x = aGlobalCol*2*theNormalizedVoxelRadius;
+      break;
+    }
 };
 
 double SpatiocyteStepper::getRowLength()

@@ -185,16 +185,6 @@ struct Comp
   std::vector<unsigned int> adjoinCount;
 };
 
-//id by default is 0, it is only has non-zero value when a GFP is explicitly
-//tagged:
-struct Tag
-{
-  unsigned origin;
-  unsigned id;
-  unsigned rotIndex; //rotation index
-  unsigned multiIdx;
-  unsigned boundCnt;
-};
 
 struct Origin
 {
@@ -202,6 +192,18 @@ struct Origin
   long row;
   long layer;
   long col;
+};
+
+//id by default is 0, it is only has non-zero value when a GFP is explicitly
+//tagged:
+struct Tag
+{
+  Origin origin;
+  unsigned speciesID;
+  unsigned molID;
+  unsigned rotIndex; //rotation index
+  unsigned multiIdx;
+  unsigned boundCnt;
 };
 
 /*struct Stacks 

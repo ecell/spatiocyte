@@ -156,8 +156,7 @@ public:
           setVacantSpecies(theComp->vacantSpecies);
         }
       theVacantIdx = theStride*theVacantID;
-      theNullTag.origin = theNullCoord;
-      theNullTag.id = theNullID;
+      theNullTag.speciesID = theNullID;
       theNullTag.rotIndex = 0;
       theNullTag.multiIdx = 0;
       theNullTag.boundCnt = 0;
@@ -442,9 +441,9 @@ public:
             {
               aCurrentPoint = theStepper->getPeriodicPoint(getCoord(i),
                                                            theDimension,
-                                                   &theMoleculeOrigins[i]);
+                                                   &theTags[i].origin);
             }
-          double aDistance(distance(theMoleculeOrigins[i].point,
+          double aDistance(distance(theTags[i].origin.point,
                                     aCurrentPoint));
           aDisplacement += aDistance;
         }
@@ -461,9 +460,9 @@ public:
         {
           aCurrentPoint = theStepper->getPeriodicPoint(getCoord(index),
                                                        theDimension,
-                                                   &theMoleculeOrigins[index]);
+                                                   &theTags[index].origin);
         }
-      const double nDisplacement(distance(theMoleculeOrigins[index].point,
+      const double nDisplacement(distance(theTags[index].origin.point,
                                           aCurrentPoint)*
                                  theStepper->getVoxelRadius()*2);
       return nDisplacement*nDisplacement;
@@ -483,7 +482,7 @@ public:
     }
   Point getPeriodicPoint(const unsigned index)
     {
-      Origin& anOrigin(theMoleculeOrigins[index]);
+      Origin& anOrigin(theTags[index].origin);
       Point aPoint(getPoint(index));
       aPoint.x += anOrigin.layer*(theComp->lengthX+nDiffuseRadius);
       aPoint.y += anOrigin.row*lipRows*nDiffuseRadius*sqrt(3);
@@ -558,7 +557,7 @@ public:
             {
               for(unsigned i(0); i != theMoleculeSize; ++i)
                 {
-                  theTags[i].origin = getCoord(i);
+                  theStepper->coord2origin(getCoord(i), theTags[i].origin);
                 }
             }
         }
@@ -1323,7 +1322,7 @@ public:
           const unsigned tarIndex(theRng.Integer(theDiffuseSize)); 
           const unsigned row(srcCoord/lipCols);
           int tarCoord(srcCoord+theAdjoinOffsets[row%2][tarIndex]);
-          Origin anOrigin(theMoleculeOrigins[i]);
+          Origin anOrigin(theTags[i].origin);
           if(!isInLatticeOrigins(tarCoord, theRowOffsets[tarIndex]+row,
                                  anOrigin))
             {
@@ -1339,7 +1338,7 @@ public:
                   source->idx = target->idx;
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
-                  theMoleculeOrigins[i] = anOrigin;
+                  theTags[i].origin = anOrigin;
                 }
             }
         }
@@ -1381,7 +1380,7 @@ public:
           const unsigned tarIndex(theRng.Integer(theDiffuseSize)); 
           const unsigned row(srcCoord/lipCols);
           int tarCoord(srcCoord+theAdjoinOffsets[row%2][tarIndex]);
-          Origin anOrigin(theMoleculeOrigins[i]);
+          Origin anOrigin(theTags[i].origin);
           if(!isInLatticeOrigins(tarCoord, theRowOffsets[tarIndex]+row,
                                  anOrigin))
             {
@@ -1399,7 +1398,7 @@ public:
                   source->idx = target->idx;
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
-                  theMoleculeOrigins[i] = anOrigin;
+                  theTags[i].origin = anOrigin;
                 }
             }
         }
@@ -1622,11 +1621,11 @@ public:
     }
   void setTagID(unsigned anIndex, unsigned anID)
     {
-      theTags[anIndex].id = anID;
+      theTags[anIndex].speciesID = anID;
     }
   unsigned getTagID(unsigned anIndex)
     {
-      return theTags[anIndex].id;
+      return theTags[anIndex].speciesID;
     }
   Tag& getTag(const unsigned anIndex)
     {
@@ -1769,16 +1768,18 @@ public:
         {
           //If it is theNullTag, the molecule of this species is first time
           //being tagged:
-          if(aTag.origin == theNullCoord)
+          if(aTag.speciesID == theNullID)
             {
-              theTags[theMoleculeSize-1].origin = getCoord(theMoleculeSize-1);
+              theStepper->coord2origin(getCoord(theMoleculeSize-1),
+                                       theTags[theMoleculeSize-1].origin);
             }
           //Previous tag exists in another species and being transferred to
           //the molecule of this species:
           else
             {
               theTags[theMoleculeSize-1].origin = aTag.origin;
-              theTags[theMoleculeSize-1].id = aTag.id;
+              theTags[theMoleculeSize-1].speciesID = aTag.speciesID;
+              theTags[theMoleculeSize-1].molID = aTag.molID;
             }
         }
     }
@@ -2765,7 +2766,7 @@ public:
     {
       for(unsigned i(0); i < theMoleculeSize; ++i)
         {
-          Origin& anOrigin(theMoleculeOrigins[i]);
+          Origin& anOrigin(theTags[i].origin);
           anOrigin.point = getPoint(i);
           anOrigin.row = 0;
           anOrigin.layer = 0;
@@ -2779,7 +2780,6 @@ public:
   void initMoleculeOrigins()
     {
       isOrigins = true;
-      theMoleculeOrigins.resize(theMoleculeSize);
       resetMoleculeOrigins();
     }
   void removeBoundaryMolecules()
@@ -2797,7 +2797,7 @@ public:
     {
       for(unsigned i(0); i < theMoleculeSize; ++i)
         {
-          Origin anOrigin(theMoleculeOrigins[i]);
+          Origin anOrigin(theTags[i].origin);
           unsigned periodicCoord(theStepper->getPeriodicCoord(
                                                 getCoord(i),
                                                 theDimension, &anOrigin));
@@ -2806,7 +2806,7 @@ public:
               theMolecules[i]->idx = theVacantID*theStride;
               theMolecules[i] = &theLattice[periodicCoord];
               theMolecules[i]->idx = i+theID*theStride;
-              theMoleculeOrigins[i] = anOrigin;
+              theTags[i].origin = anOrigin;
             }
         }
     }
@@ -4114,7 +4114,6 @@ private:
   std::vector<SpatiocyteProcess*> theInterruptedProcessesAddMolecule;
   std::vector<SpatiocyteProcess*> theInterruptedProcessesRemoveMolecule;
   std::vector<SpatiocyteProcess*> theInterruptedProcessesEndDiffusion;
-  std::vector<Origin> theMoleculeOrigins;
   std::vector<Voxel>& theLattice;
   std::vector<std::vector<unsigned> > theIntersectLipids;
   std::vector<unsigned> theBoundCnts;

@@ -280,22 +280,22 @@ void LifetimeLogProcess::logTrackedDimer(Species* aSpecies,
   const unsigned anIndex(aSpecies->getIndex(aMolecule));
   Tag& aTag(aSpecies->getTag(anIndex));
   logTag(aSpecies, aTag, anIndex);
-  logTag(aSpecies, theDimerizingMonomerTags[aTag.id], anIndex);
+  logTag(aSpecies, theDimerizingMonomerTags[aTag.molID], anIndex);
 }
 
 void LifetimeLogProcess::logTag(Species* aSpecies, Tag& aTag,
                                 const unsigned anIndex)
 {
   const Point aPoint(aSpecies->getPoint(anIndex));
-  const Point anOrigin(aSpecies->coord2point(aTag.origin));
-  availableTagIDs.push_back(aTag.id);
+  const Point& anOrigin(aTag.origin.point);
+  availableTagIDs.push_back(aTag.molID);
   double aTime(getStepper()->getCurrentTime());
-  double duration(aTime-theTagTimes[aTag.id]);
+  double duration(aTime-theTagTimes[aTag.molID]);
   totalDuration += duration;
   ++logCnt;
   theLogFile << std::setprecision(15) << duration << "," <<
     distance(aPoint, anOrigin)*2*theSpatiocyteStepper->getVoxelRadius() << ","
-    << theTagTimes[aTag.id] << "," << aTime << "," << konCnt << "," << 
+    << theTagTimes[aTag.molID] << "," << aTime << "," << konCnt << "," << 
     konCnt/aTime << "," << 1/(totalDuration/logCnt) << std::endl;
   if(Verbose)
     {
@@ -347,7 +347,7 @@ void LifetimeLogProcess::initDedimerizingMonomerTag(ReactionProcess* aProcess)
   const unsigned indexC(C->getIndex(molC));
   const unsigned indexD(D->getIndex(molD));
   Tag& aTag(D->getTag(indexD));
-  aTag = theDimerizingMonomerTags[C->getTag(indexC).id];
+  aTag = theDimerizingMonomerTags[C->getTag(indexC).molID];
 }
 
 void LifetimeLogProcess::initTrackedDimer(Species* aSpecies,
@@ -358,7 +358,7 @@ void LifetimeLogProcess::initTrackedDimer(Species* aSpecies,
   Tag tagB(tagA);
   addTagTime(tagB);
   theDimerizingMonomerTags.resize(theTagTimes.size());
-  theDimerizingMonomerTags[tagA.id] = tagB;
+  theDimerizingMonomerTags[tagA.molID] = tagB;
   ++konCnt;
 }
 
@@ -366,7 +366,7 @@ void LifetimeLogProcess::initTrackedMolecule(Species* aSpecies,
                                              const unsigned anIndex)
 {
   Tag& aTag(aSpecies->getTag(anIndex));
-  aTag.origin = aSpecies->getCoord(anIndex);
+  theSpatiocyteStepper->coord2origin(aSpecies->getCoord(anIndex), aTag.origin);
   addTagTime(aTag);
   ++konCnt;
 }
@@ -376,13 +376,13 @@ void LifetimeLogProcess::addTagTime(Tag& aTag)
 {
   if(availableTagIDs.size())
     {
-      aTag.id = availableTagIDs.back();
+      aTag.molID = availableTagIDs.back();
       theTagTimes[availableTagIDs.back()] = getStepper()->getCurrentTime();
       availableTagIDs.pop_back();
     }
   else
     {
-      aTag.id = theTagTimes.size();
+      aTag.molID = theTagTimes.size();
       theTagTimes.push_back(getStepper()->getCurrentTime());
     }
 }
@@ -399,7 +399,7 @@ void LifetimeLogProcess::saveDimerizingMonomerTag(ReactionProcess* aProcess)
   const unsigned indexA(A->getIndex(molA));
   const unsigned indexB(B->getIndex(molB));
   theDimerizingMonomerTags.resize(theTagTimes.size());
-  theDimerizingMonomerTags[A->getTag(indexA).id] = B->getTag(indexB);
+  theDimerizingMonomerTags[A->getTag(indexA).molID] = B->getTag(indexB);
 }
 
 
