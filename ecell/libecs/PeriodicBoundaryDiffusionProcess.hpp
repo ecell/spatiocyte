@@ -58,8 +58,13 @@ public:
   void initializeFourth()
     {
       DiffusionProcess::initializeFourth();
-      theDiffusionSpecies->initMoleculeOrigins();
-      theDiffusionSpecies->unsetIsOrigins();
+      //For PeriodicBoundaryDiffusionProcess, make sure Origins = 0 (default).
+      //isOrigins of SpatiocyteSpecies should only be true when using
+      //CompartmentProcess to set up compartment, and in that case use
+      //DifFusionProcess with Origins = 1. PeriodicBoundaryDiffusionProcess
+      //should not be used with CompartmentProcess. CompartmentProcess
+      //is the newer process with built in periodic boundary.
+      theDiffusionSpecies->resetMoleculeOrigins();
     }
   virtual void fire()
     {

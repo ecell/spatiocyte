@@ -134,13 +134,14 @@ void TagProcess::initializeSecond()
 
 void TagProcess::initializeFourth()
 {
+  unsigned molID(0);
   for(unsigned i(0); i != theTaggedSpeciesList.size(); ++i)
     { 
       Species* aSpecies(theTaggedSpeciesList[i]);
       unsigned anAvailableSize(0);
       for(unsigned j(0); j != aSpecies->size(); ++j)
         {
-          if(aSpecies->getTagID(j) == theNullID)
+          if(aSpecies->getTag(j).speciesID == theNullID)
             {
               ++anAvailableSize;
               if(anAvailableSize >= theTaggedSizes[i])
@@ -166,14 +167,17 @@ void TagProcess::initializeFourth()
       for(unsigned j(0); j != theTaggedSizes[i]; ++j)
         {
           unsigned anIndex(aSpecies->getRandomIndex());
-          while(aSpecies->getTagID(anIndex) != theNullID)
+          while(aSpecies->getTag(anIndex).speciesID != theNullID)
             {
               anIndex = aSpecies->getRandomIndex();
             }
-          aSpecies->setTagID(anIndex, theTagSpecies->getID());
+          Tag &aTag(aSpecies->getTag(anIndex));
+          aTag.speciesID = theTagSpecies->getID();
+          aTag.molID = molID;
+          molID++;
         }
     }
-  theTagSpecies->updateMolecules();
+  theTagSpecies->allocateTags(molID);
   theTagSpecies->setIsPopulated();
 }
 

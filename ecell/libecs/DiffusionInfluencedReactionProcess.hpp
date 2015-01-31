@@ -108,7 +108,7 @@ protected:
   void throwException(String);
   void addMoleculeF();
   void removeMolecule(Species*, Voxel*, const unsigned) const;
-  void removeMolecule(Species*, Voxel*, const unsigned, Species*) const;
+  void removeMolecule(Species*, Voxel*, unsigned, Species*) const;
   Voxel* getPopulatableVoxel(Species*, Voxel*, Voxel*);
   Voxel* getPopulatableVoxel(Species*, Voxel*, Voxel*, Voxel*);
   bool reactNone(Voxel*, Voxel*, const unsigned, const unsigned) {}

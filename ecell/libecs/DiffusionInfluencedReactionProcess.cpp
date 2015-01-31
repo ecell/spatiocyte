@@ -100,20 +100,15 @@ void DiffusionInfluencedReactionProcess::removeMolecule(Species* aSpecies,
 
 void DiffusionInfluencedReactionProcess::removeMolecule(Species* substrate, 
                                                         Voxel* mol,
-                                                        const unsigned index,
+                                                        unsigned index,
                                                         Species* product) const
 {
-  if(A != B)
+  if(A == B)
     { 
-      product->addMolecule(mol, substrate->getTag(index));
-      substrate->softRemoveMolecule(index);
+      index = substrate->getIndex(mol);
     }
-  else
-    {
-      Tag& aTag(substrate->getTag(mol));
-      substrate->softRemoveMolecule(mol);
-      product->addMolecule(mol, aTag);
-    }
+  product->addMolecule(mol, substrate->getTag(index));
+  substrate->softRemoveMolecule(index);
 }
 
 Voxel* DiffusionInfluencedReactionProcess::getPopulatableVoxel(

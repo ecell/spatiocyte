@@ -104,6 +104,8 @@ void IteratingLogProcess::initializeLastOnce()
       aDataSize = 0;
       for(unsigned i(0); i != theProcessSpecies.size(); ++i)
         {
+          //For GFP species, whose molecules are always not up to date:
+          theProcessSpecies[i]->updateMolecules();
           aDataSize += theProcessSpecies[i]->size();
         }
     }
@@ -192,7 +194,7 @@ void IteratingLogProcess::doPreLog()
   for(unsigned i(0); i != theProcessSpecies.size(); ++i)
     {
       Species* aSpecies(theProcessSpecies[i]);
-      if(FrameDisplacement)
+      if(FrameDisplacement || Diffusion || SquaredDisplacement)
         {
           aSpecies->resetMoleculeOrigins();
         }
@@ -314,6 +316,8 @@ void IteratingLogProcess::logValues()
         }
       else if(FrameDisplacement)
         {
+          //For GFP species, whose molecules are always not up to date:
+          aSpecies->updateMolecules();
           for(unsigned j(0); j != aSpecies->size(); ++j)
             {
               theLogValues[timePointCnt][i*aSpecies->size()+j] += 

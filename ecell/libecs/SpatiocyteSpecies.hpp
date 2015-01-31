@@ -102,7 +102,7 @@ public:
     isMultiscaleComp(false),
     isOffLattice(false),
     isOnMultiscale(false),
-    isOrigins(true),
+    isOrigins(false),
     isPeriodic(false),
     isPolymer(false),
     isReactiveVacant(false),
@@ -423,32 +423,9 @@ public:
     {
       return theID;
     }
-  double getDisplacement()
-    {
-      if(!theMoleculeSize)
-        {
-          return 0;
-        }
-      double aDisplacement(0);
-      for(unsigned i(0); i < theMoleculeSize; ++i)
-        {
-          Point aCurrentPoint;
-          if(isOrigins)
-            {
-              aCurrentPoint = getPeriodicPoint(i);
-            }
-          else
-            {
-              aCurrentPoint = theStepper->getPeriodicPoint(getCoord(i),
-                                                           theDimension,
-                                                   &theTags[i].origin);
-            }
-          double aDistance(distance(theTags[i].origin.point,
-                                    aCurrentPoint));
-          aDisplacement += aDistance;
-        }
-      return aDisplacement/theMoleculeSize*theStepper->getVoxelRadius()*2;
-    }
+  //Call updateMolecules() before calling this function if
+  //this species is a Tag (GFP) species, whose tag and molecules
+  //are always not up to date.
   double getSquaredDisplacement(const unsigned index)
     {
       Point aCurrentPoint;
@@ -469,6 +446,8 @@ public:
     }
   double getMeanSquaredDisplacement()
     {
+      //For GFP species, whose molecules are not always up to date:
+      updateMolecules();
       if(!theMoleculeSize)
         {
           return 0;
@@ -1539,29 +1518,71 @@ public:
           updateVacantCoordSize();
         }
     }
+  void allocateTags(const unsigned size)
+    {
+      theMoleculeSize = size;
+      theMolecules.resize(size);
+      theTags.resize(size);
+      updateTagMolecules();
+    }
   void updateTagMolecules()
     {
-      theMoleculeSize = 0;
       for(unsigned i(0); i != theTaggedSpeciesList.size(); ++i)
         {
           Species* aSpecies(theTaggedSpeciesList[i]);
           for(unsigned j(0); j != aSpecies->size(); ++j)
             {
-              if(aSpecies->getTagID(j) == theID)
+              Tag& aTag(aSpecies->getTag(j));
+              if(aTag.speciesID == theID)
                 {
-                  Voxel* aVoxel(aSpecies->getMolecule(j));
-                  ++theMoleculeSize;
-                  if(theMoleculeSize > theMolecules.size())
-                    {
-                      theMolecules.push_back(aVoxel);
-                    }
-                  else
-                    {
-                      theMolecules[theMoleculeSize-1] = aVoxel;
-                    }
+                  theMolecules[aTag.molID] = aSpecies->getMolecule(j);
+                  theTags[aTag.molID] = aTag;
                 }
             }
         }
+      /* Debug
+      unsigned cnt(0);
+      unsigned size(0);
+      for(unsigned i(0); i != theMoleculeSize; ++i)
+        {
+          theMolecules[i] = NULL;
+        }
+      for(unsigned i(0); i != theTaggedSpeciesList.size(); ++i)
+        {
+          Species* aSpecies(theTaggedSpeciesList[i]);
+          size += aSpecies->size();
+          for(unsigned j(0); j != aSpecies->size(); ++j)
+            {
+              Tag& aTag(aSpecies->getTag(j));
+              if(aTag.speciesID == theID)
+                {
+                  ++cnt;
+                  if(theMolecules[aTag.molID] != NULL)
+                    {
+                      std::cout << "not null" << std::endl;
+                    }
+                  theMolecules[aTag.molID] = aSpecies->getMolecule(j);
+                  theTags[aTag.molID] = aTag;
+                }
+              else
+                {
+                  std::cout << "not tagged:" << aSpecies->getIDString() << std::endl;
+                }
+            }
+        }
+      for(unsigned i(0); i != theMoleculeSize; ++i)
+        {
+          if(theMolecules[i] == NULL)
+            {
+              std::cout << "nul mol" << std::endl;
+            }
+        }
+      if(cnt != theMoleculeSize || size != cnt)
+        {
+          std::cout << getIDString() << std::endl;
+          std::cout << "cnt:" << cnt << " msize:" << theMoleculeSize << " size:" << size << std::endl;
+        }
+        */
     }
   void updateMoleculeList()
     {
@@ -1619,21 +1640,16 @@ public:
         }
       theVariable->setValue(theMoleculeSize);
     }
-  void setTagID(unsigned anIndex, unsigned anID)
-    {
-      theTags[anIndex].speciesID = anID;
-    }
-  unsigned getTagID(unsigned anIndex)
-    {
-      return theTags[anIndex].speciesID;
-    }
   Tag& getTag(const unsigned anIndex)
     {
+      return theTags[anIndex];
+      /*
       if(theTags.size())
         {
           return theTags[anIndex];
         }
       return theNullTag;
+      */
     }
   Tag& getTag(Voxel* aVoxel)
     {
@@ -1686,21 +1702,6 @@ public:
     {
       addMoleculeTagless(aVoxel);
       theTags[theMoleculeSize-1].multiIdx = multiIdx;
-    }
-  void softAddMolecule(Voxel* aVoxel)
-    {
-      ++theMoleculeSize; 
-      if(theMoleculeSize > theMolecules.size())
-        {
-          theMolecules.resize(theMoleculeSize);
-          theTags.push_back(theNullTag);
-        }
-      else
-        {
-          theTags[theMoleculeSize-1] = theNullTag;
-        }
-      theMolecules[theMoleculeSize-1] = aVoxel;
-      theVariable->setValue(theMoleculeSize);
     }
   void softReplaceMolecule(const unsigned index, Voxel* aVoxel)
     {
@@ -1766,14 +1767,14 @@ public:
       //Is GFP tagged:
       if(isTagged)
         {
-          //If it is theNullTag, the molecule of this species is first time
-          //being tagged:
+          //If it is theNullTag, the molecule of this species is being tagged
+          //for the first time:
           if(aTag.speciesID == theNullID)
             {
               theStepper->coord2origin(getCoord(theMoleculeSize-1),
                                        theTags[theMoleculeSize-1].origin);
             }
-          //Previous tag exists in another species and being transferred to
+          //Previous tag exists in another species and is being transferred to
           //the molecule of this species:
           else
             {
@@ -2633,18 +2634,16 @@ public:
       if(!aTag.boundCnt)
         {
           Voxel* aVoxel(theMolecules[index]);
-          Tag& aTag(theTags[index]);
           if(isOnMultiscale)
             {
               theDeoligomerizedProduct->addMoleculeInMulti(aVoxel,
                                                            aTag.multiIdx);
-              removeMoleculeDirect(index);
             }
           else
             {
-              removeMoleculeDirect(index);
               theDeoligomerizedProduct->addMolecule(aVoxel, aTag);
             }
+          removeMoleculeDirect(index);
         }
       else
         {
@@ -2758,12 +2757,18 @@ public:
     {
       return theInitCoordSize;
     }
-  void unsetIsOrigins()
-    {
-      isOrigins = false;
-    }
   void resetMoleculeOrigins()
     {
+      //For GFP species, whose molecules are not always up to date:
+      if(isTag)
+        {
+          for(unsigned i(0); i != theTaggedSpeciesList.size(); ++i)
+            {
+              theTaggedSpeciesList[i]->resetMoleculeOrigins();
+            }
+          updateMolecules();
+          return;
+        }
       for(unsigned i(0); i < theMoleculeSize; ++i)
         {
           Origin& anOrigin(theTags[i].origin);
