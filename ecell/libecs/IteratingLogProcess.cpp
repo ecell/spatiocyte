@@ -329,7 +329,7 @@ void IteratingLogProcess::logValues()
         {
           double aCoeff(aSpecies->getDimension()*2);
           theLogValues[timePointCnt][i] += 
-            aSpecies->getMeanSquaredDisplacement()/(aCoeff*theTime);
+            aSpecies->getMeanSquaredDisplacement()/(aCoeff*(theTime-LogStart));
         }
       //By default log the values:
       else

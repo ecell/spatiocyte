@@ -75,6 +75,7 @@ private:
   void saveDimerizingMonomerTag(ReactionProcess*);
   void initDedimerizingMonomerTag(ReactionProcess*);
   void setTrackedDimerSpecies();
+  void resetAll();
   void logTag(Species*, Tag&, const unsigned);
   void logFile(const double, const double, const double, const double, const
                double);
