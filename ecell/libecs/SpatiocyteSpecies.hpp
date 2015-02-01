@@ -536,7 +536,7 @@ public:
             {
               for(unsigned i(0); i != theMoleculeSize; ++i)
                 {
-                  theStepper->coord2origin(getCoord(i), theTags[i].origin);
+                  resetTagOrigin(i);
                 }
             }
         }
@@ -1771,8 +1771,7 @@ public:
           //for the first time:
           if(aTag.speciesID == theNullID)
             {
-              theStepper->coord2origin(getCoord(theMoleculeSize-1),
-                                       theTags[theMoleculeSize-1].origin);
+              resetTagOrigin(theMoleculeSize-1);
             }
           //Previous tag exists in another species and is being transferred to
           //the molecule of this species:
@@ -2771,12 +2770,16 @@ public:
         }
       for(unsigned i(0); i < theMoleculeSize; ++i)
         {
-          Origin& anOrigin(theTags[i].origin);
-          anOrigin.point = getPoint(i);
-          anOrigin.row = 0;
-          anOrigin.layer = 0;
-          anOrigin.col = 0;
+          resetTagOrigin(i);
         }
+    }
+  void resetTagOrigin(const unsigned index)
+    {
+      Origin& anOrigin(theTags[index].origin);
+      anOrigin.point = getPoint(index);
+      anOrigin.row = 0;
+      anOrigin.layer = 0;
+      anOrigin.col = 0;
     }
   void setInitCoordSize(const unsigned& val)
     {

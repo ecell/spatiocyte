@@ -174,7 +174,14 @@ void LifetimeLogProcess::initializeFourth()
 
 void LifetimeLogProcess::initializeFifth()
 {
-  theInterval = LogEnd;
+  if(LogInterval > 0)
+    {
+      theInterval = LogInterval;
+    }
+  else
+    {
+      theInterval = LogEnd;
+    }
   if(!LogStart)
     {
       LogStart = theInterval;
@@ -209,6 +216,7 @@ void LifetimeLogProcess::fire()
           theInterval = libecs::INF;
         }
     }
+  logFile(theTime, 0, 0, 0, getAverageDiffusion());
   theTime += theInterval;
   thePriorityQueue->moveTop();
 }
@@ -283,23 +291,45 @@ void LifetimeLogProcess::logTrackedDimer(Species* aSpecies,
   logTag(aSpecies, theDimerizingMonomerTags[aTag.molID], anIndex);
 }
 
+double LifetimeLogProcess::getAverageDiffusion()
+{
+  double activeSquaredDisplacement(0);
+  double activeTotalTime(0);
+  const double now(getStepper()->getCurrentTime());
+  double aCoeff(0);
+  for(unsigned i(0); i != theSpecies.size(); ++i)
+    {
+      if(isTrackedSpecies[i])
+        {
+          Species* aSpecies(theSpecies[i]);
+          aCoeff = aSpecies->getDimension()*2;
+          for(unsigned j(0); j != aSpecies->size(); ++j)
+            {
+              activeSquaredDisplacement += aSpecies->getSquaredDisplacement(j);
+              activeTotalTime += now-theTagTimes[aSpecies->getTag(j).molID];
+            }
+        }
+    }
+  return (completedSquaredDisplacement+activeSquaredDisplacement)/
+    ((totalDuration+activeTotalTime)*aCoeff);
+}
+
 void LifetimeLogProcess::logTag(Species* aSpecies, Tag& aTag,
                                 const unsigned anIndex)
 {
-  const Point aPoint(aSpecies->getPoint(anIndex));
-  const Point& anOrigin(aTag.origin.point);
   availableTagIDs.push_back(aTag.molID);
-  double aTime(getStepper()->getCurrentTime());
-  double duration(aTime-theTagTimes[aTag.molID]);
+  double startTime(theTagTimes[aTag.molID]);
+  double endTime(getStepper()->getCurrentTime());
+  double duration(endTime-startTime);
+  double averageDiffusion(getAverageDiffusion());
+  double squaredDisplacement(aSpecies->getSquaredDisplacement(anIndex));
   totalDuration += duration;
+  completedSquaredDisplacement += squaredDisplacement;
   ++logCnt;
-  theLogFile << std::setprecision(15) << duration << "," <<
-    distance(aPoint, anOrigin)*2*theSpatiocyteStepper->getVoxelRadius() << ","
-    << theTagTimes[aTag.molID] << "," << aTime << "," << konCnt << "," << 
-    konCnt/aTime << "," << 1/(totalDuration/logCnt) << std::endl;
+  logFile(endTime, duration, squaredDisplacement, startTime, averageDiffusion);
   if(Verbose)
     {
-      std::cout << "mean kon:" << konCnt/aTime << 
+      std::cout << "mean kon:" << konCnt/endTime << 
         " mean koff:" << 1/(totalDuration/logCnt);
       for(unsigned i(0); i != theSpecies.size(); ++i)
         {
@@ -315,9 +345,25 @@ void LifetimeLogProcess::logTag(Species* aSpecies, Tag& aTag,
     }
 }
 
+void LifetimeLogProcess::logFile(const double time, const double duration,
+                                 const double squaredDisplacement,
+                                 const double startTime,
+                                 const double averageDiffusion)
+{
+  double averageKoff(libecs::INF);
+  if(totalDuration > 0)
+    {
+      averageKoff = logCnt/totalDuration;
+    }
+  theLogFile << std::setprecision(5) << time << "," << duration << "," <<
+    squaredDisplacement << "," << startTime << "," << 
+    konCnt << "," << konCnt/time << "," << averageKoff << "," <<
+    averageDiffusion << std::endl;
+}
+
 void LifetimeLogProcess::saveFileHeader(std::ofstream& aFile)
 {
-  aFile << "Duration of";
+  aFile << "Time, Duration of";
   for(unsigned i(0); i != isTrackedSpecies.size(); ++i)
     {
       if(isTrackedSpecies[i])
@@ -325,9 +371,10 @@ void LifetimeLogProcess::saveFileHeader(std::ofstream& aFile)
           aFile << ":" << theSpecies[i]->getIDString();
         }
     }
-  aFile << "(s), Distance(m), Start time(s), End time(s), " <<
+  aFile << "(s), Squared Displacement(m^2), Start time(s), " <<
     "kon counts [#kon] (some still haven't koff), Average kon so far " <<
-    "[#kon/time](1/s), Average koff so far(1/s)" <<
+    "[#kon/time](1/s), Average koff so far(1/s), Average diffusion coefficient"
+    << " so far(m^2/s)" <<
     std::endl; 
 }
 
@@ -365,8 +412,8 @@ void LifetimeLogProcess::initTrackedDimer(Species* aSpecies,
 void LifetimeLogProcess::initTrackedMolecule(Species* aSpecies,
                                              const unsigned anIndex)
 {
+  aSpecies->resetTagOrigin(anIndex);
   Tag& aTag(aSpecies->getTag(anIndex));
-  theSpatiocyteStepper->coord2origin(aSpecies->getCoord(anIndex), aTag.origin);
   addTagTime(aTag);
   ++konCnt;
 }

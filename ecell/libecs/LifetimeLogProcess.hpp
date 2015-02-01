@@ -49,6 +49,7 @@ public:
     konCnt(0),
     logCnt(0),
     totalSize(0),
+    completedSquaredDisplacement(0),
     totalDuration(0)
   {
     FileName = "LifetimeLog.csv";
@@ -75,11 +76,15 @@ private:
   void initDedimerizingMonomerTag(ReactionProcess*);
   void setTrackedDimerSpecies();
   void logTag(Species*, Tag&, const unsigned);
+  void logFile(const double, const double, const double, const double, const
+               double);
   void addTagTime(Tag&);
+  double getAverageDiffusion();
 private:
   unsigned konCnt;
   unsigned logCnt;
   double totalSize;
+  double completedSquaredDisplacement;
   double totalDuration;
   std::vector<bool> isAddDimerReaction;
   std::vector<bool> isBindingSiteReaction;

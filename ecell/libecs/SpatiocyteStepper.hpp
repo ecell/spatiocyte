@@ -95,7 +95,6 @@ public:
   Species* id2species(unsigned short);
   Comp* id2Comp(unsigned short);
   void coord2global(unsigned, unsigned&, unsigned&, unsigned&);
-  void coord2origin(const unsigned, Origin&);
   void point2global(Point, unsigned&, unsigned&, unsigned&);
   Comp* system2Comp(System*);
   bool isBoundaryCoord(unsigned, unsigned);
