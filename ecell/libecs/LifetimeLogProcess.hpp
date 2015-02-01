@@ -62,6 +62,11 @@ public:
   virtual void initializeFifth();
   virtual void initializeLastOnce();
   virtual void fire();
+  virtual void saveFile();
+  virtual void doPreLog();
+  virtual void logValues();
+  virtual void saveATimePoint(std::ofstream&, const double, const unsigned,
+                              const unsigned);
   virtual void interruptedPre(ReactionProcess*);
   virtual void interruptedPost(ReactionProcess*);
   virtual bool isDependentOnPre(const Process*);
@@ -75,7 +80,7 @@ private:
   void saveDimerizingMonomerTag(ReactionProcess*);
   void initDedimerizingMonomerTag(ReactionProcess*);
   void setTrackedDimerSpecies();
-  void resetAll();
+  void reset();
   void logTag(Species*, Tag&, const unsigned);
   void logFile(const double, const double, const double, const double, const
                double);

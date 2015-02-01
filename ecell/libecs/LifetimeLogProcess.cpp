@@ -142,11 +142,39 @@ void LifetimeLogProcess::initializeSecond()
 
 void LifetimeLogProcess::initializeLastOnce()
 {
-  theLogFile.open(FileName.c_str(), std::ios::trunc);
+  if(LogEnd == libecs::INF)
+    {
+      THROW_EXCEPTION(ValueError, String(
+                  getPropertyInterface().getClassName()) +
+                  "[" + getFullID().asString() + 
+                  "]: LogEnd must be specified for " + 
+                  "LifetimeLogProcess when LogInterval > 0."); 
+    }
+  timePoints = (unsigned)ceil((LogEnd-LogStart)/theInterval)+1;
+  theLogValues.resize(timePoints);
+  unsigned aDataSize(1); //Only average diffusion now
+  for(unsigned i(0); i != timePoints; ++i)
+    {
+      theLogValues[i].resize(aDataSize, 0);
+      for(unsigned j(0); j != aDataSize; ++j)
+        {
+          theLogValues[i][j] = 0;
+        }
+    }
 }
 
 void LifetimeLogProcess::initializeFourth()
 {
+}
+
+void LifetimeLogProcess::reset()
+{
+  konCnt = 0;
+  logCnt = 0;
+  totalSize = 0;
+  completedSquaredDisplacement = 0;
+  totalDuration = 0;
+  timePointCnt = 0;
   //The following is done after populating all molecules:
   for(unsigned i(0); i != isTrackedSpecies.size(); ++i)
     {
@@ -174,38 +202,56 @@ void LifetimeLogProcess::initializeFourth()
 
 void LifetimeLogProcess::initializeFifth()
 {
+  //Only fire at fixed intervals if LogInterval is given:
   if(LogInterval > 0)
     {
       theInterval = LogInterval;
     }
-  else
-    {
-      theInterval = LogEnd;
-    }
   if(!LogStart)
     {
-      LogStart = theInterval;
+      LogStart = 2*getStepper()->getMinStepInterval();
+      theTime = getStepper()->getMinStepInterval();
     }
-  theTime = std::max(LogStart-theInterval, getStepper()->getMinStepInterval());
+  else
+    {
+      theTime = std::max(LogStart-(theInterval/2), 1e-10);
+    }
   thePriorityQueue->move(theQueueID);
 }
-
 void LifetimeLogProcess::fire()
 {
   if(theTime < LogStart)
     {
-      cout << "Iterations left:" << Iterations << " of " <<
-        theTotalIterations << std::endl;    
-      //Since there is only one file even when there are more than one
-      //iterations, save header only once:
-      if(Iterations == theTotalIterations)
+      reset();
+      doPreLog();
+      if(LogInterval > 0)
         {
-          saveFileHeader(theLogFile);
+          theTime = LogStart;
+        }
+      else
+        {
+          theTime = LogEnd;
+        }
+      thePriorityQueue->moveTop();
+      return;
+    }
+  if(theTime <= LogEnd)
+    {
+      logValues();
+      ++timePointCnt;
+    }
+  if(theTotalIterations == 1)
+    {
+      saveATimePoint(theLogFile, theTime, 1, timePointCnt-1);
+      if(theTime >= LogEnd)
+        {
+          theLogFile.close();
         }
     }
-  if(theTime >= LogEnd && Iterations > 0)
+  else if(theTime >= LogEnd && Iterations > 0)
     {
       --Iterations;
+      saveFile();
       if(Iterations)
         {
           theSpatiocyteStepper->reset(Iterations);
@@ -216,9 +262,51 @@ void LifetimeLogProcess::fire()
           theInterval = libecs::INF;
         }
     }
-  logFile(theTime, 0, 0, 0, getAverageDiffusion());
   theTime += theInterval;
   thePriorityQueue->moveTop();
+}
+
+void LifetimeLogProcess::logValues()
+{
+  theLogValues[timePointCnt][0] += getAverageDiffusion();
+}
+
+void LifetimeLogProcess::saveATimePoint(std::ofstream& aFile,
+                                         const double aTime,
+                                         const unsigned anIteration,
+                                         const unsigned aCnt)
+{
+  logFile(aTime, 0, 0, 0, theLogValues[aCnt][0]/anIteration);
+}
+
+void LifetimeLogProcess::saveFile()
+{
+  unsigned aCompletedIterations(1);
+  if(!Iterations)
+    {
+      cout << "Saving data in: " << FileName.c_str() << std::endl;
+      theLogFile.open(FileName.c_str(), std::ios::trunc);
+      aCompletedIterations = theTotalIterations;
+    }
+  else
+    {
+      return;
+    }
+  saveFileHeader(theLogFile);
+  saveFileData(theLogFile, aCompletedIterations);
+}
+
+void LifetimeLogProcess::doPreLog()
+{
+  cout << "Iterations left:" << Iterations << " of " << theTotalIterations
+    << std::endl;
+  if(theTotalIterations == 1)
+    {
+      cout << "Saving single iteration data in: " << FileName.c_str()
+        << std::endl;
+      theLogFile.open(FileName.c_str(), std::ios::trunc);
+      saveFileHeader(theLogFile);
+    }
 }
 
 void LifetimeLogProcess::interruptedPre(ReactionProcess* aProcess)
