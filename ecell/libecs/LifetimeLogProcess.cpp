@@ -150,6 +150,14 @@ void LifetimeLogProcess::initializeLastOnce()
                   "]: LogEnd must be specified for " + 
                   "LifetimeLogProcess when LogInterval > 0."); 
     }
+  if(LogEnd <= LogStart)
+    {
+      THROW_EXCEPTION(ValueError, String(
+                  getPropertyInterface().getClassName()) +
+                  "[" + getFullID().asString() + 
+                  "]: LogEnd must be larger than LogStart " + 
+                  "LifetimeLogProcess."); 
+    }
   timePoints = (unsigned)ceil((LogEnd-LogStart)/theInterval)+1;
   theLogValues.resize(timePoints);
   unsigned aDataSize(1); //Only average diffusion now
@@ -165,6 +173,7 @@ void LifetimeLogProcess::initializeLastOnce()
 
 void LifetimeLogProcess::initializeFourth()
 {
+  reset();
 }
 
 void LifetimeLogProcess::reset()
