@@ -67,19 +67,21 @@ public:
   virtual void logValues();
   virtual void saveATimePoint(std::ofstream&, const double, const unsigned,
                               const unsigned);
-  virtual void interruptedPre(ReactionProcess*);
-  virtual void interruptedPost(ReactionProcess*);
-  virtual bool isDependentOnPre(const Process*);
-  virtual bool isDependentOnPost(const Process*);
+  virtual void interruptedAddMolecule(Species*, const unsigned);
+  virtual void interruptedRemoveMolecule(Species*, const unsigned); 
+  virtual bool isDependentOnAddMolecule(Species*);
+  virtual bool isDependentOnRemoveMolecule(Species*);
   virtual void saveFileHeader(std::ofstream&);
 private:
+  void initTrackedMolecule(Species*, const unsigned);
+  /*
   void logTrackedMolecule(ReactionProcess*, Species*, const Voxel*);
   void logTrackedDimer(Species*, const Voxel*);
-  void initTrackedMolecule(Species*, const unsigned);
   void initTrackedDimer(Species*, const unsigned);
   void saveDimerizingMonomerTag(ReactionProcess*);
   void initDedimerizingMonomerTag(ReactionProcess*);
   void setTrackedDimerSpecies();
+  */
   void reset();
   void logTag(Species*, Tag&, const unsigned);
   void logFile(const double, const double, const double, const double, const
