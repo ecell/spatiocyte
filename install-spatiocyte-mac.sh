@@ -20,6 +20,7 @@ echo "export PATH=$HOME/root/bin:$PATH" >> ~/.profile
 echo "export LD_LIBRARY_PATH=$HOME/root/lib:$LD_LIBRARY_PATH" >> ~/.profile
 echo "export PYTHONPATH=$HOME/root/lib/python2.7/site-packages:$PYTHONPATH" >> ~/.profile
 echo "export PKG_CONFIG_PATH=/opt/X11/lib/pkgconfig" >> ~/.profile
+echo "export ECELL3_DM_PATH=." >> ~/.profile
 source ~/.profile
 cd
 mkdir wrk
