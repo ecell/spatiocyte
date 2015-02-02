@@ -400,11 +400,24 @@ double LifetimeLogProcess::getAverageDiffusion()
         {
           Species* aSpecies(theSpecies[i]);
           aCoeff = aSpecies->getDimension()*2;
+          /*
+          double disp(0);
+          double time(0);
+          */
           for(unsigned j(0); j != aSpecies->size(); ++j)
             {
+              /*
+              disp += aSpecies->getSquaredDisplacement(j);
+              time += now-theTagTimes[aSpecies->getTag(j).molID];
+              */
               activeSquaredDisplacement += aSpecies->getSquaredDisplacement(j);
               activeTotalTime += now-theTagTimes[aSpecies->getTag(j).molID];
-            }
+            } 
+          /*
+          std::cout << now << " species:" << aSpecies->getIDString() << 
+          " dif:" << disp/(time*aCoeff) << " number:" << aSpecies->size() <<
+          std::endl;
+          */
         }
     }
   return (completedSquaredDisplacement+activeSquaredDisplacement)/
@@ -452,7 +465,7 @@ void LifetimeLogProcess::logFile(const double time, const double duration,
     {
       averageKoff = logCnt/totalDuration;
     }
-  theLogFile << std::setprecision(5) << time << "," << duration << "," <<
+  theLogFile << time << "," << duration << "," <<
     squaredDisplacement << "," << startTime << "," << 
     konCnt << "," << konCnt/time << "," << averageKoff << "," <<
     averageDiffusion << std::endl;
