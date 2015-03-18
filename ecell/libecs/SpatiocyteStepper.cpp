@@ -209,6 +209,7 @@ void SpatiocyteStepper::reset(int seed)
   gsl_rng_set(getRng(), seed); 
   theRan.Reseed();
   setCurrentTime(0);
+  resetVariables();
   initializeSecond();
   clearComps();
   initializeThird();
@@ -219,6 +220,17 @@ void SpatiocyteStepper::reset(int seed)
   initializeFifth();
   finalizeSpecies();
   //checkLattice();
+}
+
+void SpatiocyteStepper::resetVariables()
+{
+  for(unsigned i(0); i != theVariables.size(); ++i)
+    {
+      if(variable2species(theVariables[i]) == NULL)
+        {
+          theVariables[i]->setValue(initVariableValues[i]);
+        }
+    }
 }
 
 Species* SpatiocyteStepper::addSpecies(Variable* aVariable)
@@ -410,6 +422,35 @@ Species* SpatiocyteStepper::variable2species(const Variable* aVariable) const
   return NULL;
 }
 
+void SpatiocyteStepper::enlistModelVariables()
+{
+  Model::StepperMap aStepperMap(getModel()->getStepperMap());  
+  for(Model::StepperMap::const_iterator i(aStepperMap.begin());
+      i != aStepperMap.end(); ++i )
+    {   
+      std::vector<Process*> aProcessVector(i->second->getProcessVector());
+      for(std::vector<Process*>::const_iterator j(aProcessVector.begin());
+          j != aProcessVector.end(); ++j)
+        {
+          Process::VariableReferenceVector aVariableReferenceVector( 
+                               (*j)->getVariableReferenceVector());
+          for(Process::VariableReferenceVector::const_iterator 
+              k(aVariableReferenceVector.begin());
+              k != aVariableReferenceVector.end(); ++k)
+            { 
+              const VariableReference& aVariableReference(*k);
+              Variable* aVariable(aVariableReference.getVariable()); 
+              if(std::find(theVariables.begin(), theVariables.end(),
+                           aVariable) == theVariables.end())
+                {
+                  theVariables.push_back(aVariable);
+                  initVariableValues.push_back(aVariable->getValue());
+                }
+            }
+        }
+    }
+}
+
 void SpatiocyteStepper::checkModel()
 {
   std::vector<Process*> aProcessList;
@@ -461,6 +502,7 @@ void SpatiocyteStepper::checkModel()
     {
       theProcessVector.push_back(*i);
     }
+  enlistModelVariables();
 }
 
 void SpatiocyteStepper::checkLattice()

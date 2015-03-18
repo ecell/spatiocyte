@@ -1049,7 +1049,8 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
     {
       if(p == -1)
         {
-          p = 24*k*r_v/((6+3*sqrt(3)+2*sqrt(6))*D_A);
+          //p = 24*k*r_v/((6+3*sqrt(3)+2*sqrt(6))*D_A);
+          p = 4*k*sqrt(3)*r_v/(3*sqrt(2)*D_A);
         }
       else
         {
@@ -1060,7 +1061,8 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
     {
       if(p == -1)
         {
-          p = 24*k*r_v/((6+3*sqrt(3)+2*sqrt(6))*D_B);
+          //p = 24*k*r_v/((6+3*sqrt(3)+2*sqrt(6))*D_B);
+          p = 4*k*sqrt(3)*r_v/(3*sqrt(2)*D_B);
         }
       else
         {
@@ -1097,6 +1099,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
                       "]: Error in type of second order reaction.");
     }
 }
+
 
 void DiffusionInfluencedReactionProcess::printParameters()
 {

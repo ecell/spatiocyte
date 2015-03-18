@@ -127,6 +127,8 @@ public:
   double getMinLatticeSpace();
   void updateSpecies();
   void finalizeSpecies();
+  void resetVariables();
+  void enlistModelVariables();
   unsigned getStartCoord();
   unsigned getID(const Voxel&) const;
   unsigned getID(const Voxel*) const;
@@ -233,8 +235,10 @@ private:
   Point theCenterPoint;
   ProcessPriorityQueue thePriorityQueue; 
   SpatiocyteDebug cout;
+  std::vector<unsigned> initVariableValues;
   std::vector<Species*>::iterator variable2ispecies(Variable*);
   std::vector<Species*> theSpecies;
+  std::vector<Variable*> theVariables;
   std::vector<Comp*> theComps;
   std::vector<Voxel> theLattice;
   std::vector<Process*> theExternInterruptedProcesses;
