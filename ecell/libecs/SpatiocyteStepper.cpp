@@ -107,10 +107,10 @@ void SpatiocyteStepper::initialize()
   setCompVoxelProperties();
   resizeProcessLattice();
   cout << "11. initializing processes the third time..." << std::endl;
-  initializeThird();
-  cout << "12. printing simulation parameters..." << std::endl;
   updateSpecies();
   storeSimulationParameters();
+  initializeThird();
+  cout << "12. printing simulation parameters..." << std::endl;
   printSimulationParameters();
   cout << "13. initializing before populate..." << std::endl;
   initializeBeforePopulate();
@@ -1255,13 +1255,13 @@ void SpatiocyteStepper::storeSimulationParameters()
         }
       if(aComp->dimension == 2)
         {
+          /*
           aComp->actualArea =  (72*pow(VoxelRadius,2))*
             aComp->vacantSpecies->size()/(6*pow(2,0.5)+4*pow(3,0.5)+
                                          3*pow(6, 0.5));
-          /*
+                                         */
           aComp->actualArea =  2*pow(VoxelRadius,2)*sqrt(3)*
             aComp->vacantSpecies->size();
-            */
           setSystemSize(aComp->system, aComp->actualArea*1e+2);
         }
       else // (aComp->dimension == 3)

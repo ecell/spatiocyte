@@ -1047,26 +1047,38 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
     }
   else if(A->getDimension() == 3 && B->getIsLipid())
     {
+      double nv(A->getComp()->vacantSpecies->size());
+      double ns(B->size());
+      double S(B->getComp()->specArea);
+      double V(A->getComp()->actualVolume);
       if(p == -1)
         {
-          p = 24*k*r_v/((6+3*sqrt(3)+2*sqrt(6))*D_A);
-          //p = 4*k*sqrt(3)*r_v/(3*sqrt(2)*D_A);
+          //p = 24*k*r_v/((6+3*sqrt(3)+2*sqrt(6))*D_A); //averaged hcp surface
+          //p = 4*k*sqrt(3)*r_v/(3*sqrt(2)*D_A); //perfect hcp surface
+          p = 8*k*nv*r_v*r_v*S/(3*ns*V*D_A); //more accurate for full lattice
         }
       else
         {
-          k = p*((6+3*sqrt(3)+2*sqrt(6))*D_A)/(24*r_v);
+          //k = p*((6+3*sqrt(3)+2*sqrt(6))*D_A)/(24*r_v); //averaged hcp surf
+          k = p*3*ns*V*D_A/(8*nv*r_v*r_v*S); //more accurate for full lattice
         }
     }
   else if(A->getIsLipid() && B->getDimension() == 3)
     {
+      double nv(B->getComp()->vacantSpecies->size());
+      double ns(A->size());
+      double S(A->getComp()->specArea);
+      double V(B->getComp()->actualVolume);
       if(p == -1)
         {
-          p = 24*k*r_v/((6+3*sqrt(3)+2*sqrt(6))*D_B);
-          //p = 4*k*sqrt(3)*r_v/(3*sqrt(2)*D_B);
+          //p = 24*k*r_v/((6+3*sqrt(3)+2*sqrt(6))*D_B); //averaged hcp surface
+          //p = 4*k*sqrt(3)*r_v/(3*sqrt(2)*D_B); //perfect hcp surface
+          p = 8*k*nv*r_v*r_v*S/(3*ns*V*D_B); //more accurate for full lattice
         }
       else
         {
-          k = p*((6+3*sqrt(3)+2*sqrt(6))*D_B)/(24*r_v);
+          //k = p*((6+3*sqrt(3)+2*sqrt(6))*D_B)/(24*r_v); //averaged hcp surf
+          k = p*3*ns*V*D_B/(8*nv*r_v*r_v*S); //more accurate for full lattice
         }
     }
   else if(A->getDimension() == 3 && B->getDimension() != 3)
