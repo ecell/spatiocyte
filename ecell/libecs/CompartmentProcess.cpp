@@ -264,20 +264,21 @@ void CompartmentProcess::updateResizedLattice()
 
 void CompartmentProcess::setSubunitStart()
 {
-  Point nearest;
-  Point farthest;
-  getStartVoxelPoint(subunitStart, nearest, farthest);
-  double dist(subunitStart.z-nearest.z+nVoxelRadius-nDiffuseRadius);
-  subunitStart.z -= int(dist/(nDiffuseRadius*2))*2*nDiffuseRadius;
-  dist = subunitStart.y-nearest.y+nVoxelRadius-nDiffuseRadius;
-  unsigned cnt(int(dist/(nDiffuseRadius*sqrt(3))));
-  subunitStart.y -= cnt*nDiffuseRadius*sqrt(3);
-  if(cnt%2 == 1)
+  Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
+  if(Autofit && aComp->surfaceSub)
     {
-      subunitStart.z += nDiffuseRadius;
-    }
-  if(Autofit)
-    {
+      Point nearest;
+      Point farthest;
+      getStartVoxelPoint(subunitStart, nearest, farthest);
+      double dist(subunitStart.z-nearest.z+nVoxelRadius-nDiffuseRadius);
+      subunitStart.z -= int(dist/(nDiffuseRadius*2))*2*nDiffuseRadius;
+      dist = subunitStart.y-nearest.y+nVoxelRadius-nDiffuseRadius;
+      unsigned cnt(int(dist/(nDiffuseRadius*sqrt(3))));
+      subunitStart.y -= cnt*nDiffuseRadius*sqrt(3);
+      if(cnt%2 == 1)
+        {
+          subunitStart.z += nDiffuseRadius;
+        }
       Width = (farthest.y-subunitStart.y+nVoxelRadius+nDiffuseRadius)*
         VoxelRadius*2.00001;
       Length = (farthest.z-subunitStart.z+nVoxelRadius+nDiffuseRadius)*
@@ -285,6 +286,61 @@ void CompartmentProcess::setSubunitStart()
     }
   else
     {
+      const unsigned rowSize(aComp->maxRow-aComp->minRow);
+      const unsigned colSize(aComp->maxCol-aComp->minCol);
+      const unsigned layerSize(aComp->maxLayer-aComp->minLayer);
+      unsigned row(aComp->minRow+rowSize/2); //z
+      unsigned col(aComp->minCol+colSize/2); //x
+      unsigned layer(aComp->minLayer+layerSize/2); //y
+      if(OriginX == -1)
+        {
+          col = aComp->minCol;
+        }
+      else if(OriginX == 1)
+        {
+          col = aComp->maxCol;
+        }
+      if(OriginY == -1)
+        {
+          layer = aComp->minLayer;
+        }
+      else if(OriginY == 1)
+        {
+          layer = aComp->maxLayer;
+        }
+      if(OriginZ == -1)
+        {
+          row = aComp->minRow;
+        }
+      else if(OriginZ == 1)
+        {
+          row = aComp->maxRow;
+        }
+      //Translate the point from centerPoint to the subunitStart point
+      layer -= layerSize/2;
+      row -= rowSize/2;
+      const unsigned coord(theSpatiocyteStepper->global2coord(row, layer, col));
+      subunitStart = theSpatiocyteStepper->coord2point(coord);
+      const double multX(OriginX*theComp->lengthX/2);
+      const double multY(OriginY*theComp->lengthY/2);
+      const double multZ(OriginZ*theComp->lengthZ/2);
+      Point& center(theComp->centerPoint);
+      center.x += multX;
+      center.y += multY;
+      center.z += multZ;
+      if(OriginX != 1 && OriginX != -1)
+        {
+          subunitStart.x += multX;
+        }
+      if(OriginY != 1 && OriginY != -1)
+        {
+          subunitStart.y += multY;
+        }
+      if(OriginZ != 1 && OriginZ != -1)
+        {
+          subunitStart.z += multZ;
+        }
+      /*
       const double multX(OriginX*theComp->lengthX/2);
       const double multY(OriginY*theComp->lengthY/2);
       const double multZ(OriginZ*theComp->lengthZ/2);
@@ -295,7 +351,7 @@ void CompartmentProcess::setSubunitStart()
       center.x += multX;
       center.y += multY;
       center.z += multZ;
-      rotate(center);
+      */
       /*
       subunitStart.y -= (Width/(VoxelRadius*2)-theComp->lengthY)/2;
       subunitStart.z -= (Length/(VoxelRadius*2)-theComp->lengthZ)/2;
@@ -396,14 +452,17 @@ void CompartmentProcess::initializeThird()
       setDiffuseSize(subStartCoord, lipStartCoord);
       setGrid(theVacantSpecies, theVacGrid, subStartCoord);
       interfaceSubunits();
-      initializeFilaments(lipidStart, LipidRows, LipidCols, nLipidRadius,
-                          theLipidSpecies, lipStartCoord);
-      elongateFilaments(theLipidSpecies, lipStartCoord, LipidRows,
-                        LipidCols, nLipidRadius);
-      connectFilaments(lipStartCoord, LipidRows, LipidCols);
-      setDiffuseSize(lipStartCoord, endCoord);
-      //setGrid(theLipidSpecies, theLipGrid, lipStartCoord);
-      setSpeciesIntersectLipids();
+      if(theLipidSpecies)
+        {
+          initializeFilaments(lipidStart, LipidRows, LipidCols, nLipidRadius,
+                              theLipidSpecies, lipStartCoord);
+          elongateFilaments(theLipidSpecies, lipStartCoord, LipidRows,
+                            LipidCols, nLipidRadius);
+          connectFilaments(lipStartCoord, LipidRows, LipidCols);
+          setDiffuseSize(lipStartCoord, endCoord);
+          //setGrid(theLipidSpecies, theLipGrid, lipStartCoord);
+          setSpeciesIntersectLipids();
+        }
       isCompartmentalized = true;
     }
   theVacantSpecies->setIsPopulated();
@@ -552,8 +611,15 @@ void CompartmentProcess::initializeVectors()
   //For Lipid start:
   lengthStart.z -= nDiffuseRadius;
   lengthStart.y -= nDiffuseRadius;
-  rotate(subunitStart);
-  rotate(lengthStart);
+  
+  Point& origin(theComp->centerPoint);
+  Point tmp(sub(subunitStart, origin));
+  rotate(tmp);
+  subunitStart = add(tmp, origin);
+
+  tmp = sub(lengthStart, origin);
+  rotate(tmp);
+  lengthStart = add(tmp, origin);
 
   lengthVector.x = 0;
   lengthVector.y = 0;

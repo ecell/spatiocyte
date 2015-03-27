@@ -150,6 +150,7 @@ struct Comp
   int xyPlane;
   int xzPlane;
   int yzPlane;
+  //global min and max row,col,layer of the comp:
   unsigned int minRow;
   unsigned int minCol;
   unsigned int minLayer;

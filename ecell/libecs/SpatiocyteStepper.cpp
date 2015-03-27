@@ -2946,10 +2946,12 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
             {
               if(compartmentalizeVoxel(aCoord, aComp->immediateSubs[i]))
                 {
+                  setMinMaxSurfaceDimensions(aCoord, aComp);
                   return true;
                 }
             }
           aComp->vacantSpecies->addCompVoxel(aCoord);
+          setMinMaxSurfaceDimensions(aCoord, aComp);
           return true;
         }
       if(aComp->surfaceSub)
@@ -3191,32 +3193,50 @@ void SpatiocyteStepper::setMinMaxSurfaceDimensions(unsigned aCoord,
   if(aRow < aComp->minRow)
     {
       aComp->minRow = aRow;
-      aComp->surfaceSub->minRow = aRow;
+      if(aComp->surfaceSub)
+        {
+          aComp->surfaceSub->minRow = aRow;
+        }
     }
   else if(aRow > aComp->maxRow)
     {
       aComp->maxRow = aRow;
-      aComp->surfaceSub->maxRow = aRow;
+      if(aComp->surfaceSub)
+        {
+          aComp->surfaceSub->maxRow = aRow;
+        }
     }
   if(aCol < aComp->minCol)
     {
       aComp->minCol = aCol;
-      aComp->surfaceSub->minCol = aCol;
+      if(aComp->surfaceSub)
+        {
+          aComp->surfaceSub->minCol = aCol;
+        }
     }
   else if(aCol > aComp->maxCol)
     {
       aComp->maxCol = aCol;
-      aComp->surfaceSub->maxCol = aCol;
+      if(aComp->surfaceSub)
+        {
+          aComp->surfaceSub->maxCol = aCol;
+        }
     }
   if(aLayer < aComp->minLayer)
     {
       aComp->minLayer = aLayer;
-      aComp->surfaceSub->minLayer = aLayer;
+      if(aComp->surfaceSub)
+        {
+          aComp->surfaceSub->minLayer = aLayer;
+        }
     }
   else if(aLayer > aComp->maxLayer)
     {
       aComp->maxLayer = aLayer;
-      aComp->surfaceSub->maxLayer = aLayer;
+      if(aComp->surfaceSub)
+        {
+          aComp->surfaceSub->maxLayer = aLayer;
+        }
     }
 }
 
