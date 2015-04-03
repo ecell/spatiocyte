@@ -48,6 +48,7 @@ public:
       INHERIT_PROPERTIES(Process);
       PROPERTYSLOT_SET_GET(Integer, Origins);
       PROPERTYSLOT_SET_GET(Integer, RegularLattice);
+      PROPERTYSLOT_SET_GET(Integer, WalkReact);
       PROPERTYSLOT_SET_GET(Real, D);
       PROPERTYSLOT_SET_GET(Real, Interval);
       PROPERTYSLOT_SET_GET(Real, P);
@@ -59,6 +60,7 @@ public:
     isTrailNeighbor(false),
     Origins(0),
     RegularLattice(0),
+    WalkReact(0),
     D(0),
     Interval(0),
     P(1),
@@ -72,6 +74,7 @@ public:
   virtual ~DiffusionProcess() {}
   SIMPLE_SET_GET_METHOD(Integer, Origins);
   SIMPLE_SET_GET_METHOD(Integer, RegularLattice);
+  SIMPLE_SET_GET_METHOD(Integer, WalkReact);
   SIMPLE_SET_GET_METHOD(Real, D);
   SIMPLE_SET_GET_METHOD(Real, Interval);
   SIMPLE_SET_GET_METHOD(Real, P);
@@ -218,7 +221,11 @@ public:
         {
           theDiffusionSpecies->initMoleculeOrigins();
         }
-      if(theDiffusionSpecies->getIsDiffusiveVacant())
+      if(WalkReact)
+        {
+          theWalkMethod = &DiffusionProcess::walkReact;
+        }
+      else if(theDiffusionSpecies->getIsDiffusiveVacant())
         {
           theWalkMethod = &DiffusionProcess::walkVacant;
         }
@@ -343,6 +350,10 @@ public:
     {
       theDiffusionSpecies->walkVacant();
     }
+  void walkReact() const
+    {
+      theDiffusionSpecies->walkReact();
+    }
   void walkMultiscale() const
     {
       theDiffusionSpecies->walkMultiscale();
@@ -385,6 +396,7 @@ protected:
   bool isTrailNeighbor;
   unsigned Origins;
   unsigned RegularLattice;
+  unsigned WalkReact;
   double D;
   double Interval;
   double P;

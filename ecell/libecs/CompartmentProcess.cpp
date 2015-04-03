@@ -74,6 +74,10 @@ void CompartmentProcess::initialize()
     {
       Species* aSpecies(theSpatiocyteStepper->variable2species(
                                (*i).getVariable())); 
+      if(aSpecies == NULL)
+        {
+          continue;
+        }
       if((*i).getCoefficient())
         {
           theLipidCompSpecies.push_back(aSpecies);

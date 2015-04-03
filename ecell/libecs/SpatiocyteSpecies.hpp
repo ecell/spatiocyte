@@ -832,6 +832,100 @@ public:
             theSpeciesCollisionCnt/theStepper->getCurrentTime() << std::endl;
         }
     }
+  //Just perform DIRP at every diffusion step interval without walking
+  void walkReact()
+    {
+      const unsigned beginMoleculeSize(theMoleculeSize);
+      unsigned size(theAdjoiningCoordSize);
+      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          if(!isFixedAdjoins)
+            {
+              size = source->diffuseSize;
+            }
+          Voxel* target(&theLattice[source->adjoiningCoords[
+                        theRng.Integer(size)]]);
+          if(getID(target) == theComp->interfaceID)
+            {
+              //Some interface voxels do not have pointers to the
+              //off lattice subunits, so their adjoiningSize == diffuseSize:
+              if(target->adjoiningSize == target->diffuseSize)
+                {
+                  continue;
+                }
+              unsigned coord(theRng.Integer(target->adjoiningSize-
+                                            target->diffuseSize));
+              coord = target->adjoiningCoords[coord+target->diffuseSize];
+              target = &theLattice[coord];
+            }
+          const unsigned tarID(getID(target));
+          if(theDiffusionInfluencedReactions[tarID])
+            {
+              if(theCollision==3)
+                { 
+                  ++theSpeciesCollisionCnt;
+                  return;
+                }
+              //If it meets the reaction probability:
+              if(theReactionProbabilities[tarID] == 1 ||
+                 theRng.Fixed() < theReactionProbabilities[tarID])
+                { 
+                  if(theCollision && theCollision != 3)
+                    { 
+                      ++collisionCnts[i];
+                      Species* targetSpecies(theSpecies[tarID]);
+                      targetSpecies->addCollision(target);
+                      if(theCollision != 2)
+                        {
+                          return;
+                        }
+                    }
+                  unsigned aMoleculeSize(theMoleculeSize);
+                  react(source, target, i, target->idx%theStride, tarID);
+                  //If the reaction is successful, the last molecule of this
+                  //species will replace the pointer of i, so we need to 
+                  //decrement i to perform the diffusion on it. However, if
+                  //theMoleculeSize didn't decrease, that means the
+                  //currently walked molecule was a product of this
+                  //reaction and so we don't need to walk it again by
+                  //decrementing i.
+                  if(theMoleculeSize < aMoleculeSize)
+                    {
+                      --i;
+                    }
+                }
+            }
+        }
+    }
+  void walkVacant()
+    {
+      updateVacantMolecules();
+      for(unsigned i(0); i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          int size;
+          if(isFixedAdjoins)
+            {
+              size = theAdjoiningCoordSize;
+            }
+          else
+            {
+              size = source->diffuseSize;
+            }
+          Voxel* target(&theLattice[source->adjoiningCoords[
+                        theRng.Integer(size)]]);
+          if(getID(target) == theVacantID)
+            {
+              if(theWalkProbability == 1 || theRng.Fixed() < theWalkProbability)
+                {
+                  source->idx = target->idx;
+                  target->idx = i+theStride*theID;
+                  theMolecules[i] = target;
+                }
+            }
+        }
+    }
   void walkTrail()
     {
       const unsigned beginMoleculeSize(theMoleculeSize);
@@ -1378,34 +1472,6 @@ public:
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
                   theTags[i].origin = anOrigin;
-                }
-            }
-        }
-    }
-  void walkVacant()
-    {
-      updateVacantMolecules();
-      for(unsigned i(0); i < theMoleculeSize; ++i)
-        {
-          Voxel* source(theMolecules[i]);
-          int size;
-          if(isFixedAdjoins)
-            {
-              size = theAdjoiningCoordSize;
-            }
-          else
-            {
-              size = source->diffuseSize;
-            }
-          Voxel* target(&theLattice[source->adjoiningCoords[
-                        theRng.Integer(size)]]);
-          if(getID(target) == theVacantID)
-            {
-              if(theWalkProbability == 1 || theRng.Fixed() < theWalkProbability)
-                {
-                  source->idx = target->idx;
-                  target->idx = i+theStride*theID;
-                  theMolecules[i] = target;
                 }
             }
         }
