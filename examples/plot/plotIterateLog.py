@@ -8,8 +8,8 @@ lineFontSize = 14
 
 fileNames = ["IterateLog.csv"]
 legendTitles = []
-lines = ['-', '-', '-', '-', '-', '-', '-', '-']
-colors = ['y', 'r', 'b', 'm', 'c', 'g', '#6b420c']
+lines = ['-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-']
+colors = ['y', 'r', 'b', 'm', 'c', 'g', '#6b420c', '#33aa00', '#990022', '#005599', '#220088', '#aa8822', '#110077','#003355']
 
 P.xticks(fontsize=tickFontSize)
 P.yticks(fontsize=tickFontSize)
