@@ -438,6 +438,7 @@ void CompartmentProcess::allocateGrid()
     */
   //Actual surface area = Width*Length
   theComp->actualArea = Width*Length;
+  theComp->specArea = Width*Length;
 }
 
 void CompartmentProcess::initializeThird()
@@ -1211,13 +1212,26 @@ void CompartmentProcess::printParameters()
 {
   cout << getPropertyInterface().getClassName() << "[" <<
     getFullID().asString() << "]" << std::endl;
-  cout << "  width:" << Width << " length:" << Length <<
-    " area:" << Width*Length << " LipidRows:" << LipidRows << " LipidCols:" <<
-    LipidCols << " Filaments:" << Filaments << " Subunits:" << Subunits <<
-    std::endl;
+  switch (theComp->dimension)
+    { 
+      case 1:
+          cout << "  Line compartment:" << std::endl;
+          cout << "   Actual length:"<< Length << std::endl;
+          break;
+      case 2:
+      default:
+          cout << "  Surface compartment:" << std::endl;
+          cout << "   Actual length:"<< Length << std::endl;
+          cout << "   Actual width:"<< Width << std::endl;
+          cout << "   Filaments:" << Filaments << std::endl;
+          cout << "   Subunits:" << Subunits << std::endl;
+          cout << "   Actual area:"<< theComp->actualArea << std::endl;
+          cout << "   Specified area:"<< theComp->specArea << std::endl;
+          break;
+    }
   if(theLipidSpecies)
     {
-      cout << "  " << getIDString(theLipidSpecies) << 
+      cout << "  Lipid species:" << getIDString(theLipidSpecies) << 
         " number:" << theLipidSpecies->size() << std::endl;
       for(unsigned i(0); i != theLipidCompSpecies.size(); ++i)
         {
@@ -1225,11 +1239,11 @@ void CompartmentProcess::printParameters()
             " number:" << theLipidCompSpecies[i]->size() << std::endl;
         }
     } 
-  cout << "  " << getIDString(theVacantSpecies) << 
+  cout << "  Vacant species:" << getIDString(theVacantSpecies) << 
     " number:" << theVacantSpecies->size() << std::endl;
-      for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
-        {
-          cout << "    " << getIDString(theVacantCompSpecies[i]) <<
-            " number:" << theVacantCompSpecies[i]->size() << std::endl;
-        }
+  for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
+    {
+      cout << "    " << getIDString(theVacantCompSpecies[i]) <<
+        " number:" << theVacantCompSpecies[i]->size() << std::endl;
+    }
 }
