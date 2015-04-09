@@ -165,6 +165,16 @@ public:
   void setDiffusionInfluencedReaction(DiffusionInfluencedReactionProcess*
                                       aReaction, int anID, double aProbability)
     {
+      if(theDiffusionInfluencedReactions[anID] != NULL &&
+         aReaction->getIDString() != 
+         theDiffusionInfluencedReactions[anID]->getIDString())
+        {
+          THROW_EXCEPTION(ValueError, getIDString() +
+             ": has duplicate DiffusionInfluencedReactionProcesses (1):" +
+             aReaction->getIDString() + " (2):" +
+             theDiffusionInfluencedReactions[anID]->getIDString() +
+             ". Remove one of them before proceeding.");
+        }
       theDiffusionInfluencedReactions[anID] = aReaction;
       theReactionProbabilities[anID] = aProbability;
     }
