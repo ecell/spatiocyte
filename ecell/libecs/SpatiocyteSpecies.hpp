@@ -2614,6 +2614,7 @@ public:
         }
       theMoleculeSize = 0;
       theCompVoxels->resize(0);
+      theTags.resize(0);
       theVariable->setValue(0);
     }
   void clearEmptyCompVoxels()
@@ -2627,6 +2628,7 @@ public:
         }
       theMoleculeSize = 0;
       theCompVoxels->resize(0);
+      theTags.resize(0);
       theVariable->setValue(0);
     }
   String getIDString(unsigned anID) const
@@ -2804,6 +2806,7 @@ public:
   void clearMolecules()
     {
       theMolecules.resize(0);
+      theTags.resize(0);
       theMoleculeSize = 0;
       theVariable->setValue(0);
     }

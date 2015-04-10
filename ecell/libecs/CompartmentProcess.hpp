@@ -36,6 +36,15 @@
 #include <libecs/SpatiocyteProcess.hpp>
 #include <libecs/SpatiocyteSpecies.hpp>
 
+/*Options---------------
+ RegularLattice = 1, only for flat surface with voxels directly accessible by
+                     coordinates. For non-multiscale diffusion (one molecule,
+                     one voxel), it uses walkRegular() method, which is slower 
+                     than RegularLattice=0 (uses the standard walk() method).
+ Periodic = 1, set periodic boundary condition at the edges of the 1D or 2D
+               compartment.
+*/
+
 LIBECS_DM_CLASS(CompartmentProcess, SpatiocyteProcess)
 { 
 public:
@@ -143,8 +152,9 @@ public:
   void rotate(Point&);
   void addAdjoin(Voxel&, unsigned);
   void setSpeciesIntersectLipids();
+  void setSpeciesIntersectVacants();
   void getStartVoxelPoint(Point&, Point&, Point&);
-  void setAdjoinOffsets();
+  void setAdjoinOffsets(const unsigned);
   int getCoefficient(Species*);
   void allocateGrid();
   void setGrid(Species*, std::vector<std::vector<unsigned> >&, unsigned);
