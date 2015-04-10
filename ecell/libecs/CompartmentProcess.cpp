@@ -278,6 +278,9 @@ void CompartmentProcess::updateResizedLattice()
 void CompartmentProcess::setSubunitStart()
 {
   Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
+  lengthVector = Point(0, 0, 1);
+  widthVector = Point(0, 1, 0);
+  heightVector = Point(1, 0, 0);
   if(Autofit && aComp->surfaceSub)
     {
       Point nearest;
@@ -302,36 +305,60 @@ void CompartmentProcess::setSubunitStart()
       const unsigned rowSize(aComp->maxRow-aComp->minRow);
       const unsigned colSize(aComp->maxCol-aComp->minCol);
       const unsigned layerSize(aComp->maxLayer-aComp->minLayer);
-      unsigned row(aComp->minRow+rowSize/2); //z
-      unsigned col(aComp->minCol+colSize/2); //x
-      unsigned layer(aComp->minLayer+layerSize/2); //y
-      if(OriginX == -1)
+      unsigned row(aComp->minRow); //z
+      unsigned col(aComp->minCol); //x
+      unsigned layer(aComp->minLayer); //y
+      if(PlaneYZ)
         {
-          col = aComp->minCol;
+          if(!Length && !Subunits)
+            {
+              Length = aComp->lengthZ*VoxelRadius*2;
+            }
+          if(!Width && !Filaments)
+            {
+              Width = aComp->lengthY*VoxelRadius*2;
+            }
+          if(PlaneYZ == 1)
+            { 
+              col = aComp->maxCol;
+            }
         }
-      else if(OriginX == 1)
+      else if(PlaneXZ)
         {
-          col = aComp->maxCol;
+          lengthVector = Point(0, 0, 1);
+          widthVector = Point(1, 0, 0);
+          heightVector = Point(0, 1, 0);
+          if(!Length && !Subunits)
+            {
+              Length = aComp->lengthZ*VoxelRadius*2;
+            }
+          if(!Width && !Filaments)
+            {
+              Width = aComp->lengthX*VoxelRadius*2;
+            }
+          if(PlaneXZ == 1)
+            { 
+              layer = aComp->maxLayer;
+            }
         }
-      if(OriginY == -1)
+      else
         {
-          layer = aComp->minLayer;
+          lengthVector = Point(1, 0, 0);
+          widthVector = Point(0, 1, 0);
+          heightVector = Point(0, 0, 1);
+          if(!Length && !Subunits)
+            {
+              Length = aComp->lengthX*VoxelRadius*2;
+            }
+          if(!Width && !Filaments)
+            {
+              Width = aComp->lengthY*VoxelRadius*2;
+            }
+          if(PlaneXY == 1)
+            { 
+              row = aComp->maxRow;
+            }
         }
-      else if(OriginY == 1)
-        {
-          layer = aComp->maxLayer;
-        }
-      if(OriginZ == -1)
-        {
-          row = aComp->minRow;
-        }
-      else if(OriginZ == 1)
-        {
-          row = aComp->maxRow;
-        }
-      //Translate the point from centerPoint to the subunitStart point
-      layer -= layerSize/2;
-      row -= rowSize/2;
       const unsigned coord(theSpatiocyteStepper->global2coord(row, layer, col));
       subunitStart = theSpatiocyteStepper->coord2point(coord);
       const double multX(OriginX*theComp->lengthX/2);
@@ -341,35 +368,6 @@ void CompartmentProcess::setSubunitStart()
       center.x += multX;
       center.y += multY;
       center.z += multZ;
-      if(OriginX != 1 && OriginX != -1)
-        {
-          subunitStart.x += multX;
-        }
-      if(OriginY != 1 && OriginY != -1)
-        {
-          subunitStart.y += multY;
-        }
-      if(OriginZ != 1 && OriginZ != -1)
-        {
-          subunitStart.z += multZ;
-        }
-      /*
-      const double multX(OriginX*theComp->lengthX/2);
-      const double multY(OriginY*theComp->lengthY/2);
-      const double multZ(OriginZ*theComp->lengthZ/2);
-      subunitStart.x += multX;
-      subunitStart.y += multY;
-      subunitStart.z += multZ;
-      Point& center(theComp->centerPoint);
-      center.x += multX;
-      center.y += multY;
-      center.z += multZ;
-      */
-      /*
-      subunitStart.y -= (Width/(VoxelRadius*2)-theComp->lengthY)/2;
-      subunitStart.z -= (Length/(VoxelRadius*2)-theComp->lengthZ)/2;
-      subunitStart.x -= (Height/(VoxelRadius*2)-theComp->lengthX)/2;
-      */
     }
 }
 
@@ -378,11 +376,11 @@ void CompartmentProcess::setSubunitStart()
 void CompartmentProcess::setCompartmentDimension()
 {
   setSubunitStart();
-  if(Length)
+  if(Length && !Subunits)
     {
       Subunits = (unsigned)(Length/(DiffuseRadius*2));
     }
-  if(Width)
+  if(Width && !Filaments)
     {
       Filaments = (unsigned)((Width-2*DiffuseRadius)/
                                  (DiffuseRadius*sqrt(3)))+1;
@@ -669,21 +667,12 @@ void CompartmentProcess::initializeVectors()
   rotate(tmp);
   lengthStart = add(tmp, origin);
 
-  lengthVector.x = 0;
-  lengthVector.y = 0;
-  lengthVector.z = 1;
   rotate(lengthVector);
   lengthEnd = disp(lengthStart, lengthVector, nLength);
 
-  widthVector.x = 0;
-  widthVector.y = 1;
-  widthVector.x = 0;
   rotate(widthVector);
   widthEnd = disp(lengthEnd, widthVector, nWidth);
 
-  heightVector.x = 1;
-  heightVector.y = 0;
-  heightVector.z = 0;
   rotate(heightVector);
   heightEnd = disp(widthEnd, heightVector, nHeight);
 
@@ -711,12 +700,9 @@ void CompartmentProcess::initializeVectors()
 
 void CompartmentProcess::rotate(Point& V)
 {
-  if(!Autofit)
-    {
-      theSpatiocyteStepper->rotateX(RotateX, &V, 1);
-      theSpatiocyteStepper->rotateY(RotateY, &V, 1);
-      theSpatiocyteStepper->rotateZ(RotateZ, &V, 1);
-    }
+  theSpatiocyteStepper->rotateX(RotateX, &V, 1);
+  theSpatiocyteStepper->rotateY(RotateY, &V, 1);
+  theSpatiocyteStepper->rotateZ(RotateZ, &V, 1);
 }
 
 void CompartmentProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,

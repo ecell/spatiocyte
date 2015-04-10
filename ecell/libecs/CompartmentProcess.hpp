@@ -54,12 +54,16 @@ public:
       PROPERTYSLOT_SET_GET(Integer, Autofit);
       PROPERTYSLOT_SET_GET(Integer, Filaments);
       PROPERTYSLOT_SET_GET(Integer, Periodic);
+      PROPERTYSLOT_SET_GET(Integer, PlaneXY);
+      PROPERTYSLOT_SET_GET(Integer, PlaneXZ);
+      PROPERTYSLOT_SET_GET(Integer, PlaneYZ);
       PROPERTYSLOT_SET_GET(Integer, RegularLattice);
       PROPERTYSLOT_SET_GET(Integer, Subunits);
       PROPERTYSLOT_SET_GET(Integer, SurfaceDirection);
       PROPERTYSLOT_SET_GET(Real, DiffuseRadius); //off-lattice voxel radius
       PROPERTYSLOT_SET_GET(Real, Length);
       PROPERTYSLOT_SET_GET(Real, LipidRadius); //radius of lipid voxels
+      PROPERTYSLOT_SET_GET(Real, OriginZ);
       PROPERTYSLOT_SET_GET(Real, OriginX);
       PROPERTYSLOT_SET_GET(Real, OriginY);
       PROPERTYSLOT_SET_GET(Real, OriginZ);
@@ -77,12 +81,15 @@ public:
   CompartmentProcess():
     isCompartmentalized(false),
     Autofit(1),
-    Filaments(1),
+    Filaments(0),
     LipidCols(0),
     LipidRows(0),
     Periodic(0),
+    PlaneXY(1),
+    PlaneXZ(0),
+    PlaneYZ(0),
     RegularLattice(1),
-    Subunits(1),
+    Subunits(0),
     SurfaceDirection(2),
     theDiffuseSize(6),
     theDimension(1),
@@ -105,6 +112,9 @@ public:
   SIMPLE_SET_GET_METHOD(Integer, Autofit);
   SIMPLE_SET_GET_METHOD(Integer, Filaments);
   SIMPLE_SET_GET_METHOD(Integer, Periodic);
+  SIMPLE_SET_GET_METHOD(Integer, PlaneXY);
+  SIMPLE_SET_GET_METHOD(Integer, PlaneXZ);
+  SIMPLE_SET_GET_METHOD(Integer, PlaneYZ);
   SIMPLE_SET_GET_METHOD(Integer, RegularLattice);
   SIMPLE_SET_GET_METHOD(Integer, Subunits);
   SIMPLE_SET_GET_METHOD(Integer, SurfaceDirection);
@@ -173,6 +183,9 @@ protected:
   unsigned LipidRows;
   unsigned lipStartCoord;
   unsigned Periodic;
+  unsigned PlaneXY;
+  unsigned PlaneXZ;
+  unsigned PlaneYZ;
   unsigned subStartCoord;
   unsigned RegularLattice;
   unsigned Subunits;
