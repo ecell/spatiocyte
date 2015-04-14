@@ -374,40 +374,15 @@ void CompartmentProcess::setSubunitStart()
       center.x = center.x/2+subunitStart.x;
       center.y = center.y/2+subunitStart.y;
       center.z = center.z/2+subunitStart.z;
-      /*
       const double multX(OriginX*theComp->lengthX/2);
       const double multY(OriginY*theComp->lengthY/2);
       const double multZ(OriginZ*theComp->lengthZ/2);
-      Point& center(theComp->centerPoint);
       center.x += multX;
       center.y += multY;
       center.z += multZ;
-      */
-      /*
-      layer -= layerSize/2;
-      row -= rowSize/2;
-      const unsigned coord(theSpatiocyteStepper->global2coord(row, layer, col));
-      subunitStart = theSpatiocyteStepper->coord2point(coord);
-      const double multX(OriginX*theComp->lengthX/2);
-      const double multY(OriginY*theComp->lengthY/2);
-      const double multZ(OriginZ*theComp->lengthZ/2);
-      Point& center(theComp->centerPoint);
-      center.x += multX;
-      center.y += multY;
-      center.z += multZ;
-      if(OriginX != 1 && OriginX != -1)
-        {
-          subunitStart.x += multX;
-        }
-      if(OriginY != 1 && OriginY != -1)
-        {
-          subunitStart.y += multY;
-        }
-      if(OriginZ != 1 && OriginZ != -1)
-        {
-          subunitStart.z += multZ;
-        }
-        */
+      subunitStart.x += multX;
+      subunitStart.y += multY;
+      subunitStart.z += multZ;
     }
 }
 
