@@ -3571,7 +3571,8 @@ public:
                              const unsigned aVacantRows,
                              const unsigned aVacantCols,
                              const double nLipidRadius,
-                             const double aSubunitAngle, Point& aSurfaceNormal)
+                             const double aSubunitAngle, Point& aSurfaceNormal,
+                             Point& widthVector, Point& lengthVector)
     {
       unsigned rowA(aVacantRows/2);
       unsigned rowB(rowA+1);
@@ -3607,39 +3608,46 @@ public:
               theProductPairOffsets[i].resize(2);
               pushProductPairOffsets(rowA, coordA, coordsA, nDist, aLipidStart,
                                      nLipidRadius, 
-                                     theProductPairOffsets[i][rowA%2], i);
+                                     theProductPairOffsets[i][rowA%2], i,
+                                     widthVector, lengthVector);
               pushProductPairOffsets(rowB, coordB, coordsB, nDist, aLipidStart,
                                      nLipidRadius, 
-                                     theProductPairOffsets[i][rowB%2], i);
+                                     theProductPairOffsets[i][rowB%2], i,
+                                     widthVector, lengthVector);
             }
         }
     }
   void getRowColStartEnd(const unsigned coordA, const double nDist,
                          const Point& aLipidStart, const double nLipidRadius,
                          unsigned& rowStart, unsigned& colStart,
-                         unsigned& rowEnd, unsigned& colEnd)
+                         unsigned& rowEnd, unsigned& colEnd,
+                         Point& widthVector, Point& lengthVector)
     {
       Point& pointA(*theLattice[coordA+vacStartCoord].point);
-      double minY(pointA.y-aLipidStart.y-nDist*2);
-      double minZ(pointA.z-aLipidStart.z-nDist*2);
-      double maxY(pointA.y-aLipidStart.y+nDist*2);
-      double maxZ(pointA.z-aLipidStart.z+nDist*2);
-      rowStart = (unsigned)std::max(minY/(nLipidRadius*sqrt(3))-1, 0.0);
-      colStart = (unsigned)std::max(minZ/(nLipidRadius*2)-1, 0.0);
-      rowEnd = (unsigned)std::min(maxY/(nLipidRadius*sqrt(3))+1,
-                                  double(lipRows));
-      colEnd = (unsigned)std::min(maxZ/(nLipidRadius*2)+1, double(lipCols));
+      double minWidth(point2lineDisp(pointA, lengthVector, aLipidStart));
+      double minLength(point2lineDisp(pointA, widthVector, aLipidStart));
+      double maxWidth(minWidth+nDist*2);
+      double maxLength(minLength+nDist*2);
+      minWidth = std::max(0.0, minWidth-nDist*2);
+      minLength = std::max(0.0, minLength-nDist*2);
+      rowStart = (unsigned)std::max(minWidth/(nLipidRadius*sqrt(3))-1, 0.0);
+      rowEnd = (unsigned)std::min(maxWidth/(nLipidRadius*sqrt(3))+1,
+                                         double(lipRows));
+      colStart = (unsigned)std::max(minLength/(nLipidRadius*2)-1, 0.0);
+      colEnd = (unsigned)std::min(maxLength/(nLipidRadius*2)+1,
+                                  double(lipCols));
     }
   void pushProductPairOffsets(const unsigned row, const unsigned coordA,
                               const std::vector<unsigned>& myCoords,
                               const double nDist, const Point& aLipidStart,
                               const double nLipidRadius,
                               std::vector<int>& aProductPairOffsets,
-                              const unsigned aSpeciesID)
+                              const unsigned aSpeciesID,
+                              Point& widthVector, Point& lengthVector)
     {
       unsigned rowStart, rowEnd, colStart, colEnd;
       getRowColStartEnd(coordA, nDist, aLipidStart, nLipidRadius, rowStart,
-                        colStart, rowEnd, colEnd);
+                        colStart, rowEnd, colEnd, widthVector, lengthVector);
       for(unsigned i(rowStart); i != rowEnd; ++i)
         {
           for(unsigned j(colStart); j != colEnd; ++j)
@@ -3687,7 +3695,8 @@ public:
                            const unsigned aVacantRows,
                            const unsigned aVacantCols,
                            const double nLipidRadius,
-                           const double aSubunitAngle, Point& aSurfaceNormal)
+                           const double aSubunitAngle, Point& aSurfaceNormal,
+                           Point& widthVector, Point& lengthVector)
     {
       setAdjoinOffsets(anAdjoinOffsets, aRowOffsets);
       double nDist((aLipid->getMoleculeRadius()+theMoleculeRadius)/
@@ -3715,14 +3724,15 @@ public:
       theSrcOffsets.resize(2);
       theRotOffsets.resize(2);
       setOffsets(rowA, coordA, nDist, aLipidStart, nLipidRadius, aSubunitAngle,
-                 aSurfaceNormal, theOffsets[rowA%2]);
+                 aSurfaceNormal, widthVector, lengthVector, theOffsets[rowA%2]);
       setOffsets(rowB, coordB, nDist, aLipidStart, nLipidRadius, aSubunitAngle,
-                 aSurfaceNormal, theOffsets[rowB%2]);
+                 aSurfaceNormal, widthVector, lengthVector, theOffsets[rowB%2]);
       theTotalLipidSites = theOffsets[0][0].size();
     }
   void setOffsets(const unsigned row, const unsigned coordA, const double nDist,
                   const Point& aLipidStart, const double nLipidRadius,
-                  const double aSubunitAngle, Point& aSurfaceNormal, 
+                  const double aSubunitAngle, Point& aSurfaceNormal,  
+                  Point& widthVector, Point& lengthVector,
                   std::vector<std::vector<int> >& refOffsets)
     {
       theRotateSize = 16;
@@ -3735,10 +3745,12 @@ public:
       for(unsigned i(0); i != theRotateSize; ++i)
         {
           setCoordOffsets(coordA, coordA, nDist, aLipidStart, nLipidRadius,
-                          aSubunitAngle, aSurfaceNormal, angle, refOffsets[i]);
+                          aSubunitAngle, aSurfaceNormal, widthVector, lengthVector,
+                          angle, refOffsets[i]);
           setWalkOffsets(row, coordA, nDist, aLipidStart, nLipidRadius,
-                         aSubunitAngle, aSurfaceNormal, angle, refOffsets[i],
-                         theTarOffsets[row%2][i], theSrcOffsets[row%2][i]);
+                         aSubunitAngle, aSurfaceNormal, widthVector, lengthVector,
+                         angle, refOffsets[i], theTarOffsets[row%2][i],
+                         theSrcOffsets[row%2][i]);
           theRotOffsets[row%2][i].resize(2);
           if(i)
             {
@@ -3757,7 +3769,8 @@ public:
   void setWalkOffsets(const unsigned row, const unsigned coordA,
                       const double nDist, const Point& aLipidStart,
                       const double nLipidRadius, const double aSubunitAngle,
-                      Point& aSurfaceNormal, const double angle,
+                      Point& aSurfaceNormal, Point& widthVector,
+                      Point& lengthVector, const double angle,
                       std::vector<int>& prevOffsets,
                       std::vector<std::vector<int> >& aTarOffsets,
                       std::vector<std::vector<int> >& aSrcOffsets)
@@ -3769,7 +3782,8 @@ public:
           const unsigned coordB(theAdjoinOffsets[row%2][i]+coordA);
           std::vector<int> nextOffsets;
           setCoordOffsets(coordB, coordA, nDist, aLipidStart, nLipidRadius,
-                          aSubunitAngle, aSurfaceNormal, angle, nextOffsets);
+                          aSubunitAngle, aSurfaceNormal, widthVector, lengthVector,
+                          angle, nextOffsets);
           setDiffOffsets(prevOffsets, nextOffsets, aTarOffsets[i]);
           setDiffOffsets(nextOffsets, prevOffsets, aSrcOffsets[i]);
         }
@@ -3790,13 +3804,15 @@ public:
   void setCoordOffsets(const unsigned coordA, const unsigned coordB,
                        const double nDist, const Point& aLipidStart,
                        const double nLipidRadius, const double aSubunitAngle,
-                       Point& aSurfaceNormal, const double aRotateAngle,
+                       Point& aSurfaceNormal, Point& widthVector,
+                       Point& lengthVector, const double aRotateAngle,
                        std::vector<int>& anIntersectOffsets)
     {
       std::vector<unsigned> anIntersectLipids;
       getIntersectLipidsRegular(coordA+vacStartCoord, nDist, aLipidStart,
                                 nLipidRadius, aSubunitAngle, aSurfaceNormal,
-                                aRotateAngle, anIntersectLipids);
+                                widthVector, lengthVector, aRotateAngle,
+                                anIntersectLipids);
       anIntersectOffsets.resize(0);
       for(unsigned i(0); i != anIntersectLipids.size(); ++i)
         {
@@ -3808,23 +3824,36 @@ public:
                                  const double nLipidRadius,
                                  const double aSubunitAngle,
                                  Point& aSurfaceNormal,
+                                 Point& widthVector,
+                                 Point& lengthVector,
                                  const double aRotateAngle,
                                  std::vector<unsigned>& anIntersectLipids)
     {
       Point& pointA(*theLattice[coordA].point);
+      //The rectangle shape of the rotating subunit on the 2D surface
+      //(assuming the molecule is in rectangular shape)
+      Point maxRect(disp(pointA, widthVector, nDist*sin(aSubunitAngle)));
+      Point minRect(disp(pointA, widthVector, -nDist*sin(aSubunitAngle)));
+      maxRect = disp(maxRect, lengthVector, nDist*cos(aSubunitAngle));
+      minRect = disp(minRect, lengthVector, -nDist*cos(aSubunitAngle));
+      /*
       double maxRectY(pointA.y+nDist*sin(aSubunitAngle));
       double minRectY(pointA.y-nDist*sin(aSubunitAngle));
       double maxRectZ(pointA.z+nDist*cos(aSubunitAngle));
       double minRectZ(pointA.z-nDist*cos(aSubunitAngle));
-      double minY(pointA.y-aLipidStart.y-nDist*2);
-      double minZ(pointA.z-aLipidStart.z-nDist*2);
-      double maxY(pointA.y-aLipidStart.y+nDist*2);
-      double maxZ(pointA.z-aLipidStart.z+nDist*2);
-      unsigned rowStart((unsigned)std::max(minY/(nLipidRadius*sqrt(3))-1, 0.0));
-      unsigned colStart((unsigned)std::max(minZ/(nLipidRadius*2)-1, 0.0));
-      unsigned rowEnd((unsigned)std::min(maxY/(nLipidRadius*sqrt(3))+1, 
+      */
+      double minWidth(point2lineDisp(pointA, lengthVector, aLipidStart));
+      double minLength(point2lineDisp(pointA, widthVector, aLipidStart));
+      double maxWidth(minWidth+nDist*2);
+      double maxLength(minLength+nDist*2);
+      minWidth = std::max(0.0, minWidth-nDist*2);
+      minLength = std::max(0.0, minLength-nDist*2);
+      unsigned rowStart((unsigned)std::max(minWidth/(nLipidRadius*sqrt(3))-1,
+                                           0.0));
+      unsigned rowEnd((unsigned)std::min(maxWidth/(nLipidRadius*sqrt(3))+1,
                                          double(lipRows)));
-      unsigned colEnd((unsigned)std::min(maxZ/(nLipidRadius*2)+1,
+      unsigned colStart((unsigned)std::max(minLength/(nLipidRadius*2)-1, 0.0));
+      unsigned colEnd((unsigned)std::min(maxLength/(nLipidRadius*2)+1,
                                          double(lipCols)));
       for(unsigned i(rowStart); i != rowEnd; ++i)
         {
@@ -3836,8 +3865,9 @@ public:
                                      aRotateAngle);
               if(aSubunitAngle)
                 {
-                  if(pointB.y > minRectY && pointB.y < maxRectY &&
-                     pointB.z > minRectZ && pointB.z < maxRectZ)
+                  if(pointB.y >= minRect.y && pointB.y <= maxRect.y &&
+                     pointB.x >= minRect.x && pointB.x <= maxRect.x &&
+                     pointB.z >= minRect.z && pointB.z <= maxRect.z)
                     {
                       anIntersectLipids.push_back(coord);
                     }

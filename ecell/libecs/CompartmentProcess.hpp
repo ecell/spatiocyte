@@ -63,7 +63,6 @@ public:
       PROPERTYSLOT_SET_GET(Real, DiffuseRadius); //off-lattice voxel radius
       PROPERTYSLOT_SET_GET(Real, Length);
       PROPERTYSLOT_SET_GET(Real, LipidRadius); //radius of lipid voxels
-      PROPERTYSLOT_SET_GET(Real, OriginZ);
       PROPERTYSLOT_SET_GET(Real, OriginX);
       PROPERTYSLOT_SET_GET(Real, OriginY);
       PROPERTYSLOT_SET_GET(Real, OriginZ);

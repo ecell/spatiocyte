@@ -308,16 +308,20 @@ void CompartmentProcess::setSubunitStart()
       unsigned row(aComp->minRow); //z
       unsigned col(aComp->minCol); //x
       unsigned layer(aComp->minLayer); //y
+      Point& center(theComp->centerPoint);
       if(PlaneYZ)
         {
           if(!Length && !Subunits)
             {
               Length = aComp->lengthZ*VoxelRadius*2;
+              center.z = aComp->lengthZ;
             }
           if(!Width && !Filaments)
             {
               Width = aComp->lengthY*VoxelRadius*2;
+              center.y = aComp->lengthY;
             }
+          center.x = 2*nDiffuseRadius; 
           if(PlaneYZ == 1)
             { 
               col = aComp->maxCol;
@@ -331,11 +335,14 @@ void CompartmentProcess::setSubunitStart()
           if(!Length && !Subunits)
             {
               Length = aComp->lengthZ*VoxelRadius*2;
+              center.z = aComp->lengthZ;
             }
           if(!Width && !Filaments)
             {
               Width = aComp->lengthX*VoxelRadius*2;
+              center.x = aComp->lengthX;
             }
+          center.y = 2*nDiffuseRadius;
           if(PlaneXZ == 1)
             { 
               layer = aComp->maxLayer;
@@ -349,16 +356,36 @@ void CompartmentProcess::setSubunitStart()
           if(!Length && !Subunits)
             {
               Length = aComp->lengthX*VoxelRadius*2;
+              center.x = aComp->lengthX;
             }
           if(!Width && !Filaments)
             {
               Width = aComp->lengthY*VoxelRadius*2;
+              center.y = aComp->lengthY;
             }
+          center.z = 2*nDiffuseRadius;
           if(PlaneXY == 1)
             { 
               row = aComp->maxRow;
             }
         }
+      const unsigned coord(theSpatiocyteStepper->global2coord(row, layer, col));
+      subunitStart = theSpatiocyteStepper->coord2point(coord);
+      center.x = center.x/2+subunitStart.x;
+      center.y = center.y/2+subunitStart.y;
+      center.z = center.z/2+subunitStart.z;
+      /*
+      const double multX(OriginX*theComp->lengthX/2);
+      const double multY(OriginY*theComp->lengthY/2);
+      const double multZ(OriginZ*theComp->lengthZ/2);
+      Point& center(theComp->centerPoint);
+      center.x += multX;
+      center.y += multY;
+      center.z += multZ;
+      */
+      /*
+      layer -= layerSize/2;
+      row -= rowSize/2;
       const unsigned coord(theSpatiocyteStepper->global2coord(row, layer, col));
       subunitStart = theSpatiocyteStepper->coord2point(coord);
       const double multX(OriginX*theComp->lengthX/2);
@@ -368,6 +395,19 @@ void CompartmentProcess::setSubunitStart()
       center.x += multX;
       center.y += multY;
       center.z += multZ;
+      if(OriginX != 1 && OriginX != -1)
+        {
+          subunitStart.x += multX;
+        }
+      if(OriginY != 1 && OriginY != -1)
+        {
+          subunitStart.y += multY;
+        }
+      if(OriginZ != 1 && OriginZ != -1)
+        {
+          subunitStart.z += multZ;
+        }
+        */
     }
 }
 
@@ -531,7 +571,8 @@ void CompartmentProcess::setSpeciesIntersectVacants()
                                                    subunitStart, Filaments,
                                                    Subunits, nDiffuseRadius,
                                                    SubunitAngle,
-                                                   surfaceNormal);
+                                                   surfaceNormal, widthVector,
+                                                   lengthVector);
     }
   for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
     {
@@ -541,7 +582,8 @@ void CompartmentProcess::setSpeciesIntersectVacants()
                                                      subunitStart, Filaments,
                                                      Subunits, nDiffuseRadius,
                                                      SubunitAngle,
-                                                     surfaceNormal);
+                                                     surfaceNormal, widthVector,
+                                                     lengthVector);
     }
 }
 void CompartmentProcess::setSpeciesIntersectLipids()
@@ -562,7 +604,9 @@ void CompartmentProcess::setSpeciesIntersectLipids()
                                                        lipidStart, Filaments,
                                                        Subunits, nLipidRadius,
                                                        SubunitAngle,
-                                                       surfaceNormal);
+                                                       surfaceNormal,
+                                                       widthVector,
+                                                       lengthVector);
         }
       for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
         {
@@ -572,7 +616,9 @@ void CompartmentProcess::setSpeciesIntersectLipids()
                                                          lipidStart, Filaments,
                                                          Subunits, nLipidRadius,
                                                          SubunitAngle,
-                                                         surfaceNormal);
+                                                         surfaceNormal,
+                                                         widthVector,
+                                                         lengthVector);
         }
     }
   else
@@ -668,12 +714,15 @@ void CompartmentProcess::initializeVectors()
   lengthStart = add(tmp, origin);
 
   rotate(lengthVector);
+  tmp =lengthVector;
   lengthEnd = disp(lengthStart, lengthVector, nLength);
 
   rotate(widthVector);
+  tmp =widthVector;
   widthEnd = disp(lengthEnd, widthVector, nWidth);
 
   rotate(heightVector);
+  tmp =heightVector;
   heightEnd = disp(widthEnd, heightVector, nHeight);
 
   if(theLipidSpecies)
@@ -691,7 +740,9 @@ void CompartmentProcess::initializeVectors()
   //Set up surface vectors:
   surfaceNormal = cross(lengthVector, widthVector);
   surfaceNormal = norm(surfaceNormal);
+  tmp = surfaceNormal;
   surfaceDisplace = dot(surfaceNormal, widthEnd);
+  tmp = surfaceDisplace;
   lengthDisplace = dot(lengthVector, lengthStart);
   lengthDisplaceOpp = dot(lengthVector, lengthEnd);
   widthDisplace = dot(widthVector, lengthEnd);
