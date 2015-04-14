@@ -469,13 +469,14 @@ public:
         }
       return aTotalSquaredDisplacement/theMoleculeSize;
     }
+  //Only works for 2D periodic diffusion now:
   Point getPeriodicPoint(const unsigned index)
     {
       Origin& anOrigin(theTags[index].origin);
       Point aPoint(getPoint(index));
-      aPoint.x += anOrigin.layer*(theComp->lengthX+nDiffuseRadius);
-      aPoint.y += anOrigin.row*lipRows*nDiffuseRadius*sqrt(3);
-      aPoint.z += anOrigin.col*lipCols*nDiffuseRadius*2;
+      disp_(aPoint, theWidthVector, 
+            anOrigin.row*lipRows*nDiffuseRadius*sqrt(3));
+      disp_(aPoint, theLengthVector, anOrigin.col*lipCols*nDiffuseRadius*2);
       return aPoint;
     }
   void setCollision(unsigned aCollision)
@@ -1187,6 +1188,77 @@ public:
                   source->idx = target->idx;
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
+                }
+            }
+          else
+            {
+              if(getID(target) == theComp->interfaceID)
+                {
+                  unsigned coord(theRng.Integer(target->adjoiningSize-
+                                                 target->diffuseSize));
+                  coord = target->adjoiningCoords[coord+target->diffuseSize];
+                  target = &theLattice[coord];
+                }
+              const unsigned tarID(getID(target));
+              if(theDiffusionInfluencedReactions[tarID])
+                {
+                  //If it meets the reaction probability:
+                  if(theReactionProbabilities[tarID] == 1 ||
+                     theRng.Fixed() < theReactionProbabilities[tarID])
+                    { 
+                      if(theCollision)
+                        { 
+                          ++collisionCnts[i];
+                          Species* targetSpecies(theSpecies[tarID]);
+                          targetSpecies->addCollision(target);
+                          if(theCollision != 2)
+                            {
+                              return;
+                            }
+                        }
+                      unsigned aMoleculeSize(theMoleculeSize);
+                      react(source, target, i, target->idx%theStride, tarID);
+                      //If the reaction is successful, the last molecule of this
+                      //species will replace the pointer of i, so we need to 
+                      //decrement i to perform the diffusion on it. However, if
+                      //theMoleculeSize didn't decrease, that means the
+                      //currently walked molecule was a product of this
+                      //reaction and so we don't need to walk it again by
+                      //decrementing i.
+                      if(theMoleculeSize < aMoleculeSize)
+                        {
+                          --i;
+                        }
+                    }
+                }
+            }
+        }
+    }
+  void walkRegularOrigins()
+    {
+      const unsigned beginMoleculeSize(theMoleculeSize);
+      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          const unsigned tarIndex(theRng.Integer(theDiffuseSize)); 
+          const unsigned row((source->coord-lipStartCoord)/lipCols);
+          int coordA(source->coord-lipStartCoord+
+                     theAdjoinOffsets[row%2][tarIndex]);
+          Origin anOrigin(theTags[i].origin);
+          if(!isInLatticeOrigins(coordA, theRowOffsets[tarIndex]+row,
+                                 anOrigin))
+            {
+              continue;
+            }
+          Voxel* target(&theLattice[coordA+lipStartCoord]);
+          if(getID(target) == theVacantID)
+            {
+              if(theWalkProbability == 1 || theRng.Fixed() < theWalkProbability)
+                {
+                  source->idx = target->idx;
+                  target->idx = i+theStride*theID;
+                  theMolecules[i] = target;
+                  theTags[i].origin = anOrigin;
                 }
             }
           else
@@ -3698,6 +3770,8 @@ public:
                            const double aSubunitAngle, Point& aSurfaceNormal,
                            Point& widthVector, Point& lengthVector)
     {
+      theWidthVector = widthVector;
+      theLengthVector = lengthVector;
       setAdjoinOffsets(anAdjoinOffsets, aRowOffsets);
       double nDist((aLipid->getMoleculeRadius()+theMoleculeRadius)/
                    (2*theVoxelRadius));
@@ -4190,6 +4264,8 @@ private:
   double theVoxelRadius;
   double theWalkProbability;
   double theWalkPropensity;
+  Point theLengthVector;
+  Point theWidthVector;
   RandomLib::Random& theRng;
   Species* theTrailSpecies;
   Species* theVacantSpecies;

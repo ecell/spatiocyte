@@ -279,6 +279,10 @@ public:
                 {
                   theWalkMethod = &DiffusionProcess::walkOnMultiscaleRegular;
                 }
+              else if(Origins)
+                {
+                  theWalkMethod = &DiffusionProcess::walkRegularOrigins;
+                }
               else
                 {
                   theWalkMethod = &DiffusionProcess::walkRegular;
@@ -342,7 +346,11 @@ public:
     {
       theDiffusionSpecies->walkRegular();
     }
-   void walkOnMultiscaleRegular() const
+  void walkRegularOrigins() const
+    {
+      theDiffusionSpecies->walkRegularOrigins();
+    }
+  void walkOnMultiscaleRegular() const
     {
       theDiffusionSpecies->walkOnMultiscaleRegular();
     }
