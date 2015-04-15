@@ -1167,7 +1167,8 @@ public:
         }
     }
   //This is used for perfect flat surface compartments only, so that we can
-  //get correct 2D diffusion behavior.
+  //get correct 2D diffusion behavior. Also much faster than walk() when
+  //performing periodic boundary diffusion (eg. walkRegular:5s vs walk:8.7s).
   void walkRegular()
     {
       const unsigned beginMoleculeSize(theMoleculeSize);
@@ -1251,6 +1252,144 @@ public:
         { 
           std::cout << getIDString() << " collision/time:" << 
             theSpeciesCollisionCnt/theStepper->getCurrentTime() << std::endl;
+        }
+    }
+  void walkReactRegular()
+    {
+      const unsigned beginMoleculeSize(theMoleculeSize);
+      unsigned size(theAdjoiningCoordSize);
+      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          const unsigned tarIndex(theRng.Integer(theDiffuseSize)); 
+          const unsigned row((source->coord-lipStartCoord)/lipCols);
+          int coordA(source->coord-lipStartCoord+
+                     theAdjoinOffsets[row%2][tarIndex]);
+          if(!isInLattice(coordA, theRowOffsets[tarIndex]+row))
+            {
+              continue;
+            }
+          Voxel* target(&theLattice[coordA+lipStartCoord]);
+          if(getID(target) == theComp->interfaceID)
+            {
+              //Some interface voxels do not have pointers to the
+              //off lattice subunits, so their adjoiningSize == diffuseSize:
+              if(target->adjoiningSize == target->diffuseSize)
+                {
+                  continue;
+                }
+              unsigned coord(theRng.Integer(target->adjoiningSize-
+                                            target->diffuseSize));
+              coord = target->adjoiningCoords[coord+target->diffuseSize];
+              target = &theLattice[coord];
+            }
+          const unsigned tarID(getID(target));
+          if(theDiffusionInfluencedReactions[tarID])
+            {
+              if(theCollision==3)
+                { 
+                  ++theSpeciesCollisionCnt;
+                  return;
+                }
+              //If it meets the reaction probability:
+              if(theReactionProbabilities[tarID] == 1 ||
+                 theRng.Fixed() < theReactionProbabilities[tarID])
+                { 
+                  if(theCollision && theCollision != 3)
+                    { 
+                      ++collisionCnts[i];
+                      Species* targetSpecies(theSpecies[tarID]);
+                      targetSpecies->addCollision(target);
+                      if(theCollision != 2)
+                        {
+                          return;
+                        }
+                    }
+                  unsigned aMoleculeSize(theMoleculeSize);
+                  react(source, target, i, target->idx%theStride, tarID);
+                  //If the reaction is successful, the last molecule of this
+                  //species will replace the pointer of i, so we need to 
+                  //decrement i to perform the diffusion on it. However, if
+                  //theMoleculeSize didn't decrease, that means the
+                  //currently walked molecule was a product of this
+                  //reaction and so we don't need to walk it again by
+                  //decrementing i.
+                  if(theMoleculeSize < aMoleculeSize)
+                    {
+                      --i;
+                    }
+                }
+            }
+        }
+    }
+  void walkReactRegularOrigins()
+    {
+      const unsigned beginMoleculeSize(theMoleculeSize);
+      unsigned size(theAdjoiningCoordSize);
+      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          const unsigned tarIndex(theRng.Integer(theDiffuseSize)); 
+          const unsigned row((source->coord-lipStartCoord)/lipCols);
+          int coordA(source->coord-lipStartCoord+
+                     theAdjoinOffsets[row%2][tarIndex]);
+          Origin anOrigin(theTags[i].origin);
+          if(!isInLatticeOrigins(coordA, theRowOffsets[tarIndex]+row,
+                                 anOrigin))
+            {
+              continue;
+            }
+          Voxel* target(&theLattice[coordA+lipStartCoord]);
+          if(getID(target) == theComp->interfaceID)
+            {
+              //Some interface voxels do not have pointers to the
+              //off lattice subunits, so their adjoiningSize == diffuseSize:
+              if(target->adjoiningSize == target->diffuseSize)
+                {
+                  continue;
+                }
+              unsigned coord(theRng.Integer(target->adjoiningSize-
+                                            target->diffuseSize));
+              coord = target->adjoiningCoords[coord+target->diffuseSize];
+              target = &theLattice[coord];
+            }
+          const unsigned tarID(getID(target));
+          if(theDiffusionInfluencedReactions[tarID])
+            {
+              if(theCollision==3)
+                { 
+                  ++theSpeciesCollisionCnt;
+                  return;
+                }
+              //If it meets the reaction probability:
+              if(theReactionProbabilities[tarID] == 1 ||
+                 theRng.Fixed() < theReactionProbabilities[tarID])
+                { 
+                  if(theCollision && theCollision != 3)
+                    { 
+                      ++collisionCnts[i];
+                      Species* targetSpecies(theSpecies[tarID]);
+                      targetSpecies->addCollision(target);
+                      if(theCollision != 2)
+                        {
+                          return;
+                        }
+                    }
+                  unsigned aMoleculeSize(theMoleculeSize);
+                  react(source, target, i, target->idx%theStride, tarID);
+                  //If the reaction is successful, the last molecule of this
+                  //species will replace the pointer of i, so we need to 
+                  //decrement i to perform the diffusion on it. However, if
+                  //theMoleculeSize didn't decrease, that means the
+                  //currently walked molecule was a product of this
+                  //reaction and so we don't need to walk it again by
+                  //decrementing i.
+                  if(theMoleculeSize < aMoleculeSize)
+                    {
+                      --i;
+                    }
+                }
+            }
         }
     }
   void walkRegularOrigins()

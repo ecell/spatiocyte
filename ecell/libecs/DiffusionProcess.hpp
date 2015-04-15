@@ -222,11 +222,7 @@ public:
         {
           theDiffusionSpecies->initMoleculeOrigins();
         }
-      if(WalkReact)
-        {
-          theWalkMethod = &DiffusionProcess::walkReact;
-        }
-      else if(theDiffusionSpecies->getIsDiffusiveVacant())
+      if(theDiffusionSpecies->getIsDiffusiveVacant())
         {
           theWalkMethod = &DiffusionProcess::walkVacant;
         }
@@ -282,11 +278,26 @@ public:
                 }
               else if(Origins)
                 {
-                  theWalkMethod = &DiffusionProcess::walkRegularOrigins;
+                  if(WalkReact)
+                    {
+                      theWalkMethod = 
+                        &DiffusionProcess::walkReactRegularOrigins;
+                    }
+                  else
+                    {
+                      theWalkMethod = &DiffusionProcess::walkRegularOrigins;
+                    }
                 }
               else
                 {
-                  theWalkMethod = &DiffusionProcess::walkRegular;
+                  if(WalkReact)
+                    {
+                      theWalkMethod = &DiffusionProcess::walkReactRegular;
+                    }
+                  else
+                    {
+                      theWalkMethod = &DiffusionProcess::walkRegular;
+                    }
                 }
             }
           else
@@ -302,9 +313,16 @@ public:
                       theWalkMethod = &DiffusionProcess::walkTrail;
                     }
                 }
-              else
+              else 
                 {
-                  theWalkMethod = &DiffusionProcess::walk;
+                  if(WalkReact)
+                    {
+                      theWalkMethod = &DiffusionProcess::walkReact;
+                    }
+                  else
+                    {
+                      theWalkMethod = &DiffusionProcess::walk;
+                    }
                 }
             }
         }
@@ -362,6 +380,14 @@ public:
   void walkReact() const
     {
       theDiffusionSpecies->walkReact();
+    }
+  void walkReactRegular() const
+    {
+      theDiffusionSpecies->walkReactRegular();
+    }
+  void walkReactRegularOrigins() const
+    {
+      theDiffusionSpecies->walkReactRegularOrigins();
     }
   void walkMultiscale() const
     {

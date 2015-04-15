@@ -60,6 +60,7 @@ public:
       PROPERTYSLOT_SET_GET(Integer, RegularLattice);
       PROPERTYSLOT_SET_GET(Integer, Subunits);
       PROPERTYSLOT_SET_GET(Integer, SurfaceDirection);
+      PROPERTYSLOT_SET_GET(Integer, Verbose);
       PROPERTYSLOT_SET_GET(Real, DiffuseRadius); //off-lattice voxel radius
       PROPERTYSLOT_SET_GET(Real, Length);
       PROPERTYSLOT_SET_GET(Real, LipidRadius); //radius of lipid voxels
@@ -90,6 +91,7 @@ public:
     RegularLattice(1),
     Subunits(0),
     SurfaceDirection(2),
+    Verbose(0),
     theDiffuseSize(6),
     theDimension(1),
     DiffuseRadius(0),
@@ -117,6 +119,7 @@ public:
   SIMPLE_SET_GET_METHOD(Integer, RegularLattice);
   SIMPLE_SET_GET_METHOD(Integer, Subunits);
   SIMPLE_SET_GET_METHOD(Integer, SurfaceDirection);
+  SIMPLE_SET_GET_METHOD(Integer, Verbose);
   SIMPLE_SET_GET_METHOD(Real, DiffuseRadius);
   SIMPLE_SET_GET_METHOD(Real, Length);
   SIMPLE_SET_GET_METHOD(Real, LipidRadius);
@@ -192,6 +195,7 @@ protected:
   unsigned theDiffuseSize;
   unsigned theDimension;
   unsigned vacStartIndex;
+  unsigned Verbose;
   int gridCols;
   int gridLayers;
   int gridRows;

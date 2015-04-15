@@ -1010,9 +1010,12 @@ void CompartmentProcess::enlistOrphanSubunitInterfaceVoxels()
               setSubunitInterfaceVoxels(i, nDiffuseRadius+nVoxelRadius); 
               if(!subunitInterfaces[i-subStartCoord].size())
                 {
-                  cout << getPropertyInterface().getClassName() << ":"
-                    << getFullID().asString() << 
-                    ": subunit is still orphaned" << std::endl;
+                  if(Verbose)
+                    {
+                      cout << getPropertyInterface().getClassName() << ":"
+                        << getFullID().asString() << 
+                        ": subunit is still orphaned" << std::endl;
+                    }
                 }
             }
         }
