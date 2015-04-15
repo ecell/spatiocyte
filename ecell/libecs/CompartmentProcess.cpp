@@ -386,8 +386,8 @@ void CompartmentProcess::setSubunitStart()
     }
 }
 
-// y:width:rows
-// z:length:cols
+// width:rows:filaments
+// length:cols:subunits
 void CompartmentProcess::setCompartmentDimension()
 {
   setSubunitStart();
@@ -408,12 +408,27 @@ void CompartmentProcess::setCompartmentDimension()
   //LipidRows below:
   Width = 2.00001*DiffuseRadius+(Filaments-1)*DiffuseRadius*sqrt(3); 
   Height = 2*DiffuseRadius;
+  if(!Filaments)
+    {
+      Filaments = 1;
+      Width = 2.00001*DiffuseRadius;
+    }
+  if(!Subunits)
+    {
+      Subunits = 1;
+      Length = 2.00001*DiffuseRadius;
+    }
   if(Filaments == 1)
     {
       theDimension = 1;
       Length = Subunits*DiffuseRadius*2;
     }
-  else
+  if(Subunits == 1)
+    {
+      theDimension = 1;
+      Width = Filaments*DiffuseRadius*2;
+    }
+  if(Subunits != 1 && Filaments != 1)
     {
       theDimension = 2;
       //Add DiffuseRadius for the protrusion from hexagonal arrangement:

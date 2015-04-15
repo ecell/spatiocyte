@@ -204,6 +204,7 @@ public:
                 {
                   alpha = pow((2*sqrt(2)+4*sqrt(3)+3*sqrt(6)+sqrt(22))/
                               (6*sqrt(2)+4*sqrt(3)+3*sqrt(6)), 2);
+                  //alpha = 0.9168857180924649
                 }
             }
           else if(theDiffusionSpecies->getDimension() == 3)

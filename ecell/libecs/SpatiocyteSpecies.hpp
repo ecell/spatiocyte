@@ -1166,9 +1166,12 @@ public:
             }
         }
     }
+  //This is used for perfect flat surface compartments only, so that we can
+  //get correct 2D diffusion behavior.
   void walkRegular()
     {
       const unsigned beginMoleculeSize(theMoleculeSize);
+      unsigned size(theAdjoiningCoordSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
@@ -1194,19 +1197,30 @@ public:
             {
               if(getID(target) == theComp->interfaceID)
                 {
+                  //Some interface voxels do not have pointers to the
+                  //off lattice subunits, so their adjoiningSize == diffuseSize:
+                  if(target->adjoiningSize == target->diffuseSize)
+                    {
+                      continue;
+                    }
                   unsigned coord(theRng.Integer(target->adjoiningSize-
-                                                 target->diffuseSize));
+                                                target->diffuseSize));
                   coord = target->adjoiningCoords[coord+target->diffuseSize];
                   target = &theLattice[coord];
                 }
               const unsigned tarID(getID(target));
               if(theDiffusionInfluencedReactions[tarID])
                 {
+                  if(theCollision==3)
+                    { 
+                      ++theSpeciesCollisionCnt;
+                      return;
+                    }
                   //If it meets the reaction probability:
                   if(theReactionProbabilities[tarID] == 1 ||
                      theRng.Fixed() < theReactionProbabilities[tarID])
                     { 
-                      if(theCollision)
+                      if(theCollision && theCollision != 3)
                         { 
                           ++collisionCnts[i];
                           Species* targetSpecies(theSpecies[tarID]);
@@ -1233,10 +1247,16 @@ public:
                 }
             }
         }
+      if(theCollision==3)
+        { 
+          std::cout << getIDString() << " collision/time:" << 
+            theSpeciesCollisionCnt/theStepper->getCurrentTime() << std::endl;
+        }
     }
   void walkRegularOrigins()
     {
       const unsigned beginMoleculeSize(theMoleculeSize);
+      unsigned size(theAdjoiningCoordSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
           Voxel* source(theMolecules[i]);
@@ -1265,19 +1285,30 @@ public:
             {
               if(getID(target) == theComp->interfaceID)
                 {
+                  //Some interface voxels do not have pointers to the
+                  //off lattice subunits, so their adjoiningSize == diffuseSize:
+                  if(target->adjoiningSize == target->diffuseSize)
+                    {
+                      continue;
+                    }
                   unsigned coord(theRng.Integer(target->adjoiningSize-
-                                                 target->diffuseSize));
+                                                target->diffuseSize));
                   coord = target->adjoiningCoords[coord+target->diffuseSize];
                   target = &theLattice[coord];
                 }
               const unsigned tarID(getID(target));
               if(theDiffusionInfluencedReactions[tarID])
                 {
+                  if(theCollision==3)
+                    { 
+                      ++theSpeciesCollisionCnt;
+                      return;
+                    }
                   //If it meets the reaction probability:
                   if(theReactionProbabilities[tarID] == 1 ||
                      theRng.Fixed() < theReactionProbabilities[tarID])
                     { 
-                      if(theCollision)
+                      if(theCollision && theCollision != 3)
                         { 
                           ++collisionCnts[i];
                           Species* targetSpecies(theSpecies[tarID]);
@@ -1303,6 +1334,11 @@ public:
                     }
                 }
             }
+        }
+      if(theCollision==3)
+        { 
+          std::cout << getIDString() << " collision/time:" << 
+            theSpeciesCollisionCnt/theStepper->getCurrentTime() << std::endl;
         }
     }
   void walkOnMultiscaleRegular()
