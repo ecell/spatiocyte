@@ -476,6 +476,65 @@ bool DiffusionInfluencedReactionProcess::reactAtoC_BtoD(Voxel* molA,
   return true;
 }
 
+
+
+
+//A + B => B + A
+//A + B -> [A swap B]
+bool DiffusionInfluencedReactionProcess::swapAB(Voxel* molA,
+                                                Voxel* molB,
+                                                const unsigned indexA,
+                                                const unsigned indexB)
+{
+  interruptProcessesPre();
+  Tag tagB(A->getTag(indexA));
+  Tag tagA(B->getTag(indexB));
+  unsigned oriA(tagA.boundCnt);
+  unsigned oriB(tagB.boundCnt);
+  unsigned boundCnt(tagA.boundCnt);
+  tagA.boundCnt = tagB.boundCnt;
+  tagB.boundCnt = boundCnt;
+  A->softReplaceMolecule(indexA, molB, tagA, B);
+  B->softReplaceMolecule(indexB, molA, tagB, A);
+  return true;
+}
+
+
+//A + B => C + A
+//A + B -> [C <- molA] + [move A to D]
+bool DiffusionInfluencedReactionProcess::moveAtoD_reactBtoC(Voxel* molA,
+                                                          Voxel* molB,
+                                                          const unsigned indexA,
+                                                          const unsigned indexB)
+{
+  interruptProcessesPre();
+  Tag tagD(A->getTag(indexA));
+  tagD.boundCnt = B->getTag(indexB).boundCnt;
+  Tag tagC(A->getTag(indexA));
+  D->softReplaceMolecule(indexA, molB, tagD, B);
+  C->addMolecule(molA, tagC);
+  B->softRemoveMolecule(indexB);
+  return true;
+}
+
+//A + B => B + D
+//A + B -> [move B to C] + [D <- molB]
+bool DiffusionInfluencedReactionProcess::reactAtoD_moveBtoC(Voxel* molA,
+                                                          Voxel* molB,
+                                                          const unsigned indexA,
+                                                          const unsigned indexB)
+{
+  interruptProcessesPre();
+  Tag tagC(B->getTag(indexB));
+  tagC.boundCnt = A->getTag(indexA).boundCnt;
+  Tag tagD(B->getTag(indexB));
+  C->softReplaceMolecule(indexB, molA, tagC, A);
+  D->addMolecule(molB, tagD);
+  A->softRemoveMolecule(indexA);
+  return true;
+}
+
+
 //A + B -> [C <- molA] + [D <- molN]
 bool DiffusionInfluencedReactionProcess::reactAtoC_NtoD(
                                                   Voxel* molA, Voxel* molB,
@@ -670,6 +729,62 @@ void DiffusionInfluencedReactionProcess::setReactMethod()
 
 void DiffusionInfluencedReactionProcess::setForcedSequenceReactMethod()
 {
+  setGeneralForcedSequenceReactMethod();
+  /*
+  if(C && D)
+    {
+      if(A == D)
+        {
+          //A + B => B + A
+          if(B == C)
+            {
+              if(A->getIsDiffusing() || B->getIsDiffusing())
+                {
+                  //A + B -> [A swap B]
+                  setGeneralForcedSequenceReactMethod();
+                  //reactM = &DiffusionInfluencedReactionProcess::swapAB;
+                }
+              else
+                {
+                  setGeneralForcedSequenceReactMethod();
+                }
+            }
+          //A + B => C + A
+          else if(A->getIsDiffusing()) 
+            {
+              //A + B -> [C <- molA] + [move A to D]
+              setGeneralForcedSequenceReactMethod();
+              //reactM = &DiffusionInfluencedReactionProcess::moveAtoD_reactBtoC;
+            }
+          else
+            {
+              setGeneralForcedSequenceReactMethod();
+            }
+        }
+      //A + B => B + D
+      else if(B == C)
+        {
+          if(B->getIsDiffusing())
+            {
+               //A + B -> [move B to C] + [D <- molB]
+               setGeneralForcedSequenceReactMethod();
+               //reactM = &DiffusionInfluencedReactionProcess::reactAtoD_moveBtoC;
+            }
+          else
+            {
+              setGeneralForcedSequenceReactMethod();
+            }
+        }
+      else
+        {
+          setGeneralForcedSequenceReactMethod();
+        }
+    }
+    */
+}
+
+void DiffusionInfluencedReactionProcess::setGeneralForcedSequenceReactMethod()
+{
   if(C && D)
     {
       if(A->isReplaceable(C))
@@ -795,6 +910,7 @@ void DiffusionInfluencedReactionProcess::setFreeSequenceReactMethod()
         {
           if(B->isReplaceable(D))
             {
+              //std::cout << "reactAeqC_BtoD:" << getIDString() << std::endl;
               //A + B -> [A == C] + [D <- molB]
               reactM = &DiffusionInfluencedReactionProcess::reactAeqC_BtoD;
             }
@@ -808,6 +924,7 @@ void DiffusionInfluencedReactionProcess::setFreeSequenceReactMethod()
         {
           if(A->isReplaceable(D))
             {
+              //std::cout << "reactBeqC_AtoD:" << getIDString() << std::endl;
               //A + B -> [B == C] + [D <- molA]
               reactM = &DiffusionInfluencedReactionProcess::reactBeqC_AtoD;
             }
@@ -821,11 +938,13 @@ void DiffusionInfluencedReactionProcess::setFreeSequenceReactMethod()
         {
           if(B->isReplaceable(C))
             {
+              //std::cout << "reactBtoC_AeqD:" << getIDString() << std::endl;
               //A + B -> [C <- molB] + [A == D]
               reactM = &DiffusionInfluencedReactionProcess::reactBtoC_AeqD;
             }
           else
             {
+              //std::cout << "reactNtoC_AeqD:" << getIDString() << std::endl;
               //A + B -> [C <- molN] + [A == D]
               reactM = &DiffusionInfluencedReactionProcess::reactNtoC_AeqD;
             }
@@ -836,12 +955,14 @@ void DiffusionInfluencedReactionProcess::setFreeSequenceReactMethod()
             {
               if(C->getIsTagged() && A->getIsTagged())
                 {
+              //std::cout << "reactAtoC_BeqD_tagAtoC:" << getIDString() << std::endl;
                   //A + B -> [C <- molA] + [tagC <- tagA] + [B == D]
                   reactM = 
                     &DiffusionInfluencedReactionProcess::reactAtoC_BeqD_tagAtoC;
                 }
               else
                 {
+              //std::cout << "reactAtoC_BeqD:" << getIDString() << std::endl;
                   //A + B -> [C <- molA] + [B == D]
                   reactM = &DiffusionInfluencedReactionProcess::reactAtoC_BeqD;
                 }

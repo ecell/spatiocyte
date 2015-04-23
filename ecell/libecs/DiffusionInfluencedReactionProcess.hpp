@@ -112,6 +112,9 @@ protected:
   Voxel* getPopulatableVoxel(Species*, Voxel*, Voxel*);
   Voxel* getPopulatableVoxel(Species*, Voxel*, Voxel*, Voxel*);
   bool reactNone(Voxel*, Voxel*, const unsigned, const unsigned) {}
+  bool swapAB(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool moveAtoD_reactBtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactAtoD_moveBtoC(Voxel*, Voxel*, const unsigned, const unsigned);
   bool reactVarC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
   bool reactVarC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
   bool reactVarC_AtoD(Voxel*, Voxel*, const unsigned, const unsigned);
@@ -150,6 +153,7 @@ protected:
 private:
   void setFreeSequenceReactMethod();
   void setForcedSequenceReactMethod();
+  void setGeneralForcedSequenceReactMethod();
 protected:
   bool ForcedSequence;
   unsigned Collision;

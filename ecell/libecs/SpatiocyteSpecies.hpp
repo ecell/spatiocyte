@@ -1965,14 +1965,11 @@ public:
     }
   Tag& getTag(const unsigned anIndex)
     {
-      return theTags[anIndex];
-      /*
-      if(theTags.size())
+      if(isVacant)
         {
-          return theTags[anIndex];
+          return theNullTag;
         }
-      return theNullTag;
-      */
+      return theTags[anIndex];
     }
   Tag& getTag(Voxel* aVoxel)
     {
@@ -2026,10 +2023,22 @@ public:
       addMoleculeTagless(aVoxel);
       theTags[theMoleculeSize-1].multiIdx = multiIdx;
     }
-  void softReplaceMolecule(const unsigned index, Voxel* aVoxel)
+  void softReplaceMolecule(const unsigned index, Voxel* aVoxel, const Tag& aTag,
+                           Species* aSpecies)
     {
       theMolecules[index] = aVoxel;
+      theTags[index] = aTag;
       aVoxel->idx = index+theStride*theID;
+      /*
+      if(isDeoligomerize && !aSpecies->getIsDeoligomerize())
+        {
+          addBounds(aVoxel);
+        }
+      else if(!isDeoligomerize && aSpecies->getIsDeoligomerize())
+        {
+          removeAdjoinBounds(aVoxel);
+        }
+        */
     }
   void addMoleculeDirect(Voxel* aVoxel)
     {
@@ -2976,7 +2985,7 @@ public:
     }
   void addBounds(Voxel* aVoxel)
     {
-      unsigned& cnt(theTags[theMoleculeSize-1].boundCnt);
+      unsigned& cnt(theTags[getIndex(aVoxel)].boundCnt);
       cnt = 0;
       for(unsigned i(0); i != aVoxel->diffuseSize; ++i)
         {
@@ -2995,6 +3004,10 @@ public:
       Voxel* aVoxel(theMolecules[anIndex]);
       theBoundCnts[theTags[anIndex].boundCnt]--;
       removeMoleculeDirect(anIndex);
+      removeAdjoinBounds(aVoxel);
+    }
+  void removeAdjoinBounds(Voxel* aVoxel)
+    {
       for(unsigned i(0); i != aVoxel->diffuseSize; ++i)
         {
           const unsigned aCoord(aVoxel->adjoiningCoords[i]);
