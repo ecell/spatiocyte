@@ -136,6 +136,7 @@ public:
   Voxel* getVoxel(const unsigned int& aCoord) { return &theLattice[aCoord]; }
   void addInterruptedProcess(SpatiocyteProcess*);
   static Variable* getVariable(System*, String const&);
+  SpatiocyteProcess* getCurrentProcess();
 private:
   void addSurfaceAdjoins(const unsigned, const Comp*);
   void interruptProcesses(const double);

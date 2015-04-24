@@ -729,6 +729,13 @@ void DiffusionInfluencedReactionProcess::setReactMethod()
 
 void DiffusionInfluencedReactionProcess::setForcedSequenceReactMethod()
 {
+  if(!A || !B || !C || !D)
+    {
+      THROW_EXCEPTION(ValueError,
+                   String(getPropertyInterface().getClassName()) +
+                  "[" + getFullID().asString() + "]: For DIRP ForcedSequence," +
+                  " A, B, C and D must all be nonHD species.");
+    }
   setGeneralForcedSequenceReactMethod();
   /*
   if(C && D)
@@ -853,6 +860,7 @@ void DiffusionInfluencedReactionProcess::setFreeSequenceReactMethod()
     {
       if(A == C)
         {
+          std::cout << "reactVarD_AeqC" << std::endl;
           //A + B -> variableD + [A == C]
           reactM = &DiffusionInfluencedReactionProcess::reactVarD_AeqC;
         }

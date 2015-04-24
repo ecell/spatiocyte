@@ -75,8 +75,8 @@ SOS = \
 	QuasiDynamicFluxProcess$(LTDL_SHLIB_EXT) \
 	ExpressionFluxProcess$(LTDL_SHLIB_EXT) \
 	ExpressionAlgebraicProcess$(LTDL_SHLIB_EXT) \
-	ExpressionAssignmentProcess$(LTDL_SHLIB_EXT) \
-	H5VisualizationLogProcess$(LTDL_SHLIB_EXT)
+	ExpressionAssignmentProcess$(LTDL_SHLIB_EXT) 
+#	H5VisualizationLogProcess$(LTDL_SHLIB_EXT)
 
 if HAVE_PYTHON_LIB
 SOS += \
@@ -99,8 +99,8 @@ PythonFluxProcess$(LTDL_SHLIB_EXT) : PythonFluxProcess.cpp
 PythonProcess$(LTDL_SHLIB_EXT) : PythonProcess.cpp
 	${ECELL3_DMC} --verbose --dmcompile="../../dmtool" --no-stdinclude --no-stdlibdir --ldflags="-L$(abs_top_builddir)/tmp$(libdir) $(PYTHON_LIBS) $(EXTRA_LDFLAGS) -l$(BOOST_PYTHON_LIBNAME) $(LIBS) $(EXTRA_LDFLAGS)" --cxxflags='${CPPFLAGS} ${CXXFLAGS} $(EXTRA_CXXFLAGS) -I${top_srcdir}/libecs -I${top_srcdir}/.. -I${top_srcdir} -I${top_srcdir}/../libltdl  ${PYTHON_INCLUDES} ' -o $@ $< 
 
-H5VisualizationLogProcess$(LTDL_SHLIB_EXT):   H5VisualizationLogProcess.cpp
-	$(ECELL3_DMC) --verbose --dmcompile="../../dmtool" --no-stdinclude --no-stdlibdir --ldflags="-L$(abs_top_builddir)/tmp$(libdir) $(EXTRA_LDFLAGS) -lhdf5 -lhdf5_cpp $(LIBS)" --cxxflags='${CPPFLAGS} ${CXXFLAGS} $(EXTRA_CXXFLAGS) -I${top_srcdir}/libecs -I${top_srcdir}/.. -I${top_srcdir} -I${top_srcdir}/../libltdl -I${top_srcdir}/libecs/RandomLib-1.6/include' -o $@ $<
+#H5VisualizationLogProcess$(LTDL_SHLIB_EXT):   H5VisualizationLogProcess.cpp
+#	$(ECELL3_DMC) --verbose --dmcompile="../../dmtool" --no-stdinclude --no-stdlibdir --ldflags="-L$(abs_top_builddir)/tmp$(libdir) $(EXTRA_LDFLAGS) `pkg-config hdf5 --cflags --libs` $(LIBS)" --cxxflags='${CPPFLAGS} ${CXXFLAGS} $(EXTRA_CXXFLAGS) -I${top_srcdir}/libecs -I${top_srcdir}/.. -I${top_srcdir} -I${top_srcdir}/../libltdl -I${top_srcdir}/libecs/RandomLib-1.6/include' -o $@ $<
 
 .cpp$(LTDL_SHLIB_EXT):
 	${ECELL3_DMC} --verbose --dmcompile="../../dmtool" --no-stdinclude --no-stdlibdir --ldflags="-L$(abs_top_builddir)/tmp$(libdir) $(LIBS) $(EXTRA_LDFLAGS)" --cxxflags='${CPPFLAGS} ${CXXFLAGS} $(EXTRA_CXXFLAGS) -I${top_srcdir}/libecs -I${top_srcdir}/.. -I${top_srcdir} -I${top_srcdir}/../libltdl  ${PYTHON_INCLUDES} ' -o $@ $< 

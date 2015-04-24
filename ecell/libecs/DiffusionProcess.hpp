@@ -349,6 +349,10 @@ public:
       (this->*theWalkMethod)();
       theDiffusionSpecies->finalizeReactions();
     }
+  Species* getDiffusionSpecies()
+    {
+      return theDiffusionSpecies;
+    }
   void walk() const
     {
       theDiffusionSpecies->walk();

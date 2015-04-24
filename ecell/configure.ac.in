@@ -242,7 +242,9 @@ fi
 AC_SUBST(HAVE_BOOST_RANGE_ADL_BARRIER)
 AC_SUBST(HAVE_BOOST_SPIRIT_CLASSIC)
 
-ECELL_CHECK_HDF5_CPP(, [AC_MSG_ERROR([could not find HDF5 C++ library])])
+#ECELL_CHECK_HDF5_CPP(, [AC_MSG_ERROR([could not find HDF5 C++ library])])
+#AX_LIB_HDF5([serial])
+#AC_CHECK_HEADERS([H5Cpp.h], [], [AC_MSG_ERROR("H5Cpp.h headers of hdf5 library not found: Check your installation")])
 
 USE_COMPILER_EXTENSIONS=no
 AC_MSG_CHECKING( if use of compiler specific features are allowed )

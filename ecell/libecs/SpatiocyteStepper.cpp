@@ -718,6 +718,10 @@ void SpatiocyteStepper::clearComps()
     }
 }
 
+SpatiocyteProcess* SpatiocyteStepper::getCurrentProcess()
+{
+  return thePriorityQueue.getTop();
+}
 
 inline void SpatiocyteStepper::step()
 {

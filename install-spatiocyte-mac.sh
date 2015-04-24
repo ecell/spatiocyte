@@ -5,7 +5,7 @@ brew prune
 brew update
 brew tap homebrew/python
 brew install Caskroom/cask/xquartz
-brew install wget automake autoconf libtool pkg-config gsl pygtk gcc boost-python homebrew/science/hdf5 --with-cxx numpy scipy matplotlib libav glibmm
+brew install wget automake autoconf libtool pkg-config gsl pygtk gcc boost-python --with-cxx numpy scipy matplotlib libav glibmm
 wget https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py
 sudo python ez_setup.py
 rm ez_setup.py
