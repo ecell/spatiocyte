@@ -141,10 +141,15 @@ bool SpatiocyteNextReactionProcess::react()
       //nonHD_A -> HD_C:
       else if(A && variableC && !D && !variableD)
         {
+          std::cout << "first:" << getIDString() << " A:" << A->getIDString() << " vC:" << getIDString(variableC) << std::endl;
           moleculeA = A->getRandomMolecule();
+          std::cout << "sn1" << std::endl;
           interruptProcessesPre();
+          std::cout << "sn2" << std::endl;
           A->removeMolecule(moleculeA);
+          std::cout << "sn3" << std::endl;
           variableC->addValue(coefficientC);
+          std::cout << "sn4" << std::endl;
         }
       //nonHD_A -> nonHD_C + HD_D:
       //nonHD_A -> HD_C + nonHD_D:
@@ -171,15 +176,21 @@ bool SpatiocyteNextReactionProcess::react()
       //HD_A -> nonHD_C:
       else if(variableA && C && !D && !variableD)
         {
+          std::cout << "second:" << getIDString() << " vA:" << getIDString(variableA) << " vC:" << getIDString(C) << std::endl;
           moleculeC = reactvAC(variableA, C);
+          std::cout << "ssn1" << std::endl;
           if(moleculeC == NULL)
             {
+              std::cout << "ssn2 failed" << std::endl;
               return false;
             }
           else
             {
+              std::cout << "ssn3" << std::endl;
               variableA->addValue(coefficientA);
+              std::cout << "ssn4" << std::endl;
               C->addMolecule(moleculeC);
+              std::cout << "ssn5" << std::endl;
             }
         }
       //HD_A -> nonHD_C + nonHD_D:

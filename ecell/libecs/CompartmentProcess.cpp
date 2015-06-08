@@ -187,6 +187,7 @@ unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
   Origin = aComp->centerPoint;
   setCompartmentDimension();
   theComp->dimension = theDimension;
+  theVacantSpecies->setDimension(theDimension);
   setLipidCompSpeciesProperties();
   setVacantCompSpeciesProperties();
   subStartCoord = aStartCoord;
@@ -1051,9 +1052,9 @@ bool CompartmentProcess::setSubunitInterfaceVoxels(const unsigned i,
           for(unsigned l(blCol); l <= trCol; ++l)
             {
               unsigned m(theSpatiocyteStepper->global2coord(j, k, l));
-              //Return if we have enlisted at least on interface voxel
-              //in the case of subunits are equal or smaller than
-              //voxels:
+              //Return if we have enlisted at least one interface voxel
+              //in the case of subunit radius is equal or smaller than
+              //voxels (the whole subunit is inside the volume voxel):
               addInterfaceVoxel(i, m, aDist);
               if(isSingle && theInterfaceSpecies->size() > intStartIndex)
                 {

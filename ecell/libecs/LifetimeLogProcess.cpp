@@ -345,18 +345,23 @@ bool LifetimeLogProcess::isDependentOnRemoveMolecule(Species* aSpecies)
 void LifetimeLogProcess::interruptedRemoveMolecule(Species* aSpecies,
                                                    const unsigned anIndex)
 {
+  std::cout << "life remove:" << aSpecies->getIDString() << std::endl;
   logTag(aSpecies, aSpecies->getTag(anIndex), anIndex);
+  std::cout << "life remove done" << std::endl;
 }
 
 void LifetimeLogProcess::interruptedAddMolecule(Species* aSpecies,
                                                 const unsigned anIndex)
 {
+  std::cout << "life add:" << aSpecies->getIDString() << std::endl;
   initTrackedMolecule(aSpecies, anIndex);
+  std::cout << "life add done" << std::endl;
 }
 
 void LifetimeLogProcess::initTrackedMolecule(Species* aSpecies,
                                              const unsigned anIndex)
 {
+  std::cout << "resetTagOrigin" << std::endl;
   aSpecies->resetTagOrigin(anIndex);
   Tag& aTag(aSpecies->getTag(anIndex));
   addTagTime(aTag);
@@ -411,7 +416,10 @@ void LifetimeLogProcess::logTag(Species* aSpecies, Tag& aTag,
   double squaredDisplacement(aSpecies->getSquaredDisplacement(anIndex));
   totalDuration += duration;
   completedSquaredDisplacement += squaredDisplacement;
+  //completedSquaredDisplacement += pow(2*theSpatiocyteStepper->getVoxelRadius(),2.0);
+  averageDiffusion =  completedSquaredDisplacement/(4*totalDuration);
   ++logCnt;
+  std::cout << "averageDiff:" << averageDiffusion << " averageDuration:" << totalDuration/logCnt << " averageDisp:" << completedSquaredDisplacement/logCnt << " activeCnt:" << theTagTimes.size()-availableTagIDs.size() << std::endl;
   logFile(endTime, duration, squaredDisplacement, startTime, averageDiffusion);
   if(Verbose)
     {
