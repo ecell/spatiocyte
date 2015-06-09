@@ -328,7 +328,7 @@ void CompartmentProcess::setSubunitStart()
           center.x = 2*nDiffuseRadius; 
           if(PlaneYZ == 1)
             { 
-              subunitStart.x = 1.001*aComp->maxPoint.x;
+              subunitStart.x = *aComp->maxPoint.x;
             }
         }
       else if(PlaneXZ)
@@ -349,7 +349,7 @@ void CompartmentProcess::setSubunitStart()
           center.y = 2*nDiffuseRadius;
           if(PlaneXZ == 1)
             { 
-              subunitStart.y = 1.001*aComp->maxPoint.y;
+              subunitStart.y = aComp->maxPoint.y;
             }
         }
       else
@@ -370,7 +370,7 @@ void CompartmentProcess::setSubunitStart()
           center.z = 2*nDiffuseRadius;
           if(PlaneXY == 1)
             { 
-              subunitStart.z = 1.001*aComp->maxPoint.z;
+              subunitStart.z = aComp->maxPoint.z;
             }
         }
       center.x = center.x/2+subunitStart.x;
