@@ -1182,9 +1182,14 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
     {
       double nv(A->getComp()->vacantSpecies->size());
       double ns(B->size());
+      std::cout << "ns:" << ns << std::endl;
+      if(B->getComp()->interfaceID != theSpecies.size())
+        {
+          ns = theSpecies[B->getComp()->interfaceID]->size();
+        }
       double S(B->getComp()->specArea);
       double V(A->getComp()->actualVolume);
-      //std::cout << "1: nv:" << nv << " ns:" << ns << " S:" << S << " V:" << V << std::endl;
+      std::cout << "1: nv:" << nv << " ns:" << ns << " S:" << S << " V:" << V << std::endl;
       if(p == -1)
         {
           //p = 24*k*r_v/((6+3*sqrt(3)+2*sqrt(6))*D_A); //averaged hcp surface
@@ -1201,9 +1206,14 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
     {
       double nv(B->getComp()->vacantSpecies->size());
       double ns(A->size());
+      std::cout << "ns:" << ns << std::endl;
+      if(A->getComp()->interfaceID != theSpecies.size())
+        {
+          ns = theSpecies[A->getComp()->interfaceID]->size();
+        }
       double S(A->getComp()->specArea);
       double V(B->getComp()->actualVolume);
-      //std::cout << "1: nv:" << nv << " ns:" << ns << " S:" << S << " V:" << V << std::endl;
+      std::cout << "1: nv:" << nv << " ns:" << ns << " S:" << S << " V:" << V << std::endl;
       if(p == -1)
         {
           //p = 24*k*r_v/((6+3*sqrt(3)+2*sqrt(6))*D_B); //averaged hcp surface

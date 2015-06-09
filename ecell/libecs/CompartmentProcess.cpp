@@ -990,6 +990,20 @@ void CompartmentProcess::interfaceSubunits()
   enlistPlaneIntersectInterfaceVoxels();
   enlistOrphanSubunitInterfaceVoxels();
   enlistSubunitInterfaceAdjoins();
+  //Check interface duplicates:
+  /*
+  for(unsigned i(0); i != theInterfaceSpecies->size(); ++i)
+    {
+      for(unsigned j(0); j != theInterfaceSpecies->size(); ++j)
+        {
+          if(i != j && theInterfaceSpecies->getCoord(i) ==
+             theInterfaceSpecies->getCoord(j))
+            {
+              std::cout << "duplicate i:" << i << " j:" << j << std::endl;
+            }
+        }
+    }
+    */
 }
 
 void CompartmentProcess::enlistOrphanSubunitInterfaceVoxels()
