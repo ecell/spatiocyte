@@ -913,12 +913,12 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
   //recursively.
   Comp* aComp(new Comp);
   aComp->isProcessComp = false;
-  aComp->minRow = UINT_MAX;
-  aComp->minCol = UINT_MAX;
-  aComp->minLayer = UINT_MAX;
-  aComp->maxRow = 0;
-  aComp->maxCol = 0;
-  aComp->maxLayer = 0;
+  aComp->minCoord.row = UINT_MAX;
+  aComp->minCoord.col = UINT_MAX;
+  aComp->minCoord.layer = UINT_MAX;
+  aComp->maxCoord.row = 0;
+  aComp->maxCoord.col = 0;
+  aComp->maxCoord.layer = 0;
   aComp->lengthX = 0;
   aComp->lengthY = 0;
   aComp->lengthZ = 0;
@@ -1599,9 +1599,9 @@ bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned aCoord, Comp* aComp)
   coord2global(aCoord, aRow, aLayer, aCol);
   int sharedCnt(0);
   int removeCnt(0);
-  //Minus 1 to maxRow to account for surfaces that use two rows to envelope the
+  //Minus 1 to maxCoord.row to account for surfaces that use two rows to envelope the
   //volume:
-  if(aRow >= aComp->maxRow-1)
+  if(aRow >= aComp->maxCoord.row-1)
     {
       ++sharedCnt;
       if(aComp->xyPlane == REMOVE_UPPER || aComp->xyPlane == REMOVE_BOTH)
@@ -1609,9 +1609,9 @@ bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned aCoord, Comp* aComp)
           ++removeCnt;
         }
     }
-  //Add 1 to minRow to account for surfaces that use two rows to envelope the
+  //Add 1 to minCoord.row to account for surfaces that use two rows to envelope the
   //volume:
-  if(aRow <= aComp->minRow+1)
+  if(aRow <= aComp->minCoord.row+1)
     {
       ++sharedCnt;
       if(aComp->xyPlane == REMOVE_LOWER || aComp->xyPlane == REMOVE_BOTH)
@@ -1619,7 +1619,7 @@ bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned aCoord, Comp* aComp)
           ++removeCnt;
         }
     }
-  if(aLayer >= aComp->maxLayer-1)
+  if(aLayer >= aComp->maxCoord.layer-1)
     {
       ++sharedCnt;
       if(aComp->xzPlane == REMOVE_UPPER || aComp->xzPlane == REMOVE_BOTH)
@@ -1627,7 +1627,7 @@ bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned aCoord, Comp* aComp)
           ++removeCnt;
         }
     }
-  if(aLayer <= aComp->minLayer+1)
+  if(aLayer <= aComp->minCoord.layer+1)
     {
       ++sharedCnt;
       if(aComp->xzPlane == REMOVE_LOWER || aComp->xzPlane == REMOVE_BOTH)
@@ -1635,7 +1635,7 @@ bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned aCoord, Comp* aComp)
           ++removeCnt;
         }
     }
-  if(aCol >= aComp->maxCol)
+  if(aCol >= aComp->maxCoord.col)
     {
       ++sharedCnt;
       if(aComp->yzPlane == REMOVE_UPPER || aComp->yzPlane == REMOVE_BOTH)
@@ -1643,7 +1643,7 @@ bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned aCoord, Comp* aComp)
           ++removeCnt;
         }
     }
-  if(aCol <= aComp->minCol) 
+  if(aCol <= aComp->minCoord.col) 
     {
       ++sharedCnt;
       if(aComp->yzPlane == REMOVE_LOWER || aComp->yzPlane == REMOVE_BOTH)
@@ -3194,53 +3194,78 @@ void SpatiocyteStepper::setMinMaxSurfaceDimensions(unsigned aCoord,
   unsigned aLayer;
   unsigned aCol;
   coord2global(aCoord, aRow, aLayer, aCol);
-  if(aRow < aComp->minRow)
+  if(aRow < aComp->minCoord.row)
     {
-      aComp->minRow = aRow;
+      aComp->minCoord.row = aRow;
       if(aComp->surfaceSub)
         {
-          aComp->surfaceSub->minRow = aRow;
+          aComp->surfaceSub->minCoord.row = aRow;
         }
     }
-  else if(aRow > aComp->maxRow)
+  else if(aRow > aComp->maxCoord.row)
     {
-      aComp->maxRow = aRow;
+      aComp->maxCoord.row = aRow;
       if(aComp->surfaceSub)
         {
-          aComp->surfaceSub->maxRow = aRow;
+          aComp->surfaceSub->maxCoord.row = aRow;
         }
     }
-  if(aCol < aComp->minCol)
+  if(aCol < aComp->minCoord.col)
     {
-      aComp->minCol = aCol;
+      aComp->minCoord.col = aCol;
       if(aComp->surfaceSub)
         {
-          aComp->surfaceSub->minCol = aCol;
+          aComp->surfaceSub->minCoord.col = aCol;
         }
     }
-  else if(aCol > aComp->maxCol)
+  else if(aCol > aComp->maxCoord.col)
     {
-      aComp->maxCol = aCol;
+      aComp->maxCoord.col = aCol;
       if(aComp->surfaceSub)
         {
-          aComp->surfaceSub->maxCol = aCol;
+          aComp->surfaceSub->maxCoord.col = aCol;
         }
     }
-  if(aLayer < aComp->minLayer)
+  if(aLayer < aComp->minCoord.layer)
     {
-      aComp->minLayer = aLayer;
+      aComp->minCoord.layer = aLayer;
       if(aComp->surfaceSub)
         {
-          aComp->surfaceSub->minLayer = aLayer;
+          aComp->surfaceSub->minCoord.layer = aLayer;
         }
     }
-  else if(aLayer > aComp->maxLayer)
+  else if(aLayer > aComp->maxCoord.layer)
     {
-      aComp->maxLayer = aLayer;
+      aComp->maxCoord.layer = aLayer;
       if(aComp->surfaceSub)
         {
-          aComp->surfaceSub->maxLayer = aLayer;
+          aComp->surfaceSub->maxCoord.layer = aLayer;
         }
+    }
+  Point aPoint(coord2point(aCoord));
+  if(aPoint.x < aComp->minPoint.x)
+    {
+      aComp->minPoint.x = aPoint.x;
+    }
+  else if(aPoint.x > aComp->maxPoint.x)
+    {
+      aComp->maxPoint.x = aPoint.x;
+    }
+  if(aPoint.y < aComp->minPoint.y)
+    {
+      aComp->minPoint.y = aPoint.y;
+    }
+  else if(aPoint.y > aComp->maxPoint.y)
+    {
+      aComp->maxPoint.y = aPoint.y;
+    }
+  if(aPoint.z < aComp->minPoint.z)
+    {
+      aComp->minPoint.z = aPoint.z;
+    }
+  else if(aPoint.z > aComp->maxPoint.z)
+    {
+      aComp->maxPoint.z = aPoint.z;
     }
 }
 

@@ -303,12 +303,15 @@ void CompartmentProcess::setSubunitStart()
     }
   else
     {
-      const unsigned rowSize(aComp->maxRow-aComp->minRow);
-      const unsigned colSize(aComp->maxCol-aComp->minCol);
-      const unsigned layerSize(aComp->maxLayer-aComp->minLayer);
-      unsigned row(aComp->minRow); //z
-      unsigned col(aComp->minCol); //x
-      unsigned layer(aComp->minLayer); //y
+      //row => z
+      //col => x
+      //layer => y
+      //subunitStart = aComp->minPoint;
+      const unsigned coord(theSpatiocyteStepper->global2coord(
+                                              aComp->minCoord.row,
+                                              aComp->minCoord.layer,
+                                              aComp->minCoord.col));
+      subunitStart = theSpatiocyteStepper->coord2point(coord);
       Point& center(theComp->centerPoint);
       if(PlaneYZ)
         {
@@ -325,7 +328,7 @@ void CompartmentProcess::setSubunitStart()
           center.x = 2*nDiffuseRadius; 
           if(PlaneYZ == 1)
             { 
-              col = aComp->maxCol;
+              subunitStart.x = 1.001*aComp->maxPoint.x;
             }
         }
       else if(PlaneXZ)
@@ -346,7 +349,7 @@ void CompartmentProcess::setSubunitStart()
           center.y = 2*nDiffuseRadius;
           if(PlaneXZ == 1)
             { 
-              layer = aComp->maxLayer;
+              subunitStart.y = 1.001*aComp->maxPoint.y;
             }
         }
       else
@@ -367,11 +370,9 @@ void CompartmentProcess::setSubunitStart()
           center.z = 2*nDiffuseRadius;
           if(PlaneXY == 1)
             { 
-              row = aComp->maxRow;
+              subunitStart.z = 1.001*aComp->maxPoint.z;
             }
         }
-      const unsigned coord(theSpatiocyteStepper->global2coord(row, layer, col));
-      subunitStart = theSpatiocyteStepper->coord2point(coord);
       center.x = center.x/2+subunitStart.x;
       center.y = center.y/2+subunitStart.y;
       center.z = center.z/2+subunitStart.z;
@@ -1317,6 +1318,8 @@ void CompartmentProcess::printParameters()
           cout << "   Specified area:"<< theComp->specArea << std::endl;
           break;
     }
+  cout << "   Interface species size:"<< theInterfaceSpecies->size()
+    << std::endl;
   if(theLipidSpecies)
     {
       cout << "  Lipid species:" << getIDString(theLipidSpecies) << 

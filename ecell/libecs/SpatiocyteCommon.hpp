@@ -115,6 +115,17 @@ struct Point
   double z;
 };
 
+struct Coordinate
+{
+  Coordinate(const unsigned a=0, const unsigned b=0, const unsigned c=0):
+  col(a),
+  layer(b),
+  row(c) {}
+  unsigned col;
+  unsigned layer;
+  unsigned row;
+};
+
 struct Voxel
 {
   unsigned idx;
@@ -151,12 +162,6 @@ struct Comp
   int xzPlane;
   int yzPlane;
   //global min and max row,col,layer of the comp:
-  unsigned int minRow;
-  unsigned int minCol;
-  unsigned int minLayer;
-  unsigned int maxRow;
-  unsigned int maxCol;
-  unsigned int maxLayer;
   double lengthX;
   double lengthY;
   double lengthZ;
@@ -176,6 +181,10 @@ struct Comp
   //common id. So there is only one common diffusive Comp:
   Comp* diffusiveComp;
   Point centerPoint;
+  Point minPoint;
+  Point maxPoint;
+  Coordinate minCoord;
+  Coordinate maxCoord;
   Species* vacantSpecies;
   std::vector<Comp*> allSubs;
   std::vector<Comp*> immediateSubs;
