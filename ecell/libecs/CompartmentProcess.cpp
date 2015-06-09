@@ -328,7 +328,7 @@ void CompartmentProcess::setSubunitStart()
           center.x = 2*nDiffuseRadius; 
           if(PlaneYZ == 1)
             { 
-              subunitStart.x = *aComp->maxPoint.x;
+              subunitStart.x = aComp->maxPoint.x;
             }
         }
       else if(PlaneXZ)
