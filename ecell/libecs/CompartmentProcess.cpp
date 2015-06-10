@@ -692,9 +692,11 @@ void CompartmentProcess::getStartVoxelPoint(Point& start, Point& nearest,
 void CompartmentProcess::initializeVectors()
 {
   lengthStart = subunitStart;
+  /*
   //For Lipid start:
   lengthStart.z -= nDiffuseRadius;
   lengthStart.y -= nDiffuseRadius;
+  */
   
   Point& origin(theComp->centerPoint);
   Point tmp(sub(subunitStart, origin));
@@ -1272,26 +1274,32 @@ void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
   for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
     {
       Voxel& adjoin((*theLattice)[aVoxel.adjoiningCoords[i]]);
-      //if(getID(adjoin) != theInterfaceSpecies->getID())
-      if(theSpecies[getID(adjoin)]->getIsCompVacant())
+      Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
+      double dispB(point2planeDisp(pointB, surfaceNormal, surfaceDisplace));
+      //if not on the same side of the plane, or one of it is on the plane
+      //and the other is not:
+      if(dispA == 0 && getID(aVoxel) != theInterfaceSpecies->getID())
         {
-          Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
-          double dispB(point2planeDisp(pointB, surfaceNormal, surfaceDisplace));
-          //if not on the same side of the plane, or one of it is on the plane
-          //and the other is not:
-          if((dispA < 0) != (dispB < 0))
+          addInterfaceVoxel(aVoxel, aPoint);
+        }
+      if(dispB == 0 && theSpecies[getID(adjoin)]->getIsCompVacant())
+        {
+          addInterfaceVoxel(aVoxel, aPoint);
+        }
+      if((dispA < 0) != (dispB < 0))
+        {
+          //If the voxel is nearer to the plane:
+          if(abs(dispA) < abs(dispB))
             {
-              //If the voxel is nearer to the plane:
-              if(abs(dispA) < abs(dispB))
-                { 
-                  addInterfaceVoxel(aVoxel, aPoint);
-                  return;
-                }
-              //If the adjoin is nearer to the plane:
-              else
+              if(getID(aVoxel) != theInterfaceSpecies->getID())
                 {
-                  addInterfaceVoxel(adjoin, pointB);
+                  addInterfaceVoxel(aVoxel, aPoint);
                 }
+            }
+          //If the adjoin is nearer to the plane:
+          else if(theSpecies[getID(adjoin)]->getIsCompVacant())
+            {
+              addInterfaceVoxel(adjoin, pointB);
             }
         }
     }

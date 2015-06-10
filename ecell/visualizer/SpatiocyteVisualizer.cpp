@@ -2555,6 +2555,18 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
     case GDK_space:
       m_area.pause();
       break;
+    case GDK_F:
+      m_area.translate(0,0,-1);
+      break;
+    case GDK_f:
+      m_area.zoomIn();
+      break;
+    case GDK_B:
+      m_area.translate(0,0,1);
+      break;
+    case GDK_b:
+      m_area.zoomOut();
+      break;
     case GDK_Page_Up:
       if(event->state&Gdk::SHIFT_MASK)
         {
