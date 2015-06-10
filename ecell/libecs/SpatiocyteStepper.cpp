@@ -1599,9 +1599,10 @@ bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned aCoord, Comp* aComp)
   coord2global(aCoord, aRow, aLayer, aCol);
   int sharedCnt(0);
   int removeCnt(0);
-  //Minus 1 to maxCoord.row to account for surfaces that use two rows to envelope the
-  //volume:
-  if(aRow >= aComp->maxCoord.row-1)
+  //x => col
+  //y => layer
+  //z => row
+  if(aRow >= aComp->maxCoord.row)
     {
       ++sharedCnt;
       if(aComp->xyPlane == REMOVE_UPPER || aComp->xyPlane == REMOVE_BOTH)
@@ -1609,9 +1610,7 @@ bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned aCoord, Comp* aComp)
           ++removeCnt;
         }
     }
-  //Add 1 to minCoord.row to account for surfaces that use two rows to envelope the
-  //volume:
-  if(aRow <= aComp->minCoord.row+1)
+  if(aRow <= aComp->minCoord.row)
     {
       ++sharedCnt;
       if(aComp->xyPlane == REMOVE_LOWER || aComp->xyPlane == REMOVE_BOTH)
@@ -1619,7 +1618,7 @@ bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned aCoord, Comp* aComp)
           ++removeCnt;
         }
     }
-  if(aLayer >= aComp->maxCoord.layer-1)
+  if(aLayer >= aComp->maxCoord.layer)
     {
       ++sharedCnt;
       if(aComp->xzPlane == REMOVE_UPPER || aComp->xzPlane == REMOVE_BOTH)
@@ -1627,7 +1626,7 @@ bool SpatiocyteStepper::isRemovableEdgeCoord(unsigned aCoord, Comp* aComp)
           ++removeCnt;
         }
     }
-  if(aLayer <= aComp->minCoord.layer+1)
+  if(aLayer <= aComp->minCoord.layer)
     {
       ++sharedCnt;
       if(aComp->xzPlane == REMOVE_LOWER || aComp->xzPlane == REMOVE_BOTH)
@@ -2458,8 +2457,14 @@ void SpatiocyteStepper::setLineVoxelProperties(Comp* aComp)
 
 void SpatiocyteStepper::setSurfaceCompProperties(Comp* aComp)
 {
-  aComp->vacantSpecies->removePeriodicEdgeVoxels();
-  aComp->vacantSpecies->removeSurfaces();
+  if(aComp->geometry == CUBOID)
+    {
+      if(isPeriodicEdge)
+        {
+          aComp->vacantSpecies->removePeriodicEdgeVoxels();
+        }
+      aComp->vacantSpecies->removeSurfacePlanes();
+    }
   setDiffusiveComp(aComp);
 }
 

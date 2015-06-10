@@ -1764,7 +1764,7 @@ public:
     {
       return theMolecules[anIndex]->coord;
     }
-  void removeSurfaces()
+  void removeSurfacePlanes()
     {
       int newCoordSize(0);
       for(unsigned i(0); i < theMoleculeSize; ++i) 
