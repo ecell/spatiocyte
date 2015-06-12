@@ -1193,7 +1193,7 @@ void CompartmentProcess::interfaceSubunits()
 {
   enlistSubunitIntersectInterfaceVoxel();
   enlistPlaneIntersectInterfaceVoxels();
-  //enlistOrphanSubunitInterfaceVoxels();
+  enlistOrphanSubunitInterfaceVoxels();
   connectSubunitInterfaceAdjoins();
   //Check interface duplicates:
   /*
@@ -1271,40 +1271,6 @@ void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
         }
     }
 }
-
-/*
-void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
-                                                         Point& aPoint)
-{
-  double dispA(point2planeDisp(aPoint, surfaceNormal, surfaceDisplace));
-  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
-    {
-      Voxel& adjoin((*theLattice)[aVoxel.adjoiningCoords[i]]);
-      //if(getID(adjoin) != theInterfaceSpecies->getID())
-      if(theSpecies[getID(adjoin)]->getIsCompVacant())
-        {
-          Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
-          double dispB(point2planeDisp(pointB, surfaceNormal, surfaceDisplace));
-          //if not on the same side of the plane, or one of it is on the plane
-          //and the other is not:
-          if((dispA < 0) != (dispB < 0))
-            {
-              //If the voxel is nearer to the plane:
-              if(abs(dispA) < abs(dispB))
-                { 
-                  addInterfaceVoxel(aVoxel, aPoint);
-                  return;
-                }
-              //If the adjoin is nearer to the plane:
-              else
-                {
-                  addInterfaceVoxel(adjoin, pointB);
-                }
-            }
-        }
-    }
-}
-*/
 
 //Must shift by nDiffuseRadius to make sure that the edge vectors start on the
 //sphere surface of the border voxels, instead at the center point of the
