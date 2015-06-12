@@ -987,28 +987,6 @@ void CompartmentProcess::addAdjoin(Voxel& aVoxel, unsigned coord)
   aVoxel.adjoiningCoords = temp;
 }
 
-void CompartmentProcess::interfaceSubunits()
-{
-  enlistSubunitIntersectInterfaceVoxels();
-  enlistPlaneIntersectInterfaceVoxels();
-  enlistOrphanSubunitInterfaceVoxels();
-  enlistSubunitInterfaceAdjoins();
-  //Check interface duplicates:
-  /*
-  for(unsigned i(0); i != theInterfaceSpecies->size(); ++i)
-    {
-      for(unsigned j(0); j != theInterfaceSpecies->size(); ++j)
-        {
-          if(i != j && theInterfaceSpecies->getCoord(i) ==
-             theInterfaceSpecies->getCoord(j))
-            {
-              std::cout << "duplicate i:" << i << " j:" << j << std::endl;
-            }
-        }
-    }
-    */
-}
-
 void CompartmentProcess::enlistOrphanSubunitInterfaceVoxels()
 {
   //No need to enlist intersecting interface voxel again since
@@ -1044,24 +1022,25 @@ bool CompartmentProcess::setSubunitInterfaceVoxels(const unsigned i,
                                                    const double aDist,
                                                    const bool isSingle)
 {
-  Voxel& subunit((*theLattice)[i]);
-  Point center(*subunit.point);
-  Point bottomLeft(*subunit.point);
-  Point topRight(*subunit.point);
-  bottomLeft.x -= nDiffuseRadius+theSpatiocyteStepper->getColLength();
-  bottomLeft.y -= nDiffuseRadius+theSpatiocyteStepper->getLayerLength();
-  bottomLeft.z -= nDiffuseRadius+theSpatiocyteStepper->getRowLength();
-  topRight.x += nDiffuseRadius+theSpatiocyteStepper->getColLength();
-  topRight.y += nDiffuseRadius+theSpatiocyteStepper->getLayerLength();
-  topRight.z += nDiffuseRadius+theSpatiocyteStepper->getRowLength();
+  Point a(*(*theLattice)[i].point);
+  Point b(a);
+  disp_(a, lengthVector, 1.5*nVoxelRadius);
+  disp_(a, widthVector, 1.5*nVoxelRadius);
+  disp_(a, surfaceNormal, 1.5*nVoxelRadius);
+  disp_(b, lengthVector, -1.5*nVoxelRadius);
+  disp_(b, widthVector, -1.5*nVoxelRadius);
+  disp_(b, surfaceNormal, -1.5*nVoxelRadius);
+  Point top(Point(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z)));
+  Point bottom(Point(std::min(a.x, b.x), std::min(a.y, b.y),
+                     std::min(a.z, b.z)));
   unsigned blRow(0);
   unsigned blLayer(0);
   unsigned blCol(0);
-  theSpatiocyteStepper->point2global(bottomLeft, blRow, blLayer, blCol);
+  theSpatiocyteStepper->point2global(bottom, blRow, blLayer, blCol);
   unsigned trRow(0);
   unsigned trLayer(0);
   unsigned trCol(0);
-  theSpatiocyteStepper->point2global(topRight, trRow, trLayer, trCol);
+  theSpatiocyteStepper->point2global(top, trRow, trLayer, trCol);
   for(unsigned j(blRow); j <= trRow; ++j)
     {
       for(unsigned k(blLayer); k <= trLayer; ++k)
@@ -1072,7 +1051,7 @@ bool CompartmentProcess::setSubunitInterfaceVoxels(const unsigned i,
               //Return if we have enlisted at least one interface voxel
               //in the case of subunit radius is equal or smaller than
               //voxels (the whole subunit is inside the volume voxel):
-              addInterfaceVoxel(i, m, aDist);
+              addPlaneSubunitInterfaceVoxel(i, m, aDist);
               if(isSingle && theInterfaceSpecies->size() > intStartIndex)
                 {
                   return true;
@@ -1083,7 +1062,8 @@ bool CompartmentProcess::setSubunitInterfaceVoxels(const unsigned i,
   return false;
 }
 
-void CompartmentProcess::enlistSubunitIntersectInterfaceVoxels()
+//get one subunit intersecting compVoxel
+void CompartmentProcess::enlistSubunitIntersectInterfaceVoxel()
 {
   subunitInterfaces.resize(Filaments*Subunits);
   for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
@@ -1097,28 +1077,24 @@ void CompartmentProcess::enlistSubunitIntersectInterfaceVoxels()
     }
 }
 
-void CompartmentProcess::addInterfaceVoxel(unsigned subunitCoord,
-                                           unsigned voxelCoord,
-                                           const double aDist)
+void CompartmentProcess::addPlaneSubunitInterfaceVoxel(unsigned subunitCoord,
+                                                       unsigned voxelCoord,
+                                                       const double aDist)
 { 
   Voxel& subunit((*theLattice)[subunitCoord]);
   Point subunitPoint(*subunit.point);
   Point voxelPoint(theSpatiocyteStepper->coord2point(voxelCoord));
+  double disp(point2planeDisp(voxelPoint, surfaceNormal, surfaceDisplace));
   double dist(distance(subunitPoint, voxelPoint));
-  //Should use SubunitRadius instead of DiffuseRadius since it is the
-  //actual size of the subunit. Nope, the distance is too far when using
-  //SubunitRadius:
-  //if(dist < aDist && subunitInterfaces[subunitCoord-subStartCoord].size() < 3)
-  if(dist < aDist)
+  if(dist < aDist || abs(disp) < aDist)
     {
       Voxel& voxel((*theLattice)[voxelCoord]);
       //theSpecies[6]->addMolecule(&voxel);
       //Insert voxel in the list of interface voxels if was not already:
       //if(voxel.id == theComp->vacantSpecies->getID())
-      //if(getID(voxel) != theInterfaceSpecies->getID())
-      if(theSpecies[getID(voxel)]->getIsCompVacant())
+      if(getID(voxel) != theInterfaceSpecies->getID() &&
+         theSpecies[getID(voxel)]->getIsCompVacant())
         {
-          //theSpecies[5]->addMolecule(&voxel);
           theInterfaceSpecies->addMolecule(&voxel);
         }
       //each subunit list has unique (no duplicates) interface voxels:
@@ -1163,7 +1139,7 @@ void CompartmentProcess::addInterfaceVoxel(Voxel& aVoxel, Point& aPoint)
     }
 }
 
-void CompartmentProcess::enlistSubunitInterfaceAdjoins()
+void CompartmentProcess::connectSubunitInterfaceAdjoins()
 {
   for(unsigned i(0); i != subunitInterfaces.size(); ++i)
     {
@@ -1213,9 +1189,33 @@ bool CompartmentProcess::isCorrectSide(const unsigned aCoord)
   return true;
 }
 
+void CompartmentProcess::interfaceSubunits()
+{
+  enlistSubunitIntersectInterfaceVoxel();
+  enlistPlaneIntersectInterfaceVoxels();
+  //enlistOrphanSubunitInterfaceVoxels();
+  connectSubunitInterfaceAdjoins();
+  //Check interface duplicates:
+  /*
+  for(unsigned i(0); i != theInterfaceSpecies->size(); ++i)
+    {
+      for(unsigned j(0); j != theInterfaceSpecies->size(); ++j)
+        {
+          if(i != j && theInterfaceSpecies->getCoord(i) ==
+             theInterfaceSpecies->getCoord(j))
+            {
+              std::cout << "duplicate i:" << i << " j:" << j << std::endl;
+            }
+        }
+    }
+    */
+}
+
+
 void CompartmentProcess::enlistPlaneIntersectInterfaceVoxels()
 {
   for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
+  //for(unsigned i(intStartIndex); i != 1; ++i)
     {
       unsigned voxelCoord(theInterfaceSpecies->getCoord(i));
       Voxel& anInterface((*theLattice)[voxelCoord]);
@@ -1235,19 +1235,93 @@ void CompartmentProcess::enlistPlaneIntersectInterfaceVoxels()
     }
 }
 
+void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
+                                                         Point& aPoint)
+{
+  //We have already checked that aVoxel is a compVacant
+  double dispA(point2planeDisp(aPoint, surfaceNormal, surfaceDisplace));
+  if(dispA == 0 && getID(aVoxel) != theInterfaceSpecies->getID())
+    {
+      addInterfaceVoxel(aVoxel, aPoint);
+    }
+  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
+    {
+      Voxel& adjoin((*theLattice)[aVoxel.adjoiningCoords[i]]);
+      Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
+      double dispB(point2planeDisp(pointB, surfaceNormal, surfaceDisplace));
+      if(dispB == 0 && theSpecies[getID(adjoin)]->getIsCompVacant() &&
+         getID(adjoin) != theInterfaceSpecies->getID())
+        {
+          addInterfaceVoxel(adjoin, pointB);
+        }
+      if((dispA < 0) != (dispB < 0) &&
+         getID(aVoxel) != theInterfaceSpecies->getID() &&
+         getID(adjoin) != theInterfaceSpecies->getID())
+        {
+          //If aVoxel is nearer to the plane:
+          if(abs(dispA) <= abs(dispB))
+            {
+              addInterfaceVoxel(aVoxel, aPoint);
+            }
+          //If the adjoin is nearer to the plane:
+          else if(theSpecies[getID(adjoin)]->getIsCompVacant())
+            {
+              addInterfaceVoxel(adjoin, pointB);
+            }
+        }
+    }
+}
+
+/*
+void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
+                                                         Point& aPoint)
+{
+  double dispA(point2planeDisp(aPoint, surfaceNormal, surfaceDisplace));
+  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
+    {
+      Voxel& adjoin((*theLattice)[aVoxel.adjoiningCoords[i]]);
+      //if(getID(adjoin) != theInterfaceSpecies->getID())
+      if(theSpecies[getID(adjoin)]->getIsCompVacant())
+        {
+          Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
+          double dispB(point2planeDisp(pointB, surfaceNormal, surfaceDisplace));
+          //if not on the same side of the plane, or one of it is on the plane
+          //and the other is not:
+          if((dispA < 0) != (dispB < 0))
+            {
+              //If the voxel is nearer to the plane:
+              if(abs(dispA) < abs(dispB))
+                { 
+                  addInterfaceVoxel(aVoxel, aPoint);
+                  return;
+                }
+              //If the adjoin is nearer to the plane:
+              else
+                {
+                  addInterfaceVoxel(adjoin, pointB);
+                }
+            }
+        }
+    }
+}
+*/
+
+//Must shift by nDiffuseRadius to make sure that the edge vectors start on the
+//sphere surface of the border voxels, instead at the center point of the
+//voxels.
 bool CompartmentProcess::isInside(Point& aPoint)
 {
   double disp(point2planeDisp(aPoint, lengthVector, lengthDisplace));
-  if(disp >= 0)
+  if(disp >= -nDiffuseRadius)
     {
       disp = point2planeDisp(aPoint, lengthVector, lengthDisplaceOpp);
-      if(disp <= 0)
+      if(disp <= nDiffuseRadius)
         {
           disp = point2planeDisp(aPoint, widthVector, widthDisplaceOpp);
-          if(disp <= 0)
+          if(disp <= nDiffuseRadius)
             {
               disp = point2planeDisp(aPoint, widthVector, widthDisplace);
-              if(disp >= 0)
+              if(disp >= -nDiffuseRadius)
                 {
                   return true;
                 }
@@ -1267,43 +1341,6 @@ bool CompartmentProcess::isOnAboveSurface(Point& aPoint)
   return false;
 }
 
-void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
-                                                         Point& aPoint)
-{
-  double dispA(point2planeDisp(aPoint, surfaceNormal, surfaceDisplace));
-  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
-    {
-      Voxel& adjoin((*theLattice)[aVoxel.adjoiningCoords[i]]);
-      Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
-      double dispB(point2planeDisp(pointB, surfaceNormal, surfaceDisplace));
-      //if not on the same side of the plane, or one of it is on the plane
-      //and the other is not:
-      if(dispA == 0 && getID(aVoxel) != theInterfaceSpecies->getID())
-        {
-          addInterfaceVoxel(aVoxel, aPoint);
-        }
-      if(dispB == 0 && theSpecies[getID(adjoin)]->getIsCompVacant())
-        {
-          addInterfaceVoxel(aVoxel, aPoint);
-        }
-      if((dispA < 0) != (dispB < 0))
-        {
-          //If the voxel is nearer to the plane:
-          if(abs(dispA) < abs(dispB))
-            {
-              if(getID(aVoxel) != theInterfaceSpecies->getID())
-                {
-                  addInterfaceVoxel(aVoxel, aPoint);
-                }
-            }
-          //If the adjoin is nearer to the plane:
-          else if(theSpecies[getID(adjoin)]->getIsCompVacant())
-            {
-              addInterfaceVoxel(adjoin, pointB);
-            }
-        }
-    }
-}
 
 void CompartmentProcess::printParameters()
 {
