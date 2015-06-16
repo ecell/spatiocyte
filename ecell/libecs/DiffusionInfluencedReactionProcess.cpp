@@ -265,13 +265,13 @@ bool DiffusionInfluencedReactionProcess::reactVarD_AeqC(Voxel* molA,
                                                         const unsigned indexA,
                                                         const unsigned indexB)
 {
-  std::cout << "first:" << getIDString() << " A:" << A->getIDString() << " B:" << B->getIDString() << " C:" << C->getIDString() << " vD:" << getIDString(variableD) << std::endl;
+  //std::cout << "first:" << getIDString() << " A:" << A->getIDString() << " B:" << B->getIDString() << " C:" << C->getIDString() << " vD:" << getIDString(variableD) << std::endl;
   interruptProcessesPre();
-  std::cout << "dir1" << std::endl;
+  //std::cout << "dir1" << std::endl;
   variableD->addValue(1);
-  std::cout << "dir2" << std::endl;
+  //std::cout << "dir2" << std::endl;
   B->removeMolecule(indexB);
-  std::cout << "dir3" << std::endl;
+  //std::cout << "dir3" << std::endl;
   return true;
 }
 
@@ -864,7 +864,7 @@ void DiffusionInfluencedReactionProcess::setFreeSequenceReactMethod()
     {
       if(A == C)
         {
-          std::cout << "reactVarD_AeqC" << std::endl;
+          //std::cout << "reactVarD_AeqC" << std::endl;
           //A + B -> variableD + [A == C]
           reactM = &DiffusionInfluencedReactionProcess::reactVarD_AeqC;
         }
@@ -1182,14 +1182,14 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
     {
       double nv(A->getComp()->vacantSpecies->size());
       double ns(B->size());
-      std::cout << "ns:" << ns << std::endl;
+      //std::cout << "ns:" << ns << std::endl;
       if(B->getComp()->interfaceID != theSpecies.size())
         {
           ns = theSpecies[B->getComp()->interfaceID]->size();
         }
       double S(B->getComp()->specArea);
       double V(A->getComp()->actualVolume);
-      std::cout << "1: nv:" << nv << " ns:" << ns << " S:" << S << " V:" << V << std::endl;
+      //std::cout << "1: nv:" << nv << " ns:" << ns << " S:" << S << " V:" << V << std::endl;
       if(p == -1)
         {
           //p = 24*k*r_v/((6+3*sqrt(3)+2*sqrt(6))*D_A); //averaged hcp surface
@@ -1206,14 +1206,14 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
     {
       double nv(B->getComp()->vacantSpecies->size());
       double ns(A->size());
-      std::cout << "ns:" << ns << std::endl;
+      //std::cout << "ns:" << ns << std::endl;
       if(A->getComp()->interfaceID != theSpecies.size())
         {
           ns = theSpecies[A->getComp()->interfaceID]->size();
         }
       double S(A->getComp()->specArea);
       double V(B->getComp()->actualVolume);
-      std::cout << "1: nv:" << nv << " ns:" << ns << " S:" << S << " V:" << V << std::endl;
+      //std::cout << "1: nv:" << nv << " ns:" << ns << " S:" << S << " V:" << V << std::endl;
       if(p == -1)
         {
           //p = 24*k*r_v/((6+3*sqrt(3)+2*sqrt(6))*D_B); //averaged hcp surface
