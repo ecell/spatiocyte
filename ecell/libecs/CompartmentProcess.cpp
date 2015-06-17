@@ -520,7 +520,7 @@ void CompartmentProcess::initializeThird()
       theLipidSpecies->setIsPopulated();
     }
   theInterfaceSpecies->setIsPopulated();
-  theSpecies[2]->setIsPopulated();
+  //theSpecies[2]->setIsPopulated();
 }
 
 void CompartmentProcess::setGrid(Species* aSpecies,
