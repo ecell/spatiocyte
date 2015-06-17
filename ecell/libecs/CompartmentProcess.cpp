@@ -1312,6 +1312,7 @@ void CompartmentProcess::interfaceSubunits()
   enlistPlaneIntersectInterfaceVoxels();
   setSubunitInterfaces();
 
+  /*
   //enlistOrphanSubunitInterfaceVoxels();
   std::vector<unsigned> sizes(12,0);
   for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
@@ -1322,8 +1323,10 @@ void CompartmentProcess::interfaceSubunits()
     {
       std::cout << "size i:" << i << " " << sizes[i] << std::endl;
     }
+    */
 
   connectSubunitInterfaceAdjoins();
+  /*
 
   //check subunit adjoins
   std::vector<unsigned> adjoins(30,0);
@@ -1341,6 +1344,7 @@ void CompartmentProcess::interfaceSubunits()
     {
       std::cout << "adjoins size i:" << i << " " << adjoins[i] << std::endl;
     }
+    */
 
 
   /*
