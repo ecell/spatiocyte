@@ -153,6 +153,9 @@ public:
   void connectSubunit(unsigned, unsigned, unsigned, unsigned);
   void addPlaneSubunitInterfaceVoxel(unsigned, unsigned, const double);
   void addInterfaceVoxel(Voxel&, Point&);
+  void addSubunitInterface(Voxel&, Point&);
+  void addSortedSubunitInterface(const unsigned, Voxel&, const double);
+  void setSubunitInterfaces();
   void setVacantCompSpeciesProperties();
   void setLipidCompSpeciesProperties();
   void setDiffuseSize(unsigned, unsigned);
@@ -170,8 +173,8 @@ public:
   int getCoefficient(Species*);
   void allocateGrid();
   void setGrid(Species*, std::vector<std::vector<unsigned> >&, unsigned);
-  bool setSubunitInterfaceVoxels(const unsigned, const double, 
-                                 const bool isSingle=false);
+  bool setSubunitInterfaceVoxel(const unsigned, const double, 
+                                const bool isSingle=false);
   bool isCorrectSide(const unsigned);
   Species* coefficient2species(int);
   Voxel* addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
@@ -184,6 +187,7 @@ protected:
   unsigned LipidCols;
   unsigned LipidRows;
   unsigned lipStartCoord;
+  unsigned meanSubunitInterfaceSize;
   unsigned Periodic;
   unsigned PlaneXY;
   unsigned PlaneXZ;
@@ -254,6 +258,7 @@ protected:
   std::vector<Species*> theLipidCompSpecies;
   std::vector<Species*> theVacantCompSpecies;
   std::vector<std::vector<unsigned> > subunitInterfaces;
+  std::vector<std::vector<double> > subunitInterfaceDists;
   std::vector<std::vector<int> > theAdjoinOffsets;
   std::vector<int> theRowOffsets;
 };

@@ -520,6 +520,7 @@ void CompartmentProcess::initializeThird()
       theLipidSpecies->setIsPopulated();
     }
   theInterfaceSpecies->setIsPopulated();
+  theSpecies[2]->setIsPopulated();
 }
 
 void CompartmentProcess::setGrid(Species* aSpecies,
@@ -1000,10 +1001,10 @@ void CompartmentProcess::enlistOrphanSubunitInterfaceVoxels()
     {
       if(!subunitInterfaces[i-subStartCoord].size())
         {
-          setSubunitInterfaceVoxels(i, 0.75*(nDiffuseRadius+nVoxelRadius)); 
+          setSubunitInterfaceVoxel(i, 0.75*(nDiffuseRadius+nVoxelRadius)); 
           if(!subunitInterfaces[i-subStartCoord].size())
             {
-              setSubunitInterfaceVoxels(i, nDiffuseRadius+nVoxelRadius); 
+              setSubunitInterfaceVoxel(i, nDiffuseRadius+nVoxelRadius); 
               if(!subunitInterfaces[i-subStartCoord].size())
                 {
                   if(Verbose)
@@ -1018,7 +1019,7 @@ void CompartmentProcess::enlistOrphanSubunitInterfaceVoxels()
     }
 }
 
-bool CompartmentProcess::setSubunitInterfaceVoxels(const unsigned i,
+bool CompartmentProcess::setSubunitInterfaceVoxel(const unsigned i,
                                                    const double aDist,
                                                    const bool isSingle)
 {
@@ -1066,10 +1067,11 @@ bool CompartmentProcess::setSubunitInterfaceVoxels(const unsigned i,
 void CompartmentProcess::enlistSubunitIntersectInterfaceVoxel()
 {
   subunitInterfaces.resize(Filaments*Subunits);
+  subunitInterfaceDists.resize(Filaments*Subunits);
   for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
     {
       //If nDiffuseRadius <= nVoxelRadius, just enlist one interface voxel:
-      if(setSubunitInterfaceVoxels(i, std::max(nDiffuseRadius, nVoxelRadius),
+      if(setSubunitInterfaceVoxel(i, std::max(nDiffuseRadius, nVoxelRadius),
                                    nDiffuseRadius <= nVoxelRadius))
         {
           return;
@@ -1097,11 +1099,10 @@ void CompartmentProcess::addPlaneSubunitInterfaceVoxel(unsigned subunitCoord,
         {
           theInterfaceSpecies->addMolecule(&voxel);
         }
-      //each subunit list has unique (no duplicates) interface voxels:
-      subunitInterfaces[subunitCoord-subStartCoord].push_back(voxelCoord);
     }
 }
 
+//Deprecated, remove this
 void CompartmentProcess::addInterfaceVoxel(Voxel& aVoxel, Point& aPoint)
 { 
   theInterfaceSpecies->addMolecule(&aVoxel);
@@ -1123,17 +1124,118 @@ void CompartmentProcess::addInterfaceVoxel(Voxel& aVoxel, Point& aPoint)
                   for(unsigned l(0); l != coords.size(); ++l)
                     {
                       const unsigned subCoord(coords[l]);
-                      const Point& subPoint(*(*theLattice)[subCoord].point);
+                      Point& subPoint(*(*theLattice)[subCoord].point);
                       const double dist(distance(subPoint, aPoint));
                       //if(dist < nDiffuseRadius+nVoxelRadius &&
                       //   subunitInterfaces[subCoord-subStartCoord].size() < 3)
-                      if(dist < nDiffuseRadius+nVoxelRadius)
+                      if(dist <= nDiffuseRadius+nVoxelRadius)
                         {
                           subunitInterfaces[subCoord-subStartCoord].push_back(
                                                               aVoxel.coord);
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+void CompartmentProcess::addSubunitInterface(Voxel& aVoxel, Point& aPoint)
+{ 
+  const int row((int)((aPoint.y-parentOrigin.y)/nGridSize));
+  const int col((int)((aPoint.z-parentOrigin.z)/nGridSize));
+  const int layer((int)((aPoint.x-parentOrigin.x)/nGridSize));
+  if(row >= 0 && row < gridRows && layer >= 0 && layer < gridLayers &&
+     col >= 0 && col < gridCols)
+    {
+      for(int i(std::max(0, layer-1)); i != std::min(layer+2, gridLayers); ++i)
+        {
+          for(int j(std::max(0, col-1)); j != std::min(col+2, gridCols); ++j)
+            {
+              for(int k(std::max(0, row-1)); k != std::min(row+2, gridRows);
+                  ++k)
+                {
+                  const std::vector<unsigned>& coords(theVacGrid[k+gridRows*i+
+                                                      gridRows*gridLayers*j]);
+                  for(unsigned l(0); l != coords.size(); ++l)
+                    {
+                      Voxel& subunit((*theLattice)[coords[l]]);
+                      const double dist(distance(*subunit.point, aPoint));
+                      if(dist <= nDiffuseRadius+nVoxelRadius)
+                        {
+                          addSortedSubunitInterface(coords[l]-subStartCoord,
+                                                    aVoxel, dist);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void CompartmentProcess::addSortedSubunitInterface(const unsigned subIndex,
+                                                   Voxel& aVoxel,
+                                                   const double aDist)
+{
+  std::vector<unsigned>& interfaces(subunitInterfaces[subIndex]);
+  std::vector<double>& dists(subunitInterfaceDists[subIndex]);
+  if(interfaces.size() < meanSubunitInterfaceSize)
+    {
+      interfaces.push_back(aVoxel.coord);
+      dists.push_back(aDist);
+      //Sort the list once it is full:
+      if(meanSubunitInterfaceSize > 1 && 
+         dists.size() == meanSubunitInterfaceSize)
+        {
+          std::vector<unsigned> tmpInterfaces(dists.size());
+          std::vector<double> tmpDists(dists.size());
+          for(unsigned i(0); i != dists.size(); ++i)
+            {
+              unsigned idx(dists.size()-1);
+              const double dist(dists[i]);
+              for(unsigned j(0); j < i; ++j)
+                {
+                  if(dist < dists[j])
+                    {
+                      --idx;
+                    }
+                }
+              for(unsigned j(i+1); j < dists.size(); ++j)
+                {
+                  if(dist < dists[j])
+                    {
+                      --idx;
+                    }
+                  else if(dist == dists[j])
+                    {
+                      --idx;
+                    }
+                }
+              tmpDists[idx] = dist;
+              tmpInterfaces[idx] = interfaces[i];
+            }
+          subunitInterfaces[subIndex] = tmpInterfaces;
+          subunitInterfaceDists[subIndex] = tmpDists;
+        }
+    }
+  //Replace an existing interface if the current one is nearer to the subunit:
+  else
+    {
+      for(int i(dists.size()-1); i >= 0; --i)
+        {
+          if(aDist < dists[i])
+            {
+              if(i < dists.size()-1)
+                {
+                  dists[i+1] = dists[i];
+                  interfaces[i+1] = interfaces[i];
+                }
+              dists[i] = aDist;
+              interfaces[i] = aVoxel.coord;
+            }
+          else
+            {
+              break;
             }
         }
     }
@@ -1189,14 +1291,60 @@ bool CompartmentProcess::isCorrectSide(const unsigned aCoord)
   return true;
 }
 
+void CompartmentProcess::setSubunitInterfaces()
+{
+  std::cout << "interface size:" << theInterfaceSpecies->size() << std::endl;
+  std::cout << "vacant size:" << theVacantSpecies->size() << " " << lipStartCoord-subStartCoord << std::endl;
+  meanSubunitInterfaceSize = std::max(1, int(
+      double(theInterfaceSpecies->size())/double(theVacantSpecies->size())));
+  std::cout << "mean:" << meanSubunitInterfaceSize << std::endl;
+  for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
+    {
+      Voxel& aVoxel(*theInterfaceSpecies->getMolecule(i));
+      Point aPoint(theSpatiocyteStepper->coord2point(aVoxel.coord));
+      addSubunitInterface(aVoxel, aPoint);
+    }
+}
+
 void CompartmentProcess::interfaceSubunits()
 {
   enlistSubunitIntersectInterfaceVoxel();
   enlistPlaneIntersectInterfaceVoxels();
-  enlistOrphanSubunitInterfaceVoxels();
+  setSubunitInterfaces();
+
+  //enlistOrphanSubunitInterfaceVoxels();
+  std::vector<unsigned> sizes(12,0);
+  for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
+    {
+      sizes[subunitInterfaces[i-subStartCoord].size()]++;
+    }
+  for(unsigned i(0); i != sizes.size(); ++i)
+    {
+      std::cout << "size i:" << i << " " << sizes[i] << std::endl;
+    }
+
   connectSubunitInterfaceAdjoins();
-  //Check interface duplicates:
+
+  //check subunit adjoins
+  std::vector<unsigned> adjoins(30,0);
+  for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
+    {
+      Voxel& subunit((*theLattice)[i]);
+      adjoins[subunit.adjoiningSize-subunit.diffuseSize]++;
+      if(subunit.adjoiningSize-subunit.diffuseSize<3)
+        {
+          Voxel& subunit((*theLattice)[i]);
+          theSpecies[2]->addMolecule(&subunit);
+        }
+    }
+  for(unsigned i(0); i != adjoins.size(); ++i)
+    {
+      std::cout << "adjoins size i:" << i << " " << adjoins[i] << std::endl;
+    }
+
+
   /*
+  //Check interface duplicates:
   for(unsigned i(0); i != theInterfaceSpecies->size(); ++i)
     {
       for(unsigned j(0); j != theInterfaceSpecies->size(); ++j)
@@ -1215,7 +1363,6 @@ void CompartmentProcess::interfaceSubunits()
 void CompartmentProcess::enlistPlaneIntersectInterfaceVoxels()
 {
   for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
-  //for(unsigned i(intStartIndex); i != 1; ++i)
     {
       unsigned voxelCoord(theInterfaceSpecies->getCoord(i));
       Voxel& anInterface((*theLattice)[voxelCoord]);
@@ -1242,7 +1389,7 @@ void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
   double dispA(point2planeDisp(aPoint, surfaceNormal, surfaceDisplace));
   if(dispA == 0 && getID(aVoxel) != theInterfaceSpecies->getID())
     {
-      addInterfaceVoxel(aVoxel, aPoint);
+      theInterfaceSpecies->addMolecule(&aVoxel);
     }
   for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
     {
@@ -1252,7 +1399,7 @@ void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
       if(dispB == 0 && theSpecies[getID(adjoin)]->getIsCompVacant() &&
          getID(adjoin) != theInterfaceSpecies->getID())
         {
-          addInterfaceVoxel(adjoin, pointB);
+          theInterfaceSpecies->addMolecule(&adjoin);
         }
       if((dispA < 0) != (dispB < 0) &&
          getID(aVoxel) != theInterfaceSpecies->getID() &&
@@ -1261,12 +1408,12 @@ void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
           //If aVoxel is nearer to the plane:
           if(abs(dispA) <= abs(dispB))
             {
-              addInterfaceVoxel(aVoxel, aPoint);
+              theInterfaceSpecies->addMolecule(&aVoxel);
             }
           //If the adjoin is nearer to the plane:
           else if(theSpecies[getID(adjoin)]->getIsCompVacant())
             {
-              addInterfaceVoxel(adjoin, pointB);
+              theInterfaceSpecies->addMolecule(&adjoin);
             }
         }
     }

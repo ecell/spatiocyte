@@ -3150,8 +3150,8 @@ bool SpatiocyteStepper::isLineVoxel(Voxel& aVoxel, unsigned aCoord,
     const double safety(2.0);
     const Point aPoint(coord2point(aCoord));
 
-    double distance(aPoint.x - aComp->centerPoint.x);
-    if (-safety < distance && distance <= 0)
+    double dist(aPoint.x - aComp->centerPoint.x);
+    if (-safety < dist && dist <= 0)
     {
         // This is not efficient because we don't need to check volume voxels.
         // However, at this time, aVoxel.adjoinigVoxels is not properly 
@@ -3159,16 +3159,16 @@ bool SpatiocyteStepper::isLineVoxel(Voxel& aVoxel, unsigned aCoord,
         for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
         {
             const Point adjoiningPoint(coord2point(aVoxel.adjoiningCoords[i]));
-            const double distance_i(adjoiningPoint.x - aComp->centerPoint.x);
-            if (distance_i > 0)
+            const double dist_i(adjoiningPoint.x - aComp->centerPoint.x);
+            if (dist_i > 0)
             {
                 return true;
             }
         }
     }
                        
-    distance = aPoint.y - aComp->centerPoint.y;
-    if (-safety < distance && distance <= 0)
+    dist = aPoint.y - aComp->centerPoint.y;
+    if (-safety < dist && dist <= 0)
     {
         // This is not efficient because we don't need to check volume voxels.
         // However, at this time, aVoxel.adjoinigVoxels is not properly 
@@ -3176,8 +3176,8 @@ bool SpatiocyteStepper::isLineVoxel(Voxel& aVoxel, unsigned aCoord,
         for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
         {
             const Point adjoiningPoint(coord2point(aVoxel.adjoiningCoords[i]));
-            const double distance_i(adjoiningPoint.y - aComp->centerPoint.y);
-            if (distance_i > 0)
+            const double dist_i(adjoiningPoint.y - aComp->centerPoint.y);
+            if (dist_i > 0)
             {
                 return true;
             }
