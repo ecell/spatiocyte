@@ -988,6 +988,7 @@ void CompartmentProcess::addAdjoin(Voxel& aVoxel, unsigned coord)
   aVoxel.adjoiningCoords = temp;
 }
 
+/*
 void CompartmentProcess::enlistOrphanSubunitInterfaceVoxels()
 {
   //No need to enlist intersecting interface voxel again since
@@ -1018,10 +1019,11 @@ void CompartmentProcess::enlistOrphanSubunitInterfaceVoxels()
         }
     }
 }
+*/
 
 bool CompartmentProcess::setSubunitInterfaceVoxel(const unsigned i,
-                                                   const double aDist,
-                                                   const bool isSingle)
+                                                  const double aDist,
+                                                  const bool isSingle)
 {
   Point a(*(*theLattice)[i].point);
   Point b(a);
@@ -1140,52 +1142,117 @@ void CompartmentProcess::addInterfaceVoxel(Voxel& aVoxel, Point& aPoint)
     }
 }
 
-void CompartmentProcess::addSubunitInterface(Voxel& aVoxel, Point& aPoint)
-{ 
-  const int row((int)((aPoint.y-parentOrigin.y)/nGridSize));
-  const int col((int)((aPoint.z-parentOrigin.z)/nGridSize));
-  const int layer((int)((aPoint.x-parentOrigin.x)/nGridSize));
-  if(row >= 0 && row < gridRows && layer >= 0 && layer < gridLayers &&
-     col >= 0 && col < gridCols)
+
+
+
+
+/* Summary
+ Interface voxels
+   adjoins[0 → diffuseSize-1] = original volume voxels
+   adjoins[diffuseSize → adjoiningSize-1] = subunit voxels
+ Subunit voxels
+   adjoins[0 → diffuseSize-1] = original subunit voxels
+   adjoins[diffuseSize → adjoiningSize-1] = volume voxels that are not 
+                                            interface species
+*/
+void CompartmentProcess::connectSubunitInterfaceAdjoins()
+{
+  for(unsigned i(0); i != subunitInterfaces.size(); ++i)
     {
-      for(int i(std::max(0, layer-1)); i != std::min(layer+2, gridLayers); ++i)
+      for(unsigned j(0); j != subunitInterfaces[i].size(); ++j)
         {
-          for(int j(std::max(0, col-1)); j != std::min(col+2, gridCols); ++j)
+          Voxel& subunit((*theLattice)[i+subStartCoord]);
+          Voxel& interface(*theInterfaceSpecies->getMolecule(
+                                        subunitInterfaces[i][j]));
+          addAdjoin(interface, i+subStartCoord);
+          for(unsigned k(0); k != interface.diffuseSize; ++k)
             {
-              for(int k(std::max(0, row-1)); k != std::min(row+2, gridRows);
-                  ++k)
+              unsigned coord(interface.adjoiningCoords[k]);
+              Voxel& adjoin((*theLattice)[coord]);
+              if(theSpecies[getID(adjoin)]->getIsCompVacant() && 
+                 getID(adjoin) != theInterfaceSpecies->getID())
+                 //isCorrectSide(adjoin.coord))
                 {
-                  const std::vector<unsigned>& coords(theVacGrid[k+gridRows*i+
-                                                      gridRows*gridLayers*j]);
-                  for(unsigned l(0); l != coords.size(); ++l)
-                    {
-                      Voxel& subunit((*theLattice)[coords[l]]);
-                      const double dist(distance(*subunit.point, aPoint));
-                      if(dist <= nDiffuseRadius+nVoxelRadius)
-                        {
-                          addSortedSubunitInterface(coords[l]-subStartCoord,
-                                                    aVoxel, dist);
-                        }
-                    }
+                  addAdjoin(subunit, coord);
                 }
             }
         }
     }
 }
 
+bool CompartmentProcess::isCorrectSide(const unsigned aCoord)
+{
+  Point aPoint(theSpatiocyteStepper->coord2point(aCoord));
+  switch(SurfaceDirection)
+    {
+      //Is inside
+    case 0:
+      if(isOnAboveSurface(aPoint))
+        {
+          return true;
+        }
+      return false;
+      //Is outside
+    case 1:
+      if(!isOnAboveSurface(aPoint))
+        {
+          return true;
+        }
+      return false;
+      //Is bidirectional
+    default:
+      return true;
+    }
+  return true;
+}
+
+void CompartmentProcess::setSubunitInterfaces()
+{
+  std::cout << "interface size:" << theInterfaceSpecies->size() << std::endl;
+  std::cout << "vacant size:" << theVacantSpecies->size() << " " << lipStartCoord-subStartCoord << std::endl;
+  meanSubunitInterfaceSize = std::max(1, int(
+      double(theInterfaceSpecies->size())/double(theVacantSpecies->size())));
+  std::cout << "mean:" << meanSubunitInterfaceSize << std::endl;
+  for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
+    {
+      setNearestSubunit(i, 1);
+    }
+}
+
+void CompartmentProcess::setNearestSubunitForOrphanInterfaces()
+{
+  std::vector<unsigned> interfaceSubunitPairs(theInterfaceSpecies->size(), 0);
+  for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
+    {
+      std::vector<unsigned>& interfaces(subunitInterfaces[i-subStartCoord]);
+      for(unsigned j(0); j != interfaces.size(); ++j)
+        {
+          ++interfaceSubunitPairs[interfaces[j]];
+        }
+    }
+  for(unsigned i(intStartIndex); i != interfaceSubunitPairs.size(); ++i)
+    {
+      if(!interfaceSubunitPairs[i])
+        {
+          setNearestSubunit(i, 5);
+        }
+    }
+}
+
 void CompartmentProcess::addSortedSubunitInterface(const unsigned subIndex,
-                                                   Voxel& aVoxel,
-                                                   const double aDist)
+                                                   const unsigned intIndex,
+                                                   const double aDist,
+                                       const unsigned maxSubunitInterfaceSize)
 {
   std::vector<unsigned>& interfaces(subunitInterfaces[subIndex]);
   std::vector<double>& dists(subunitInterfaceDists[subIndex]);
-  if(interfaces.size() < meanSubunitInterfaceSize)
+  if(interfaces.size() < maxSubunitInterfaceSize)
     {
-      interfaces.push_back(aVoxel.coord);
+      interfaces.push_back(intIndex);
       dists.push_back(aDist);
       //Sort the list once it is full:
-      if(meanSubunitInterfaceSize > 1 && 
-         dists.size() == meanSubunitInterfaceSize)
+      if(maxSubunitInterfaceSize > 1 && 
+         dists.size() == maxSubunitInterfaceSize)
         {
           std::vector<unsigned> tmpInterfaces(dists.size());
           std::vector<double> tmpDists(dists.size());
@@ -1231,7 +1298,7 @@ void CompartmentProcess::addSortedSubunitInterface(const unsigned subIndex,
                   interfaces[i+1] = interfaces[i];
                 }
               dists[i] = aDist;
-              interfaces[i] = aVoxel.coord;
+              interfaces[i] = intIndex;
             }
           else
             {
@@ -1241,70 +1308,129 @@ void CompartmentProcess::addSortedSubunitInterface(const unsigned subIndex,
     }
 }
 
-void CompartmentProcess::connectSubunitInterfaceAdjoins()
-{
-  for(unsigned i(0); i != subunitInterfaces.size(); ++i)
+void CompartmentProcess::setNearestSubunit(const unsigned intIndex,
+                                       const unsigned maxSubunitInterfaceSize)
+{ 
+  Voxel& aVoxel(*theInterfaceSpecies->getMolecule(intIndex));
+  Point aPoint(theSpatiocyteStepper->coord2point(aVoxel.coord));
+  const int row((int)((aPoint.y-parentOrigin.y)/nGridSize));
+  const int col((int)((aPoint.z-parentOrigin.z)/nGridSize));
+  const int layer((int)((aPoint.x-parentOrigin.x)/nGridSize)); 
+  double nearestDist(libecs::INF);
+  unsigned nearestCoord(0);
+  if(row >= 0 && row < gridRows && layer >= 0 && layer < gridLayers &&
+     col >= 0 && col < gridCols)
     {
-      for(unsigned j(0); j != subunitInterfaces[i].size(); ++j)
+      for(int i(std::max(0, layer-1)); i != std::min(layer+2, gridLayers); ++i)
         {
-          Voxel& subunit((*theLattice)[i+subStartCoord]);
-          Voxel& interface((*theLattice)[subunitInterfaces[i][j]]);
-          addAdjoin(interface, i+subStartCoord);
-          for(unsigned k(0); k != interface.diffuseSize; ++k)
+          for(int j(std::max(0, col-1)); j != std::min(col+2, gridCols); ++j)
             {
-              unsigned coord(interface.adjoiningCoords[k]);
-              Voxel& adjoin((*theLattice)[coord]);
-              //if(getID(adjoin) != theInterfaceSpecies->getID())
-              if(theSpecies[getID(adjoin)]->getIsCompVacant() &&
-                 isCorrectSide(adjoin.coord))
+              for(int k(std::max(0, row-1)); k != std::min(row+2, gridRows);
+                  ++k)
                 {
-                  addAdjoin(subunit, coord);
+                  const std::vector<unsigned>& coords(theVacGrid[k+gridRows*i+
+                                                      gridRows*gridLayers*j]);
+                  for(unsigned l(0); l < coords.size(); ++l)
+                    {
+                      const double dist(distance(
+                                   *(*theLattice)[coords[l]].point, aPoint));
+                      if(dist < nearestDist)
+                        {
+                          nearestCoord = coords[l];
+                          nearestDist = dist;
+                        }
+                    }
+                  /*
+                  for(unsigned l(0); l != coords.size(); ++l)
+                    {
+                      Voxel& subunit((*theLattice)[coords[l]]);
+                      const double dist(distance(*subunit.point, aPoint));
+                      if(dist <= nDiffuseRadius+nVoxelRadius)
+                        {
+                          addSortedSubunitInterface(coords[l]-subStartCoord,
+                                      intIndex, dist, maxSubunitInterfaceSize);
+                        }
+                    }
+                    */
                 }
+            }
+        }
+    }
+  if(nearestDist != libecs::INF &&
+     nearestDist <= (nDiffuseRadius+nVoxelRadius))
+    {
+      addSortedSubunitInterface(nearestCoord-subStartCoord, intIndex,
+                                nearestDist, maxSubunitInterfaceSize);
+    }
+}
+
+unsigned CompartmentProcess::getNearestInterface(const unsigned subIndex,
+                                                 double& nearestDist)
+{
+  unsigned intIndex(0);
+  Point subPoint(*(*theLattice)[subIndex+subStartCoord].point);
+  Point a(subPoint);
+  Point b(subPoint);
+  disp_(a, lengthVector, 1.5*nVoxelRadius);
+  disp_(a, widthVector, 1.5*nVoxelRadius);
+  disp_(a, surfaceNormal, 1.5*nVoxelRadius);
+  disp_(b, lengthVector, -1.5*nVoxelRadius);
+  disp_(b, widthVector, -1.5*nVoxelRadius);
+  disp_(b, surfaceNormal, -1.5*nVoxelRadius);
+  Point top(Point(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z)));
+  Point bottom(Point(std::min(a.x, b.x), std::min(a.y, b.y),
+                     std::min(a.z, b.z)));
+  unsigned blRow(0);
+  unsigned blLayer(0);
+  unsigned blCol(0);
+  theSpatiocyteStepper->point2global(bottom, blRow, blLayer, blCol);
+  unsigned trRow(0);
+  unsigned trLayer(0);
+  unsigned trCol(0);
+  theSpatiocyteStepper->point2global(top, trRow, trLayer, trCol);
+  for(unsigned i(blRow); i <= trRow; ++i)
+    {
+      for(unsigned j(blLayer); j <= trLayer; ++j)
+        {
+          for(unsigned k(blCol); k <= trCol; ++k)
+            {
+              unsigned coord(theSpatiocyteStepper->global2coord(i, j, k)); 
+              Voxel& voxel((*theLattice)[coord]);
+              if(getID(voxel) == theInterfaceSpecies->getID())
+                { 
+                  Point intPoint(theSpatiocyteStepper->coord2point(coord));
+                  double dist(distance(subPoint, intPoint));
+                  if(dist < nearestDist)
+                    {
+                      nearestDist = dist;
+                      intIndex = theInterfaceSpecies->getIndex(&voxel);
+                    }
+                }
+            }
+        }
+    }
+  return intIndex;
+}
+
+void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
+{
+  for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
+    {
+      unsigned subIndex(i-subStartCoord);
+      if(!subunitInterfaces[subIndex].size())
+        {
+          double nearestDist(libecs::INF);
+          const unsigned intIndex(getNearestInterface(subIndex, nearestDist));
+          if(nearestDist != libecs::INF &&
+             nearestDist <= (nDiffuseRadius+nVoxelRadius))
+            {
+              addSortedSubunitInterface(subIndex, intIndex, nearestDist, 1);
             }
         }
     }
 }
 
-bool CompartmentProcess::isCorrectSide(const unsigned aCoord)
-{
-  Point aPoint(theSpatiocyteStepper->coord2point(aCoord));
-  switch(SurfaceDirection)
-    {
-      //Is inside
-    case 0:
-      if(isOnAboveSurface(aPoint))
-        {
-          return true;
-        }
-      return false;
-      //Is outside
-    case 1:
-      if(!isOnAboveSurface(aPoint))
-        {
-          return true;
-        }
-      return false;
-      //Is bidirectional
-    default:
-      return true;
-    }
-  return true;
-}
 
-void CompartmentProcess::setSubunitInterfaces()
-{
-  std::cout << "interface size:" << theInterfaceSpecies->size() << std::endl;
-  std::cout << "vacant size:" << theVacantSpecies->size() << " " << lipStartCoord-subStartCoord << std::endl;
-  meanSubunitInterfaceSize = std::max(1, int(
-      double(theInterfaceSpecies->size())/double(theVacantSpecies->size())));
-  std::cout << "mean:" << meanSubunitInterfaceSize << std::endl;
-  for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
-    {
-      Voxel& aVoxel(*theInterfaceSpecies->getMolecule(i));
-      Point aPoint(theSpatiocyteStepper->coord2point(aVoxel.coord));
-      addSubunitInterface(aVoxel, aPoint);
-    }
-}
 
 void CompartmentProcess::interfaceSubunits()
 {
@@ -1312,8 +1438,6 @@ void CompartmentProcess::interfaceSubunits()
   enlistPlaneIntersectInterfaceVoxels();
   setSubunitInterfaces();
 
-  /*
-  //enlistOrphanSubunitInterfaceVoxels();
   std::vector<unsigned> sizes(12,0);
   for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
     {
@@ -1321,12 +1445,71 @@ void CompartmentProcess::interfaceSubunits()
     }
   for(unsigned i(0); i != sizes.size(); ++i)
     {
-      std::cout << "size i:" << i << " " << sizes[i] << std::endl;
+      std::cout << "before subunit size i:" << i << " " << sizes[i] <<
+        std::endl;
     }
-    */
+  setNearestInterfaceForOrphanSubunits();
+
+  for(unsigned i(0); i != sizes.size(); ++i)
+    {
+      sizes[i] = 0;
+    }
+  for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
+    {
+      sizes[subunitInterfaces[i-subStartCoord].size()]++;
+    }
+  for(unsigned i(0); i != sizes.size(); ++i)
+    {
+      std::cout << "after subunit size i:" << i << " " << sizes[i] << std::endl;
+    }
+
+  std::vector<unsigned> interfaceSubunitPairs(theInterfaceSpecies->size(), 0);
+  for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
+    {
+      std::vector<unsigned>& interfaces(subunitInterfaces[i-subStartCoord]);
+      for(unsigned j(0); j != interfaces.size(); ++j)
+        {
+          ++interfaceSubunitPairs[interfaces[j]];
+        }
+    }
+  std::vector<unsigned> pairs(20,0);
+  for(unsigned i(intStartIndex); i != interfaceSubunitPairs.size(); ++i)
+    {
+      pairs[interfaceSubunitPairs[i]]++;
+    }
+  for(unsigned i(0); i != pairs.size(); ++i)
+    {
+      std::cout << "before interface size i:" << i << " " << pairs[i] << std::endl;
+    }
+
+  setNearestSubunitForOrphanInterfaces();
+
+  for(unsigned i(0); i!= interfaceSubunitPairs.size(); ++i)
+    {
+      interfaceSubunitPairs[i] = 0;
+    }
+  for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
+    {
+      std::vector<unsigned>& interfaces(subunitInterfaces[i-subStartCoord]);
+      for(unsigned j(0); j != interfaces.size(); ++j)
+        {
+          ++interfaceSubunitPairs[interfaces[j]];
+        }
+    }
+  for(unsigned i(0); i!= pairs.size(); ++i)
+    {
+      pairs[i] = 0;
+    }
+  for(unsigned i(intStartIndex); i != interfaceSubunitPairs.size(); ++i)
+    {
+      pairs[interfaceSubunitPairs[i]]++;
+    }
+  for(unsigned i(0); i != pairs.size(); ++i)
+    {
+      std::cout << "after interface size i:" << i << " " << pairs[i] << std::endl;
+    }
 
   connectSubunitInterfaceAdjoins();
-  /*
 
   //check subunit adjoins
   std::vector<unsigned> adjoins(30,0);
@@ -1336,15 +1519,42 @@ void CompartmentProcess::interfaceSubunits()
       adjoins[subunit.adjoiningSize-subunit.diffuseSize]++;
       if(subunit.adjoiningSize-subunit.diffuseSize<3)
         {
-          Voxel& subunit((*theLattice)[i]);
-          theSpecies[2]->addMolecule(&subunit);
+          //theSpecies[2]->addMolecule(&subunit);
         }
     }
+  unsigned totalAdjs(0);
+  unsigned totalAdjsE(0);
   for(unsigned i(0); i != adjoins.size(); ++i)
     {
-      std::cout << "adjoins size i:" << i << " " << adjoins[i] << std::endl;
+      totalAdjsE += adjoins[i]*i;
+      totalAdjs += adjoins[i];
+      std::cout << "subunit adjoins size i:" << i << " " << adjoins[i] << std::endl;
     }
-    */
+  std::cout << "total adjs:" << totalAdjs << " extAdjs:" << totalAdjsE << " ave:" << 
+    double(totalAdjsE)/theVacantSpecies->size() << std::endl;
+
+  //check interface adjoins
+  std::vector<unsigned> adjoinsI(30,0);
+  for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
+    {
+      unsigned voxelCoord(theInterfaceSpecies->getCoord(i));
+      Voxel& interface((*theLattice)[voxelCoord]);
+      adjoinsI[interface.adjoiningSize-interface.diffuseSize]++;
+      if(interface.adjoiningSize-interface.diffuseSize<1)
+        {
+          //theSpecies[2]->addMolecule(&interface);
+        }
+    }
+  unsigned totalAdjsI(0);
+  unsigned totalAdjsEI(0);
+  for(unsigned i(0); i != adjoinsI.size(); ++i)
+    {
+      totalAdjsEI += adjoinsI[i]*i;
+      totalAdjsI += adjoinsI[i];
+      std::cout << "interface adjoins size i:" << i << " " << adjoinsI[i] << std::endl;
+    }
+  std::cout << "total adjs:" << totalAdjsI << " extAdjs:" << totalAdjsEI << 
+    " ave:" << double(totalAdjsEI)/theVacantSpecies->size() << std::endl;
 
 
   /*

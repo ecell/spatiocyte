@@ -153,9 +153,13 @@ public:
   void connectSubunit(unsigned, unsigned, unsigned, unsigned);
   void addPlaneSubunitInterfaceVoxel(unsigned, unsigned, const double);
   void addInterfaceVoxel(Voxel&, Point&);
-  void addSubunitInterface(Voxel&, Point&);
-  void addSortedSubunitInterface(const unsigned, Voxel&, const double);
+  void setNearestSubunit(const unsigned, const unsigned);
+  void addSortedSubunitInterface(const unsigned, const unsigned, const double,
+                                 const unsigned);
+  unsigned getNearestInterface(const unsigned, double&);
   void setSubunitInterfaces();
+  void setNearestSubunitForOrphanInterfaces();
+  void setNearestInterfaceForOrphanSubunits();
   void setVacantCompSpeciesProperties();
   void setLipidCompSpeciesProperties();
   void setDiffuseSize(unsigned, unsigned);
