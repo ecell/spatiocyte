@@ -1021,6 +1021,7 @@ void CompartmentProcess::enlistOrphanSubunitInterfaceVoxels()
 }
 */
 
+/*
 bool CompartmentProcess::setSubunitInterfaceVoxel(const unsigned i,
                                                   const double aDist,
                                                   const bool isSingle)
@@ -1064,20 +1065,151 @@ bool CompartmentProcess::setSubunitInterfaceVoxel(const unsigned i,
     }
   return false;
 }
+*/
 
-//get one subunit intersecting compVoxel
-void CompartmentProcess::enlistSubunitIntersectInterfaceVoxel()
+Voxel* CompartmentProcess::getNearestVoxelToSurface(const unsigned subIndex,
+                                                    double& nearestDist,
+                                                    const bool isInterface)
 {
-  subunitInterfaces.resize(Filaments*Subunits);
-  subunitInterfaceDists.resize(Filaments*Subunits);
-  for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
+  Voxel* nearestVoxel;
+  Point subPoint(*(*theLattice)[subIndex+subStartCoord].point);
+  Point a(subPoint);
+  Point b(subPoint);
+  disp_(a, lengthVector, 1.5*nVoxelRadius);
+  disp_(a, widthVector, 1.5*nVoxelRadius);
+  disp_(a, surfaceNormal, 1.5*nVoxelRadius);
+  disp_(b, lengthVector, -1.5*nVoxelRadius);
+  disp_(b, widthVector, -1.5*nVoxelRadius);
+  disp_(b, surfaceNormal, -1.5*nVoxelRadius);
+  Point top(Point(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z)));
+  Point bottom(Point(std::min(a.x, b.x), std::min(a.y, b.y),
+                     std::min(a.z, b.z)));
+  unsigned blRow(0);
+  unsigned blLayer(0);
+  unsigned blCol(0);
+  theSpatiocyteStepper->point2global(bottom, blRow, blLayer, blCol);
+  unsigned trRow(0);
+  unsigned trLayer(0);
+  unsigned trCol(0);
+  theSpatiocyteStepper->point2global(top, trRow, trLayer, trCol);
+  for(unsigned i(blRow); i <= trRow; ++i)
     {
-      //If nDiffuseRadius <= nVoxelRadius, just enlist one interface voxel:
-      if(setSubunitInterfaceVoxel(i, std::max(nDiffuseRadius, nVoxelRadius),
-                                   nDiffuseRadius <= nVoxelRadius))
+      for(unsigned j(blLayer); j <= trLayer; ++j)
         {
-          return;
+          for(unsigned k(blCol); k <= trCol; ++k)
+            {
+              unsigned aCoord(theSpatiocyteStepper->global2coord(i, j, k)); 
+              Voxel& aVoxel((*theLattice)[aCoord]);
+              if((isInterface && getID(aVoxel) == 
+                  theInterfaceSpecies->getID()) ||
+                 (!isInterface && theSpecies[getID(aVoxel)]->getIsCompVacant()))
+                { 
+                  Point aPoint(theSpatiocyteStepper->coord2point(aCoord));
+                  double aDist(getDistanceToSurface(aPoint));
+                  if(aDist < nearestDist)
+                    {
+                      nearestDist = aDist;
+                      nearestVoxel = &aVoxel;
+                    }
+                }
+            }
         }
+    }
+  return nearestVoxel;
+}
+
+double CompartmentProcess::getDistanceToSurface(Point& aPoint)
+{
+  return abs(point2planeDisp(aPoint, surfaceNormal, surfaceDisplace));
+}
+
+Voxel* CompartmentProcess::getNearestVoxelToSubunit(const unsigned subIndex,
+                                                    double& nearestDist,
+                                                    const bool isInterface)
+{
+  Voxel* nearestVoxel;
+  Point subPoint(*(*theLattice)[subIndex+subStartCoord].point);
+  Point a(subPoint);
+  Point b(subPoint);
+  disp_(a, lengthVector, 1.5*nVoxelRadius);
+  disp_(a, widthVector, 1.5*nVoxelRadius);
+  disp_(a, surfaceNormal, 1.5*nVoxelRadius);
+  disp_(b, lengthVector, -1.5*nVoxelRadius);
+  disp_(b, widthVector, -1.5*nVoxelRadius);
+  disp_(b, surfaceNormal, -1.5*nVoxelRadius);
+  Point top(Point(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z)));
+  Point bottom(Point(std::min(a.x, b.x), std::min(a.y, b.y),
+                     std::min(a.z, b.z)));
+  unsigned blRow(0);
+  unsigned blLayer(0);
+  unsigned blCol(0);
+  theSpatiocyteStepper->point2global(bottom, blRow, blLayer, blCol);
+  unsigned trRow(0);
+  unsigned trLayer(0);
+  unsigned trCol(0);
+  theSpatiocyteStepper->point2global(top, trRow, trLayer, trCol);
+  for(unsigned i(blRow); i <= trRow; ++i)
+    {
+      for(unsigned j(blLayer); j <= trLayer; ++j)
+        {
+          for(unsigned k(blCol); k <= trCol; ++k)
+            {
+              unsigned aCoord(theSpatiocyteStepper->global2coord(i, j, k)); 
+              Voxel& aVoxel((*theLattice)[aCoord]);
+              if((isInterface && getID(aVoxel) == 
+                  theInterfaceSpecies->getID()) ||
+                 (!isInterface && theSpecies[getID(aVoxel)]->getIsCompVacant()))
+                { 
+                  Point aPoint(theSpatiocyteStepper->coord2point(aCoord));
+                  double aDist(distance(subPoint, aPoint));
+                  if(aDist < nearestDist)
+                    {
+                      nearestDist = aDist;
+                      nearestVoxel = &aVoxel;
+                    }
+                }
+            }
+        }
+    }
+  return nearestVoxel;
+}
+
+
+//get a voxel that intersects either a subunit or surface, with the
+//shortest distance
+void CompartmentProcess::addFirstInterface()
+{
+  double nearestDist(libecs::INF);
+  Voxel* nearestVoxel(NULL);
+  unsigned subIndex(0);
+  while(nearestDist > nDiffuseRadius && subIndex < lipStartCoord-subStartCoord)
+    {
+      double tmpDist(libecs::INF); 
+      Voxel* tmpVoxel(getNearestVoxelToSubunit(subIndex, tmpDist, false));
+      if(tmpDist < nearestDist)
+        {
+          nearestDist = tmpDist;
+          nearestVoxel = tmpVoxel;
+        }
+      tmpDist = libecs::INF; 
+      tmpVoxel = getNearestVoxelToSurface(subIndex, tmpDist, false); 
+      if(tmpDist < nearestDist)
+        {
+          nearestDist = tmpDist;
+          nearestVoxel = tmpVoxel;
+        }
+      ++subIndex;
+    }
+  if(nearestVoxel != NULL && nearestDist <= nDiffuseRadius)
+    {
+      std::cout << "Found the first interface voxel, dist:" <<
+       nearestDist << std::endl;
+      addInterfaceVoxel(*nearestVoxel);
+    }
+  else
+    {
+      std::cout << "Couldn't find the first interface voxel, dist:" <<
+       nearestDist << std::endl;
     }
 }
 
@@ -1088,6 +1220,7 @@ void CompartmentProcess::addInterfaceVoxel(Voxel& aVoxel)
   theInterfaceSpecies->addMolecule(&aVoxel);
 }
 
+/*
 void CompartmentProcess::addPlaneSubunitInterfaceVoxel(unsigned subunitCoord,
                                                        unsigned voxelCoord,
                                                        const double aDist)
@@ -1110,6 +1243,7 @@ void CompartmentProcess::addPlaneSubunitInterfaceVoxel(unsigned subunitCoord,
         }
     }
 }
+*/
 
 //Deprecated, remove this
 void CompartmentProcess::addInterfaceVoxel(Voxel& aVoxel, Point& aPoint)
@@ -1215,6 +1349,8 @@ bool CompartmentProcess::isCorrectSide(const unsigned aCoord)
 
 void CompartmentProcess::setSubunitInterfaces()
 {
+  subunitInterfaces.resize(Filaments*Subunits);
+  subunitInterfaceDists.resize(Filaments*Subunits);
   for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
     {
       setNearestSubunit(i, 1);
@@ -1354,6 +1490,7 @@ void CompartmentProcess::setNearestSubunit(const unsigned intIndex,
     }
 }
 
+/*
 unsigned CompartmentProcess::getNearestInterface(const unsigned subIndex,
                                                  double& nearestDist)
 {
@@ -1401,6 +1538,7 @@ unsigned CompartmentProcess::getNearestInterface(const unsigned subIndex,
     }
   return intIndex;
 }
+*/
 
 void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
 {
@@ -1410,11 +1548,14 @@ void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
       if(!subunitInterfaces[subIndex].size())
         {
           double nearestDist(libecs::INF);
-          const unsigned intIndex(getNearestInterface(subIndex, nearestDist));
+          Voxel* interface(getNearestVoxelToSubunit(subIndex, nearestDist,
+                                                    true));
           if(nearestDist != libecs::INF &&
              nearestDist <= (nDiffuseRadius+nVoxelRadius))
             {
-              addSortedSubunitInterface(subIndex, intIndex, nearestDist, 1);
+              addSortedSubunitInterface(subIndex, 
+                                  theInterfaceSpecies->getIndex(interface),
+                                  nearestDist, 1);
             }
         }
     }
@@ -1424,8 +1565,8 @@ void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
 
 void CompartmentProcess::interfaceSubunits()
 {
-  enlistSubunitIntersectInterfaceVoxel();
-  enlistPlaneIntersectInterfaceVoxels();
+  addFirstInterface();
+  extendInterfacesOverSurface();
   setSubunitInterfaces();
   /*
   std::vector<unsigned> sizes(12,0);
@@ -1575,7 +1716,7 @@ void CompartmentProcess::interfaceSubunits()
 }
 
 
-void CompartmentProcess::enlistPlaneIntersectInterfaceVoxels()
+void CompartmentProcess::extendInterfacesOverSurface()
 {
   for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
     {
@@ -1590,14 +1731,14 @@ void CompartmentProcess::enlistPlaneIntersectInterfaceVoxels()
               Point aPoint(theSpatiocyteStepper->coord2point(adjoin.coord));
               if(isInside(aPoint))
                 {
-                  addPlaneIntersectInterfaceVoxel(adjoin, aPoint);
+                  addSurfaceIntersectInterfaceVoxel(adjoin, aPoint);
                 }
             }
         }
     }
 }
 
-void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
+void CompartmentProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
                                                          Point& aPoint)
 {
   //We have already checked that aVoxel is a compVacant

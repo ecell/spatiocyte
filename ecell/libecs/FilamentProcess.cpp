@@ -380,13 +380,22 @@ bool FilamentProcess::isOnAboveSurface(Point& aPoint)
   return false;
 }
 
-void FilamentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
-                                                       Point& aPoint)
+double FilamentProcess::getDistanceToSurface(Point& aPoint)
 {
+  return abs(point2lineDisp(aPoint, lengthVector, Minus)-nRadius);
+}
+
+
+void FilamentProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
+                                                        Point& aPoint)
+{
+  std::cout << "inside add surface, nRadius:" << nRadius << std::endl;
   //Get the displacement from the voxel to the center line of the filament:
   double dispA(point2lineDisp(aPoint, lengthVector, Minus));
+  std::cout << "dispA:" << dispA << std::endl;
   for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
     {
+      std::cout << "i:" << i << std::endl;
       Voxel& adjoin((*theLattice)[aVoxel.adjoiningCoords[i]]);
       //if(getID(adjoin) != theInterfaceSpecies->getID())
       if(theSpecies[getID(adjoin)]->getIsCompVacant())
@@ -394,6 +403,7 @@ void FilamentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
           Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
           //Get the displacement from the adjoin to the center line of the MT:
           double dispB(point2lineDisp(pointB, lengthVector, Minus));
+          std::cout << "dispB:" << dispB << std::endl;
           //If not on the same side of the MT surface, or one of it is on
           //the MT surface while the other is not:
           if((dispA < nRadius) != (dispB < nRadius))
@@ -401,13 +411,15 @@ void FilamentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
               //If the voxel is nearer to the MT surface:
               if(abs(dispA-nRadius) < abs(dispB-nRadius))
                 {
-                  addInterfaceVoxel(aVoxel, aPoint);
+                  //addInterfaceVoxel(aVoxel, aPoint);
+                  addInterfaceVoxel(aVoxel);
                   return;
                 }
               //If the adjoin is nearer to the MT surface:
               else
                 {
-                  addInterfaceVoxel(adjoin, pointB);
+                  //addInterfaceVoxel(adjoin, pointB);
+                  addInterfaceVoxel(adjoin);
                 }
             }
         }

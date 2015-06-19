@@ -49,13 +49,13 @@ public:
     theMinusSpecies(NULL),
     thePlusSpecies(NULL)
   {
+    Filaments = 1;
+    /*
     SurfaceDirection = 0;
     Autofit = 0;
-    Filaments = 1;
     Subunits = 1;
     RegularLattice = 0;
-    DiffuseRadius = 2.5e-9;
-    SubunitRadius = DiffuseRadius;
+    */
   }
   virtual ~FilamentProcess() {}
   virtual void prepreinitialize();
@@ -71,9 +71,10 @@ public:
   virtual void connectFilaments(unsigned, unsigned, unsigned);
   virtual void elongateFilaments(Species*, unsigned, unsigned, unsigned,
                                  double);
-  virtual void addPlaneIntersectInterfaceVoxel(Voxel&, Point&);
+  virtual void addSurfaceIntersectInterfaceVoxel(Voxel&, Point&);
   virtual bool isInside(Point&);
   virtual bool isOnAboveSurface(Point&);
+  virtual double getDistanceToSurface(Point&);
   void connectTrailSubunits(unsigned, unsigned, unsigned);
   void setTrailSize(unsigned, unsigned);
 protected:

@@ -147,11 +147,12 @@ public:
                                  double);
   virtual void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
                                    unsigned);
-  virtual void addPlaneIntersectInterfaceVoxel(Voxel&, Point&);
+  virtual void addSurfaceIntersectInterfaceVoxel(Voxel&, Point&);
   virtual bool isInside(Point&);
   virtual bool isOnAboveSurface(Point&);
+  virtual double getDistanceToSurface(Point&);
   void connectSubunit(unsigned, unsigned, unsigned, unsigned);
-  void addPlaneSubunitInterfaceVoxel(unsigned, unsigned, const double);
+  //void addPlaneSubunitInterfaceVoxel(unsigned, unsigned, const double);
   void addInterfaceVoxel(Voxel&, Point&);
   void addInterfaceVoxel(Voxel&);
   void setNearestSubunit(const unsigned, const unsigned);
@@ -165,9 +166,9 @@ public:
   void setLipidCompSpeciesProperties();
   void setDiffuseSize(unsigned, unsigned);
   void interfaceSubunits();
-  void enlistSubunitIntersectInterfaceVoxel();
+  void addFirstInterface();
   void enlistOrphanSubunitInterfaceVoxels();
-  void enlistPlaneIntersectInterfaceVoxels();
+  void extendInterfacesOverSurface();
   void connectSubunitInterfaceAdjoins();
   void rotate(Point&);
   void addAdjoin(Voxel&, unsigned);
@@ -182,6 +183,8 @@ public:
                                 const bool isSingle=false);
   bool isCorrectSide(const unsigned);
   Species* coefficient2species(int);
+  Voxel* getNearestVoxelToSubunit(const unsigned, double&, const bool);
+  Voxel* getNearestVoxelToSurface(const unsigned, double&, const bool);
   Voxel* addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
 protected:
   bool isCompartmentalized;
