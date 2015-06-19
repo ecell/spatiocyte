@@ -60,7 +60,7 @@ public:
   SIMPLE_SET_GET_METHOD(Real, Radius);
   virtual void initialize();
   virtual void setSubunitStart();
-  virtual void initializeThird();
+  virtual void initializeCompartment();
   virtual void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
                                    unsigned);
 protected:

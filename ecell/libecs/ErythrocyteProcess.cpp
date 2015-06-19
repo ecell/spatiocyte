@@ -143,7 +143,7 @@ unsigned ErythrocyteProcess::getLatticeResizeCoord(unsigned aStartCoord)
   return 0;
 }
 
-void ErythrocyteProcess::initializeThird()
+void ErythrocyteProcess::initializeCompartment()
 {
   if(!isCompartmentalized)
     {

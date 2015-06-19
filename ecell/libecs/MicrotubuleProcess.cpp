@@ -69,7 +69,7 @@ void MicrotubuleProcess::setSubunitStart() {
   subunitStart = disp(Minus, D, nRadius);
 }
 
-void MicrotubuleProcess::initializeThird() {
+void MicrotubuleProcess::initializeCompartment() {
   if(!isCompartmentalized)
     {
       thePoints.resize(endCoord-subStartCoord);

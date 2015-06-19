@@ -42,6 +42,7 @@
 #include <libecs/VariableReference.hpp>
 #include <libecs/SpatiocyteStepper.hpp>
 #include <libecs/SpatiocyteSpecies.hpp>
+#include <libecs/CompartmentProcess.hpp>
 
 LIBECS_DM_INIT_STATIC(SpatiocyteStepper, Stepper);
 
@@ -108,6 +109,7 @@ void SpatiocyteStepper::initialize()
   resizeProcessLattice();
   cout << "11. initializing processes the third time..." << std::endl;
   updateSpecies();
+  initializeCompartments();
   storeSimulationParameters();
   initializeThird();
   cout << "12. printing simulation parameters..." << std::endl;
@@ -212,6 +214,7 @@ void SpatiocyteStepper::reset(int seed)
   resetVariables();
   initializeSecond();
   clearComps();
+  initializeCompartments();
   initializeThird();
   initializeBeforePopulate();
   populateComps();
@@ -573,6 +576,20 @@ void SpatiocyteStepper::initializeSecond()
       theSpatiocyteProcesses[i]->initializeSecond();
     }
 }
+
+void SpatiocyteStepper::initializeCompartments()
+{
+  for(std::vector<SpatiocyteProcess*>::const_iterator 
+      i(theSpatiocyteProcesses.begin()); i != theSpatiocyteProcesses.end(); ++i)
+    {      
+      CompartmentProcess* aCompProcess(dynamic_cast<CompartmentProcess*>(*i));
+      if(aCompProcess)
+        {
+          aCompProcess->initializeCompartment();
+        }
+    }
+}
+
 
 void SpatiocyteStepper::initializeThird()
 {

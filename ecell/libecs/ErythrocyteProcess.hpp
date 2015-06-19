@@ -59,7 +59,7 @@ public:
   virtual unsigned getLatticeResizeCoord(unsigned);
   virtual void initializeVectors();
   virtual void initializeFilaments();
-  virtual void initializeThird();
+  virtual void initializeCompartment();
   virtual void normalize(Point&);
   virtual bool isInsidePlane(Point&, Point&, Point&);
   virtual bool isOnPlane(Point&, Point&, Point&, unsigned int);

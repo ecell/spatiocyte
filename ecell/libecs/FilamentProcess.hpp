@@ -66,7 +66,7 @@ public:
   virtual void initializeVectors();
   virtual void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
                                    unsigned);
-  virtual void initializeThird();
+  virtual void initializeCompartment();
   virtual void setSubunitStart();
   virtual void connectFilaments(unsigned, unsigned, unsigned);
   virtual void elongateFilaments(Species*, unsigned, unsigned, unsigned,

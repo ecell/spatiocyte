@@ -2849,9 +2849,9 @@ public:
     }
   void addCompVoxel(unsigned aCoord)
     {
-      theLattice[aCoord].idx = theID*theStride;
+      theLattice[aCoord].idx = theMoleculeSize+theStride*theID;
+      ++theMoleculeSize; 
       theCompVoxels->push_back(&theLattice[aCoord]);
-      ++theMoleculeSize;
       theVariable->setValue(theMoleculeSize);
     }
   void removeCompVoxel(const unsigned anIndex)

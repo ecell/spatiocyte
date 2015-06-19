@@ -207,7 +207,7 @@ void FilamentProcess::setCompartmentDimension() {
   allocateGrid();
 }
 
-void FilamentProcess::initializeThird() {
+void FilamentProcess::initializeCompartment() {
   if(!isCompartmentalized)
     {
       thePoints.resize(endCoord-subStartCoord);

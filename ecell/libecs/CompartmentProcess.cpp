@@ -480,7 +480,7 @@ void CompartmentProcess::allocateGrid()
   theComp->specArea = Width*Length;
 }
 
-void CompartmentProcess::initializeThird()
+void CompartmentProcess::initializeCompartment()
 {
   if(!isCompartmentalized)
     {
@@ -1081,6 +1081,13 @@ void CompartmentProcess::enlistSubunitIntersectInterfaceVoxel()
     }
 }
 
+void CompartmentProcess::addInterfaceVoxel(Voxel& aVoxel)
+{
+  Species* aCompVacant(theInterfaceSpecies->getVacantSpecies());
+  aCompVacant->removeCompVoxel(aCompVacant->getIndex(&aVoxel));
+  theInterfaceSpecies->addMolecule(&aVoxel);
+}
+
 void CompartmentProcess::addPlaneSubunitInterfaceVoxel(unsigned subunitCoord,
                                                        unsigned voxelCoord,
                                                        const double aDist)
@@ -1099,7 +1106,7 @@ void CompartmentProcess::addPlaneSubunitInterfaceVoxel(unsigned subunitCoord,
       if(getID(voxel) != theInterfaceSpecies->getID() &&
          theSpecies[getID(voxel)]->getIsCompVacant())
         {
-          theInterfaceSpecies->addMolecule(&voxel);
+          addInterfaceVoxel(voxel);
         }
     }
 }
@@ -1107,7 +1114,7 @@ void CompartmentProcess::addPlaneSubunitInterfaceVoxel(unsigned subunitCoord,
 //Deprecated, remove this
 void CompartmentProcess::addInterfaceVoxel(Voxel& aVoxel, Point& aPoint)
 { 
-  theInterfaceSpecies->addMolecule(&aVoxel);
+  addInterfaceVoxel(aVoxel);
   const int row((int)((aPoint.y-parentOrigin.y)/nGridSize));
   const int col((int)((aPoint.z-parentOrigin.z)/nGridSize));
   const int layer((int)((aPoint.x-parentOrigin.x)/nGridSize));
@@ -1556,7 +1563,6 @@ void CompartmentProcess::interfaceSubunits()
   std::cout << "total adjs:" << totalAdjsI << " extAdjs:" << totalAdjsEI << 
     " ave:" << double(totalAdjsEI)/theVacantSpecies->size() << std::endl;
 
-
   /*
   //Check interface duplicates:
   for(unsigned i(0); i != theInterfaceSpecies->size(); ++i)
@@ -1603,7 +1609,7 @@ void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
   double dispA(point2planeDisp(aPoint, surfaceNormal, surfaceDisplace));
   if(dispA == 0 && getID(aVoxel) != theInterfaceSpecies->getID())
     {
-      theInterfaceSpecies->addMolecule(&aVoxel);
+      addInterfaceVoxel(aVoxel);
     }
   for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
     {
@@ -1613,7 +1619,7 @@ void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
       if(dispB == 0 && theSpecies[getID(adjoin)]->getIsCompVacant() &&
          getID(adjoin) != theInterfaceSpecies->getID())
         {
-          theInterfaceSpecies->addMolecule(&adjoin);
+          addInterfaceVoxel(adjoin);
         }
       if((dispA < 0) != (dispB < 0) &&
          getID(aVoxel) != theInterfaceSpecies->getID() &&
@@ -1622,12 +1628,12 @@ void CompartmentProcess::addPlaneIntersectInterfaceVoxel(Voxel& aVoxel,
           //If aVoxel is nearer to the plane:
           if(abs(dispA) <= abs(dispB))
             {
-              theInterfaceSpecies->addMolecule(&aVoxel);
+              addInterfaceVoxel(aVoxel);
             }
           //If the adjoin is nearer to the plane:
           else if(theSpecies[getID(adjoin)]->getIsCompVacant())
             {
-              theInterfaceSpecies->addMolecule(&adjoin);
+              addInterfaceVoxel(adjoin);
             }
         }
     }

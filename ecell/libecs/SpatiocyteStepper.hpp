@@ -153,6 +153,7 @@ private:
   void initPriorityQueue();
   void initializeFirst();
   void initializeSecond();
+  void initializeCompartments();
   void initializeThird();
   void initializeBeforePopulate();
   void initializeFourth();

@@ -136,7 +136,7 @@ public:
   virtual void initialize();
   virtual void initializeFirst();
   virtual unsigned getLatticeResizeCoord(unsigned);
-  virtual void initializeThird();
+  virtual void initializeCompartment();
   virtual void printParameters();
   virtual void updateResizedLattice();
   virtual void setCompartmentDimension();
@@ -153,6 +153,7 @@ public:
   void connectSubunit(unsigned, unsigned, unsigned, unsigned);
   void addPlaneSubunitInterfaceVoxel(unsigned, unsigned, const double);
   void addInterfaceVoxel(Voxel&, Point&);
+  void addInterfaceVoxel(Voxel&);
   void setNearestSubunit(const unsigned, const unsigned);
   void addSortedSubunitInterface(const unsigned, const unsigned, const double,
                                  const unsigned);
