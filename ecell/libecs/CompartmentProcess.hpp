@@ -192,7 +192,6 @@ protected:
   unsigned LipidCols;
   unsigned LipidRows;
   unsigned lipStartCoord;
-  unsigned meanSubunitInterfaceSize;
   unsigned Periodic;
   unsigned PlaneXY;
   unsigned PlaneXZ;

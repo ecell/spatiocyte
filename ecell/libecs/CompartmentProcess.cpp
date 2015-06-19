@@ -1215,11 +1215,6 @@ bool CompartmentProcess::isCorrectSide(const unsigned aCoord)
 
 void CompartmentProcess::setSubunitInterfaces()
 {
-  std::cout << "interface size:" << theInterfaceSpecies->size() << std::endl;
-  std::cout << "vacant size:" << theVacantSpecies->size() << " " << lipStartCoord-subStartCoord << std::endl;
-  meanSubunitInterfaceSize = std::max(1, int(
-      double(theInterfaceSpecies->size())/double(theVacantSpecies->size())));
-  std::cout << "mean:" << meanSubunitInterfaceSize << std::endl;
   for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
     {
       setNearestSubunit(i, 1);
@@ -1347,18 +1342,6 @@ void CompartmentProcess::setNearestSubunit(const unsigned intIndex,
                           nearestDist = dist;
                         }
                     }
-                  /*
-                  for(unsigned l(0); l != coords.size(); ++l)
-                    {
-                      Voxel& subunit((*theLattice)[coords[l]]);
-                      const double dist(distance(*subunit.point, aPoint));
-                      if(dist <= nDiffuseRadius+nVoxelRadius)
-                        {
-                          addSortedSubunitInterface(coords[l]-subStartCoord,
-                                      intIndex, dist, maxSubunitInterfaceSize);
-                        }
-                    }
-                    */
                 }
             }
         }
@@ -1444,7 +1427,7 @@ void CompartmentProcess::interfaceSubunits()
   enlistSubunitIntersectInterfaceVoxel();
   enlistPlaneIntersectInterfaceVoxels();
   setSubunitInterfaces();
-
+  /*
   std::vector<unsigned> sizes(12,0);
   for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
     {
@@ -1455,8 +1438,11 @@ void CompartmentProcess::interfaceSubunits()
       std::cout << "before subunit size i:" << i << " " << sizes[i] <<
         std::endl;
     }
+    */
+
   setNearestInterfaceForOrphanSubunits();
 
+  /*
   for(unsigned i(0); i != sizes.size(); ++i)
     {
       sizes[i] = 0;
@@ -1469,7 +1455,6 @@ void CompartmentProcess::interfaceSubunits()
     {
       std::cout << "after subunit size i:" << i << " " << sizes[i] << std::endl;
     }
-
   std::vector<unsigned> interfaceSubunitPairs(theInterfaceSpecies->size(), 0);
   for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
     {
@@ -1486,11 +1471,14 @@ void CompartmentProcess::interfaceSubunits()
     }
   for(unsigned i(0); i != pairs.size(); ++i)
     {
-      std::cout << "before interface size i:" << i << " " << pairs[i] << std::endl;
+      std::cout << "before interface size i:" << i << " " << pairs[i] <<
+      std::endl;
     }
+    */
 
   setNearestSubunitForOrphanInterfaces();
 
+  /*
   for(unsigned i(0); i!= interfaceSubunitPairs.size(); ++i)
     {
       interfaceSubunitPairs[i] = 0;
@@ -1513,11 +1501,14 @@ void CompartmentProcess::interfaceSubunits()
     }
   for(unsigned i(0); i != pairs.size(); ++i)
     {
-      std::cout << "after interface size i:" << i << " " << pairs[i] << std::endl;
+      std::cout << "after interface size i:" << i << " " << pairs[i] <<
+      std::endl;
     }
+    */
 
   connectSubunitInterfaceAdjoins();
 
+  /*
   //check subunit adjoins
   std::vector<unsigned> adjoins(30,0);
   for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
@@ -1535,10 +1526,12 @@ void CompartmentProcess::interfaceSubunits()
     {
       totalAdjsE += adjoins[i]*i;
       totalAdjs += adjoins[i];
-      std::cout << "subunit adjoins size i:" << i << " " << adjoins[i] << std::endl;
+      std::cout << "subunit adjoins size i:" << i << " " << adjoins[i] << 
+      std::endl;
     }
-  std::cout << "total adjs:" << totalAdjs << " extAdjs:" << totalAdjsE << " ave:" << 
-    double(totalAdjsE)/theVacantSpecies->size() << std::endl;
+  std::cout << "total adjs:" << totalAdjs << " extAdjs:" << totalAdjsE <<
+    " ave:" << 
+  double(totalAdjsE)/theVacantSpecies->size() << std::endl;
 
   //check interface adjoins
   std::vector<unsigned> adjoinsI(30,0);
@@ -1558,10 +1551,12 @@ void CompartmentProcess::interfaceSubunits()
     {
       totalAdjsEI += adjoinsI[i]*i;
       totalAdjsI += adjoinsI[i];
-      std::cout << "interface adjoins size i:" << i << " " << adjoinsI[i] << std::endl;
+      std::cout << "interface adjoins size i:" << i << " " << adjoinsI[i] <<
+      std::endl;
     }
   std::cout << "total adjs:" << totalAdjsI << " extAdjs:" << totalAdjsEI << 
     " ave:" << double(totalAdjsEI)/theVacantSpecies->size() << std::endl;
+    */
 
   /*
   //Check interface duplicates:
@@ -1648,6 +1643,32 @@ bool CompartmentProcess::isInside(Point& aPoint)
   if(disp >= -nDiffuseRadius)
     {
       disp = point2planeDisp(aPoint, lengthVector, lengthDisplaceOpp);
+      if(disp <= -2*nDiffuseRadius)
+        {
+          disp = point2planeDisp(aPoint, widthVector, widthDisplaceOpp);
+          if(disp <= -nDiffuseRadius)
+            {
+              disp = point2planeDisp(aPoint, widthVector, widthDisplace);
+              if(disp >= -nDiffuseRadius)
+                {
+                  return true;
+                }
+            }
+        }
+    }
+  return false;
+}
+
+/*
+//Must shift by nDiffuseRadius to make sure that the edge vectors start on the
+//sphere surface of the border voxels, instead at the center point of the
+//voxels.
+bool CompartmentProcess::isInside(Point& aPoint)
+{
+  double disp(point2planeDisp(aPoint, lengthVector, lengthDisplace));
+  if(disp >= -nDiffuseRadius)
+    {
+      disp = point2planeDisp(aPoint, lengthVector, lengthDisplaceOpp);
       if(disp <= nDiffuseRadius)
         {
           disp = point2planeDisp(aPoint, widthVector, widthDisplaceOpp);
@@ -1663,6 +1684,7 @@ bool CompartmentProcess::isInside(Point& aPoint)
     }
   return false;
 }
+*/
 
 bool CompartmentProcess::isOnAboveSurface(Point& aPoint)
 {
