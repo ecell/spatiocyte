@@ -168,7 +168,7 @@ public:
   void interfaceSubunits();
   void addFirstInterface();
   void enlistOrphanSubunitInterfaceVoxels();
-  void extendInterfacesOverSurface();
+  virtual void extendInterfacesOverSurface();
   void connectSubunitInterfaceAdjoins();
   void rotate(Point&);
   void addAdjoin(Voxel&, unsigned);

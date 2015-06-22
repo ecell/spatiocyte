@@ -1181,8 +1181,8 @@ void CompartmentProcess::addFirstInterface()
 {
   double nearestDist(libecs::INF);
   Voxel* nearestVoxel(NULL);
-  unsigned subIndex(0);
-  while(nearestDist > nDiffuseRadius && subIndex < lipStartCoord-subStartCoord)
+  unsigned subIndex(20);
+  while(nearestDist > nDiffuseRadius/2 && subIndex < lipStartCoord-subStartCoord)
     {
       double tmpDist(libecs::INF); 
       Voxel* tmpVoxel(getNearestVoxelToSubunit(subIndex, tmpDist, false));
@@ -1203,7 +1203,8 @@ void CompartmentProcess::addFirstInterface()
   if(nearestVoxel != NULL && nearestDist <= nDiffuseRadius)
     {
       std::cout << "Found the first interface voxel, dist:" <<
-       nearestDist << std::endl;
+       nearestDist << " subIndex:" << subIndex << " subMax:" <<
+       lipStartCoord-subStartCoord << std::endl;
       addInterfaceVoxel(*nearestVoxel);
     }
   else

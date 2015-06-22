@@ -57,9 +57,13 @@ double mag(const Point& P);
 //displacement, m:
 double point2planeDisp(const Point& P, const Point& N, const double m);
 
+//Get the point A on a line that has the shortest distance to a given point P.
+//The line is defined by the direction vector, N that passes through a point, Q:
+Point point2lineIntersect(const Point& P, const Point& N, const Point& Q);
+
 //Get the shortest distance from a point, P to a line defined by the direction
 //vector, N that passes through a point, Q:
-double point2lineDisp(const Point& P, const Point& N, const Point& Q);
+double point2lineDist(const Point& P, const Point& N, const Point& Q);
 double abs(const double a);
 
 //Return the result when the point P(x,y,z) is rotated about the line through

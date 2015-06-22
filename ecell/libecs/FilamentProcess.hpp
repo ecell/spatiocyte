@@ -71,9 +71,10 @@ public:
   virtual void connectFilaments(unsigned, unsigned, unsigned);
   virtual void elongateFilaments(Species*, unsigned, unsigned, unsigned,
                                  double);
-  virtual void addSurfaceIntersectInterfaceVoxel(Voxel&, Point&);
+  void addFilamentIntersectInterfaceVoxel(Voxel&, Point&, Point&);
   virtual bool isInside(Point&);
   virtual bool isOnAboveSurface(Point&);
+  virtual void extendInterfacesOverSurface();
   virtual double getDistanceToSurface(Point&);
   void connectTrailSubunits(unsigned, unsigned, unsigned);
   void setTrailSize(unsigned, unsigned);

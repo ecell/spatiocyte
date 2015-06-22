@@ -3884,8 +3884,8 @@ public:
                          Point& widthVector, Point& lengthVector)
     {
       Point& pointA(*theLattice[coordA+vacStartCoord].point);
-      double minWidth(point2lineDisp(pointA, lengthVector, aLipidStart));
-      double minLength(point2lineDisp(pointA, widthVector, aLipidStart));
+      double minWidth(point2lineDist(pointA, lengthVector, aLipidStart));
+      double minLength(point2lineDist(pointA, widthVector, aLipidStart));
       double maxWidth(minWidth+nDist*2);
       double maxLength(minLength+nDist*2);
       minWidth = std::max(0.0, minWidth-nDist*2);
@@ -4104,8 +4104,8 @@ public:
       double maxRectZ(pointA.z+nDist*cos(aSubunitAngle));
       double minRectZ(pointA.z-nDist*cos(aSubunitAngle));
       */
-      double minWidth(point2lineDisp(pointA, lengthVector, aLipidStart));
-      double minLength(point2lineDisp(pointA, widthVector, aLipidStart));
+      double minWidth(point2lineDist(pointA, lengthVector, aLipidStart));
+      double minLength(point2lineDist(pointA, widthVector, aLipidStart));
       double maxWidth(minWidth+nDist*2);
       double maxLength(minLength+nDist*2);
       minWidth = std::max(0.0, minWidth-nDist*2);

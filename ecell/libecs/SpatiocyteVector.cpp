@@ -154,22 +154,31 @@ double distance(const Point& L, const Point& R)
   return sqrt((L.x-R.x)*(L.x-R.x) + (L.y-R.y)*(L.y-R.y) + (L.z-R.z)*(L.z-R.z));
 }
 
-//Get the shortest distance from a point, P to a plane given by normal N and
+//Get the shortest displacement from a point, P to a plane given by normal N and
 //displacement, m:
 double point2planeDisp(const Point& P, const Point& N, const double m)
 {
   return dot(P, N) - m;
 }
 
-//Get the shortest distance from a point, P to a line defined by the direction
-//vector, N that passes through a point, Q:
-double point2lineDisp(const Point& P, const Point& N, const Point& Q)
+//Get the point A on a line that has the shortest distance to a given point P.
+//The line is defined by the direction vector, N that passes through a point, Q:
+Point point2lineIntersect(const Point& P, const Point& N, const Point& Q)
 {
   double t((dot(P, N) - dot(Q, N))/dot(N, N));
   Point A(mult(N, t));
   add_(A, Q);
+  return A;
+}
+
+//Get the shortest distance from a point, P to a line defined by the direction
+//vector, N that passes through a point, Q:
+double point2lineDist(const Point& P, const Point& N, const Point& Q)
+{
+  Point A(point2lineIntersect(P, N, Q));
   return distance(P, A);
 }
+
 
 double abs(const double a)
 {
