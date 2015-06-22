@@ -358,10 +358,10 @@ bool FilamentProcess::isInside(Point& aPoint)
   //hitting along the normal of the surface of the MT at the ends can bind.
   //This would avoid bias of molecule directly hitting the MT ends from the
   //sides and binding:
-  if(disp > nDiffuseRadius/2)
+  if(disp > -2*nDiffuseRadius)
     { 
       disp = point2planeDisp(aPoint, lengthVector, dot(lengthVector, Plus));
-      if(disp < -nDiffuseRadius/2)
+      if(disp < 0)
         {
           return true;
         }
@@ -427,7 +427,7 @@ void FilamentProcess::extendInterfacesOverSurface()
                       double subDisp(point2planeDisp(subPoint, lengthVector,
                                              aSurfaceDisplace));
                       if(subDist+adjDist < nearestAdjDist && 
-                         isInside(adjPoint) && 
+                         isInside(adjPoint) && isInside(subPoint) && 
                          (adjDisp < 0) == (subDisp < 0) && 
                          subLineDist > adjLineDist)
                         {
