@@ -1167,7 +1167,7 @@ void CompartmentProcess::addFirstInterface()
 {
   double nearestDist(libecs::INF);
   Voxel* nearestVoxel(NULL);
-  unsigned subIndex(20);
+  unsigned subIndex(0);
   while(nearestDist > nDiffuseRadius/2 && subIndex < lipStartCoord-subStartCoord)
     {
       double tmpDist(libecs::INF); 
