@@ -485,8 +485,7 @@ bool FilamentProcess::isInside(Point& aPoint)
   //This would avoid bias of molecule directly hitting the MT ends from the
   //sides and binding:
   double dispA(point2planeDisp(aPoint, lengthVector, lengthDisplace));
-  std::cout << "disp:" << dispA << " nLength:" << nLength << std::endl;
-  if(dispA >= -nDiffuseRadius/2 && dispA <= nLength+nDiffuseRadius/2)
+  if(dispA >= 0 && dispA <= nLength)
     {
       return true;
     }
@@ -614,7 +613,7 @@ void FilamentProcess::extendInterfacesOverSurface()
           if(getFilamentAdjoin(&interface, direction, j, 1, aSurfaceDisp,
                                0, adjPoint, adjDist, adjDisp, &adjoin))
             { 
-              if(getMinDistanceFromLineEnd(adjPoint) >= -nDiffuseRadius)
+              if(getMinDistanceFromLineEnd(adjPoint) > -nDiffuseRadius)
                 {
                   for(unsigned k(0); k != theAdjoiningCoordSize; ++k)
                     {
@@ -642,7 +641,7 @@ void FilamentProcess::extendInterfacesOverSurface()
                                     {
                                       if(!isAdjoin(subSub, adjoin) &&
                                          getMinDistanceFromLineEnd(subSubPoint)
-                                         > -nDiffuseRadius)
+                                         > nDiffuseRadius)
                                         {
                                           if(subSubDist+subDist+adjDist < 
                                              thirdDist && 
@@ -685,56 +684,20 @@ void FilamentProcess::extendInterfacesOverSurface()
         }
       if(thirdDist != libecs::INF)
         {
-          /*
           addInterfaceVoxel(*thirdAdj);
           addInterfaceVoxel(*thirdSub);
           //addInterfaceVoxel(*thirdSubSub);
-          */
-          Point aPoint(theSpatiocyteStepper->coord2point(thirdAdj->coord));
-          if(isInside(aPoint))
-            {
-              addInterfaceVoxel(*thirdAdj);
-              Point sPoint(theSpatiocyteStepper->coord2point(thirdSub->coord));
-              if(isInside(sPoint))
-                {
-                  addInterfaceVoxel(*thirdSub);
-                  Point ssPoint(theSpatiocyteStepper->coord2point(thirdSubSub->coord));
-                  if(isInside(ssPoint))
-                    {
-                      addInterfaceVoxel(*thirdSubSub);
-                    }
-                }
-            }
         }
       else if(secondDist != libecs::INF)
         {
-          /*
           addInterfaceVoxel(*secondAdj);
           addInterfaceVoxel(*secondSub);
-          */
-          Point aPoint(theSpatiocyteStepper->coord2point(secondAdj->coord));
-          if(isInside(aPoint))
-            {
-              addInterfaceVoxel(*secondAdj);
-              Point sPoint(theSpatiocyteStepper->coord2point(secondSub->coord));
-              if(isInside(sPoint))
-                {
-                  addInterfaceVoxel(*secondSub);
-                }
-            }
         }
       else if(firstDist != libecs::INF)
         {
-          /*
           addInterfaceVoxel(*firstAdj);
-          */
-          Point aPoint(theSpatiocyteStepper->coord2point(firstAdj->coord));
-          if(isInside(aPoint))
-            {
-              addInterfaceVoxel(*firstAdj);
-            }
         }
-      if(i == theInterfaceSpecies->size()-1)
+      else if(i == theInterfaceSpecies->size()-1)
         {
           direction = !direction;
           i = intStartIndex-1;
