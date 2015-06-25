@@ -44,8 +44,14 @@ public:
   LIBECS_DM_OBJECT(FilamentProcess, Process)
     {
       INHERIT_PROPERTIES(CompartmentProcess);
+      PROPERTYSLOT_SET_GET(Integer, LineX);
+      PROPERTYSLOT_SET_GET(Integer, LineY);
+      PROPERTYSLOT_SET_GET(Integer, LineZ);
     }
   FilamentProcess():
+    LineX(1),
+    LineY(0),
+    LineZ(0),
     theMinusSpecies(NULL),
     thePlusSpecies(NULL)
   {
@@ -58,6 +64,9 @@ public:
     */
   }
   virtual ~FilamentProcess() {}
+  SIMPLE_SET_GET_METHOD(Integer, LineX);
+  SIMPLE_SET_GET_METHOD(Integer, LineY);
+  SIMPLE_SET_GET_METHOD(Integer, LineZ);
   virtual void prepreinitialize();
   virtual void initialize();
   virtual void initializeFirst();
@@ -71,14 +80,23 @@ public:
   virtual void connectFilaments(unsigned, unsigned, unsigned);
   virtual void elongateFilaments(Species*, unsigned, unsigned, unsigned,
                                  double);
-  void addFilamentIntersectInterfaceVoxel(Voxel&, Point&, Point&);
   virtual bool isInside(Point&);
   virtual bool isOnAboveSurface(Point&);
   virtual void extendInterfacesOverSurface();
   virtual double getDistanceToSurface(Point&);
+  //virtual void addLineIntersectInterfaceVoxel(Voxel&, Point&, const bool, const bool);
   void connectTrailSubunits(unsigned, unsigned, unsigned);
   void setTrailSize(unsigned, unsigned);
 protected:
+  unsigned getAdjoiningInterfaceCnt(Voxel&);
+  bool getFilamentAdjoin(Voxel*, const bool, const unsigned, const unsigned,
+               const double, const double, Point&, double&, double&, Voxel**);
+  bool isAdjoin(Voxel*, Voxel*);
+  double getMinDistanceFromLineEnd(Point&);
+  unsigned LineX;
+  unsigned LineY;
+  unsigned LineZ;
+  double heightDisplace;
   double nRadius;
   double Radius;
   Point Minus; //Minus end

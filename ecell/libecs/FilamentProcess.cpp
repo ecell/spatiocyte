@@ -191,19 +191,17 @@ unsigned FilamentProcess::getLatticeResizeCoord(unsigned aStartCoord) {
 }
 
 void FilamentProcess::setCompartmentDimension() {
+  setSubunitStart();
   if(Length)
     {
       Subunits = (unsigned)rint(Length/(2*DiffuseRadius));
     }
-  Length = Subunits*2*DiffuseRadius;
+  //Length is from the center point of the first subunit to the center point
+  //of the last subunit
+  Length = Subunits*2*DiffuseRadius-2*DiffuseRadius;
   Width = Radius*2;
   Height = Radius*2;
   theDimension = 1;
-  /*
-  Origin.x += OriginX*theComp->lengthX/2;
-  Origin.y += OriginY*theComp->lengthY/2;
-  Origin.z += OriginZ*theComp->lengthZ/2;
-  */
   allocateGrid();
 }
 
@@ -230,6 +228,7 @@ void FilamentProcess::initializeCompartment() {
   theInterfaceSpecies->setIsPopulated();
   theMinusSpecies->setIsPopulated();
   thePlusSpecies->setIsPopulated();
+  //theSpecies[2]->setIsPopulated();
 }
 
 void FilamentProcess::setTrailSize(unsigned start, unsigned end) {
@@ -240,6 +239,7 @@ void FilamentProcess::setTrailSize(unsigned start, unsigned end) {
     }
 }
 
+/*
 void FilamentProcess::initializeVectors() { 
   //Minus end
   Minus.x = -nLength/2;
@@ -270,10 +270,135 @@ void FilamentProcess::initializeVectors() {
   Plus = disp(Minus, lengthVector, nLength);
   setSubunitStart();
 }
+*/
+
+void FilamentProcess::initializeVectors() { 
+  //subunitStart is the center point of the first vacant species voxel:
+  lengthStart = subunitStart;
+  
+  Point& origin(theComp->centerPoint);
+  Point tmp(sub(subunitStart, origin));
+  rotate(tmp);
+  subunitStart = add(tmp, origin);
+
+  tmp = sub(lengthStart, origin);
+  rotate(tmp);
+  lengthStart = add(tmp, origin);
+  Minus = lengthStart;
+
+  rotate(lengthVector);
+  lengthEnd = disp(lengthStart, lengthVector, nLength);
+  Plus = lengthEnd;
+
+  rotate(widthVector);
+  widthEnd = disp(lengthEnd, widthVector, nWidth);
+
+  rotate(heightVector);
+  heightEnd = disp(widthEnd, heightVector, nHeight);
+
+  Point center(lengthStart);
+  disp_(center, lengthVector, nLength/2);
+  disp_(center, widthVector, nWidth/2);
+  theComp->centerPoint = center;
+
+  heightDisplace = dot(heightVector, lengthStart);
+  lengthDisplace = dot(lengthVector, lengthStart);
+  lengthDisplaceOpp = dot(lengthVector, lengthEnd);
+  widthDisplace = dot(widthVector, lengthStart);
+  
+  //remove the following
+  surfaceNormal = heightVector;
+  surfaceDisplace = heightDisplace;
+}
+
 
 void FilamentProcess::setSubunitStart()
 {
-  subunitStart = Minus;
+  Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
+  //row => z
+  //col => x
+  //layer => y
+  const unsigned minCoord(theSpatiocyteStepper->global2coord(
+                                          aComp->minCoord.row,
+                                          aComp->minCoord.layer,
+                                          aComp->minCoord.col));
+  const unsigned maxCoord(theSpatiocyteStepper->global2coord(
+                                          aComp->maxCoord.row,
+                                          aComp->maxCoord.layer,
+                                          aComp->maxCoord.col));
+  Point maxPoint(theSpatiocyteStepper->coord2point(maxCoord));
+  subunitStart = theSpatiocyteStepper->coord2point(minCoord);
+ /* 
+  Point maxPoint(aComp->maxPoint);
+  subunitStart = aComp->minPoint;
+  */
+  Point lengths(sub(maxPoint, subunitStart));
+  Point& center(theComp->centerPoint);
+  center.x = 0;
+  center.y = 0;
+  center.z = 0;
+  if(OriginX == 1)
+    {
+      subunitStart.x = maxPoint.x;
+    }
+  else if(OriginX != -1)
+    {
+      subunitStart.x += lengths.x*0.5*(1+OriginX);
+    }
+  if(OriginY == 1)
+    {
+      subunitStart.y = maxPoint.y;
+    }
+  else if(OriginY != -1)
+    {
+      subunitStart.y += lengths.y*0.5*(1+OriginY);
+    }
+  if(OriginZ == 1)
+    {
+      subunitStart.z = maxPoint.z;
+    }
+  else if(OriginZ != -1)
+    {
+      subunitStart.z += lengths.z*0.5*(1+OriginZ);
+    }
+  if(LineZ)
+    {
+      lengthVector = Point(0, 0, 1);
+      widthVector = Point(1, 0, 0);
+      heightVector = Point(0, 1, 0);
+      if(!Length && !Subunits)
+        {
+          Length = lengths.z*VoxelRadius*2;
+          center.z = lengths.z*0.5;
+        }
+      subunitStart.z -= lengths.z*0.5;
+    }
+  else if(LineY)
+    {
+      lengthVector = Point(0, 1, 0);
+      widthVector = Point(1, 0, 0);
+      heightVector = Point(0, 0, 1);
+      if(!Length && !Subunits)
+        {
+          Length = lengths.y*VoxelRadius*2;
+          center.y = lengths.y*0.5;
+        }
+      subunitStart.y -= lengths.y*0.5;
+    }
+  //LineX 
+  else
+    {
+      lengthVector = Point(1, 0, 0);
+      widthVector = Point(0, 0, 1);
+      heightVector = Point(0, 1, 0);
+      if(!Length && !Subunits)
+        {
+          Length = lengths.x*VoxelRadius*2;
+          center.x = lengths.x*0.5;
+        }
+      subunitStart.x -= lengths.x*0.5;
+    }
+  add_(center, subunitStart);
 }
 
 void FilamentProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
@@ -282,6 +407,7 @@ void FilamentProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
                                           unsigned aStartCoord) {
   Voxel* aVoxel(addCompVoxel(0, 0, aStartPoint, aVacant, aStartCoord, aCols));
   theMinusSpecies->addMolecule(aVoxel);
+  std::cout << "V:" << aVoxel->point->x << " " << aVoxel->point->y << " " << aVoxel->point->z << std::endl;
 }
 
 // y:width:rows:filaments
@@ -344,6 +470,7 @@ void FilamentProcess::elongateFilaments(Species* aVacant,
           if(j == aCols-1)
             {
               thePlusSpecies->addMolecule(aVoxel);
+              std::cout << "E:" << aVoxel->point->x << " " << aVoxel->point->y << " " << aVoxel->point->z << std::endl;
             }
         }
     }
@@ -352,21 +479,28 @@ void FilamentProcess::elongateFilaments(Species* aVacant,
 //Is inside the parent compartment and confined by the length of the MT:
 bool FilamentProcess::isInside(Point& aPoint)
 {
-  double disp(point2planeDisp(aPoint, lengthVector, dot(lengthVector, Minus)));
   //Use nDifffuseRadius/2 instead of 0 because we don't want additional
   //interface voxels at the edge of the plus or minus end. So only molecules
   //hitting along the normal of the surface of the MT at the ends can bind.
   //This would avoid bias of molecule directly hitting the MT ends from the
   //sides and binding:
-  if(disp > -2*nDiffuseRadius)
-    { 
-      disp = point2planeDisp(aPoint, lengthVector, dot(lengthVector, Plus));
-      if(disp < 0)
-        {
-          return true;
-        }
+  double dispA(point2planeDisp(aPoint, lengthVector, lengthDisplace));
+  std::cout << "disp:" << dispA << " nLength:" << nLength << std::endl;
+  if(dispA >= -nDiffuseRadius/2 && dispA <= nLength+nDiffuseRadius/2)
+    {
+      return true;
     }
   return false;
+}
+
+
+//Returns positive distance if the point is within the Minus and Plus
+//points of the filament, otherwise returns the distance overshot the Minus
+//or Plus points in negative.
+double FilamentProcess::getMinDistanceFromLineEnd(Point& aPoint)
+{
+  double dispA(point2planeDisp(aPoint, lengthVector, lengthDisplace));
+  return std::min(dispA, nLength-dispA);
 }
 
 bool FilamentProcess::isOnAboveSurface(Point& aPoint)
@@ -384,15 +518,388 @@ double FilamentProcess::getDistanceToSurface(Point& aPoint)
   return abs(point2lineDist(aPoint, lengthVector, Minus)-nRadius);
 }
 
+unsigned FilamentProcess::getAdjoiningInterfaceCnt(Voxel& aVoxel)
+{
+  unsigned cnt(0);
+  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
+    {
+      const unsigned coord(aVoxel.adjoiningCoords[i]);
+      Voxel& adjoin((*theLattice)[coord]);
+      if(getID(adjoin) == theInterfaceSpecies->getID())
+        {
+          ++cnt;
+        }
+    }
+  return cnt;
+}
+
+bool FilamentProcess::isAdjoin(Voxel* aSource, Voxel* aTarget)
+{
+  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
+    {
+      const unsigned coord(aSource->adjoiningCoords[i]);
+      if(aTarget == &(*theLattice)[coord])
+        {
+          return true;
+        }
+    }
+  return false;
+}
+
+bool FilamentProcess::getFilamentAdjoin(Voxel* aVoxel,
+                                        const bool direction,
+                                        const unsigned adjIndex,
+                                        const unsigned maxAdjInterface,
+                                        const double aSurfaceDisp,
+                                        const double aDisp,
+                                        Point& adjPoint,
+                                        double& adjDist,
+                                        double& adjDisp,
+                                        Voxel** adjoin)
+{
+  *adjoin = &(*theLattice)[aVoxel->adjoiningCoords[adjIndex]];
+  if(theSpecies[getID(*adjoin)]->getIsCompVacant() &&
+     getID(*adjoin) != theInterfaceSpecies->getID())
+    { 
+      adjPoint = theSpatiocyteStepper->coord2point((*adjoin)->coord);
+      adjDist = point2lineDist(adjPoint, lengthVector, Minus);
+      adjDisp = point2planeDisp(adjPoint, lengthVector, aSurfaceDisp);
+      if((adjDisp < 0) == direction && abs(adjDisp) > abs(aDisp) &&
+         getAdjoiningInterfaceCnt(**adjoin) <= maxAdjInterface)
+        {
+          return true;
+        }
+    }
+  return false;
+}
+
+void FilamentProcess::extendInterfacesOverSurface()
+{
+  std::cout << "nLength:" << nLength << std::endl;
+  std::cout << "P:" << Plus.x << " " << Plus.y << " " << Plus.z << std::endl;
+  std::cout << "M:" << Minus.x << " " << Minus.y << " " << Minus.z << std::endl;
+  Voxel* s(theVacantSpecies->getMolecule(0));
+  std::cout << "s:" << s->point->x << " " << s->point->y << " " << s->point->z << std::endl;
+  Voxel* e(theVacantSpecies->getMolecule(theVacantSpecies->size()-1));
+  std::cout << "e:" << e->point->x << " " << e->point->y << " " << e->point->z << std::endl;
+  
+  bool direction(true);
+  for(int i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
+    {
+      std::cout << "i:" << i << std::endl;
+      unsigned intLatticeCoord(theInterfaceSpecies->getCoord(i));
+      Voxel& interface((*theLattice)[intLatticeCoord]);
+      if(getAdjoiningInterfaceCnt(interface) > 1)
+        {
+          continue;
+        }
+      Point intPoint(theSpatiocyteStepper->coord2point(interface.coord));
+      Point intLinePoint(point2lineIntersect(intPoint, lengthVector, Minus));
+      double aSurfaceDisp(dot(lengthVector, intLinePoint));
+      double firstDist(libecs::INF);
+      double secondDist(libecs::INF);
+      double thirdDist(libecs::INF);
+      Voxel* firstAdj(NULL);
+      Voxel* secondAdj(NULL);
+      Voxel* thirdAdj(NULL);
+      Voxel* secondSub(NULL);
+      Voxel* thirdSub(NULL);
+      Voxel* thirdSubSub(NULL);
+      for(unsigned j(0); j != theAdjoiningCoordSize; ++j)
+        {
+          Voxel* adjoin;
+          double adjDist;
+          double adjDisp;
+          Point adjPoint;
+          if(getFilamentAdjoin(&interface, direction, j, 1, aSurfaceDisp,
+                               0, adjPoint, adjDist, adjDisp, &adjoin))
+            { 
+              if(getMinDistanceFromLineEnd(adjPoint) >= -nDiffuseRadius)
+                {
+                  for(unsigned k(0); k != theAdjoiningCoordSize; ++k)
+                    {
+                      Voxel* sub;
+                      double subDist;
+                      double subDisp;
+                      Point subPoint;
+                      if(getFilamentAdjoin(adjoin, direction, k, 0,
+                         aSurfaceDisp, adjDisp, subPoint, subDist, subDisp,
+                         &sub))
+                        {
+                          if(getMinDistanceFromLineEnd(subPoint) > 
+                             -nDiffuseRadius)
+                            {
+                              for(unsigned l(0); l != theAdjoiningCoordSize;
+                                  ++l)
+                                {
+                                  Voxel* subSub;
+                                  double subSubDist;
+                                  double subSubDisp;
+                                  Point subSubPoint;
+                                  if(getFilamentAdjoin(sub, direction, l, 0,
+                                     aSurfaceDisp, subDisp, subSubPoint,
+                                     subSubDist, subSubDisp, &subSub))
+                                    {
+                                      if(!isAdjoin(subSub, adjoin) &&
+                                         getMinDistanceFromLineEnd(subSubPoint)
+                                         > -nDiffuseRadius)
+                                        {
+                                          if(subSubDist+subDist+adjDist < 
+                                             thirdDist && 
+                                             adjDist < 0.8 &&
+                                             subDist < 0.8 &&
+                                             subSubDist < 0.8)
+                                            {
+                                  std::cout << "adjDist:" << adjDist << 
+                                    " subDist:" << subDist << " subSubDist:" << subSubDist <<  std::endl;
+                                              thirdDist = 
+                                                subSubDist+subDist+adjDist;
+                                              thirdAdj = adjoin;
+                                              thirdSub = sub;
+                                              thirdSubSub = subSub;
+                                            }
+                                        }
+                                    }
+                                }
+                              if(adjDist+subDist < secondDist &&
+                                 adjDist < 0.8 &&
+                                 subDist < 0.8)
+                                {
+                                  std::cout << "adjDist:" << adjDist << 
+                                    " subDist:" << subDist << std::endl;
+                                  secondDist = adjDist+subDist;
+                                  secondAdj = adjoin;
+                                  secondSub = sub;
+                                }
+                            }
+                        }
+                    }
+                  if(adjDist < firstDist && adjDist < 0.8)
+                    {
+                      std::cout << "adjDist:" << adjDist << std::endl;
+                      firstDist = adjDist;
+                      firstAdj = adjoin;
+                    }
+                }
+            }
+        }
+      if(thirdDist != libecs::INF)
+        {
+          /*
+          addInterfaceVoxel(*thirdAdj);
+          addInterfaceVoxel(*thirdSub);
+          //addInterfaceVoxel(*thirdSubSub);
+          */
+          Point aPoint(theSpatiocyteStepper->coord2point(thirdAdj->coord));
+          if(isInside(aPoint))
+            {
+              addInterfaceVoxel(*thirdAdj);
+              Point sPoint(theSpatiocyteStepper->coord2point(thirdSub->coord));
+              if(isInside(sPoint))
+                {
+                  addInterfaceVoxel(*thirdSub);
+                  Point ssPoint(theSpatiocyteStepper->coord2point(thirdSubSub->coord));
+                  if(isInside(ssPoint))
+                    {
+                      addInterfaceVoxel(*thirdSubSub);
+                    }
+                }
+            }
+        }
+      else if(secondDist != libecs::INF)
+        {
+          /*
+          addInterfaceVoxel(*secondAdj);
+          addInterfaceVoxel(*secondSub);
+          */
+          Point aPoint(theSpatiocyteStepper->coord2point(secondAdj->coord));
+          if(isInside(aPoint))
+            {
+              addInterfaceVoxel(*secondAdj);
+              Point sPoint(theSpatiocyteStepper->coord2point(secondSub->coord));
+              if(isInside(sPoint))
+                {
+                  addInterfaceVoxel(*secondSub);
+                }
+            }
+        }
+      else if(firstDist != libecs::INF)
+        {
+          /*
+          addInterfaceVoxel(*firstAdj);
+          */
+          Point aPoint(theSpatiocyteStepper->coord2point(firstAdj->coord));
+          if(isInside(aPoint))
+            {
+              addInterfaceVoxel(*firstAdj);
+            }
+        }
+      if(i == theInterfaceSpecies->size()-1)
+        {
+          direction = !direction;
+          i = intStartIndex-1;
+          if(direction == true)
+            {
+              return;
+            }
+        }
+    }
+}
+
+
+
+/*
+void FilamentProcess::extendInterfacesOverSurface()
+{
+  bool direction(true);
+  for(int i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
+    {
+      unsigned intLatticeCoord(theInterfaceSpecies->getCoord(i));
+      Voxel& interface((*theLattice)[intLatticeCoord]);
+      if(getAdjoiningInterfaceCnt(interface) > 1)
+        {
+          continue;
+        }
+      Point intPoint(theSpatiocyteStepper->coord2point(interface.coord));
+      Point intLinePoint(point2lineIntersect(intPoint, lengthVector, Minus));
+      double aSurfaceDisp(dot(lengthVector, intLinePoint));
+      double nearestAdjDist(libecs::INF);
+      Voxel* nearestAdj;
+      Voxel* nearestSub;
+      for(unsigned j(0); j != theAdjoiningCoordSize; ++j)
+        {
+          const unsigned adjCoord(interface.adjoiningCoords[j]);
+          Voxel& adjoin((*theLattice)[adjCoord]);
+          if(theSpecies[getID(adjoin)]->getIsCompVacant() &&
+             getID(adjoin) != theInterfaceSpecies->getID())
+            {
+              Point adjPoint(theSpatiocyteStepper->coord2point(adjoin.coord));
+              double adjDist(point2lineDist(adjPoint, lengthVector, Minus));
+              double adjDisp(point2planeDisp(adjPoint, lengthVector,
+                                             aSurfaceDisp));
+              if((adjDisp < 0) != direction || abs(adjDisp) == 0 ||
+                 getAdjoiningInterfaceCnt(adjoin) > 1)
+                {
+                  continue;
+                }
+              for(unsigned k(0); k != theAdjoiningCoordSize; ++k)
+                {
+                  Voxel& subAdj((*theLattice)[adjoin.adjoiningCoords[k]]);
+                  if(theSpecies[getID(subAdj)]->getIsCompVacant())
+                    { 
+                      Point subPoint(theSpatiocyteStepper->coord2point(
+                                                             subAdj.coord));
+                      double subDist(point2lineDist(subPoint, lengthVector,
+                                                    Minus));
+                      double subDisp(point2planeDisp(subPoint, lengthVector,
+                                             aSurfaceDisp));
+                      if((subDisp < 0) != direction || 
+                         abs(subDisp) <= abs(adjDisp) ||
+                         getAdjoiningInterfaceCnt(subAdj) > 0)
+                        {
+                          continue;
+                        }
+                      if(subDist+adjDist < nearestAdjDist && 
+                         subDist+adjDist < nDiffuseRadius*2 &&
+                         isInside(adjPoint) && isInside(subPoint))
+                        {
+                          nearestAdjDist = subDist+adjDist;
+                          nearestAdj = &adjoin;
+                          nearestSub = &subAdj;
+                        }
+                    }
+                }
+            }
+        }
+      if(nearestAdjDist != libecs::INF)
+        {
+          addInterfaceVoxel(*nearestAdj);
+          //If circular filament:
+          if(getID(nearestSub) != theInterfaceSpecies->getID())
+            {
+              addInterfaceVoxel(*nearestSub);
+            }
+        }
+      else if(i == theInterfaceSpecies->size()-1)
+        {
+          direction = !direction;
+          i = intStartIndex-1;
+          if(direction == true)
+            {
+              return;
+            }
+        }
+    }
+}
+*/
+
+/*
 void FilamentProcess::extendInterfacesOverSurface()
 {
   for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
     {
-      //Traverse both directions of the first interface:
-      if(i == intStartIndex+1 && theInterfaceSpecies->size()-intStartIndex == 2)
+      unsigned intLatticeCoord(theInterfaceSpecies->getCoord(i));
+      Voxel& interface((*theLattice)[intLatticeCoord]);
+      Point intPoint(theSpatiocyteStepper->coord2point(interface.coord));
+      Point intLinePoint(point2lineIntersect(intPoint, lengthVector, Minus));
+      double aSurfaceDisp(dot(lengthVector, intLinePoint));
+      double prevDisp(point2planeDisp(intLinePoint, lengthVector, 
+                                      aSurfaceDisp));
+      std::cout << "prevDisp:" << prevDisp << std::endl;
+      double nearestAdjDist(libecs::INF);
+      Voxel* nearestAdj;
+      for(unsigned j(0); j != theAdjoiningCoordSize; ++j)
         {
-          --i;
+          const unsigned adjCoord(interface.adjoiningCoords[j]);
+          Voxel& adjoin((*theLattice)[adjCoord]);
+          if(theSpecies[getID(adjoin)]->getIsCompVacant() &&
+             getID(adjoin) != theInterfaceSpecies->getID())
+            {
+              Point adjPoint(theSpatiocyteStepper->coord2point(adjoin.coord));
+              Point adjLinePoint(point2lineIntersect(adjPoint, lengthVector,
+                                                     Minus));
+              double adjDist(point2lineDist(adjPoint, lengthVector, Minus));
+              double adjLineDist(distance(intLinePoint, adjLinePoint));
+              double adjDisp(point2planeDisp(adjPoint, lengthVector,
+                                             aSurfaceDisp));
+              unsigned cnt(0);
+              for(unsigned k(0); k != theAdjoiningCoordSize; ++k)
+                {
+                  Voxel& subAdj((*theLattice)[adjoin.adjoiningCoords[k]]);
+                  if(getID(subAdj) == theInterfaceSpecies->getID())
+                    {
+                      ++cnt;
+                    }
+                }
+              if(cnt > 1)
+                {
+                  continue;
+                }
+              if( adjDist < nearestAdjDist && 
+                 (adjDisp < 0) == (prevDisp < 0) && 
+                 abs(adjDisp) > abs(prevDisp) &&
+                 adjDist <= nDiffuseRadius*2 &&
+                 isInside(adjPoint))
+                {
+                  std::cout << "adjDisp:" << adjDisp << std::endl;
+                  nearestAdjDist = adjDist;
+                  nearestAdj = &adjoin;
+                }
+            }
         }
+      if(nearestAdjDist != libecs::INF)
+        {
+          addInterfaceVoxel(*nearestAdj);
+        }
+    }
+}
+*/
+
+/*
+void FilamentProcess::extendInterfacesOverSurface()
+{
+  for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
+    {
       unsigned voxelCoord(theInterfaceSpecies->getCoord(i));
       Voxel& anInterface((*theLattice)[voxelCoord]);
       Point intPoint(theSpatiocyteStepper->coord2point(anInterface.coord));
@@ -402,28 +909,44 @@ void FilamentProcess::extendInterfacesOverSurface()
       Voxel* nearestAdj;
       for(unsigned j(0); j != theAdjoiningCoordSize; ++j)
         {
-          Voxel& adjoin((*theLattice)[anInterface.adjoiningCoords[j]]);
+          const unsigned adjCoord(anInterface.adjoiningCoords[j]);
+          Voxel& adjoin((*theLattice)[adjCoord]);
           if(theSpecies[getID(adjoin)]->getIsCompVacant())
             {
-              Point adjPoint(theSpatiocyteStepper->coord2point( adjoin.coord));
+              Point adjPoint(theSpatiocyteStepper->coord2point(adjoin.coord));
               Point adjLinePoint(point2lineIntersect(adjPoint, lengthVector,
                                                      Minus));
               double adjDist(point2lineDist(adjPoint, lengthVector, Minus));
               double adjLineDist(distance(intLinePoint, adjLinePoint));
               double adjDisp(point2planeDisp(adjPoint, lengthVector,
                                              aSurfaceDisplace));
+              unsigned cnt(0);
               for(unsigned k(0); k != theAdjoiningCoordSize; ++k)
                 {
-                  Voxel& subAdjoin((*theLattice)[adjoin.adjoiningCoords[k]]);
-                  if(theSpecies[getID(subAdjoin)]->getIsCompVacant())
+                  Voxel& subAdj((*theLattice)[adjoin.adjoiningCoords[k]]);
+                  if(getID(subAdj) == theInterfaceSpecies->getID())
+                    {
+                      ++cnt;
+                    }
+                }
+              if(cnt > 1)
+                {
+                  continue;
+                }
+              for(unsigned k(0); k != theAdjoiningCoordSize; ++k)
+                {
+                  Voxel& subAdj((*theLattice)[adjoin.adjoiningCoords[k]]);
+                  if(theSpecies[getID(subAdj)]->getIsCompVacant() &&
+                     cnt < 2)
                     { 
                       Point subPoint(theSpatiocyteStepper->coord2point(
-                                                             subAdjoin.coord));
+                                                             subAdj.coord));
                       Point subLinePoint(point2lineIntersect(subPoint,
-                                                         lengthVector, Minus));
+                                                     lengthVector, Minus));
                       double subDist(point2lineDist(subPoint, lengthVector,
                                                     Minus));
-                      double subLineDist(distance(intLinePoint, subLinePoint));
+                      double subLineDist(distance(intLinePoint,
+                                                  subLinePoint));
                       double subDisp(point2planeDisp(subPoint, lengthVector,
                                              aSurfaceDisplace));
                       if(subDist+adjDist < nearestAdjDist && 
@@ -445,8 +968,307 @@ void FilamentProcess::extendInterfacesOverSurface()
         }
     }
 }
+*/
 
 
+/*
+void FilamentProcess::extendInterfacesOverSurface()
+{
+  for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
+    {
+      unsigned voxelCoord(theInterfaceSpecies->getCoord(i));
+      Voxel& anInterface((*theLattice)[voxelCoord]);
+      for(unsigned j(0); j != theAdjoiningCoordSize; ++j)
+        {
+          Voxel& adjoin((*theLattice)[anInterface.adjoiningCoords[j]]);
+          //if(getID(adjoin) != theInterfaceSpecies->getID())
+          if(theSpecies[getID(adjoin)]->getIsCompVacant())
+            {
+              Point aPoint(theSpatiocyteStepper->coord2point(adjoin.coord));
+              if(isInside(aPoint))
+                {
+                  addSurfaceIntersectInterfaceVoxel(adjoin, aPoint);
+                }
+            }
+        }
+    }
+}
+
+
+void FilamentProcess::addLineIntersectInterfaceVoxel(Voxel& aVoxel,
+                                                     Point& aPoint)
+{
+  //We have already checked that aVoxel is a compVacant
+  double dispA(point2planeDisp(aPoint, widthVector, widthDisplace));
+  if(dispA == 0 && getID(aVoxel) == theInterfaceSpecies->getID())
+    {
+      addInterfaceVoxel(aVoxel);
+    }
+  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
+    {
+      Voxel& adjoin((*theLattice)[aVoxel.adjoiningCoords[i]]);
+      Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
+      double dispB(point2planeDisp(pointB, surfaceNormal, surfaceDisplace));
+      if(dispB == 0 && theSpecies[getID(adjoin)]->getIsCompVacant() &&
+         getID(adjoin) != theInterfaceSpecies->getID())
+        {
+          addInterfaceVoxel(adjoin);
+        }
+      if((dispA < 0) != (dispB < 0) &&
+         getID(aVoxel) != theInterfaceSpecies->getID() &&
+         getID(adjoin) != theInterfaceSpecies->getID())
+        {
+          //If aVoxel is nearer to the plane:
+          if(abs(dispA) <= abs(dispB))
+            {
+              addInterfaceVoxel(aVoxel);
+            }
+          //If the adjoin is nearer to the plane:
+          else if(theSpecies[getID(adjoin)]->getIsCompVacant())
+            {
+              addInterfaceVoxel(adjoin);
+            }
+        }
+    }
+}
+
+void FilamentProcess::addLineIntersectInterfaceVoxel(Voxel& aVoxel,
+                                                        Point& aPoint,
+                                                        const bool heightDir,
+                                                        const bool widthDir)
+{
+  //We have already checked that aVoxel is a compVacant
+  double heightA(point2planeDisp(aPoint, heightVector, heightDisplace));
+  double widthA(point2planeDisp(aPoint, widthVector, widthDisplace));
+  if(heightA == 0 && widthA == 0 && 
+     getID(aVoxel) != theInterfaceSpecies->getID())
+    {
+      addInterfaceVoxel(aVoxel);
+    }
+  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
+    {
+      Voxel& adjoin((*theLattice)[aVoxel.adjoiningCoords[i]]);
+      Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
+      double heightB(point2planeDisp(pointB, heightVector, heightDisplace));
+      double widthB(point2planeDisp(pointB, widthVector, widthDisplace));
+      if(heightB == 0 && widthB == 0 && 
+         theSpecies[getID(adjoin)]->getIsCompVacant() &&
+         getID(adjoin) != theInterfaceSpecies->getID())
+        {
+          addInterfaceVoxel(adjoin);
+        }
+      if((heightA < 0) != (heightB < 0) &&
+         getID(aVoxel) != theInterfaceSpecies->getID() &&
+         getID(adjoin) != theInterfaceSpecies->getID())
+        {
+          if(abs(heightA) <= abs(heightB))
+            {
+              for(unsigned j(0); j != theAdjoiningCoordSize; ++j)
+                {
+                  Voxel& subAdj((*theLattice)[aVoxel.adjoiningCoords[j]]);
+                  Point pointC(theSpatiocyteStepper->coord2point(subAdj.coord));
+                  double heightC(point2planeDisp(pointC, heightVector,
+                                                 heightDisplace));
+                  double widthC(point2planeDisp(pointC, widthVector,
+                                                widthDisplace));
+                  if((widthA < 0) != (widthC < 0) &&
+                     getID(subAdj) != theInterfaceSpecies->getID()) 
+                    {
+                      if(abs(widthA) <= abs(widthC))
+                        {
+                          addInterfaceVoxel(aVoxel); 
+                          break;
+                        }
+                    }
+                }
+            }
+          //If the adjoin is nearer to the plane:
+          else if(theSpecies[getID(adjoin)]->getIsCompVacant())
+            {
+              for(unsigned j(0); j != theAdjoiningCoordSize; ++j)
+                {
+                  Voxel& subAdj((*theLattice)[adjoin.adjoiningCoords[j]]);
+                  Point pointC(theSpatiocyteStepper->coord2point(subAdj.coord));
+                  double widthC(point2planeDisp(pointC, widthVector,
+                                                widthDisplace));
+                  if((widthB < 0) != (widthC < 0) &&
+                     getID(subAdj) != theInterfaceSpecies->getID()) 
+                    {
+                      if(abs(widthB) <= abs(widthC))
+                        {
+                          addInterfaceVoxel(adjoin);
+                          break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+*/
+
+/*
+void FilamentProcess::addLineIntersectInterfaceVoxel(Voxel& aVoxel,
+                                                        Point& aPoint,
+                                                        const bool heightDir,
+                                                        const bool widthDir)
+{
+  //We have already checked that aVoxel is a compVacant
+  double heightA(point2planeDisp(aPoint, heightVector, heightDisplace));
+  double widthA(point2planeDisp(aPoint, widthVector, widthDisplace));
+  if(heightA == 0 && widthA == 0 && 
+     getID(aVoxel) != theInterfaceSpecies->getID())
+    {
+      addInterfaceVoxel(aVoxel);
+    }
+  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
+    {
+      Voxel& adjoin((*theLattice)[aVoxel.adjoiningCoords[i]]);
+      Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
+      double heightB(point2planeDisp(pointB, heightVector, heightDisplace));
+      double widthB(point2planeDisp(pointB, widthVector, widthDisplace));
+      if(heightB == 0 && widthB == 0 && 
+         theSpecies[getID(adjoin)]->getIsCompVacant() &&
+         getID(adjoin) != theInterfaceSpecies->getID())
+        {
+          addInterfaceVoxel(adjoin);
+        }
+      if((heightA < 0) != (heightB < 0))
+        {
+          if(abs(heightA) <= abs(heightB))
+            {
+              double height(heightA);
+              double width(widthA);
+              Voxel* selVoxel(&aVoxel);
+              if(abs(heightA) == abs(heightB) && heightDir == (heightB < 0))
+                {
+                  height = heightB;
+                  width = widthB;
+                  selVoxel = &adjoin;
+                }
+              for(unsigned j(0); j != theAdjoiningCoordSize; ++j)
+                {
+                  Voxel& subAdj((*theLattice)[selVoxel->adjoiningCoords[j]]);
+                  Point pointC(theSpatiocyteStepper->coord2point(subAdj.coord));
+                  double heightC(point2planeDisp(pointC, heightVector, heightDisplace));
+                  double widthC(point2planeDisp(pointC, widthVector,
+                                                widthDisplace));
+                  if((width < 0) != (widthC < 0))
+                    {
+                      if(abs(width) <= abs(widthC))
+                        {
+                          addInterfaceVoxel(*selVoxel); 
+                        }
+                    }
+                }
+            }
+          //If the adjoin is nearer to the plane:
+          else if(theSpecies[getID(adjoin)]->getIsCompVacant())
+            {
+              for(unsigned j(0); j != theAdjoiningCoordSize; ++j)
+                {
+                  Voxel& subAdj((*theLattice)[adjoin.adjoiningCoords[j]]);
+                  Point pointC(theSpatiocyteStepper->coord2point(subAdj.coord));
+                  double widthC(point2planeDisp(pointC, widthVector,
+                                                widthDisplace));
+                  if((widthB < 0) != (widthC < 0))
+                    {
+                      if(abs(widthB) <= abs(widthC))
+                        {
+                          addInterfaceVoxel(adjoin);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+*/
+
+/*
+void FilamentProcess::extendInterfacesOverSurface()
+{
+  bool switched(false);
+  for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
+    {
+      //Traverse both directions of the first interface:
+      if(i == intStartIndex+1 && theInterfaceSpecies->size()-intStartIndex == 2)
+        {
+          --i;
+          //switched = true;
+        }
+      unsigned voxelCoord(theInterfaceSpecies->getCoord(i));
+      Voxel& anInterface((*theLattice)[voxelCoord]);
+      Point intPoint(theSpatiocyteStepper->coord2point(anInterface.coord));
+      Point intLinePoint(point2lineIntersect(intPoint, lengthVector, Minus));
+      double aSurfaceDisplace(dot(lengthVector, intLinePoint));
+      double nearestAdjDist(libecs::INF);
+      Voxel* nearestAdj;
+      for(unsigned j(0); j != theAdjoiningCoordSize; ++j)
+        {
+          const unsigned adjCoord(anInterface.adjoiningCoords[j]);
+          Voxel& adjoin((*theLattice)[adjCoord]);
+          if(theSpecies[getID(adjoin)]->getIsCompVacant())
+            {
+              Point adjPoint(theSpatiocyteStepper->coord2point(adjoin.coord));
+              Point adjLinePoint(point2lineIntersect(adjPoint, lengthVector,
+                                                     Minus));
+              double adjDist(point2lineDist(adjPoint, lengthVector, Minus));
+              double adjLineDist(distance(intLinePoint, adjLinePoint));
+              double adjDisp(point2planeDisp(adjPoint, lengthVector,
+                                             aSurfaceDisplace));
+              unsigned cnt(0);
+              for(unsigned k(0); k != theAdjoiningCoordSize; ++k)
+                {
+                  Voxel& subAdj((*theLattice)[adjoin.adjoiningCoords[k]]);
+                  if(getID(subAdj) == theInterfaceSpecies->getID())
+                    {
+                      ++cnt;
+                    }
+                }
+              if(cnt > 1)
+                {
+                  continue;
+                }
+              for(unsigned k(0); k != theAdjoiningCoordSize; ++k)
+                {
+                  Voxel& subAdj((*theLattice)[adjoin.adjoiningCoords[k]]);
+                  if(theSpecies[getID(subAdj)]->getIsCompVacant() &&
+                     cnt < 2)
+                    { 
+                      Point subPoint(theSpatiocyteStepper->coord2point(
+                                                             subAdj.coord));
+                      Point subLinePoint(point2lineIntersect(subPoint,
+                                                     lengthVector, Minus));
+                      double subDist(point2lineDist(subPoint, lengthVector,
+                                                    Minus));
+                      double subLineDist(distance(intLinePoint,
+                                                  subLinePoint));
+                      double subDisp(point2planeDisp(subPoint, lengthVector,
+                                             aSurfaceDisplace));
+                      if(subDist+adjDist < nearestAdjDist && 
+                         isInside(adjPoint) && isInside(subPoint) && 
+                         (adjDisp < 0) == (subDisp < 0) && 
+                         subLineDist > adjLineDist)
+                        {
+                          nearestAdjDist = subDist+adjDist;
+                          nearestAdj = &adjoin;
+                        }
+                    }
+                }
+            }
+        }
+      if(nearestAdjDist <= nDiffuseRadius*2 && 
+         getID(nearestAdj) != theInterfaceSpecies->getID())
+        { 
+          addInterfaceVoxel(*nearestAdj);
+        }
+    }
+}
+*/
+
+
+/*
 void FilamentProcess::addFilamentIntersectInterfaceVoxel(Voxel& aVoxel,
                                                          Point& aPoint,
                                                          Point& filamentPoint)
@@ -493,7 +1315,6 @@ void FilamentProcess::addFilamentIntersectInterfaceVoxel(Voxel& aVoxel,
     }
 }
 
-/*
 void FilamentProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
                                                         Point& aPoint)
 {

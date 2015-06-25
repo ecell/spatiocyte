@@ -79,6 +79,15 @@ Point addDivide(const Point& L, const Point& R)
   return V;
 }
 
+Point subDivide(const Point& L, const Point& R)
+{
+  Point V;
+  V.x = (L.x - R.x) / 2;
+  V.y = (L.y - R.y) / 2;
+  V.z = (L.z - R.z) / 2;
+  return V;
+}
+
 void add_(Point& L, const Point& R)
 {
   L.x += R.x;
@@ -142,6 +151,13 @@ Point mult(const Point& P, const double dist)
   A.y = P.y*dist;
   A.z = P.z*dist;
   return A;
+}
+
+void mult_(Point& P, const double dist)
+{
+  P.x = P.x*dist;
+  P.y = P.y*dist;
+  P.z = P.z*dist;
 }
 
 double dot(const Point& L, const Point& R)

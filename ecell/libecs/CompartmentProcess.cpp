@@ -326,10 +326,7 @@ void CompartmentProcess::setSubunitStart()
               center.y = aComp->lengthY;
             }
           center.x = 2*nDiffuseRadius; 
-          if(PlaneYZ == 1)
-            { 
-              subunitStart.x = aComp->maxPoint.x;
-            }
+          subunitStart.x = aComp->maxPoint.x;
         }
       else if(PlaneXZ)
         {
@@ -347,10 +344,7 @@ void CompartmentProcess::setSubunitStart()
               center.x = aComp->lengthX;
             }
           center.y = 2*nDiffuseRadius;
-          if(PlaneXZ == 1)
-            { 
-              subunitStart.y = aComp->maxPoint.y;
-            }
+          subunitStart.y = aComp->maxPoint.y;
         }
       else
         {
@@ -368,10 +362,7 @@ void CompartmentProcess::setSubunitStart()
               center.y = aComp->lengthY;
             }
           center.z = 2*nDiffuseRadius;
-          if(PlaneXY == 1)
-            { 
-              subunitStart.z = aComp->maxPoint.z;
-            }
+          subunitStart.z = aComp->maxPoint.z;
         }
       center.x = center.x/2+subunitStart.x;
       center.y = center.y/2+subunitStart.y;
@@ -709,15 +700,12 @@ void CompartmentProcess::initializeVectors()
   lengthStart = add(tmp, origin);
 
   rotate(lengthVector);
-  tmp =lengthVector;
   lengthEnd = disp(lengthStart, lengthVector, nLength);
 
   rotate(widthVector);
-  tmp =widthVector;
   widthEnd = disp(lengthEnd, widthVector, nWidth);
 
   rotate(heightVector);
-  tmp =heightVector;
   heightEnd = disp(widthEnd, heightVector, nHeight);
 
   if(theLipidSpecies)
@@ -735,9 +723,7 @@ void CompartmentProcess::initializeVectors()
   //Set up surface vectors:
   surfaceNormal = cross(lengthVector, widthVector);
   surfaceNormal = norm(surfaceNormal);
-  tmp = surfaceNormal;
   surfaceDisplace = dot(surfaceNormal, widthEnd);
-  tmp = surfaceDisplace;
   lengthDisplace = dot(lengthVector, lengthStart);
   lengthDisplaceOpp = dot(lengthVector, lengthEnd);
   widthDisplace = dot(widthVector, lengthEnd);
@@ -1200,7 +1186,7 @@ void CompartmentProcess::addFirstInterface()
         }
       ++subIndex;
     }
-  if(nearestVoxel != NULL && nearestDist <= nDiffuseRadius)
+  if(nearestVoxel != NULL && nearestDist <= 1.01*nDiffuseRadius)
     {
       std::cout << "Found the first interface voxel, dist:" <<
        nearestDist << " subIndex:" << subIndex << " subMax:" <<
@@ -1700,7 +1686,6 @@ void CompartmentProcess::interfaceSubunits()
     " ave:" << double(totalAdjsEI)/theVacantSpecies->size() << std::endl;
     */
 
-  /*
   //Check interface duplicates:
   for(unsigned i(0); i != theInterfaceSpecies->size(); ++i)
     {
@@ -1713,7 +1698,6 @@ void CompartmentProcess::interfaceSubunits()
             }
         }
     }
-    */
 }
 
 

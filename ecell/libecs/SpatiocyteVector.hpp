@@ -48,6 +48,7 @@ void norm_(Point& P);
 Point disp(const Point& P, const Point& V, const double dist);
 void disp_(Point& P, const Point& V, const double dist);
 Point mult(const Point& P, const double dist);
+void  mult_(const Point& P, const double dist);
 double dot(const Point& L, const Point& R);
 double distance(const Point& L, const Point& R);
 Point divide(const Point& P, const int& Q);
