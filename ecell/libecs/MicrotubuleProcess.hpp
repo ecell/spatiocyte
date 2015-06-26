@@ -51,6 +51,9 @@ public:
   MicrotubuleProcess():
     MonomerPitch(4e-9)
   {
+    //Both FilamentProcess and MicrotubuleProcess are not RegularLattice
+    //because each subunit may have different diffuseSize
+    RegularLattice = 0;
     Filaments = 13;
     DiffuseRadius = 8e-9/2;
     SubunitRadius = DiffuseRadius;
@@ -63,6 +66,8 @@ public:
   virtual void initializeCompartment();
   virtual void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
                                    unsigned);
+  virtual void extendInterfacesOverSurface();
+  virtual void addSurfaceIntersectInterfaceVoxel(Voxel&, Point&);
 protected:
   double MonomerPitch;
   double nMonomerPitch;

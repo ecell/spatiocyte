@@ -56,11 +56,13 @@ public:
     thePlusSpecies(NULL)
   {
     Filaments = 1;
+    //Both FilamentProcess and MicrotubuleProcess are not RegularLattice
+    //because each subunit may have different diffuseSize
+    RegularLattice = 0;
     /*
     SurfaceDirection = 0;
     Autofit = 0;
     Subunits = 1;
-    RegularLattice = 0;
     */
   }
   virtual ~FilamentProcess() {}

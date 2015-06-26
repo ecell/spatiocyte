@@ -112,4 +112,63 @@ void MicrotubuleProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
     }
 }
 
+void MicrotubuleProcess::extendInterfacesOverSurface()
+{
+  for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
+    {
+      unsigned voxelCoord(theInterfaceSpecies->getCoord(i));
+      Voxel& anInterface((*theLattice)[voxelCoord]);
+      for(unsigned j(0); j != theAdjoiningCoordSize; ++j)
+        {
+          Voxel& adjoin((*theLattice)[anInterface.adjoiningCoords[j]]);
+          //if(getID(adjoin) != theInterfaceSpecies->getID())
+          if(theSpecies[getID(adjoin)]->getIsCompVacant())
+            {
+              Point aPoint(theSpatiocyteStepper->coord2point(adjoin.coord));
+              if(isInside(aPoint))
+                {
+                  addSurfaceIntersectInterfaceVoxel(adjoin, aPoint);
+                }
+            }
+        }
+    }
+}
+
+void MicrotubuleProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
+                                                         Point& aPoint)
+{
+  //We have already checked that aVoxel is a compVacant
+  double distA(point2lineDist(aPoint, lengthVector, lengthStart));
+  if(distA == nRadius && getID(aVoxel) != theInterfaceSpecies->getID())
+    {
+      addInterfaceVoxel(aVoxel);
+    }
+  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
+    {
+      Voxel& adjoin((*theLattice)[aVoxel.adjoiningCoords[i]]);
+      Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
+      double distB(point2lineDist(pointB, lengthVector, lengthStart));
+      if(distB == 0 && theSpecies[getID(adjoin)]->getIsCompVacant() &&
+         getID(adjoin) != theInterfaceSpecies->getID())
+        {
+          addInterfaceVoxel(adjoin);
+        }
+      if((distA-nRadius < 0) != (distB-nRadius < 0) &&
+         getID(aVoxel) != theInterfaceSpecies->getID() &&
+         getID(adjoin) != theInterfaceSpecies->getID())
+        {
+          //If aVoxel is nearer to the plane:
+          if(abs(distA-nRadius) <= abs(distB-nRadius))
+            {
+              addInterfaceVoxel(aVoxel);
+            }
+          //If the adjoin is nearer to the plane:
+          else if(theSpecies[getID(adjoin)]->getIsCompVacant())
+            {
+              addInterfaceVoxel(adjoin);
+            }
+        }
+    }
+}
+
 }
