@@ -561,8 +561,8 @@ bool FilamentProcess::getFilamentAdjoin(Voxel* aVoxel,
       adjPoint = theSpatiocyteStepper->coord2point((*adjoin)->coord);
       adjDist = point2lineDist(adjPoint, lengthVector, Minus);
       adjDisp = point2planeDisp(adjPoint, lengthVector, aSurfaceDisp);
-      if((adjDisp < 0) == direction && abs(adjDisp) > abs(aDisp) &&
-         getAdjoiningInterfaceCnt(**adjoin) <= maxAdjInterface)
+      if((adjDisp < 0) == direction && abs(adjDisp) > std::max(abs(aDisp), 0.2)
+         && getAdjoiningInterfaceCnt(**adjoin) <= maxAdjInterface)
         {
           return true;
         }
@@ -601,7 +601,7 @@ void FilamentProcess::extendInterfacesOverSurface()
           double adjDisp;
           Point adjPoint;
           if(getFilamentAdjoin(&interface, direction, j, 1, aSurfaceDisp,
-                               0, adjPoint, adjDist, adjDisp, &adjoin))
+                               0.2, adjPoint, adjDist, adjDisp, &adjoin))
             { 
               if(getMinDistanceFromLineEnd(adjPoint) > -nDiffuseRadius)
                 {
