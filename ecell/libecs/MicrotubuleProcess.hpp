@@ -59,7 +59,7 @@ public:
   SIMPLE_SET_GET_METHOD(Real, MonomerPitch);
   SIMPLE_SET_GET_METHOD(Real, Radius);
   virtual void initialize();
-  virtual void setSubunitStart();
+  virtual void initializeVectors();
   virtual void initializeCompartment();
   virtual void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
                                    unsigned);

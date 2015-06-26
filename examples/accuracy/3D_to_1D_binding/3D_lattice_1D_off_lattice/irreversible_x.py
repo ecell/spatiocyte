@@ -19,7 +19,7 @@ logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:logger'
 logger.VariableReferenceList = [['_', 'Variable:/:Vacant']]
 logger.VariableReferenceList = [['_', 'Variable:/:A']]
 logger.VariableReferenceList = [['_', 'Variable:/:Interface']]
-logger.LogInterval = 0.0001
+logger.LogInterval = 0.01
 
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
 populator.VariableReferenceList = [['_', 'Variable:/:A']]

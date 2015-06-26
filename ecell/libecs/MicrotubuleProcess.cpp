@@ -40,7 +40,8 @@ void MicrotubuleProcess::initialize() {
   nMonomerPitch = MonomerPitch/(VoxelRadius*2);
 }
 
-void MicrotubuleProcess::setSubunitStart() {
+void MicrotubuleProcess::initializeVectors() {
+  FilamentProcess::initializeVectors();
   Point R; //Initialize a random point on the plane attached at the minus end
   if(Minus.x != Plus.x)
     {

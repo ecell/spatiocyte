@@ -235,39 +235,6 @@ void FilamentProcess::setTrailSize(unsigned start, unsigned end) {
     }
 }
 
-/*
-void FilamentProcess::initializeVectors() { 
-  //Minus end
-  Minus.x = -nLength/2;
-  Minus.y = 0;
-  Minus.z = 0;
-  Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
-  Point tmpOrigin;
-  tmpOrigin.x = OriginX*aComp->lengthX/2;
-  tmpOrigin.y = OriginY*aComp->lengthY/2;
-  tmpOrigin.z = OriginZ*aComp->lengthZ/2;
-  //Rotated Minus end
-  theSpatiocyteStepper->rotateX(theComp->rotateX, &Minus, -1);
-  theSpatiocyteStepper->rotateY(theComp->rotateY, &Minus, -1);
-  theSpatiocyteStepper->rotateZ(theComp->rotateZ, &Minus, -1);
-  theSpatiocyteStepper->rotateX(RotateX, &Minus, 1);
-  theSpatiocyteStepper->rotateY(RotateY, &Minus, 1);
-  theSpatiocyteStepper->rotateZ(RotateZ, &Minus, 1);
-  theSpatiocyteStepper->rotateX(theComp->rotateX, &tmpOrigin, -1);
-  theSpatiocyteStepper->rotateY(theComp->rotateY, &tmpOrigin, -1);
-  theSpatiocyteStepper->rotateZ(theComp->rotateZ, &tmpOrigin, -1);
-  add_(tmpOrigin, Origin);
-  add_(Minus, tmpOrigin);
-  //Direction vector from the Minus end to center
-  lengthVector = sub(tmpOrigin, Minus);
-  //Make direction vector a unit vector
-  norm_(lengthVector);
-  //Rotated Plus end
-  Plus = disp(Minus, lengthVector, nLength);
-  setSubunitStart();
-}
-*/
-
 void FilamentProcess::initializeVectors() { 
   //subunitStart is the center point of the first vacant species voxel:
   lengthStart = subunitStart;
@@ -365,8 +332,12 @@ void FilamentProcess::setSubunitStart()
       if(!Length && !Subunits)
         {
           Length = lengths.z*VoxelRadius*2;
-          center.z = lengths.z*0.5;
         }
+      else
+        {
+          lengths.z = Length/(VoxelRadius*2);
+        }
+      center.z = lengths.z*0.5;
       subunitStart.z -= lengths.z*0.5;
     }
   else if(LineY)
@@ -377,8 +348,12 @@ void FilamentProcess::setSubunitStart()
       if(!Length && !Subunits)
         {
           Length = lengths.y*VoxelRadius*2;
-          center.y = lengths.y*0.5;
         }
+      else
+        {
+          lengths.y = Length/(VoxelRadius*2);
+        }
+      center.y = lengths.y*0.5;
       subunitStart.y -= lengths.y*0.5;
     }
   //LineX 
@@ -390,8 +365,12 @@ void FilamentProcess::setSubunitStart()
       if(!Length && !Subunits)
         {
           Length = lengths.x*VoxelRadius*2;
-          center.x = lengths.x*0.5;
         }
+      else
+        {
+          lengths.x = Length/(VoxelRadius*2);
+        }
+      center.x = lengths.x*0.5;
       subunitStart.x -= lengths.x*0.5;
     }
   add_(center, subunitStart);
