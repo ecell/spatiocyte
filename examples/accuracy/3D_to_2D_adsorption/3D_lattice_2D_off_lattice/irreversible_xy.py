@@ -36,7 +36,7 @@ logger.VariableReferenceList = [['_', 'Variable:/:sA']]
 logger.LogInterval = 1
 logger.LogEnd = 200
 logger.Iterations = 250
-logger.FileName = "IterateLogXYd.csv"
+logger.FileName = "IterateLogXY.csv"
 
 fil = theSimulator.createEntity('CompartmentProcess', 'Process:/:filam')
 fil.VariableReferenceList = [['_', 'Variable:/:Vacant', '-1']]
