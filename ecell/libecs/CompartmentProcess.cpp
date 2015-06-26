@@ -38,7 +38,6 @@ void CompartmentProcess::prepreinitialize()
 {
   SpatiocyteProcess::prepreinitialize();
   theInterfaceVariable = createVariable("Interface");
-  theVacantVariable = createVariable("Vacant");
   if(LipidRadius)
     {
       if(LipidRadius < 0)
@@ -62,25 +61,39 @@ void CompartmentProcess::initialize()
   theInterfaceSpecies = theSpatiocyteStepper->addSpecies(
                                                    theInterfaceVariable);
   theInterfaceSpecies->setIsInterface();
-  theVacantSpecies = theSpatiocyteStepper->addSpecies(theVacantVariable);
-  if(LipidRadius)
-    {
-      theLipidSpecies = theSpatiocyteStepper->addSpecies(
-                                                   theLipidVariable);
-    }
   for(VariableReferenceVector::iterator
       i(theVariableReferenceVector.begin());
       i != theVariableReferenceVector.end(); ++i)
     {
       Species* aSpecies(theSpatiocyteStepper->variable2species(
                                (*i).getVariable())); 
+      //HD Species
       if(aSpecies == NULL)
         {
           continue;
         }
       if((*i).getCoefficient())
         {
-          theLipidCompSpecies.push_back(aSpecies);
+          if((*i).getCoefficient() == -1)
+            {
+              if(theVacantSpecies)
+                {
+                  THROW_EXCEPTION(ValueError, String(
+                                  getPropertyInterface().getClassName()) +
+                                  "[" + getFullID().asString() + 
+                                  "]: This compartment requires only " +
+                                  "one vacant variable reference with -1 " +
+                                  "coefficient as the vacant species of " +
+                                  "the compartment, but " +
+                                  getIDString(theVacantSpecies) + " and " +
+                                  getIDString(aSpecies) + " are given."); 
+                }
+              theVacantSpecies = aSpecies;
+            }
+          else
+            {
+              theLipidCompSpecies.push_back(aSpecies);
+            }
         }
       else
         {
@@ -94,6 +107,21 @@ void CompartmentProcess::initialize()
         {
           aSpecies->setIsPeriodic();
         }
+    }
+  if(!theVacantSpecies)
+    {
+      THROW_EXCEPTION(ValueError, String(
+                      getPropertyInterface().getClassName()) +
+                      "[" + getFullID().asString() + 
+                      "]: This compartment requires one " +
+                      "nonHD variable reference with -1 " +
+                      "coefficient as the vacant species, " +
+                      "but none is given."); 
+    }
+  if(LipidRadius)
+    {
+      theLipidSpecies = theSpatiocyteStepper->addSpecies(
+                                                   theLipidVariable);
     }
   if(!DiffuseRadius)
     {

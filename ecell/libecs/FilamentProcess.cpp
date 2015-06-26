@@ -55,6 +55,11 @@ void FilamentProcess::initialize() {
     {
       Species* aSpecies(theSpatiocyteStepper->variable2species(
                                (*i).getVariable())); 
+      //HD Species
+      if(aSpecies == NULL)
+        {
+          continue;
+        }
       if((*i).getCoefficient())
         {
           if((*i).getCoefficient() == -1)
@@ -108,17 +113,8 @@ void FilamentProcess::initialize() {
         }
       else
         {
-          theBindingSpecies.push_back(aSpecies);
+          theVacantCompSpecies.push_back(aSpecies);
         }
-    }
-  if(!theBindingSpecies.size())
-    {
-      THROW_EXCEPTION(ValueError, String(
-                      getPropertyInterface().getClassName()) +
-                      "[" + getFullID().asString() + 
-                      "]: This compartment requires at least one " +
-                      "nonHD variable reference with zero coefficient " +
-                      "as the binding species, but none is given."); 
     }
   if(!theVacantSpecies)
     {
@@ -126,7 +122,7 @@ void FilamentProcess::initialize() {
                       getPropertyInterface().getClassName()) +
                       "[" + getFullID().asString() + 
                       "]: This compartment requires one " +
-                      "nonHD variable reference with negative " +
+                      "nonHD variable reference with -1 " +
                       "coefficient as the vacant species, " +
                       "but none is given."); 
     }
@@ -167,13 +163,13 @@ void FilamentProcess::initializeFirst() {
   theMinusSpecies->setComp(theComp);
   thePlusSpecies->setIsOffLattice();
   thePlusSpecies->setComp(theComp);
-  for(unsigned i(0); i != theBindingSpecies.size(); ++i)
+  for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
     {
-      theBindingSpecies[i]->setIsOffLattice();
-      theBindingSpecies[i]->setDimension(1);
-      theBindingSpecies[i]->setVacantSpecies(theVacantSpecies);
-      theBindingSpecies[i]->setComp(theComp);
-      theBindingSpecies[i]->resetFixedAdjoins();
+      theVacantCompSpecies[i]->setIsOffLattice();
+      theVacantCompSpecies[i]->setDimension(1);
+      theVacantCompSpecies[i]->setVacantSpecies(theVacantSpecies);
+      theVacantCompSpecies[i]->setComp(theComp);
+      theVacantCompSpecies[i]->resetFixedAdjoins();
     }
 }
 
@@ -183,9 +179,9 @@ unsigned FilamentProcess::getLatticeResizeCoord(unsigned aStartCoord) {
   theMinusSpecies->setMoleculeRadius(DiffuseRadius);
   thePlusSpecies->resetFixedAdjoins();
   thePlusSpecies->setMoleculeRadius(DiffuseRadius);
-  for(unsigned i(0); i != theBindingSpecies.size(); ++i)
+  for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
     {
-      theBindingSpecies[i]->setMoleculeRadius(DiffuseRadius);
+      theVacantCompSpecies[i]->setMoleculeRadius(DiffuseRadius);
     }
   return aSize;
 }

@@ -10,6 +10,7 @@ theSimulator.createEntity('Variable', 'Variable:/:LENGTHY').Value = 100e-6
 theSimulator.createEntity('Variable', 'Variable:/:LENGTHZ').Value = 100e-6
 theSimulator.createEntity('Variable', 'Variable:/:VACANT')
 theSimulator.createEntity('Variable', 'Variable:/:A').Value = 10000
+theSimulator.createEntity('Variable', 'Variable:/:Vacant').Value = 0
 s = theSimulator.createEntity('Variable', 'Variable:/:sA')
 s.Value = 0
 s.Name = "HD"
@@ -24,10 +25,6 @@ diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseA')
 diffuser.VariableReferenceList = [['_', 'Variable:/:A']]
 diffuser.D = 1e-12
 
-fil = theSimulator.createEntity('CompartmentProcess', 'Process:/:filam')
-fil.VariableReferenceList = [['_', 'Variable:/:sA']]
-fil.PlaneXY = 1
-
 binder = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:reaction1')
 binder.VariableReferenceList = [['_', 'Variable:/:A','-1']]
 binder.VariableReferenceList = [['_', 'Variable:/:Vacant','-1']]
@@ -39,6 +36,11 @@ logger.VariableReferenceList = [['_', 'Variable:/:sA']]
 logger.LogInterval = 1
 logger.LogEnd = 200
 logger.Iterations = 250
-logger.FileName = "IterateLogXY.csv"
+logger.FileName = "IterateLogXYd.csv"
+
+fil = theSimulator.createEntity('CompartmentProcess', 'Process:/:filam')
+fil.VariableReferenceList = [['_', 'Variable:/:Vacant', '-1']]
+fil.VariableReferenceList = [['_', 'Variable:/:sA']]
+fil.PlaneXY = 1
 
 run(201)
