@@ -67,10 +67,13 @@ public:
   virtual void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
                                    unsigned);
   virtual void extendInterfacesOverSurface();
-  virtual void addSurfaceIntersectInterfaceVoxel(Voxel&, Point&);
+  virtual bool isInside(Point&);
+  virtual double getDisplacementToSurface(Point&);
 protected:
+  unsigned getNearestFilament(Point&);
   double MonomerPitch;
   double nMonomerPitch;
+  std::vector<Point> theMinusPoints;
   std::vector<Species*> theKinesinSpecies;
 };
 

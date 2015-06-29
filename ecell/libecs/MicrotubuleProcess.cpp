@@ -101,6 +101,7 @@ void MicrotubuleProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
                                              unsigned aStartCoord) {
   Voxel* aVoxel(addCompVoxel(0, 0, aStartPoint, aVacant, aStartCoord, aCols));
   theMinusSpecies->addMolecule(aVoxel);
+  theMinusPoints.push_back(aStartPoint);
   Point U(aStartPoint);
   for(unsigned i(1); i < aRows; ++i)
     {
@@ -109,66 +110,51 @@ void MicrotubuleProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
       disp_(U, lengthVector, aRadius/(aRows-1));
       aVoxel = addCompVoxel(i, 0, U, aVacant, aStartCoord, aCols);
       theMinusSpecies->addMolecule(aVoxel);
+      theMinusPoints.push_back(U);
     }
 }
 
+unsigned MicrotubuleProcess::getNearestFilament(Point& aPoint)
+{
+  double nearestDist(libecs::INF);
+  unsigned nearestFilament(0);
+  for(unsigned i(0); i != theMinusPoints.size(); ++i)
+    {
+      double aDist(point2lineDist(aPoint, lengthVector, theMinusPoints[i]));
+      if(aDist < nearestDist)
+        {
+          nearestDist = aDist;
+          nearestFilament = i;
+        }
+    }
+  return nearestFilament;
+}
+
+
+//Is inside the parent compartment and confined by the length of the MT:
+bool MicrotubuleProcess::isInside(Point& aPoint)
+{
+  unsigned nearestFilament(getNearestFilament(aPoint));
+  double aLengthDisplace(dot(lengthVector, theMinusPoints[nearestFilament]));
+  double dispA(point2planeDisp(aPoint, lengthVector, aLengthDisplace));
+  if(dispA >= -nDiffuseRadius/2 && dispA <= nLength+nDiffuseRadius/2)
+    {
+      return true;
+    }
+  return false;
+}
+
+
+//Overload FilamentProcess::extendInterfacesOverSurface():
 void MicrotubuleProcess::extendInterfacesOverSurface()
 {
-  for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
-    {
-      unsigned voxelCoord(theInterfaceSpecies->getCoord(i));
-      Voxel& anInterface((*theLattice)[voxelCoord]);
-      for(unsigned j(0); j != theAdjoiningCoordSize; ++j)
-        {
-          Voxel& adjoin((*theLattice)[anInterface.adjoiningCoords[j]]);
-          //if(getID(adjoin) != theInterfaceSpecies->getID())
-          if(theSpecies[getID(adjoin)]->getIsCompVacant())
-            {
-              Point aPoint(theSpatiocyteStepper->coord2point(adjoin.coord));
-              if(isInside(aPoint))
-                {
-                  addSurfaceIntersectInterfaceVoxel(adjoin, aPoint);
-                }
-            }
-        }
-    }
+  CompartmentProcess::extendInterfacesOverSurface();
 }
 
-void MicrotubuleProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
-                                                         Point& aPoint)
+//nRadius is the radius of MT cylinder
+double MicrotubuleProcess::getDisplacementToSurface(Point& aPoint)
 {
-  //We have already checked that aVoxel is a compVacant
-  double distA(point2lineDist(aPoint, lengthVector, lengthStart));
-  if(distA == nRadius && getID(aVoxel) != theInterfaceSpecies->getID())
-    {
-      addInterfaceVoxel(aVoxel);
-    }
-  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
-    {
-      Voxel& adjoin((*theLattice)[aVoxel.adjoiningCoords[i]]);
-      Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
-      double distB(point2lineDist(pointB, lengthVector, lengthStart));
-      if(distB == 0 && theSpecies[getID(adjoin)]->getIsCompVacant() &&
-         getID(adjoin) != theInterfaceSpecies->getID())
-        {
-          addInterfaceVoxel(adjoin);
-        }
-      if((distA-nRadius < 0) != (distB-nRadius < 0) &&
-         getID(aVoxel) != theInterfaceSpecies->getID() &&
-         getID(adjoin) != theInterfaceSpecies->getID())
-        {
-          //If aVoxel is nearer to the plane:
-          if(abs(distA-nRadius) <= abs(distB-nRadius))
-            {
-              addInterfaceVoxel(aVoxel);
-            }
-          //If the adjoin is nearer to the plane:
-          else if(theSpecies[getID(adjoin)]->getIsCompVacant())
-            {
-              addInterfaceVoxel(adjoin);
-            }
-        }
-    }
+  return point2lineDist(aPoint, lengthVector, lengthStart)-nRadius;
 }
 
 }

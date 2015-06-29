@@ -105,7 +105,6 @@ protected:
   Point Plus; //Plus end
   Species* theMinusSpecies;
   Species* thePlusSpecies;
-  std::vector<Species*> theBindingSpecies;
 };
 
 }

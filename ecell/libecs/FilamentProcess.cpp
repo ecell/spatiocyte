@@ -266,12 +266,7 @@ void FilamentProcess::initializeVectors() {
 
   heightDisplace = dot(heightVector, lengthStart);
   lengthDisplace = dot(lengthVector, lengthStart);
-  lengthDisplaceOpp = dot(lengthVector, lengthEnd);
   widthDisplace = dot(widthVector, lengthStart);
-  
-  //remove the following
-  surfaceNormal = heightVector;
-  surfaceDisplace = heightDisplace;
 }
 
 
@@ -449,14 +444,9 @@ void FilamentProcess::elongateFilaments(Species* aVacant,
     }
 }
 
-//Is inside the parent compartment and confined by the length of the MT:
+//Is inside the parent compartment and confined by the length of the filament:
 bool FilamentProcess::isInside(Point& aPoint)
 {
-  //Use nDifffuseRadius/2 instead of 0 because we don't want additional
-  //interface voxels at the edge of the plus or minus end. So only molecules
-  //hitting along the normal of the surface of the MT at the ends can bind.
-  //This would avoid bias of molecule directly hitting the MT ends from the
-  //sides and binding:
   double dispA(point2planeDisp(aPoint, lengthVector, lengthDisplace));
   if(dispA >= 0 && dispA <= nLength)
     {

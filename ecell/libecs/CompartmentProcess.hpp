@@ -150,7 +150,7 @@ public:
   virtual void addSurfaceIntersectInterfaceVoxel(Voxel&, Point&);
   virtual bool isInside(Point&);
   virtual bool isOnAboveSurface(Point&);
-  virtual double getDistanceToSurface(Point&);
+  virtual double getDisplacementToSurface(Point&);
   void connectSubunit(unsigned, unsigned, unsigned, unsigned);
   //void addPlaneSubunitInterfaceVoxel(unsigned, unsigned, const double);
   void addInterfaceVoxel(Voxel&, Point&);
