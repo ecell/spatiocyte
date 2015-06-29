@@ -1500,6 +1500,8 @@ void CompartmentProcess::interfaceSubunits()
   addFirstInterface();
   extendInterfacesOverSurface();
   setSubunitInterfaces();
+
+
   /*
   std::vector<unsigned> sizes(12,0);
   for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
@@ -1508,12 +1510,14 @@ void CompartmentProcess::interfaceSubunits()
     }
   for(unsigned i(0); i != sizes.size(); ++i)
     {
-      std::cout << "before subunit size i:" << i << " " << sizes[i] <<
+      std::cout << "before setNearestInterfaceForOrphanSubunits subunit size i:" << i << " " << sizes[i] <<
         std::endl;
     }
     */
 
+
   setNearestInterfaceForOrphanSubunits();
+
 
   /*
   for(unsigned i(0); i != sizes.size(); ++i)
@@ -1526,7 +1530,7 @@ void CompartmentProcess::interfaceSubunits()
     }
   for(unsigned i(0); i != sizes.size(); ++i)
     {
-      std::cout << "after subunit size i:" << i << " " << sizes[i] << std::endl;
+      std::cout << "after size i:" << i << " " << sizes[i] << std::endl;
     }
   std::vector<unsigned> interfaceSubunitPairs(theInterfaceSpecies->size(), 0);
   for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
@@ -1544,12 +1548,14 @@ void CompartmentProcess::interfaceSubunits()
     }
   for(unsigned i(0); i != pairs.size(); ++i)
     {
-      std::cout << "before interface size i:" << i << " " << pairs[i] <<
+      std::cout << "before setNearestSubunitForOrphanInterfaces interface size i:" << i << " " << pairs[i] <<
       std::endl;
     }
     */
 
+
   setNearestSubunitForOrphanInterfaces();
+
 
   /*
   for(unsigned i(0); i!= interfaceSubunitPairs.size(); ++i)
@@ -1579,7 +1585,9 @@ void CompartmentProcess::interfaceSubunits()
     }
     */
 
+
   connectSubunitInterfaceAdjoins();
+
 
   /*
   //check subunit adjoins
@@ -1629,7 +1637,6 @@ void CompartmentProcess::interfaceSubunits()
     }
   std::cout << "total adjs:" << totalAdjsI << " extAdjs:" << totalAdjsEI << 
     " ave:" << double(totalAdjsEI)/theVacantSpecies->size() << std::endl;
-    */
 
   //Check interface duplicates:
   for(unsigned i(0); i != theInterfaceSpecies->size(); ++i)
@@ -1643,6 +1650,7 @@ void CompartmentProcess::interfaceSubunits()
             }
         }
     }
+    */
 }
 
 
