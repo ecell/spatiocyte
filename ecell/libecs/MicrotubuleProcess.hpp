@@ -57,6 +57,10 @@ public:
     Filaments = 13;
     DiffuseRadius = 8e-9/2;
     SubunitRadius = DiffuseRadius;
+    //Only allow kinesins to bind from the outside of the MT surface, not
+    //from the cylindrical tube inside MT
+    BindingDirection = 0; 
+    DissociationDirection = 0; 
   }
   virtual ~MicrotubuleProcess() {}
   SIMPLE_SET_GET_METHOD(Real, MonomerPitch);

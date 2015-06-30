@@ -59,11 +59,6 @@ public:
     //Both FilamentProcess and MicrotubuleProcess are not RegularLattice
     //because each subunit may have different diffuseSize
     RegularLattice = 0;
-    /*
-    SurfaceDirection = 0;
-    Autofit = 0;
-    Subunits = 1;
-    */
   }
   virtual ~FilamentProcess() {}
   SIMPLE_SET_GET_METHOD(Integer, LineX);

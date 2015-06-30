@@ -1226,7 +1226,7 @@ void SpatiocyteStepper::setLatticeProperties()
   double mem_required(((theRowSize*theLayerSize*theColSize+1)*108.0)/
                       (1024.0*1024.0*1024.0));
   double mem_available(get_total_system_memory()/(1024.0*1024.0*1024.0));
-  std::cout << "   Total memory required (GB): " << mem_required 
+  std::cout << "   Estimated total memory required (GB): " << mem_required 
     << std::endl;
   std::cout << "   Total memory available (GB): " << mem_available <<
     std::endl;

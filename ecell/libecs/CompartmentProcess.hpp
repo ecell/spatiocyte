@@ -52,6 +52,7 @@ public:
     {
       INHERIT_PROPERTIES(Process);
       PROPERTYSLOT_SET_GET(Integer, Autofit);
+      PROPERTYSLOT_SET_GET(Integer, BindingDirection);
       PROPERTYSLOT_SET_GET(Integer, Filaments);
       PROPERTYSLOT_SET_GET(Integer, Periodic);
       PROPERTYSLOT_SET_GET(Integer, PlaneXY);
@@ -59,7 +60,7 @@ public:
       PROPERTYSLOT_SET_GET(Integer, PlaneYZ);
       PROPERTYSLOT_SET_GET(Integer, RegularLattice);
       PROPERTYSLOT_SET_GET(Integer, Subunits);
-      PROPERTYSLOT_SET_GET(Integer, SurfaceDirection);
+      PROPERTYSLOT_SET_GET(Integer, DissociationDirection);
       PROPERTYSLOT_SET_GET(Integer, Verbose);
       PROPERTYSLOT_SET_GET(Real, DiffuseRadius); //off-lattice voxel radius
       PROPERTYSLOT_SET_GET(Real, Length);
@@ -81,6 +82,7 @@ public:
   CompartmentProcess():
     isCompartmentalized(false),
     Autofit(1),
+    BindingDirection(2), //bidirectional
     Filaments(0),
     LipidCols(0),
     LipidRows(0),
@@ -90,7 +92,7 @@ public:
     PlaneYZ(0),
     RegularLattice(1),
     Subunits(0),
-    SurfaceDirection(2),
+    DissociationDirection(2), //bidirectional
     Verbose(0),
     theDiffuseSize(6),
     theDimension(1),
@@ -111,6 +113,7 @@ public:
     theVacantSpecies(NULL) {}
   virtual ~CompartmentProcess() {}
   SIMPLE_SET_GET_METHOD(Integer, Autofit);
+  SIMPLE_SET_GET_METHOD(Integer, BindingDirection);
   SIMPLE_SET_GET_METHOD(Integer, Filaments);
   SIMPLE_SET_GET_METHOD(Integer, Periodic);
   SIMPLE_SET_GET_METHOD(Integer, PlaneXY);
@@ -118,7 +121,7 @@ public:
   SIMPLE_SET_GET_METHOD(Integer, PlaneYZ);
   SIMPLE_SET_GET_METHOD(Integer, RegularLattice);
   SIMPLE_SET_GET_METHOD(Integer, Subunits);
-  SIMPLE_SET_GET_METHOD(Integer, SurfaceDirection);
+  SIMPLE_SET_GET_METHOD(Integer, DissociationDirection);
   SIMPLE_SET_GET_METHOD(Integer, Verbose);
   SIMPLE_SET_GET_METHOD(Real, DiffuseRadius);
   SIMPLE_SET_GET_METHOD(Real, Length);
@@ -181,14 +184,17 @@ public:
   void setGrid(Species*, std::vector<std::vector<unsigned> >&, unsigned);
   bool setSubunitInterfaceVoxel(const unsigned, const double, 
                                 const bool isSingle=false);
-  bool isCorrectSide(const unsigned);
   Species* coefficient2species(int);
   Voxel* getNearestVoxelToSubunit(const unsigned, double&, const bool);
   Voxel* getNearestVoxelToSurface(const unsigned, double&, const bool);
   Voxel* addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
 protected:
+  void removeAdjoinsFromNonBindingSide(Voxel&);
+  bool isDissociationSide(const unsigned);
+  bool isBindingSide(const unsigned);
   bool isCompartmentalized;
   unsigned Autofit;
+  unsigned BindingDirection;
   unsigned endCoord;
   unsigned Filaments;
   unsigned intStartIndex;
@@ -202,7 +208,7 @@ protected:
   unsigned subStartCoord;
   unsigned RegularLattice;
   unsigned Subunits;
-  unsigned SurfaceDirection;
+  unsigned DissociationDirection;
   unsigned theDiffuseSize;
   unsigned theDimension;
   unsigned vacStartIndex;

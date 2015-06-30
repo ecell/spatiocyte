@@ -1243,40 +1243,77 @@ void CompartmentProcess::connectSubunitInterfaceAdjoins()
               unsigned coord(interface.adjoiningCoords[k]);
               Voxel& adjoin((*theLattice)[coord]);
               if(theSpecies[getID(adjoin)]->getIsCompVacant() && 
-                 getID(adjoin) != theInterfaceSpecies->getID())
-                 //isCorrectSide(adjoin.coord))
+                 getID(adjoin) != theInterfaceSpecies->getID() &&
+                 isDissociationSide(adjoin.coord))
                 {
                   addAdjoin(subunit, coord);
+                }
+            }
+          //Remove adjoins of volume voxels pointing to interface if
+          //they are not from the correction binding side of the surface:
+          removeAdjoinsFromNonBindingSide(interface);
+        }
+    }
+}
+
+void CompartmentProcess::removeAdjoinsFromNonBindingSide(Voxel& interface)
+{
+  for(unsigned i(0); i != interface.diffuseSize; ++i)
+    {
+      unsigned coord(interface.adjoiningCoords[i]);
+      Voxel& adjoin((*theLattice)[coord]);
+      if(theSpecies[getID(adjoin)]->getIsCompVacant() && 
+         getID(adjoin) != theInterfaceSpecies->getID() &&
+         !isBindingSide(adjoin.coord))
+        {
+          for(unsigned j(0); j != adjoin.diffuseSize; ++j)
+            {
+              if(adjoin.adjoiningCoords[j] == interface.coord)
+                {
+                  //Point to itself it is pointing to interface:
+                  adjoin.adjoiningCoords[j] = adjoin.coord;
                 }
             }
         }
     }
 }
 
-bool CompartmentProcess::isCorrectSide(const unsigned aCoord)
+bool CompartmentProcess::isBindingSide(const unsigned aCoord)
 {
   Point aPoint(theSpatiocyteStepper->coord2point(aCoord));
-  switch(SurfaceDirection)
+  //Dissociating from subunit to volume voxels:
+  if(BindingDirection == 2)
     {
-      //Is inside
-    case 0:
-      if(isOnAboveSurface(aPoint))
-        {
-          return true;
-        }
-      return false;
-      //Is outside
-    case 1:
-      if(!isOnAboveSurface(aPoint))
-        {
-          return true;
-        }
-      return false;
-      //Is bidirectional
-    default:
       return true;
     }
-  return true;
+  else if(BindingDirection == 0 && isOnAboveSurface(aPoint))
+    {
+      return true;
+    }
+  else if(BindingDirection == 1 && !isOnAboveSurface(aPoint))
+    {
+      return true;
+    }
+  return false;
+}
+
+bool CompartmentProcess::isDissociationSide(const unsigned aCoord)
+{
+  Point aPoint(theSpatiocyteStepper->coord2point(aCoord));
+  //Dissociating from subunit to volume voxels:
+  if(DissociationDirection == 2)
+    {
+      return true;
+    }
+  else if(DissociationDirection == 0 && isOnAboveSurface(aPoint))
+    {
+      return true;
+    }
+  else if(DissociationDirection == 1 && !isOnAboveSurface(aPoint))
+    {
+      return true;
+    }
+  return false;
 }
 
 void CompartmentProcess::setSubunitInterfaces()
@@ -1422,55 +1459,6 @@ void CompartmentProcess::setNearestSubunit(const unsigned intIndex,
     }
 }
 
-/*
-unsigned CompartmentProcess::getNearestInterface(const unsigned subIndex,
-                                                 double& nearestDist)
-{
-  unsigned intIndex(0);
-  Point subPoint(*(*theLattice)[subIndex+subStartCoord].point);
-  Point a(subPoint);
-  Point b(subPoint);
-  disp_(a, lengthVector, 1.5*nVoxelRadius);
-  disp_(a, widthVector, 1.5*nVoxelRadius);
-  disp_(a, surfaceNormal, 1.5*nVoxelRadius);
-  disp_(b, lengthVector, -1.5*nVoxelRadius);
-  disp_(b, widthVector, -1.5*nVoxelRadius);
-  disp_(b, surfaceNormal, -1.5*nVoxelRadius);
-  Point top(Point(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z)));
-  Point bottom(Point(std::min(a.x, b.x), std::min(a.y, b.y),
-                     std::min(a.z, b.z)));
-  unsigned blRow(0);
-  unsigned blLayer(0);
-  unsigned blCol(0);
-  theSpatiocyteStepper->point2global(bottom, blRow, blLayer, blCol);
-  unsigned trRow(0);
-  unsigned trLayer(0);
-  unsigned trCol(0);
-  theSpatiocyteStepper->point2global(top, trRow, trLayer, trCol);
-  for(unsigned i(blRow); i <= trRow; ++i)
-    {
-      for(unsigned j(blLayer); j <= trLayer; ++j)
-        {
-          for(unsigned k(blCol); k <= trCol; ++k)
-            {
-              unsigned coord(theSpatiocyteStepper->global2coord(i, j, k)); 
-              Voxel& voxel((*theLattice)[coord]);
-              if(getID(voxel) == theInterfaceSpecies->getID())
-                { 
-                  Point intPoint(theSpatiocyteStepper->coord2point(coord));
-                  double dist(distance(subPoint, intPoint));
-                  if(dist < nearestDist)
-                    {
-                      nearestDist = dist;
-                      intIndex = theInterfaceSpecies->getIndex(&voxel);
-                    }
-                }
-            }
-        }
-    }
-  return intIndex;
-}
-*/
 
 void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
 {
@@ -1672,11 +1660,6 @@ void CompartmentProcess::extendInterfacesOverSurface()
     }
 }
 
-double CompartmentProcess::getDisplacementToSurface(Point& aPoint)
-{
-  return point2planeDisp(aPoint, surfaceNormal, surfaceDisplace);
-}
-
 
 void CompartmentProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
                                                            Point& aPoint)
@@ -1747,10 +1730,15 @@ bool CompartmentProcess::isInside(Point& aPoint)
   return false;
 }
 
+double CompartmentProcess::getDisplacementToSurface(Point& aPoint)
+{
+  return point2planeDisp(aPoint, surfaceNormal, surfaceDisplace);
+}
+
+
 bool CompartmentProcess::isOnAboveSurface(Point& aPoint)
 {
-  double disp(point2planeDisp(aPoint, surfaceNormal, surfaceDisplace));
-  if(disp >= 0)
+  if(getDisplacementToSurface(aPoint) >= 0)
     {
       return true;
     }
