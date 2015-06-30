@@ -155,8 +155,6 @@ public:
   virtual bool isOnAboveSurface(Point&);
   virtual double getDisplacementToSurface(Point&);
   void connectSubunit(unsigned, unsigned, unsigned, unsigned);
-  //void addPlaneSubunitInterfaceVoxel(unsigned, unsigned, const double);
-  void addInterfaceVoxel(Voxel&, Point&);
   void addInterfaceVoxel(Voxel&);
   void setNearestSubunit(const unsigned, const unsigned);
   void addSortedSubunitInterface(const unsigned, const unsigned, const double,

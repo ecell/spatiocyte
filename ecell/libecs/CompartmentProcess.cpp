@@ -1110,10 +1110,12 @@ Voxel* CompartmentProcess::getNearestVoxelToSubunit(const unsigned subIndex,
 //shortest distance
 void CompartmentProcess::addFirstInterface()
 {
+  const double delta(std::max(nDiffuseRadius, nVoxelRadius));
   double nearestDist(libecs::INF);
   Voxel* nearestVoxel(NULL);
   unsigned subIndex(0);
-  while(nearestDist > nDiffuseRadius/2 && subIndex < lipStartCoord-subStartCoord)
+  while(nearestDist > nDiffuseRadius/2 && 
+        subIndex < lipStartCoord-subStartCoord)
     {
       double tmpDist(libecs::INF); 
       Voxel* tmpVoxel(getNearestVoxelToSubunit(subIndex, tmpDist, false));
@@ -1131,7 +1133,7 @@ void CompartmentProcess::addFirstInterface()
         }
       ++subIndex;
     }
-  if(nearestVoxel != NULL && nearestDist <= 1.01*nDiffuseRadius)
+  if(nearestVoxel != NULL && nearestDist <= 1.01*delta)
     {
       std::cout << "Found the first interface voxel, dist:" <<
        nearestDist << " subIndex:" << subIndex << " subMax:" <<
@@ -1151,72 +1153,6 @@ void CompartmentProcess::addInterfaceVoxel(Voxel& aVoxel)
   aCompVacant->removeCompVoxel(aCompVacant->getIndex(&aVoxel));
   theInterfaceSpecies->addMolecule(&aVoxel);
 }
-
-/*
-void CompartmentProcess::addPlaneSubunitInterfaceVoxel(unsigned subunitCoord,
-                                                       unsigned voxelCoord,
-                                                       const double aDist)
-{ 
-  Voxel& subunit((*theLattice)[subunitCoord]);
-  Point subunitPoint(*subunit.point);
-  Point voxelPoint(theSpatiocyteStepper->coord2point(voxelCoord));
-  double disp(point2planeDisp(voxelPoint, surfaceNormal, surfaceDisplace));
-  double dist(distance(subunitPoint, voxelPoint));
-  if(dist < aDist || abs(disp) < aDist)
-    {
-      Voxel& voxel((*theLattice)[voxelCoord]);
-      //theSpecies[6]->addMolecule(&voxel);
-      //Insert voxel in the list of interface voxels if was not already:
-      //if(voxel.id == theComp->vacantSpecies->getID())
-      if(getID(voxel) != theInterfaceSpecies->getID() &&
-         theSpecies[getID(voxel)]->getIsCompVacant())
-        {
-          addInterfaceVoxel(voxel);
-        }
-    }
-}
-*/
-
-//Deprecated, remove this
-void CompartmentProcess::addInterfaceVoxel(Voxel& aVoxel, Point& aPoint)
-{ 
-  addInterfaceVoxel(aVoxel);
-  const int row((int)((aPoint.y-parentOrigin.y)/nGridSize));
-  const int col((int)((aPoint.z-parentOrigin.z)/nGridSize));
-  const int layer((int)((aPoint.x-parentOrigin.x)/nGridSize));
-  if(row >= 0 && row < gridRows && layer >= 0 && layer < gridLayers &&
-     col >= 0 && col < gridCols)
-    {
-      for(int i(std::max(0, layer-1)); i != std::min(layer+2, gridLayers); ++i)
-        {
-          for(int j(std::max(0, col-1)); j != std::min(col+2, gridCols); ++j)
-            {
-              for(int k(std::max(0, row-1)); k != std::min(row+2, gridRows);
-                  ++k)
-                {
-                  const std::vector<unsigned>& coords(theVacGrid[k+gridRows*i+
-                                                      gridRows*gridLayers*j]);
-                  for(unsigned l(0); l != coords.size(); ++l)
-                    {
-                      const unsigned subCoord(coords[l]);
-                      Point& subPoint(*(*theLattice)[subCoord].point);
-                      const double dist(distance(subPoint, aPoint));
-                      //if(dist < nDiffuseRadius+nVoxelRadius &&
-                      //   subunitInterfaces[subCoord-subStartCoord].size() < 3)
-                      if(dist <= nDiffuseRadius+nVoxelRadius)
-                        {
-                          subunitInterfaces[subCoord-subStartCoord].push_back(
-                                                              aVoxel.coord);
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-
 
 
 /* Summary
@@ -1451,17 +1387,23 @@ void CompartmentProcess::setNearestSubunit(const unsigned intIndex,
             }
         }
     }
-  if(nearestDist != libecs::INF &&
-     nearestDist <= (nDiffuseRadius+nVoxelRadius))
+  const double delta(nDiffuseRadius+nVoxelRadius);
+  if(nearestDist != libecs::INF && nearestDist <= delta)
     {
       addSortedSubunitInterface(nearestCoord-subStartCoord, intIndex,
                                 nearestDist, maxSubunitInterfaceSize);
+    }
+  else
+    {
+      std::cout << "i:" << intIndex << " nearestDist of subunit from " <<
+                "orphan interface:" <<  nearestDist << std::endl;
     }
 }
 
 
 void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
 {
+  const double delta(DiffuseRadius+nVoxelRadius);
   for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
     {
       unsigned subIndex(i-subStartCoord);
@@ -1470,12 +1412,16 @@ void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
           double nearestDist(libecs::INF);
           Voxel* interface(getNearestVoxelToSubunit(subIndex, nearestDist,
                                                     true));
-          if(nearestDist != libecs::INF &&
-             nearestDist <= (nDiffuseRadius+nVoxelRadius))
+          if(nearestDist != libecs::INF && nearestDist <= delta)
             {
               addSortedSubunitInterface(subIndex, 
                                   theInterfaceSpecies->getIndex(interface),
                                   nearestDist, 1);
+            }
+          else
+            {
+              std::cout << "i:" << i << " nearestDist of interface from " <<
+                "orphan subunit:" <<  nearestDist << std::endl;
             }
         }
     }
@@ -1665,6 +1611,7 @@ void CompartmentProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
                                                            Point& aPoint)
 {
   //We have already checked that aVoxel is a compVacant
+  const double delta((nDiffuseRadius+nVoxelRadius)/2);
   double dispA(getDisplacementToSurface(aPoint));
   bool isInsideA(isInside(aPoint));
   if(dispA == 0 && getID(aVoxel) != theInterfaceSpecies->getID() &&
@@ -1695,7 +1642,7 @@ void CompartmentProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
                   addInterfaceVoxel(aVoxel);
                 }
               else if(theSpecies[getID(adjoin)]->getIsCompVacant() &&
-                      isInsideB && abs(dispB) <= nDiffuseRadius)
+                      isInsideB && abs(dispB) <= delta)
                 {
                   addInterfaceVoxel(adjoin);
                 }
@@ -1707,7 +1654,7 @@ void CompartmentProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
                 {
                   addInterfaceVoxel(adjoin);
                 }
-              else if(isInsideA && abs(dispA) <= nDiffuseRadius)
+              else if(isInsideA && abs(dispA) <= delta)
                 {
                   addInterfaceVoxel(aVoxel);
                 }
