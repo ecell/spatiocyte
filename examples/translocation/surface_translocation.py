@@ -16,7 +16,6 @@ theSimulator.createEntity('Variable', 'Variable:/:sA').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/:sB').Value = 0
 
 logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:logger')
-logger.VariableReferenceList = [['_', 'Variable:/:Vacant']]
 logger.VariableReferenceList = [['_', 'Variable:/:A']]
 logger.VariableReferenceList = [['_', 'Variable:/:B']]
 logger.VariableReferenceList = [['_', 'Variable:/:sA']]
