@@ -186,21 +186,6 @@ unsigned FilamentProcess::getLatticeResizeCoord(unsigned aStartCoord) {
   return aSize;
 }
 
-void FilamentProcess::setCompartmentDimension() {
-  setSubunitStart();
-  if(Length)
-    {
-      Subunits = (unsigned)rint(Length/(2*DiffuseRadius));
-    }
-  //Length is from the center point of the first subunit to the center point
-  //of the last subunit
-  Length = Subunits*2*DiffuseRadius-2*DiffuseRadius;
-  Width = Radius*2;
-  Height = Radius*2;
-  theDimension = 1;
-  allocateGrid();
-}
-
 void FilamentProcess::initializeCompartment() {
   if(!isCompartmentalized)
     {
@@ -235,95 +220,59 @@ void FilamentProcess::setTrailSize(unsigned start, unsigned end) {
     }
 }
 
-void FilamentProcess::initializeVectors() { 
-  //subunitStart is the center point of the first vacant species voxel:
-  lengthStart = subunitStart;
-  
-  Point& origin(theComp->centerPoint);
-  Point tmp(sub(subunitStart, origin));
-  rotate(tmp);
-  subunitStart = add(tmp, origin);
-
-  tmp = sub(lengthStart, origin);
-  rotate(tmp);
-  lengthStart = add(tmp, origin);
-  Minus = lengthStart;
-
-  rotate(lengthVector);
-  lengthEnd = disp(lengthStart, lengthVector, nLength);
-  Plus = lengthEnd;
-
-  rotate(widthVector);
-  widthEnd = disp(lengthEnd, widthVector, nWidth);
-
-  rotate(heightVector);
-  heightEnd = disp(widthEnd, heightVector, nHeight);
-
-  Point center(lengthStart);
-  disp_(center, lengthVector, nLength/2);
-  disp_(center, widthVector, nWidth/2);
-  theComp->centerPoint = center;
-
-  heightDisplace = dot(heightVector, lengthStart);
-  lengthDisplace = dot(lengthVector, lengthStart);
-  widthDisplace = dot(widthVector, lengthStart);
+void FilamentProcess::setCompartmentDimension() {
+  setSubunitStart();
+  if(Length)
+    {
+      Subunits = (unsigned)rint(Length/(2*DiffuseRadius));
+    }
+  //Length is from the center point of the first subunit to the center point
+  //of the last subunit
+  Length = Subunits*2*DiffuseRadius-2*DiffuseRadius;
+  Width = Radius*2;
+  Height = Radius*2;
+  theDimension = 1;
+  allocateGrid();
 }
-
 
 void FilamentProcess::setSubunitStart()
 {
-  Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
   //row => z
   //col => x
   //layer => y
-  const unsigned minCoord(theSpatiocyteStepper->global2coord(
-                                          aComp->minCoord.row,
-                                          aComp->minCoord.layer,
-                                          aComp->minCoord.col));
-  const unsigned maxCoord(theSpatiocyteStepper->global2coord(
-                                          aComp->maxCoord.row,
-                                          aComp->maxCoord.layer,
-                                          aComp->maxCoord.col));
-  Point maxPoint(theSpatiocyteStepper->coord2point(maxCoord));
-  subunitStart = theSpatiocyteStepper->coord2point(minCoord);
- /* 
-  Point maxPoint(aComp->maxPoint);
-  subunitStart = aComp->minPoint;
-  */
-  Point lengths(sub(maxPoint, subunitStart));
+  Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
+  //lengths denote the parent's length in x, y and z
+  Point lengths(aComp->lengthX, aComp->lengthY, aComp->lengthZ);
+  if(aComp->geometry == CUBOID && aComp->rotateX == 0 && aComp->rotateY == 0 && 
+     aComp->rotateZ == 0)
+    {
+      const unsigned minCoord(theSpatiocyteStepper->global2coord(
+                                              aComp->minCoord.row,
+                                              aComp->minCoord.layer,
+                                              aComp->minCoord.col));
+      const unsigned maxCoord(theSpatiocyteStepper->global2coord(
+                                              aComp->maxCoord.row,
+                                              aComp->maxCoord.layer,
+                                              aComp->maxCoord.col));
+      Point maxPoint(theSpatiocyteStepper->coord2point(maxCoord));
+      Point minPoint(theSpatiocyteStepper->coord2point(minCoord)); 
+      lengths = sub(maxPoint, minPoint);
+    }
+  //Set the current compartment's center point:
+  Point& parentCenter(aComp->centerPoint);
   Point& center(theComp->centerPoint);
-  center.x = 0;
-  center.y = 0;
-  center.z = 0;
-  if(OriginX == 1)
-    {
-      subunitStart.x = maxPoint.x;
-    }
-  else if(OriginX != -1)
-    {
-      subunitStart.x += lengths.x*0.5*(1+OriginX);
-    }
-  if(OriginY == 1)
-    {
-      subunitStart.y = maxPoint.y;
-    }
-  else if(OriginY != -1)
-    {
-      subunitStart.y += lengths.y*0.5*(1+OriginY);
-    }
-  if(OriginZ == 1)
-    {
-      subunitStart.z = maxPoint.z;
-    }
-  else if(OriginZ != -1)
-    {
-      subunitStart.z += lengths.z*0.5*(1+OriginZ);
-    }
+  center.x = lengths.x*0.5*OriginX;
+  center.y = lengths.y*0.5*OriginY;
+  center.z = lengths.z*0.5*OriginZ;
+  rotateAsParent(center);
+  add_(center, parentCenter);
+  subunitStart = Point(0, 0, 0);
   if(LineZ)
     {
       lengthVector = Point(0, 0, 1);
       widthVector = Point(1, 0, 0);
       heightVector = Point(0, 1, 0);
+      //If the Length is not specified, take up the parent's length:
       if(!Length && !Subunits)
         {
           Length = lengths.z*VoxelRadius*2;
@@ -332,8 +281,7 @@ void FilamentProcess::setSubunitStart()
         {
           lengths.z = Length/(VoxelRadius*2);
         }
-      center.z = lengths.z*0.5;
-      subunitStart.z -= lengths.z*0.5;
+      subunitStart.z = -lengths.z*0.5;
     }
   else if(LineY)
     {
@@ -348,8 +296,7 @@ void FilamentProcess::setSubunitStart()
         {
           lengths.y = Length/(VoxelRadius*2);
         }
-      center.y = lengths.y*0.5;
-      subunitStart.y -= lengths.y*0.5;
+      subunitStart.y = -lengths.y*0.5;
     }
   //LineX 
   else
@@ -365,11 +312,38 @@ void FilamentProcess::setSubunitStart()
         {
           lengths.x = Length/(VoxelRadius*2);
         }
-      center.x = lengths.x*0.5;
-      subunitStart.x -= lengths.x*0.5;
+      subunitStart.x = -lengths.x*0.5;
     }
-  add_(center, subunitStart);
 }
+
+void FilamentProcess::initializeVectors() { 
+  //subunitStart is the center point of the first vacant species voxel:
+  //subunitStart coordinate is at present is relative to the theComp center
+  //point, so we can rotate it first before adding the coordinate of the
+  //center point to make it an absolute coordinate.
+
+  rotate(subunitStart);
+  add_(subunitStart, theComp->centerPoint);
+
+  lengthStart = subunitStart;
+  Minus = subunitStart;
+
+  rotate(lengthVector);
+  lengthEnd = disp(lengthStart, lengthVector, nLength);
+  Plus = lengthEnd;
+
+  rotate(widthVector);
+  widthEnd = disp(lengthEnd, widthVector, nWidth);
+
+  rotate(heightVector);
+  heightEnd = disp(widthEnd, heightVector, nHeight);
+
+  heightDisplace = dot(heightVector, lengthStart);
+  lengthDisplace = dot(lengthVector, lengthStart);
+  widthDisplace = dot(widthVector, lengthStart);
+}
+
+
 
 void FilamentProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
                                           unsigned aCols, double aRadius,

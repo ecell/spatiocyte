@@ -3212,6 +3212,13 @@ unsigned SpatiocyteStepper::getStartCoord()
 void SpatiocyteStepper::setMinMaxSurfaceDimensions(unsigned aCoord, 
                                                    Comp* aComp)
 {
+  //maxCoord, minCoord, maxPoint and minPoint are only valid for unrotated
+  //cuboid compartments
+  if(aComp->geometry != CUBOID || aComp->rotateX != 0 || aComp->rotateY != 0 || 
+     aComp->rotateZ != 0)
+    {
+      return;
+    }
   unsigned aRow;
   unsigned aLayer;
   unsigned aCol;

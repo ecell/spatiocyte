@@ -304,6 +304,9 @@ void CompartmentProcess::updateResizedLattice()
     }
 }
 
+
+//May not work well when parent compartment is rotated. Modify this according
+//to FilamentProcess::setSubunitStart if it doesn'w work well.
 void CompartmentProcess::setSubunitStart()
 {
   Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
@@ -758,8 +761,16 @@ void CompartmentProcess::initializeVectors()
   widthDisplaceOpp = dot(widthVector, widthEnd);
 }
 
+void CompartmentProcess::rotateAsParent(Point& V)
+{
+  theSpatiocyteStepper->rotateX(theComp->rotateX, &V, -1);
+  theSpatiocyteStepper->rotateY(theComp->rotateY, &V, -1);
+  theSpatiocyteStepper->rotateZ(theComp->rotateZ, &V, -1);
+}
+
 void CompartmentProcess::rotate(Point& V)
 {
+  rotateAsParent(V);
   theSpatiocyteStepper->rotateX(RotateX, &V, 1);
   theSpatiocyteStepper->rotateY(RotateY, &V, 1);
   theSpatiocyteStepper->rotateZ(RotateZ, &V, 1);
@@ -1149,8 +1160,10 @@ void CompartmentProcess::addFirstInterface()
 
 void CompartmentProcess::addInterfaceVoxel(Voxel& aVoxel)
 {
-  Species* aCompVacant(theInterfaceSpecies->getVacantSpecies());
-  aCompVacant->removeCompVoxel(aCompVacant->getIndex(&aVoxel));
+  //removeCompVoxel with getIndex(x) doesn't work when you combine multiple
+  //volume compartments
+  //Species* aCompVacant(theInterfaceSpecies->getVacantSpecies());
+  //aCompVacant->removeCompVoxel(aCompVacant->getIndex(&aVoxel));
   theInterfaceSpecies->addMolecule(&aVoxel);
 }
 
@@ -1396,14 +1409,15 @@ void CompartmentProcess::setNearestSubunit(const unsigned intIndex,
   else
     {
       std::cout << "i:" << intIndex << " nearestDist of subunit from " <<
-                "orphan interface:" <<  nearestDist << std::endl;
+                "orphan interface:" <<  nearestDist << " delta:" << delta <<
+                std::endl;
     }
 }
 
 
 void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
 {
-  const double delta(DiffuseRadius+nVoxelRadius);
+  const double delta(std::max(nDiffuseRadius, nVoxelRadius)*2);
   for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
     {
       unsigned subIndex(i-subStartCoord);
@@ -1421,12 +1435,31 @@ void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
           else
             {
               std::cout << "i:" << i << " nearestDist of interface from " <<
-                "orphan subunit:" <<  nearestDist << std::endl;
+                "orphan subunit:" <<  nearestDist << " delta:" << delta <<
+                std::endl;
             }
         }
     }
 }
 
+
+//To get better accuracy of actual volume size:
+void CompartmentProcess::removeInterfaceCompVoxels()
+{
+  Species* aCompVacant(theInterfaceSpecies->getVacantSpecies());
+  for(unsigned i(0); i != aCompVacant->size(); )
+    { 
+      Voxel* aVoxel(aCompVacant->getMolecule(i));
+      if(getID(aVoxel) == theInterfaceSpecies->getID())
+        {
+          aCompVacant->removeCompVoxel(i);
+        }
+      else
+        {
+          ++i;
+        }
+    }
+}
 
 
 void CompartmentProcess::interfaceSubunits()
@@ -1521,6 +1554,7 @@ void CompartmentProcess::interfaceSubunits()
 
 
   connectSubunitInterfaceAdjoins();
+  //removeInterfaceCompVoxels();
 
 
   /*
@@ -1611,7 +1645,7 @@ void CompartmentProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
                                                            Point& aPoint)
 {
   //We have already checked that aVoxel is a compVacant
-  const double delta((nDiffuseRadius+nVoxelRadius)/2);
+  const double delta(std::max(nDiffuseRadius, nVoxelRadius)/2);
   double dispA(getDisplacementToSurface(aPoint));
   bool isInsideA(isInside(aPoint));
   if(dispA == 0 && getID(aVoxel) != theInterfaceSpecies->getID() &&

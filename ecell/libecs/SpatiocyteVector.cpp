@@ -95,7 +95,7 @@ void add_(Point& L, const Point& R)
   L.z += R.z;
 }
 
-Point divide(const Point& P, const int& Q)
+Point divide(const Point& P, const double Q)
 {
   Point V;
   V.x = P.x/Q;

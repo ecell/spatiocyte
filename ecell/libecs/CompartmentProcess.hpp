@@ -171,6 +171,7 @@ public:
   void enlistOrphanSubunitInterfaceVoxels();
   virtual void extendInterfacesOverSurface();
   void connectSubunitInterfaceAdjoins();
+  void rotateAsParent(Point&);
   void rotate(Point&);
   void addAdjoin(Voxel&, unsigned);
   void setSpeciesIntersectLipids();
@@ -187,6 +188,7 @@ public:
   Voxel* getNearestVoxelToSurface(const unsigned, double&, const bool);
   Voxel* addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
 protected:
+  void removeInterfaceCompVoxels();
   void removeAdjoinsFromNonBindingSide(Voxel&);
   bool isDissociationSide(const unsigned);
   bool isBindingSide(const unsigned);
