@@ -1052,7 +1052,7 @@ Voxel* CompartmentProcess::getNearestVoxelToSurface(const unsigned subIndex,
                  (!isInterface && theSpecies[getID(aVoxel)]->getIsCompVacant()))
                 { 
                   Point aPoint(theSpatiocyteStepper->coord2point(aCoord));
-                  double aDist(abs(getDisplacementToSurface(aPoint)));
+                  double aDist(std::fabs(getDisplacementToSurface(aPoint)));
                   if(aDist < nearestDist && isInside(aPoint))
                     {
                       nearestDist = aDist;
@@ -1408,9 +1408,12 @@ void CompartmentProcess::setNearestSubunit(const unsigned intIndex,
     }
   else
     {
-      std::cout << "i:" << intIndex << " nearestDist of subunit from " <<
+      if(Verbose)
+        {
+          std::cout << "i:" << intIndex << " nearestDist of subunit from " <<
                 "orphan interface:" <<  nearestDist << " delta:" << delta <<
                 std::endl;
+        }
     }
 }
 
@@ -1434,9 +1437,12 @@ void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
             }
           else
             {
-              std::cout << "i:" << i << " nearestDist of interface from " <<
-                "orphan subunit:" <<  nearestDist << " delta:" << delta <<
-                std::endl;
+              if(Verbose)
+                {
+                  std::cout << "i:" << i << " nearestDist of interface from " <<
+                    "orphan subunit:" <<  nearestDist << " delta:" << delta <<
+                    std::endl;
+                }
             }
         }
     }
@@ -1669,14 +1675,14 @@ void CompartmentProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
          getID(adjoin) != theInterfaceSpecies->getID())
         {
           //If aVoxel is nearer to the plane:
-          if(abs(dispA) <= abs(dispB))
+          if(std::fabs(dispA) <= std::fabs(dispB))
             {
               if(isInsideA)
                 {
                   addInterfaceVoxel(aVoxel);
                 }
               else if(theSpecies[getID(adjoin)]->getIsCompVacant() &&
-                      isInsideB && abs(dispB) <= delta)
+                      isInsideB && std::fabs(dispB) <= delta)
                 {
                   addInterfaceVoxel(adjoin);
                 }
@@ -1688,7 +1694,7 @@ void CompartmentProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
                 {
                   addInterfaceVoxel(adjoin);
                 }
-              else if(isInsideA && abs(dispA) <= delta)
+              else if(isInsideA && std::fabs(dispA) <= delta)
                 {
                   addInterfaceVoxel(aVoxel);
                 }

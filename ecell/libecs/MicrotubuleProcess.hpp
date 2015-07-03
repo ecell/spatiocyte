@@ -71,8 +71,10 @@ public:
   virtual void initializeFilaments(Point&, unsigned, unsigned, double, Species*,
                                    unsigned);
   virtual void extendInterfacesOverSurface();
+  virtual void addSurfaceIntersectInterfaceVoxel(Voxel&, Point&);
   virtual bool isInside(Point&);
   virtual double getDisplacementToSurface(Point&);
+  bool isWithinMTDiameter(Point&, Point&);
 protected:
   unsigned getNearestFilament(Point&);
   double MonomerPitch;

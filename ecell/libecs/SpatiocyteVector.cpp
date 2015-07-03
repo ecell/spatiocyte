@@ -177,6 +177,13 @@ double point2planeDisp(const Point& P, const Point& N, const double m)
   return dot(P, N) - m;
 }
 
+// N
+// |
+// |
+// A-----P
+// |
+// |
+// Q
 //Get the point A on a line that has the shortest distance to a given point P.
 //The line is defined by the direction vector, N that passes through a point, Q:
 Point point2lineIntersect(const Point& P, const Point& N, const Point& Q)
@@ -195,11 +202,6 @@ double point2lineDist(const Point& P, const Point& N, const Point& Q)
   return distance(P, A);
 }
 
-
-double abs(const double a)
-{
-  return sqrt(a*a);
-}
 
 //Return the result when the point P(x,y,z) is rotated about the line through
 //C(a,b,c) with unit direction vector N⟨u,v,w⟩ by the angle θ.

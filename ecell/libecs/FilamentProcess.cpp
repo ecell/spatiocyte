@@ -153,6 +153,10 @@ void FilamentProcess::initialize() {
   //Normalized off-lattice voxel radius:
   nSubunitRadius = SubunitRadius/(VoxelRadius*2);
   nDiffuseRadius = DiffuseRadius/(VoxelRadius*2);
+  if(!Radius)
+    {
+      Radius = DiffuseRadius;
+    }
   nRadius = Radius/(VoxelRadius*2);
   nGridSize = 10*nDiffuseRadius;
 }
@@ -451,7 +455,7 @@ bool FilamentProcess::isOnAboveSurface(Point& aPoint)
 
 double FilamentProcess::getDistanceToSurface(Point& aPoint)
 {
-  return abs(point2lineDist(aPoint, lengthVector, Minus)-nRadius);
+  return std::fabs(point2lineDist(aPoint, lengthVector, Minus)-nRadius);
 }
 
 unsigned FilamentProcess::getAdjoiningInterfaceCnt(Voxel& aVoxel)
@@ -500,7 +504,8 @@ bool FilamentProcess::getFilamentAdjoin(Voxel* aVoxel,
       adjPoint = theSpatiocyteStepper->coord2point((*adjoin)->coord);
       adjDist = point2lineDist(adjPoint, lengthVector, Minus);
       adjDisp = point2planeDisp(adjPoint, lengthVector, aSurfaceDisp);
-      if((adjDisp < 0) == direction && abs(adjDisp) > std::max(abs(aDisp), 0.2)
+      if((adjDisp < 0) == direction && std::fabs(adjDisp) > 
+         std::max(std::fabs(aDisp), 0.2)
          && getAdjoiningInterfaceCnt(**adjoin) <= maxAdjInterface)
         {
           return true;
@@ -511,7 +516,7 @@ bool FilamentProcess::getFilamentAdjoin(Voxel* aVoxel,
 
 void FilamentProcess::extendInterfacesOverSurface()
 {
-  const double delta(1.6*nDiffuseRadius);
+  const double delta(1.7*nRadius);
   bool direction(true);
   for(int i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
     {
@@ -542,7 +547,7 @@ void FilamentProcess::extendInterfacesOverSurface()
           if(getFilamentAdjoin(&interface, direction, j, 1, aSurfaceDisp,
                                0.2, adjPoint, adjDist, adjDisp, &adjoin))
             { 
-              if(getMinDistanceFromLineEnd(adjPoint) > -nDiffuseRadius)
+              if(getMinDistanceFromLineEnd(adjPoint) > -nRadius)
                 {
                   for(unsigned k(0); k != theAdjoiningCoordSize; ++k)
                     {
@@ -555,7 +560,7 @@ void FilamentProcess::extendInterfacesOverSurface()
                          &sub))
                         {
                           if(getMinDistanceFromLineEnd(subPoint) > 
-                             -nDiffuseRadius)
+                             -nRadius)
                             {
                               for(unsigned l(0); l != theAdjoiningCoordSize;
                                   ++l)
@@ -570,7 +575,7 @@ void FilamentProcess::extendInterfacesOverSurface()
                                     {
                                       if(!isAdjoin(subSub, adjoin) &&
                                          getMinDistanceFromLineEnd(subSubPoint)
-                                         > nDiffuseRadius)
+                                         > nRadius)
                                         {
                                           if(subSubDist+subDist+adjDist < 
                                              thirdDist && 

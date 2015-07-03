@@ -65,7 +65,6 @@ Point point2lineIntersect(const Point& P, const Point& N, const Point& Q);
 //Get the shortest distance from a point, P to a line defined by the direction
 //vector, N that passes through a point, Q:
 double point2lineDist(const Point& P, const Point& N, const Point& Q);
-double abs(const double a);
 
 //Return the result when the point P(x,y,z) is rotated about the line through
 //C(a,b,c) with unit direction vector N⟨u,v,w⟩ by the angle θ.
