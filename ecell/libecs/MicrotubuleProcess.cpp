@@ -150,8 +150,8 @@ void MicrotubuleProcess::extendInterfacesOverSurface()
 {
   if(nVoxelRadius >= nRadius)
     {
-      //FilamentProcess::extendInterfacesOverSurface();
-      CompartmentProcess::extendInterfacesOverSurface();
+      FilamentProcess::extendInterfacesOverSurface();
+      //CompartmentProcess::extendInterfacesOverSurface();
     }
   else
     { 
@@ -224,7 +224,7 @@ void MicrotubuleProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
       const double distB(std::fabs(dispB));
       if(getID(aVoxel) != theInterfaceSpecies->getID() &&
          getID(adjoin) != theInterfaceSpecies->getID() && 
-         ((dispA < 0) != (dispB < 0)))// || (distA <= nRadius && distB > nRadius) || (distB <= nRadius && distA > nRadius)))
+         ((dispA < 0) != (dispB < 0) || isWithinMTDiameter(aPoint, pointB)))
         {
           //If aVoxel is nearer to the plane:
           if(distA <= distB)
@@ -247,8 +247,6 @@ void MicrotubuleProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
                     }
                 }
             }
-          /*
-          //If the adjoin is nearer to the plane:
           else if(theSpecies[getID(adjoin)]->getIsCompVacant())
             {
               if(isInsideB)
@@ -268,7 +266,6 @@ void MicrotubuleProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
                     }
                 }
             }
-            */
         }
     }
   if(nearestDist != libecs::INF)
@@ -276,65 +273,6 @@ void MicrotubuleProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
       addInterfaceVoxel(*nearestVoxel);
     }
 }
-
-
-/*
-void MicrotubuleProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
-                                                           Point& aPoint)
-{
-  //We have already checked that aVoxel is a compVacant
-  const double delta(std::max(nDiffuseRadius, nVoxelRadius)/2);
-  double dispA(getDisplacementToSurface(aPoint));
-  bool isInsideA(isInside(aPoint));
-  if(dispA == 0 && getID(aVoxel) != theInterfaceSpecies->getID() &&
-     isInsideA)
-    {
-      addInterfaceVoxel(aVoxel);
-    }
-  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
-    {
-      Voxel& adjoin((*theLattice)[aVoxel.adjoiningCoords[i]]);
-      Point pointB(theSpatiocyteStepper->coord2point(adjoin.coord));
-      double dispB(getDisplacementToSurface(pointB));
-      bool isInsideB(isInside(pointB));
-      if(dispB == 0 && theSpecies[getID(adjoin)]->getIsCompVacant() &&
-         getID(adjoin) != theInterfaceSpecies->getID() && isInsideB)
-        {
-          addInterfaceVoxel(adjoin);
-        }
-      if((dispA < 0) != (dispB < 0) &&
-         getID(aVoxel) != theInterfaceSpecies->getID() &&
-         getID(adjoin) != theInterfaceSpecies->getID())
-        {
-          //If aVoxel is nearer to the plane:
-          if(abs(dispA) <= abs(dispB))
-            {
-              if(isInsideA)
-                {
-                  addInterfaceVoxel(aVoxel);
-                }
-              else if(theSpecies[getID(adjoin)]->getIsCompVacant() &&
-                      isInsideB && abs(dispB) <= delta)
-                {
-                  addInterfaceVoxel(adjoin);
-                }
-            }
-          //If the adjoin is nearer to the plane:
-          else if(theSpecies[getID(adjoin)]->getIsCompVacant())
-            {
-              if(isInsideB)
-                {
-                  addInterfaceVoxel(adjoin);
-                }
-              else if(isInsideA && abs(dispA) <= delta)
-                {
-                  addInterfaceVoxel(aVoxel);
-                }
-            }
-        }
-    }
-}
-*/
 
 
 }
