@@ -544,6 +544,7 @@ void SpatiocyteStepper::initSpecies()
   for(std::vector<Comp*>::const_iterator i(theComps.begin());
       i != theComps.end(); ++i)
     {
+      (*i)->baseInterfaceID = theSpecies.size();
       (*i)->interfaceID = theSpecies.size();
     }
 }

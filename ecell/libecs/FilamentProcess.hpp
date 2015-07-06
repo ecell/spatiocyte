@@ -64,7 +64,6 @@ public:
   SIMPLE_SET_GET_METHOD(Integer, LineX);
   SIMPLE_SET_GET_METHOD(Integer, LineY);
   SIMPLE_SET_GET_METHOD(Integer, LineZ);
-  virtual void prepreinitialize();
   virtual void initialize();
   virtual void initializeFirst();
   virtual unsigned getLatticeResizeCoord(unsigned);

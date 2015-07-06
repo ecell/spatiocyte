@@ -37,7 +37,22 @@ LIBECS_DM_INIT_STATIC(CompartmentProcess, Process);
 void CompartmentProcess::prepreinitialize()
 {
   SpatiocyteProcess::prepreinitialize();
-  theInterfaceVariable = createVariable("Interface");
+  unsigned index(0);
+  theBaseInterfaceVariable = createVariable("Interface");
+  String base("Interface");
+  String anID(base+int2str(index));
+  theInterfaceVariable = SpatiocyteStepper::getVariable(getSuperSystem(), anID);
+  while(theInterfaceVariable)
+    {
+      ++index;
+      anID = base+int2str(index);
+      theInterfaceVariable = 
+        SpatiocyteStepper::getVariable(getSuperSystem(), anID);
+    
+    }
+  theInterfaceVariable = createVariable(anID);
+  std::cout << "base:" << theBaseInterfaceVariable->getFullID().asString() << std::endl;
+  std::cout << "created:" << theInterfaceVariable->getFullID().asString() << std::endl;
   if(LipidRadius)
     {
       if(LipidRadius < 0)
@@ -58,8 +73,9 @@ void CompartmentProcess::initialize()
       return;
     }
   SpatiocyteProcess::initialize();
-  theInterfaceSpecies = theSpatiocyteStepper->addSpecies(
-                                                   theInterfaceVariable);
+  theInterfaceSpecies = theSpatiocyteStepper->addSpecies(theInterfaceVariable);
+  theBaseInterfaceSpecies = theSpatiocyteStepper->addSpecies(
+                                                     theBaseInterfaceVariable);
   theInterfaceSpecies->setIsInterface();
   for(VariableReferenceVector::iterator
       i(theVariableReferenceVector.begin());
@@ -193,15 +209,16 @@ unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
   if(aComp->diffusiveComp)
     {
       Comp* aDiffusiveComp(aComp->diffusiveComp);
-      if(aDiffusiveComp->interfaceID == theSpecies.size())
+      if(aDiffusiveComp->baseInterfaceID == theSpecies.size())
         {
-          aDiffusiveComp->interfaceID = theInterfaceSpecies->getID();
+          aDiffusiveComp->baseInterfaceID = theBaseInterfaceSpecies->getID();
         }
       else
         {
-          theInterfaceSpecies = theSpecies[aDiffusiveComp->interfaceID];
+          theBaseInterfaceSpecies = theSpecies[aDiffusiveComp->baseInterfaceID];
         }
     }
+  aComp->baseInterfaceID = theBaseInterfaceSpecies->getID();
   aComp->interfaceID = theInterfaceSpecies->getID();
   *theComp = *aComp;
   theVacantSpecies->resetFixedAdjoins();
@@ -508,7 +525,6 @@ void CompartmentProcess::initializeCompartment()
     {
       thePoints.resize(endCoord-subStartCoord);
       vacStartIndex = theVacantSpecies->size();
-      intStartIndex = theInterfaceSpecies->size();
       initializeVectors();
       initializeFilaments(subunitStart, Filaments, Subunits, nDiffuseRadius,
                           theVacantSpecies, subStartCoord);
@@ -542,6 +558,7 @@ void CompartmentProcess::initializeCompartment()
       theLipidSpecies->setIsPopulated();
     }
   theInterfaceSpecies->setIsPopulated();
+  theBaseInterfaceSpecies->setIsPopulated();
   //theSpecies[2]->setIsPopulated();
 }
 
@@ -1192,7 +1209,7 @@ void CompartmentProcess::connectSubunitInterfaceAdjoins()
               unsigned coord(interface.adjoiningCoords[k]);
               Voxel& adjoin((*theLattice)[coord]);
               if(theSpecies[getID(adjoin)]->getIsCompVacant() && 
-                 getID(adjoin) != theInterfaceSpecies->getID() &&
+                 !theSpecies[getID(adjoin)]->getIsInterface() &&
                  isDissociationSide(adjoin.coord))
                 {
                   addAdjoin(subunit, coord);
@@ -1212,7 +1229,7 @@ void CompartmentProcess::removeAdjoinsFromNonBindingSide(Voxel& interface)
       unsigned coord(interface.adjoiningCoords[i]);
       Voxel& adjoin((*theLattice)[coord]);
       if(theSpecies[getID(adjoin)]->getIsCompVacant() && 
-         getID(adjoin) != theInterfaceSpecies->getID() &&
+         !theSpecies[getID(adjoin)]->getIsInterface() &&
          !isBindingSide(adjoin.coord))
         {
           for(unsigned j(0); j != adjoin.diffuseSize; ++j)
@@ -1269,7 +1286,7 @@ void CompartmentProcess::setSubunitInterfaces()
 {
   subunitInterfaces.resize(Filaments*Subunits);
   subunitInterfaceDists.resize(Filaments*Subunits);
-  for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
+  for(unsigned i(0); i != theInterfaceSpecies->size(); ++i)
     {
       setNearestSubunit(i, 1);
     }
@@ -1286,7 +1303,7 @@ void CompartmentProcess::setNearestSubunitForOrphanInterfaces()
           ++interfaceSubunitPairs[interfaces[j]];
         }
     }
-  for(unsigned i(intStartIndex); i != interfaceSubunitPairs.size(); ++i)
+  for(unsigned i(0); i != interfaceSubunitPairs.size(); ++i)
     {
       if(!interfaceSubunitPairs[i])
         {
@@ -1456,7 +1473,7 @@ void CompartmentProcess::removeInterfaceCompVoxels()
   for(unsigned i(0); i != aCompVacant->size(); )
     { 
       Voxel* aVoxel(aCompVacant->getMolecule(i));
-      if(getID(aVoxel) == theInterfaceSpecies->getID())
+      if(theSpecies[getID(aVoxel)]->getIsInterface())
         {
           aCompVacant->removeCompVoxel(i);
         }
@@ -1515,7 +1532,7 @@ void CompartmentProcess::interfaceSubunits()
         }
     }
   std::vector<unsigned> pairs(20,0);
-  for(unsigned i(intStartIndex); i != interfaceSubunitPairs.size(); ++i)
+  for(unsigned i(0); i != interfaceSubunitPairs.size(); ++i)
     {
       pairs[interfaceSubunitPairs[i]]++;
     }
@@ -1547,7 +1564,7 @@ void CompartmentProcess::interfaceSubunits()
     {
       pairs[i] = 0;
     }
-  for(unsigned i(intStartIndex); i != interfaceSubunitPairs.size(); ++i)
+  for(unsigned i(0); i != interfaceSubunitPairs.size(); ++i)
     {
       pairs[interfaceSubunitPairs[i]]++;
     }
@@ -1561,6 +1578,7 @@ void CompartmentProcess::interfaceSubunits()
 
   connectSubunitInterfaceAdjoins();
   //removeInterfaceCompVoxels();
+  updateBaseInterfaceSpecies();
 
 
   /*
@@ -1590,7 +1608,7 @@ void CompartmentProcess::interfaceSubunits()
 
   //check interface adjoins
   std::vector<unsigned> adjoinsI(30,0);
-  for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
+  for(unsigned i(0); i != theInterfaceSpecies->size(); ++i)
     {
       unsigned voxelCoord(theInterfaceSpecies->getCoord(i));
       Voxel& interface((*theLattice)[voxelCoord]);
@@ -1627,10 +1645,19 @@ void CompartmentProcess::interfaceSubunits()
     */
 }
 
+void CompartmentProcess::updateBaseInterfaceSpecies()
+{
+  for(unsigned i(0); i != theInterfaceSpecies->size(); ++i)
+    {
+      theBaseInterfaceSpecies->softAddMolecule(
+                                 theInterfaceSpecies->getMolecule(i));
+    }
+}
+
 
 void CompartmentProcess::extendInterfacesOverSurface()
 {
-  for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
+  for(unsigned i(0); i != theInterfaceSpecies->size(); ++i)
     {
       unsigned voxelCoord(theInterfaceSpecies->getCoord(i));
       Voxel& anInterface((*theLattice)[voxelCoord]);
@@ -1654,7 +1681,7 @@ void CompartmentProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
   const double delta(std::max(nDiffuseRadius, nVoxelRadius)/2);
   double dispA(getDisplacementToSurface(aPoint));
   bool isInsideA(isInside(aPoint));
-  if(dispA == 0 && getID(aVoxel) != theInterfaceSpecies->getID() &&
+  if(dispA == 0 && !theSpecies[getID(aVoxel)]->getIsInterface() &&
      isInsideA)
     {
       addInterfaceVoxel(aVoxel);
@@ -1666,13 +1693,13 @@ void CompartmentProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
       double dispB(getDisplacementToSurface(pointB));
       bool isInsideB(isInside(pointB));
       if(dispB == 0 && theSpecies[getID(adjoin)]->getIsCompVacant() &&
-         getID(adjoin) != theInterfaceSpecies->getID() && isInsideB)
+        !theSpecies[getID(adjoin)]->getIsInterface() && isInsideB)
         {
           addInterfaceVoxel(adjoin);
         }
       if((dispA < 0) != (dispB < 0) &&
-         getID(aVoxel) != theInterfaceSpecies->getID() &&
-         getID(adjoin) != theInterfaceSpecies->getID())
+         !theSpecies[getID(aVoxel)]->getIsInterface() &&
+         !theSpecies[getID(adjoin)]->getIsInterface())
         {
           //If aVoxel is nearer to the plane:
           if(std::fabs(dispA) <= std::fabs(dispB))
@@ -1754,8 +1781,8 @@ void CompartmentProcess::printParameters()
           cout << "   Specified area:"<< theComp->specArea << std::endl;
           break;
     }
-  cout << "   Interface species size:"<< theInterfaceSpecies->size()
-    << std::endl;
+  cout << "   Comp interface species size:"<< theInterfaceSpecies->size()
+    << ", base size:" << theBaseInterfaceSpecies->size() << std::endl;
   if(theLipidSpecies)
     {
       cout << "  Lipid species:" << getIDString(theLipidSpecies) << 

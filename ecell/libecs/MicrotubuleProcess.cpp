@@ -75,7 +75,6 @@ void MicrotubuleProcess::initializeCompartment() {
     {
       thePoints.resize(endCoord-subStartCoord);
       vacStartIndex = theVacantSpecies->size();
-      intStartIndex = theInterfaceSpecies->size();
       initializeVectors();
       initializeFilaments(subunitStart, Filaments, Subunits, nMonomerPitch,
                           theVacantSpecies, subStartCoord);
@@ -91,6 +90,7 @@ void MicrotubuleProcess::initializeCompartment() {
     }
   theVacantSpecies->setIsPopulated();
   theInterfaceSpecies->setIsPopulated();
+  theBaseInterfaceSpecies->setIsPopulated();
   theMinusSpecies->setIsPopulated();
   thePlusSpecies->setIsPopulated();
 }
@@ -205,8 +205,7 @@ void MicrotubuleProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
   double dispA(getDisplacementToSurface(aPoint));
   double distA(std::fabs(dispA));
   bool isInsideA(isInside(aPoint));
-  if(dispA == 0 && getID(aVoxel) != theInterfaceSpecies->getID() &&
-     isInsideA)
+  if(dispA == 0 && !theSpecies[getID(aVoxel)]->getIsInterface() && isInsideA)
     {
       addInterfaceVoxel(aVoxel);
     }
@@ -217,14 +216,14 @@ void MicrotubuleProcess::addSurfaceIntersectInterfaceVoxel(Voxel& aVoxel,
       double dispB(getDisplacementToSurface(pointB));
       bool isInsideB(isInside(pointB));
       if(dispB == 0 && theSpecies[getID(adjoin)]->getIsCompVacant() &&
-         getID(adjoin) != theInterfaceSpecies->getID() && isInsideB)
+         !theSpecies[getID(adjoin)]->getIsInterface() && isInsideB)
         {
           addInterfaceVoxel(adjoin);
         }
       const double distB(std::fabs(dispB));
-      if(getID(aVoxel) != theInterfaceSpecies->getID() &&
-         getID(adjoin) != theInterfaceSpecies->getID() && 
-         ((dispA < 0) != (dispB < 0) || isWithinMTDiameter(aPoint, pointB)))
+      if(!theSpecies[getID(aVoxel)]->getIsInterface() &&
+         !theSpecies[getID(adjoin)]->getIsInterface() &&
+         ((dispA < 0) != (dispB < 0)))
         {
           //If aVoxel is nearer to the plane:
           if(distA <= distB)

@@ -785,7 +785,7 @@ public:
             }
           else
             {
-              if(getID(target) == theComp->interfaceID)
+              if(theSpecies[getID(target)]->getIsInterface())
                 {
                   //Some interface voxels do not have pointers to the
                   //off lattice subunits, so their adjoiningSize == diffuseSize:
@@ -857,7 +857,7 @@ public:
             }
           Voxel* target(&theLattice[source->adjoiningCoords[
                         theRng.Integer(size)]]);
-          if(getID(target) == theComp->interfaceID)
+          if(theSpecies[getID(target)]->getIsInterface())
             {
               //Some interface voxels do not have pointers to the
               //off lattice subunits, so their adjoiningSize == diffuseSize:
@@ -973,7 +973,7 @@ public:
             }
           else
             {
-              if(getID(target) == theComp->interfaceID)
+              if(theSpecies[getID(target)]->getIsInterface())
                 {
                   //Some interface voxels do not have pointers to the
                   //off lattice subunits, so their adjoiningSize == diffuseSize:
@@ -1075,7 +1075,7 @@ public:
             }
           else
             {
-              if(getID(target) == theComp->interfaceID)
+              if(theSpecies[getID(target)]->getIsInterface())
                 {
                   //Some interface voxels do not have pointers to the
                   //off lattice subunits, so their adjoiningSize == diffuseSize:
@@ -1196,7 +1196,7 @@ public:
             }
           else
             {
-              if(getID(target) == theComp->interfaceID)
+              if(theSpecies[getID(target)]->getIsInterface())
                 {
                   //Some interface voxels do not have pointers to the
                   //off lattice subunits, so their adjoiningSize == diffuseSize:
@@ -1270,7 +1270,7 @@ public:
               continue;
             }
           Voxel* target(&theLattice[coordA+lipStartCoord]);
-          if(getID(target) == theComp->interfaceID)
+          if(theSpecies[getID(target)]->getIsInterface())
             {
               //Some interface voxels do not have pointers to the
               //off lattice subunits, so their adjoiningSize == diffuseSize:
@@ -1340,7 +1340,7 @@ public:
               continue;
             }
           Voxel* target(&theLattice[coordA+lipStartCoord]);
-          if(getID(target) == theComp->interfaceID)
+          if(theSpecies[getID(target)]->getIsInterface())
             {
               //Some interface voxels do not have pointers to the
               //off lattice subunits, so their adjoiningSize == diffuseSize:
@@ -1422,7 +1422,7 @@ public:
             }
           else
             {
-              if(getID(target) == theComp->interfaceID)
+              if(theSpecies[getID(target)]->getIsInterface())
                 {
                   //Some interface voxels do not have pointers to the
                   //off lattice subunits, so their adjoiningSize == diffuseSize:
@@ -2043,6 +2043,10 @@ public:
   void addMoleculeDirect(Voxel* aVoxel)
     {
       aVoxel->idx = theMoleculeSize+theStride*theID;
+      softAddMolecule(aVoxel);
+    }
+  void softAddMolecule(Voxel* aVoxel)
+    {
       ++theMoleculeSize; 
       if(theMoleculeSize > theMolecules.size())
         {

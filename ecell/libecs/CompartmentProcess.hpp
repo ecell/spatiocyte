@@ -188,6 +188,7 @@ public:
   Voxel* getNearestVoxelToSurface(const unsigned, double&, const bool);
   Voxel* addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
 protected:
+  void updateBaseInterfaceSpecies();
   void removeInterfaceCompVoxels();
   void removeAdjoinsFromNonBindingSide(Voxel&);
   bool isDissociationSide(const unsigned);
@@ -197,7 +198,6 @@ protected:
   unsigned BindingDirection;
   unsigned endCoord;
   unsigned Filaments;
-  unsigned intStartIndex;
   unsigned LipidCols;
   unsigned LipidRows;
   unsigned lipStartCoord;
@@ -259,9 +259,11 @@ protected:
   Point parentOrigin;
   Point widthEnd;
   Point widthVector;
+  Species* theBaseInterfaceSpecies;
   Species* theLipidSpecies;
   Species* theInterfaceSpecies;
   Species* theVacantSpecies;
+  Variable* theBaseInterfaceVariable;
   Variable* theInterfaceVariable;
   Variable* theLipidVariable;
   Variable* theVacantVariable;
