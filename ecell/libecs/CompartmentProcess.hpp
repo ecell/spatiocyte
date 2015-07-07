@@ -213,9 +213,6 @@ protected:
   unsigned theDimension;
   unsigned vacStartIndex;
   unsigned Verbose;
-  int gridCols;
-  int gridLayers;
-  int gridRows;
   double DiffuseRadius;
   double nGridSize;
   double Height;
@@ -227,9 +224,6 @@ protected:
   double nDiffuseRadius;
   double nLength;
   double nLipidRadius;
-  double nParentHeight;
-  double nParentLength;
-  double nParentWidth;
   double nSubunitRadius;
   double nVoxelRadius;
   double nWidth;
@@ -246,7 +240,11 @@ protected:
   double Width;
   double widthDisplace;
   double widthDisplaceOpp;
-  Comp* theComp;
+  IntPoint parentGrid;
+  Point parentOrigin;
+  Point parentVectorX;
+  Point parentVectorY;
+  Point parentVectorZ;
   Point heightEnd;
   Point heightVector;
   Point lengthEnd;
@@ -256,9 +254,9 @@ protected:
   Point Origin;
   Point subunitStart;
   Point surfaceNormal;
-  Point parentOrigin;
   Point widthEnd;
   Point widthVector;
+  Comp* theComp;
   Species* theBaseInterfaceSpecies;
   Species* theLipidSpecies;
   Species* theInterfaceSpecies;

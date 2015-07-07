@@ -126,6 +126,17 @@ struct Coordinate
   unsigned row;
 };
 
+struct IntPoint 
+{
+  IntPoint(const int a=0, const int b=0, const int c=0):
+  nx(a),
+  ny(b),
+  nz(c) {}
+  int nx;
+  int ny;
+  int nz;
+};
+
 struct Voxel
 {
   unsigned idx;

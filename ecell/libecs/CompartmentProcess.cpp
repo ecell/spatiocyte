@@ -51,8 +51,6 @@ void CompartmentProcess::prepreinitialize()
     
     }
   theInterfaceVariable = createVariable(anID);
-  std::cout << "base:" << theBaseInterfaceVariable->getFullID().asString() << std::endl;
-  std::cout << "created:" << theInterfaceVariable->getFullID().asString() << std::endl;
   if(LipidRadius)
     {
       if(LipidRadius < 0)
@@ -486,11 +484,6 @@ void CompartmentProcess::setCompartmentDimension()
 
 void CompartmentProcess::allocateGrid()
 {
-  //in SpatiocyteStepper:
-  //Normalized compartment lengths in terms of lattice voxel radius:
-  nParentHeight = theComp->lengthX+nVoxelRadius*2;
-  nParentWidth = theComp->lengthY+nVoxelRadius*2;
-  nParentLength = theComp->lengthZ+nVoxelRadius*2;
   nLength = Length/(VoxelRadius*2);
   nWidth = Width/(VoxelRadius*2);
   nHeight = Height/(VoxelRadius*2);
@@ -498,20 +491,32 @@ void CompartmentProcess::allocateGrid()
   theComp->lengthY = nWidth;
   theComp->lengthZ = nLength;
 
-  parentOrigin = theComp->centerPoint;
-  Point s(parentOrigin);
-  parentOrigin.x -= nParentHeight/2;
-  parentOrigin.y -= nParentWidth/2;
-  parentOrigin.z -= nParentLength/2;
-  s = parentOrigin;
-  gridCols = (unsigned)ceil(nParentLength/nGridSize);
-  gridRows = (unsigned)ceil(nParentWidth/nGridSize);
-  gridLayers = (unsigned)ceil(nParentHeight/nGridSize);
-  theVacGrid.resize(gridCols*gridRows*gridLayers);
+  //Set up parent vector and origin for grid which can be used to 
+  //quickly find subunits closest to a given point in lattice space:
+  Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
+  parentVectorX = Point(1, 0, 0);
+  parentVectorY = Point(0, 1, 0);
+  parentVectorZ = Point(0, 0, 1);
+  rotateAsParent(parentVectorX);
+  rotateAsParent(parentVectorY);
+  rotateAsParent(parentVectorZ);
+  Point parentLengths(Point(aComp->lengthX+nVoxelRadius*2, 
+                        aComp->lengthY+nVoxelRadius*2,
+                        aComp->lengthZ+nVoxelRadius*2));
+  Point halfLengths(mult(parentLengths, -0.5));
+  parentOrigin = aComp->centerPoint;
+  disp_(parentOrigin, parentVectorX, halfLengths.x);
+  disp_(parentOrigin, parentVectorY, halfLengths.y);
+  disp_(parentOrigin, parentVectorZ, halfLengths.z);
+  //parentOrigin = disp_vector(aComp->centerPoint, parentVector, halfLengths); 
+  parentGrid = IntPoint((int)ceil(parentLengths.x/nGridSize),
+                        (int)ceil(parentLengths.y/nGridSize),
+                        (int)ceil(parentLengths.z/nGridSize));
+  theVacGrid.resize(parentGrid.nx*parentGrid.ny*parentGrid.nz);
   /*
   if(theLipidSpecies)
     {
-      theLipGrid.resize(gridCols*gridRows*gridLayers);
+      theLipGrid.resize(parentGrid.nx*parentGrid.ny*parentGrid.nz);
     }
     */
   //Actual surface area = Width*Length
@@ -559,7 +564,7 @@ void CompartmentProcess::initializeCompartment()
     }
   theInterfaceSpecies->setIsPopulated();
   theBaseInterfaceSpecies->setIsPopulated();
-  //theSpecies[2]->setIsPopulated();
+  //theSpecies[57]->setIsPopulated();
 }
 
 void CompartmentProcess::setGrid(Species* aSpecies,
@@ -571,15 +576,23 @@ void CompartmentProcess::setGrid(Species* aSpecies,
       for(unsigned i(vacStartIndex); i != aSpecies->size(); ++i)
         {
           Point& aPoint(*(*theLattice)[aStartCoord+i-vacStartIndex].point);
-          const int row((int)((aPoint.y-parentOrigin.y)/nGridSize));
-          const int col((int)((aPoint.z-parentOrigin.z)/nGridSize));
-          const int layer((int)((aPoint.x-parentOrigin.x)/nGridSize));
-          if(row >= 0 && row < gridRows && layer >= 0 && layer < gridLayers &&
-             col >= 0 && col < gridCols)
+          Point rel(sub(aPoint, parentOrigin));
+          rel = Point(dot(rel, parentVectorX), dot(rel, parentVectorY),
+                      dot(rel, parentVectorZ));
+          IntPoint pos((int)(rel.x/nGridSize), (int)(rel.y/nGridSize),
+                       (int)(rel.z/nGridSize));
+          if(pos.nx >= 0 && pos.nx < parentGrid.nx && 
+             pos.ny >= 0 && pos.ny < parentGrid.ny &&
+             pos.nz >= 0 && pos.nz < parentGrid.nz)
             {
-              aGrid[row+
-                gridRows*layer+
-                gridRows*gridLayers*col].push_back(aStartCoord+i-vacStartIndex);
+              aGrid[pos.nx+
+                parentGrid.nx*pos.ny+
+                parentGrid.nx*parentGrid.ny*pos.nz].push_back(
+                                            aStartCoord+i-vacStartIndex);
+            }
+          else
+            {
+              //std::cout << "error in setGrid:" << getIDString() << std::endl;
             }
         }
     }
@@ -660,8 +673,9 @@ void CompartmentProcess::setSpeciesIntersectLipids()
           if(theVacantCompSpecies[i]->getIsMultiscale())
             {
               theVacantCompSpecies[i]->setIntersectLipids(theLipidSpecies,
-                                                lipidStart, nGridSize, gridCols,
-                                                gridRows, theVacGrid, Filaments,
+                                                lipidStart, nGridSize, 
+                                                parentGrid.nx, parentGrid.nz,
+                                                theVacGrid, Filaments,
                                                 Subunits);
             }
         }
@@ -1039,12 +1053,9 @@ Voxel* CompartmentProcess::getNearestVoxelToSurface(const unsigned subIndex,
   Point subPoint(*(*theLattice)[subIndex+subStartCoord].point);
   Point a(subPoint);
   Point b(subPoint);
-  disp_(a, lengthVector, 1.5*nVoxelRadius);
-  disp_(a, widthVector, 1.5*nVoxelRadius);
-  disp_(a, surfaceNormal, 1.5*nVoxelRadius);
-  disp_(b, lengthVector, -1.5*nVoxelRadius);
-  disp_(b, widthVector, -1.5*nVoxelRadius);
-  disp_(b, surfaceNormal, -1.5*nVoxelRadius);
+  Point c(Point(1, 1, 1));
+  disp_(a, c, 3*nVoxelRadius);;
+  disp_(b, c, -3*nVoxelRadius);
   Point top(Point(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z)));
   Point bottom(Point(std::min(a.x, b.x), std::min(a.y, b.y),
                      std::min(a.z, b.z)));
@@ -1090,12 +1101,9 @@ Voxel* CompartmentProcess::getNearestVoxelToSubunit(const unsigned subIndex,
   Point subPoint(*(*theLattice)[subIndex+subStartCoord].point);
   Point a(subPoint);
   Point b(subPoint);
-  disp_(a, lengthVector, 1.5*nVoxelRadius);
-  disp_(a, widthVector, 1.5*nVoxelRadius);
-  disp_(a, surfaceNormal, 1.5*nVoxelRadius);
-  disp_(b, lengthVector, -1.5*nVoxelRadius);
-  disp_(b, widthVector, -1.5*nVoxelRadius);
-  disp_(b, surfaceNormal, -1.5*nVoxelRadius);
+  Point c(Point(1, 1, 1));
+  disp_(a, c, 3*nVoxelRadius);;
+  disp_(b, c, -3*nVoxelRadius);
   Point top(Point(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z)));
   Point bottom(Point(std::min(a.x, b.x), std::min(a.y, b.y),
                      std::min(a.z, b.z)));
@@ -1163,9 +1171,12 @@ void CompartmentProcess::addFirstInterface()
     }
   if(nearestVoxel != NULL && nearestDist <= 1.01*delta)
     {
-      std::cout << "Found the first interface voxel, dist:" <<
-       nearestDist << " subIndex:" << subIndex << " subMax:" <<
-       lipStartCoord-subStartCoord << std::endl;
+      if(Verbose)
+        {
+          std::cout << "Found the first interface voxel, dist:" <<
+            nearestDist << " subIndex:" << subIndex << " subMax:" <<
+            lipStartCoord-subStartCoord << std::endl;
+        }
       addInterfaceVoxel(*nearestVoxel);
     }
   else
@@ -1386,23 +1397,30 @@ void CompartmentProcess::setNearestSubunit(const unsigned intIndex,
 { 
   Voxel& aVoxel(*theInterfaceSpecies->getMolecule(intIndex));
   Point aPoint(theSpatiocyteStepper->coord2point(aVoxel.coord));
-  const int row((int)((aPoint.y-parentOrigin.y)/nGridSize));
-  const int col((int)((aPoint.z-parentOrigin.z)/nGridSize));
-  const int layer((int)((aPoint.x-parentOrigin.x)/nGridSize)); 
+  Point rel(sub(aPoint, parentOrigin));
+  rel = Point(dot(rel, parentVectorX), dot(rel, parentVectorY),
+              dot(rel, parentVectorZ));
+  IntPoint pos((int)(rel.x/nGridSize), (int)(rel.y/nGridSize),
+               (int)(rel.z/nGridSize));
   double nearestDist(libecs::INF);
   unsigned nearestCoord(0);
-  if(row >= 0 && row < gridRows && layer >= 0 && layer < gridLayers &&
-     col >= 0 && col < gridCols)
+
+  if(pos.nx >= 0 && pos.nx < parentGrid.nx && 
+     pos.ny >= 0 && pos.ny < parentGrid.ny &&
+     pos.nz >= 0 && pos.nz < parentGrid.nz)
     {
-      for(int i(std::max(0, layer-1)); i != std::min(layer+2, gridLayers); ++i)
+      for(int i(std::max(0, pos.nx-1));
+          i != std::min(pos.nx+2, parentGrid.nx); ++i)
         {
-          for(int j(std::max(0, col-1)); j != std::min(col+2, gridCols); ++j)
+          for(int j(std::max(0, pos.ny-1));
+              j != std::min(pos.ny+2, parentGrid.ny); ++j)
             {
-              for(int k(std::max(0, row-1)); k != std::min(row+2, gridRows);
-                  ++k)
+              for(int k(std::max(0, pos.nz-1));
+                  k != std::min(pos.nz+2, parentGrid.nz); ++k)
                 {
-                  const std::vector<unsigned>& coords(theVacGrid[k+gridRows*i+
-                                                      gridRows*gridLayers*j]);
+                  const std::vector<unsigned>& coords(theVacGrid[i+
+                                              parentGrid.nx*j+
+                                              parentGrid.nx*parentGrid.ny*k]);
                   for(unsigned l(0); l < coords.size(); ++l)
                     {
                       const double dist(distance(
@@ -1425,19 +1443,16 @@ void CompartmentProcess::setNearestSubunit(const unsigned intIndex,
     }
   else
     {
-      if(Verbose)
-        {
-          std::cout << "i:" << intIndex << " nearestDist of subunit from " <<
-                "orphan interface:" <<  nearestDist << " delta:" << delta <<
-                std::endl;
-        }
+      std::cout << getIDString() << " nearestDist of subunit from " <<
+        "orphan interface:" <<  nearestDist << " delta:" << delta <<
+       std::endl;
     }
 }
 
 
 void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
 {
-  const double delta(std::max(nDiffuseRadius, nVoxelRadius)*2);
+  const double delta(std::max(nDiffuseRadius, nVoxelRadius)*2.5);
   for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
     {
       unsigned subIndex(i-subStartCoord);
@@ -1454,12 +1469,11 @@ void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
             }
           else
             {
-              if(Verbose)
-                {
-                  std::cout << "i:" << i << " nearestDist of interface from " <<
-                    "orphan subunit:" <<  nearestDist << " delta:" << delta <<
-                    std::endl;
-                }
+              Voxel& aVoxel((*theLattice)[subIndex+subStartCoord]);
+              theSpecies[1]->softAddMolecule(&aVoxel);
+              std::cout << getIDString() << " nearestDist of interface from " <<
+                "orphan subunit:" <<  nearestDist << " delta:" << delta <<
+                std::endl;
             }
         }
     }
@@ -1487,6 +1501,12 @@ void CompartmentProcess::removeInterfaceCompVoxels()
 
 void CompartmentProcess::interfaceSubunits()
 {
+  /*
+  for(unsigned i(0); i != theSpecies.size(); ++i)
+    {
+      std::cout << "i:" << theSpecies[i]->getIDString() << std::endl;
+    }
+    */
   addFirstInterface();
   extendInterfacesOverSurface();
   setSubunitInterfaces();
@@ -1782,7 +1802,7 @@ void CompartmentProcess::printParameters()
           break;
     }
   cout << "   Comp interface species size:"<< theInterfaceSpecies->size()
-    << ", base size:" << theBaseInterfaceSpecies->size() << std::endl;
+    << ". Total interface species size (base):" << theBaseInterfaceSpecies->size() << std::endl;
   if(theLipidSpecies)
     {
       cout << "  Lipid species:" << getIDString(theLipidSpecies) << 

@@ -93,6 +93,7 @@ void MicrotubuleProcess::initializeCompartment() {
   theBaseInterfaceSpecies->setIsPopulated();
   theMinusSpecies->setIsPopulated();
   thePlusSpecies->setIsPopulated();
+  theSpecies[1]->setIsPopulated();
 }
 
 void MicrotubuleProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
