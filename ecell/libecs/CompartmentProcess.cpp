@@ -1081,7 +1081,7 @@ Voxel* CompartmentProcess::getNearestVoxelToSurface(const unsigned subIndex,
                 { 
                   Point aPoint(theSpatiocyteStepper->coord2point(aCoord));
                   double aDist(std::fabs(getDisplacementToSurface(aPoint)));
-                  if(aDist < nearestDist && isInside(aPoint))
+                  if(aDist < nearestDist && (isInterface || isInside(aPoint)))
                     {
                       nearestDist = aDist;
                       nearestVoxel = &aVoxel;
@@ -1129,7 +1129,7 @@ Voxel* CompartmentProcess::getNearestVoxelToSubunit(const unsigned subIndex,
                 { 
                   Point aPoint(theSpatiocyteStepper->coord2point(aCoord));
                   double aDist(distance(subPoint, aPoint));
-                  if(aDist < nearestDist && isInside(aPoint))
+                  if(aDist < nearestDist && (isInterface || isInside(aPoint)))
                     {
                       nearestDist = aDist;
                       nearestVoxel = &aVoxel;
@@ -1452,7 +1452,7 @@ void CompartmentProcess::setNearestSubunit(const unsigned intIndex,
 
 void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
 {
-  const double delta(std::max(nDiffuseRadius, nVoxelRadius)*2.5);
+  const double delta(std::max(nDiffuseRadius, nVoxelRadius)*2.25);
   for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
     {
       unsigned subIndex(i-subStartCoord);
@@ -1469,11 +1469,55 @@ void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
             }
           else
             {
-              Voxel& aVoxel((*theLattice)[subIndex+subStartCoord]);
-              theSpecies[1]->softAddMolecule(&aVoxel);
               std::cout << getIDString() << " nearestDist of interface from " <<
                 "orphan subunit:" <<  nearestDist << " delta:" << delta <<
                 std::endl;
+              /*
+              Voxel& aVoxel((*theLattice)[subIndex+subStartCoord]);
+              theSpecies[1]->softAddMolecule(&aVoxel);
+
+  Voxel* nearestVoxel;
+  Point subPoint(*(*theLattice)[subIndex+subStartCoord].point);
+  Point a(subPoint);
+  Point b(subPoint);
+  Point c(Point(1, 1, 1));
+  disp_(a, c, 3*nVoxelRadius);;
+  disp_(b, c, -3*nVoxelRadius);
+  Point top(Point(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z)));
+  Point bottom(Point(std::min(a.x, b.x), std::min(a.y, b.y),
+                     std::min(a.z, b.z)));
+  unsigned blRow(0);
+  unsigned blLayer(0);
+  unsigned blCol(0);
+  theSpatiocyteStepper->point2global(bottom, blRow, blLayer, blCol);
+  unsigned trRow(0);
+  unsigned trLayer(0);
+  unsigned trCol(0);
+  theSpatiocyteStepper->point2global(top, trRow, trLayer, trCol);
+  for(unsigned i(blRow); i <= trRow; ++i)
+    {
+      for(unsigned j(blLayer); j <= trLayer; ++j)
+        {
+          for(unsigned k(blCol); k <= trCol; ++k)
+            {
+              unsigned aCoord(theSpatiocyteStepper->global2coord(i, j, k)); 
+              Voxel& bVoxel((*theLattice)[aCoord]);
+              theSpecies[58]->softAddMolecule(&bVoxel);
+              if(getID(bVoxel) == theInterfaceSpecies->getID())
+                { 
+                  theSpecies[59]->softAddMolecule(&bVoxel);
+                  Point aPoint(theSpatiocyteStepper->coord2point(aCoord));
+                  double aDist(distance(subPoint, aPoint));
+                  if(aDist < nearestDist)
+                    {
+                      nearestDist = aDist;
+                      std::cout << "aDist:" << aDist << std::endl;
+                    }
+                }
+            }
+        }
+    }
+    */
             }
         }
     }
