@@ -1465,7 +1465,7 @@ void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
                 "orphan subunit:" <<  nearestDist << " delta:" << delta <<
                 std::endl;
               Voxel& aVoxel((*theLattice)[subIndex+subStartCoord]);
-              theSpecies[1]->softAddMolecule(&aVoxel);
+              theSpecies[0]->softAddMolecule(&aVoxel);
 
   Voxel* nearestVoxel;
   Point subPoint(*(*theLattice)[subIndex+subStartCoord].point);
@@ -1493,10 +1493,10 @@ void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
             {
               unsigned aCoord(theSpatiocyteStepper->global2coord(i, j, k)); 
               Voxel& bVoxel((*theLattice)[aCoord]);
-              theSpecies[10]->softAddMolecule(&bVoxel);
+              theSpecies[9]->softAddMolecule(&bVoxel);
               if(getID(bVoxel) == theInterfaceSpecies->getID())
                 { 
-                  theSpecies[11]->softAddMolecule(&bVoxel);
+                  theSpecies[10]->softAddMolecule(&bVoxel);
                   Point aPoint(theSpatiocyteStepper->coord2point(aCoord));
                   double aDist(distance(subPoint, aPoint));
                   if(aDist < nearestDist)

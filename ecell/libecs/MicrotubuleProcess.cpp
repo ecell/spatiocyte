@@ -93,9 +93,9 @@ void MicrotubuleProcess::initializeCompartment() {
   theInterfaceSpecies->setIsPopulated();
   theMinusSpecies->setIsPopulated();
   thePlusSpecies->setIsPopulated();
-  theSpecies[1]->setIsPopulated();
+  theSpecies[0]->setIsPopulated();
+  theSpecies[9]->setIsPopulated();
   theSpecies[10]->setIsPopulated();
-  theSpecies[11]->setIsPopulated();
 }
 
 void MicrotubuleProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
