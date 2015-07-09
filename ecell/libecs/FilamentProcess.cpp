@@ -42,8 +42,6 @@ void FilamentProcess::initialize() {
     }
   SpatiocyteProcess::initialize();
   theInterfaceSpecies = theSpatiocyteStepper->addSpecies(theInterfaceVariable);
-  theBaseInterfaceSpecies = theSpatiocyteStepper->addSpecies(
-                                                   theBaseInterfaceVariable);
   theInterfaceSpecies->setIsInterface();
   for(VariableReferenceVector::iterator
       i(theVariableReferenceVector.begin());
@@ -191,6 +189,7 @@ void FilamentProcess::initializeCompartment() {
     {
       thePoints.resize(endCoord-subStartCoord);
       vacStartIndex = theVacantSpecies->size();
+      intStartIndex = theInterfaceSpecies->size();
       initializeVectors();
       initializeFilaments(subunitStart, Filaments, Subunits, 0,
                           theVacantSpecies, subStartCoord);
@@ -206,7 +205,6 @@ void FilamentProcess::initializeCompartment() {
     }
   theVacantSpecies->setIsPopulated();
   theInterfaceSpecies->setIsPopulated();
-  theBaseInterfaceSpecies->setIsPopulated();
   theMinusSpecies->setIsPopulated();
   thePlusSpecies->setIsPopulated();
   //theSpecies[2]->setIsPopulated();
@@ -461,7 +459,8 @@ unsigned FilamentProcess::getAdjoiningInterfaceCnt(Voxel& aVoxel)
     {
       const unsigned coord(aVoxel.adjoiningCoords[i]);
       Voxel& adjoin((*theLattice)[coord]);
-      if(getID(adjoin) == theInterfaceSpecies->getID())
+      if(getID(adjoin) == theInterfaceSpecies->getID() &&
+         isThisCompInterface(theInterfaceSpecies->getIndex(&adjoin)))
         {
           ++cnt;
         }
@@ -494,8 +493,7 @@ bool FilamentProcess::getFilamentAdjoin(Voxel* aVoxel,
                                         Voxel** adjoin)
 {
   *adjoin = &(*theLattice)[aVoxel->adjoiningCoords[adjIndex]];
-  if(theSpecies[getID(*adjoin)]->getIsCompVacant() &&
-     !theSpecies[getID(*adjoin)]->getIsInterface())
+  if(theSpecies[getID(*adjoin)]->getIsCompVacant())
     { 
       adjPoint = theSpatiocyteStepper->coord2point((*adjoin)->coord);
       adjDist = point2lineDist(adjPoint, lengthVector, Minus);
@@ -514,7 +512,7 @@ void FilamentProcess::extendInterfacesOverSurface()
 {
   const double delta(1.7*nRadius);
   bool direction(true);
-  for(int i(0); i != theInterfaceSpecies->size(); ++i)
+  for(int i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
     {
       unsigned intLatticeCoord(theInterfaceSpecies->getCoord(i));
       Voxel& interface((*theLattice)[intLatticeCoord]);
@@ -625,7 +623,7 @@ void FilamentProcess::extendInterfacesOverSurface()
       else if(i == theInterfaceSpecies->size()-1)
         {
           direction = !direction;
-          i = -1;
+          i = intStartIndex-1;
           if(direction == true)
             {
               return;

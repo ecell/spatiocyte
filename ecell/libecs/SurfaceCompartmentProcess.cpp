@@ -39,16 +39,16 @@ unsigned SurfaceCompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
   if(aComp->diffusiveComp)
     {
       Comp* aDiffusiveComp(aComp->diffusiveComp);
-      if(aDiffusiveComp->baseInterfaceID == theSpecies.size())
+      if(aDiffusiveComp->interfaceID == theSpecies.size())
         {
-          aDiffusiveComp->baseInterfaceID = theInterfaceSpecies->getID();
+          aDiffusiveComp->interfaceID = theInterfaceSpecies->getID();
         }
       else
         {
-          theInterfaceSpecies = theSpecies[aDiffusiveComp->baseInterfaceID];
+          theInterfaceSpecies = theSpecies[aDiffusiveComp->interfaceID];
         }
     }
-  aComp->baseInterfaceID = theInterfaceSpecies->getID();
+  aComp->interfaceID = theInterfaceSpecies->getID();
   *theComp = *aComp;
   theVacantSpecies->resetFixedAdjoins();
   theVacantSpecies->setMoleculeRadius(SubunitRadius);

@@ -75,6 +75,7 @@ void MicrotubuleProcess::initializeCompartment() {
     {
       thePoints.resize(endCoord-subStartCoord);
       vacStartIndex = theVacantSpecies->size();
+      intStartIndex = theInterfaceSpecies->size();
       initializeVectors();
       initializeFilaments(subunitStart, Filaments, Subunits, nMonomerPitch,
                           theVacantSpecies, subStartCoord);
@@ -90,12 +91,11 @@ void MicrotubuleProcess::initializeCompartment() {
     }
   theVacantSpecies->setIsPopulated();
   theInterfaceSpecies->setIsPopulated();
-  theBaseInterfaceSpecies->setIsPopulated();
   theMinusSpecies->setIsPopulated();
   thePlusSpecies->setIsPopulated();
-  theSpecies[0]->setIsPopulated();
-  theSpecies[57]->setIsPopulated();
-  theSpecies[58]->setIsPopulated();
+  theSpecies[1]->setIsPopulated();
+  theSpecies[10]->setIsPopulated();
+  theSpecies[11]->setIsPopulated();
 }
 
 void MicrotubuleProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,

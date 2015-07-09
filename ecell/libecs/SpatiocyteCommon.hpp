@@ -166,7 +166,6 @@ struct Comp
   bool isIntersectRoot;
   unsigned dimension;
   unsigned vacantID; //remove this
-  unsigned baseInterfaceID;
   unsigned interfaceID;
   int enclosed;
   int geometry;
