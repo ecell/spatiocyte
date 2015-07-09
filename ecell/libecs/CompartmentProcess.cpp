@@ -1464,6 +1464,7 @@ void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
               std::cout << getIDString() << " nearestDist of interface from " <<
                 "orphan subunit:" <<  nearestDist << " delta:" << delta <<
                 std::endl;
+              /*
               Voxel& aVoxel((*theLattice)[subIndex+subStartCoord]);
               theSpecies[0]->softAddMolecule(&aVoxel);
 
@@ -1508,6 +1509,7 @@ void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
             }
         }
     }
+    */
             }
         }
     }
