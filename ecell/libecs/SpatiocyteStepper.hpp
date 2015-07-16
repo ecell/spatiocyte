@@ -90,8 +90,8 @@ public:
   Species* getSpecies(Variable*);
   std::vector<Species*> getSpecies();
   Point coord2point(unsigned);
-  void optimizeSurfaceVoxel(unsigned, Comp*);
-  void setSurfaceSubunit(unsigned, Comp*);
+  bool setSurfaceDiffuseSize(const unsigned, const unsigned, const unsigned,
+                             const unsigned, const bool);
   Species* id2species(unsigned short);
   Comp* id2Comp(unsigned short);
   void coord2global(unsigned, unsigned&, unsigned&, unsigned&);
@@ -204,6 +204,7 @@ private:
   bool isPeerCoord(unsigned, Comp*);
   bool isLowerPeerCoord(unsigned, Comp*);
   bool isRootSurfaceVoxel(Voxel&, unsigned, Comp*);
+  bool isVoxelTouchingComp(Voxel&, Comp*);
   bool isParentSurfaceVoxel(Voxel&, unsigned, Comp*);
   bool compartmentalizeVoxel(unsigned, Comp*);
   double getCuboidSpecArea(Comp*);

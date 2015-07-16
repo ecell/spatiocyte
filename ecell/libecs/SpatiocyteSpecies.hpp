@@ -2851,15 +2851,16 @@ public:
       theDiffusionInfluencedReactions[anID]->unbind(aVoxel);
       isFinalizeReactions[anID] = true;
     }
-  void addCompVoxel(unsigned aCoord)
+  void addCompVoxel(const unsigned aCoord)
     {
       theLattice[aCoord].idx = theMoleculeSize+theStride*theID;
       ++theMoleculeSize; 
       theCompVoxels->push_back(&theLattice[aCoord]);
       theVariable->setValue(theMoleculeSize);
     }
-  void removeCompVoxel(const unsigned anIndex)
+  void removeCompVoxel(const unsigned aCoord)
     {
+      const unsigned anIndex(getIndex(&theLattice[aCoord]));
       --theMoleculeSize;
       (*theCompVoxels)[anIndex]->idx = theVacantID*theStride;
       (*theCompVoxels)[anIndex] = (*theCompVoxels)[theMoleculeSize];

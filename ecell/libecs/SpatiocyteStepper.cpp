@@ -2490,28 +2490,6 @@ void SpatiocyteStepper::setVolumeCompProperties(Comp* aComp)
   setDiffusiveComp(aComp);
 }
 
-void SpatiocyteStepper::setSurfaceVoxelProperties(Comp* aComp)
-{
-  if(!aComp->diffusiveComp)
-    {
-      Species* aVacantSpecies(aComp->vacantSpecies);
-      for(unsigned i(0); i != aVacantSpecies->size(); ++i)
-        {
-          unsigned aCoord(aVacantSpecies->getCoord(i));
-          optimizeSurfaceVoxel(aCoord, aComp);
-          setSurfaceSubunit(aCoord, aComp);
-        }
-      if(RemoveSurfaceBias)
-        {
-          for(unsigned i(0); i != aVacantSpecies->size(); ++i)
-            {
-              unsigned aCoord(aVacantSpecies->getCoord(i));
-              addSurfaceAdjoins(aCoord, aComp);
-            }
-        }
-    }
-}
-
 void SpatiocyteStepper::setDiffusiveComp(Comp* aComp)
 {
   FOR_ALL(System::Variables, aComp->system->getVariables())
@@ -2538,106 +2516,112 @@ void SpatiocyteStepper::setDiffusiveComp(Comp* aComp)
     }
 }
 
-void SpatiocyteStepper::optimizeSurfaceVoxel(unsigned aCoord, Comp* aComp)
+void SpatiocyteStepper::setSurfaceVoxelProperties(Comp* aComp)
+{
+  if(!aComp->diffusiveComp)
+    {
+      Comp* aSuperComp(system2Comp(aComp->system->getSuperSystem())); 
+      const unsigned intID(aSuperComp->vacantSpecies->getID());
+      Comp* aSuperSuperComp(system2Comp(aSuperComp->system->getSuperSystem())); 
+      unsigned extID(aSuperSuperComp->vacantSpecies->getID());
+      if(aSuperSuperComp == aSuperComp)
+        {
+          extID = theNullID;
+        }
+      Species* aVacantSpecies(aComp->vacantSpecies);
+      const unsigned surfaceID(aVacantSpecies->getID());
+      for(unsigned i(0); i != aVacantSpecies->size(); )
+        {
+          const unsigned aCoord(aVacantSpecies->getCoord(i));
+          if(setSurfaceDiffuseSize(aCoord, surfaceID, intID, extID, true))
+            {
+              ++i;
+            }
+        }
+      if(RemoveSurfaceBias)
+        {
+          for(unsigned i(0); i != aVacantSpecies->size(); ++i)
+            {
+              unsigned aCoord(aVacantSpecies->getCoord(i));
+              addSurfaceAdjoins(aCoord, aComp);
+            }
+        }
+      theSpecies[5]->setIsPopulated();
+      theSpecies[6]->setIsPopulated();
+    }
+}
+
+
+bool SpatiocyteStepper::setSurfaceDiffuseSize(const unsigned aCoord,
+                                              const unsigned surfaceID,
+                                              const unsigned intID,
+                                              const unsigned extID,
+                                              const bool isRemoveOrphan)
 {
   Voxel& aVoxel(theLattice[aCoord]);
-  //unsigned short surfaceID(aComp->vacantSpecies->getID());
-  aComp->adjoinCount.resize(theAdjoiningCoordSize);
-  /*
-  aVoxel.surfaceCoords = new std::vector<std::vector<unsigned> >;
-  aVoxel.surfaceCoords->resize(4);
-  std::vector<unsigned>& immedSurface((*aVoxel.surfaceCoords)[IMMED]);
-  std::vector<unsigned>& extSurface((*aVoxel.surfaceCoords)[EXTEND]);
-  std::vector<unsigned>& innerVolume((*aVoxel.surfaceCoords)[INNER]);
-  std::vector<unsigned>& outerVolume((*aVoxel.surfaceCoords)[OUTER]);
-  std::vector<std::vector<unsigned> > sharedCoordsList;
-  */
-  unsigned* forward(aVoxel.adjoiningCoords);
-  //unsigned* reverse(forward+theAdjoiningCoordSize);
-  std::vector<unsigned> adjoiningCopy;
-  for(unsigned k(0); k != theAdjoiningCoordSize; ++k)
+  unsigned* adjoins(aVoxel.adjoiningCoords);
+  std::vector<unsigned> adjoinsCopy;
+  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
     {
-      adjoiningCopy.push_back(forward[k]);
+      adjoinsCopy.push_back(adjoins[i]);
     }
   //Separate adjoining surface voxels and adjoining volume voxels.
   //Put the adjoining surface voxels at the beginning of the
   //adjoiningCoords list while the volume voxels are put at the end:
-  for(std::vector<unsigned>::iterator l(adjoiningCopy.begin());
-      l != adjoiningCopy.end(); ++l)
+  unsigned f(0);
+  unsigned b(theAdjoiningCoordSize-1);
+  unsigned intCnt(0);
+  unsigned extCnt(0);
+  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
     {
-      if((*l) != aCoord && theLattice[*l].idx != theNullID*theStride 
-         && id2Comp(getID(theLattice[*l]))->dimension <= aComp->dimension)
+      const unsigned adjCoord(adjoinsCopy[i]);
+      const unsigned anID(getID(theLattice[adjCoord]));
+      if(anID == surfaceID)
         {
-          ++aComp->adjoinCount[l-adjoiningCopy.begin()];
-          (*forward) = (*l);
-          ++forward;
-          /*
-          //immedSurface contains all adjoining surface voxels except the 
-          //source voxel, aVoxel:
-          immedSurface.push_back(*l);
-          for(unsigned m(0); m != theAdjoiningCoordSize; ++m)
-            {
-              //extSurface contains the adjoining surface voxels of
-              //adjoining surface voxels. They do not include the source voxel
-              //and its adjoining voxels:
-              unsigned extendedCoord(theLattice[*l].adjoiningCoords[m]);
-              if(theLattice[extendedCoord].id == surfaceID &&
-                 extendedCoord != aCoord &&
-                 std::find(adjoiningCopy.begin(), adjoiningCopy.end(),
-                      extendedCoord) == adjoiningCopy.end())
-                {
-                  std::vector<unsigned>::iterator n(std::find(
-                      extSurface.begin(), extSurface.end(), extendedCoord));
-                  if(n == extSurface.end())
-                    {
-                      extSurface.push_back(extendedCoord);
-                      //We require shared immediate voxel which
-                      //connects the extended voxel with the source voxel 
-                      //for polymerization. Create a new list of shared
-                      //immediate voxel each time a new extended voxel is added:
-                      std::vector<unsigned> sharedCoords;
-                      sharedCoords.push_back(*l);
-                      sharedCoordsList.push_back(sharedCoords);
-                    }
-                  else
-                    {
-                      //An extended voxel may have multiple shared immediate
-                      //voxels, so we insert the additional ones in the list:
-                      sharedCoordsList[n-extSurface.begin()].push_back(*l);
-                    }
-                }
-            }
-            */
+          adjoins[f++] = adjCoord; 
         }
       else
         {
-          /*
-          --reverse;
-          (*reverse) = (*l);
-          //We know that it is not a surface voxel, so it would not
-          //be a self-pointed adjoining voxel. If it is not inside the
-          //surface (i.e., the parent volume) Comp, it must be an
-          //outer volume voxel:
-          if(!isInsideCoord(*l, aComp, 0))
+          adjoins[b--] = adjCoord;
+          if(anID == intID)
             {
-              outerVolume.push_back(*l);
+              ++intCnt;
             }
-          //otherwise, it must be an inner volume voxel:
+          else if(anID == extID)
+            {
+              ++extCnt;
+            }
+        }
+    }
+  //Some surface voxels are not connected to the volume voxels. Remove these
+  //orphaned surface voxels and update its neighbours.
+  if(isRemoveOrphan && (!intCnt || !extCnt))
+    {
+      theSpecies[surfaceID]->removeCompVoxel(aCoord);
+      if(!intCnt)
+        {
+          if(extID == theNullID)
+            {
+              theLattice[aCoord].idx = theNullID*theStride;
+            }
           else
             {
-              innerVolume.push_back(*l);
+              theSpecies[extID]->addCompVoxel(aCoord);
             }
-            */
         }
-    } 
-  /*
-  for(std::vector<std::vector<unsigned> >::iterator
-      i(sharedCoordsList.begin()); i != sharedCoordsList.end(); ++i)
-    {
-      aVoxel.surfaceCoords->push_back(*i);
+      else
+        {
+          theSpecies[intID]->addCompVoxel(aCoord);
+        }
+      for(unsigned i(0); i != f; ++i)
+        {
+          const unsigned adjCoord(adjoins[i]);
+          setSurfaceDiffuseSize(adjCoord, surfaceID, intID, extID, false);
+        }
+      return false;
     }
-    */
-  aVoxel.diffuseSize = forward-aVoxel.adjoiningCoords;
+  aVoxel.diffuseSize = f;
+  return true;
 }
 
 void SpatiocyteStepper::addSurfaceAdjoins(const unsigned aCoord,
@@ -2744,45 +2728,6 @@ Comp* SpatiocyteStepper::system2Comp(System* aSystem)
         }
     }
   return NULL;
-}
-
-void SpatiocyteStepper::setSurfaceSubunit(unsigned aCoord, Comp* aComp)
-{
-  /*
-  Voxel& aVoxel(theLattice[aCoord]);
-  // The subunit is only useful for a cylindrical surface
-  // and for polymerization on it.
-  aVoxel.subunit = new Subunit;
-  aVoxel.subunit->coord = aCoord;
-  Point& aPoint(aVoxel.subunit->surfacePoint);
-  aPoint = coord2point(aCoord);
-  double aRadius(aComp->lengthY/2);
-  Point aCenterPoint(aComp->centerPoint);
-  Point aWestPoint(aComp->centerPoint);
-  Point anEastPoint(aComp->centerPoint); 
-  aWestPoint.x = aComp->centerPoint.x-aComp->lengthX/2+aComp->lengthY/2;
-  anEastPoint.x = aComp->centerPoint.x+aComp->lengthX/2-aComp->lengthY/2;
-  if(aPoint.x < aWestPoint.x)
-    {
-      aCenterPoint.x = aWestPoint.x;
-    }
-  else if(aPoint.x > anEastPoint.x)
-    {
-      aCenterPoint.x = anEastPoint.x;
-    }
-  else
-    {
-      aCenterPoint.x = aPoint.x;
-    }
-  double X(aPoint.x-aCenterPoint.x);
-  double Y(aPoint.y-aCenterPoint.y);
-  double Z(aPoint.z-aCenterPoint.z);
-  double f(atan2(X, Z));
-  double d(atan2(sqrt(X*X+Z*Z),Y));
-  aPoint.x = aCenterPoint.x + sin(f)*aRadius*sin(d);
-  aPoint.y = aCenterPoint.y + aRadius*cos(d);
-  aPoint.z = aCenterPoint.z + cos(f)*aRadius*sin(d);
-  */
 }
 
 void SpatiocyteStepper::setIntersectingCompartmentList() 
@@ -2991,6 +2936,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
             }
         }
     }
+  //aComp dimension == 2 or 1
   else if(aComp->system->getSuperSystem()->isRootSystem())
     {
       Comp* aRootComp(system2Comp(aComp->system->getSuperSystem())); 
