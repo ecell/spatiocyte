@@ -2533,7 +2533,8 @@ void SpatiocyteStepper::setSurfaceVoxelProperties(Comp* aComp)
       for(unsigned i(0); i != aVacantSpecies->size(); )
         {
           const unsigned aCoord(aVacantSpecies->getCoord(i));
-          if(setSurfaceDiffuseSize(aCoord, surfaceID, intID, extID, true))
+          if(setSurfaceDiffuseSize(aCoord, surfaceID, intID, extID,
+                                   aSuperComp->system->isRootSystem()))
             {
               ++i;
             }
@@ -2546,8 +2547,6 @@ void SpatiocyteStepper::setSurfaceVoxelProperties(Comp* aComp)
               addSurfaceAdjoins(aCoord, aComp);
             }
         }
-      theSpecies[5]->setIsPopulated();
-      theSpecies[6]->setIsPopulated();
     }
 }
 
