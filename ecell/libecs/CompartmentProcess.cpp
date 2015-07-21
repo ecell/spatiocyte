@@ -1211,7 +1211,7 @@ void CompartmentProcess::connectSubunitInterfaceAdjoins()
                 }
             }
           //Remove adjoins of volume voxels pointing to interface if
-          //they are not from the correction binding side of the surface:
+          //they are not from the correct binding side of the surface:
           removeAdjoinsFromNonBindingSide(interface);
         }
     }

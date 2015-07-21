@@ -57,8 +57,8 @@ public:
     Filaments = 13;
     DiffuseRadius = 8e-9/2;
     SubunitRadius = DiffuseRadius;
-    //Only allow kinesins to bind from the outside of the MT surface, not
-    //from the cylindrical tube inside MT
+    //Only allow kinesins to bind from and dissociate to the outside of the MT
+    //surface, not from the cylindrical tube inside MT
     BindingDirection = 0; 
     DissociationDirection = 0; 
   }
@@ -74,6 +74,7 @@ public:
   virtual void addSurfaceIntersectInterfaceVoxel(Voxel&, Point&);
   virtual bool isInside(Point&);
   virtual double getDisplacementToSurface(Point&);
+  virtual void removeAdjoinsFromNonBindingSide(Voxel&);
   bool isWithinMTDiameter(Point&, Point&);
 protected:
   unsigned getNearestFilament(Point&);

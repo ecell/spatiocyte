@@ -170,6 +170,29 @@ double MicrotubuleProcess::getDisplacementToSurface(Point& aPoint)
   return point2lineDist(aPoint, lengthVector, lengthStart)-nRadius;
 }
 
+void MicrotubuleProcess::removeAdjoinsFromNonBindingSide(Voxel& interface)
+{
+  for(unsigned i(0); i != interface.diffuseSize; ++i)
+    {
+      unsigned coord(interface.adjoiningCoords[i]);
+      Voxel& adjoin((*theLattice)[coord]);
+      if(theSpecies[getID(adjoin)]->getIsCompVacant() && 
+         !theSpecies[getID(adjoin)]->getIsInterface() &&
+         !isBindingSide(adjoin.coord))
+        {
+          for(unsigned j(0); j != adjoin.diffuseSize; ++j)
+            {
+              if(adjoin.adjoiningCoords[j] == interface.coord)
+                {
+                  (*theLattice)[adjoin.adjoiningCoords[j]].idx = 
+                    theNullID*theStride;;
+                }
+            }
+        }
+    }
+}
+
+
 //When the nVoxelRadius >= nRadius
 bool MicrotubuleProcess::isWithinMTDiameter(Point& A, Point& B)
 {

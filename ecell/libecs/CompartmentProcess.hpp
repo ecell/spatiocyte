@@ -187,10 +187,10 @@ public:
   Voxel* getNearestVoxelToSubunit(const unsigned, double&, const bool);
   Voxel* getNearestVoxelToSurface(const unsigned, double&, const bool);
   Voxel* addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
+  virtual void removeAdjoinsFromNonBindingSide(Voxel&);
 protected:
   bool isThisCompInterface(const unsigned);
   void removeInterfaceCompVoxels();
-  void removeAdjoinsFromNonBindingSide(Voxel&);
   bool isDissociationSide(const unsigned);
   bool isBindingSide(const unsigned);
   bool isCompartmentalized;
