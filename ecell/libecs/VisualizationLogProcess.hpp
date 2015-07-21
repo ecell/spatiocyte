@@ -181,6 +181,7 @@ public:
     }
   virtual void fire()
     {
+      theSpatiocyteStepper->checkLattice();
       logSpecies();
       theLogFile.flush();
       if(LogInterval > 0)
