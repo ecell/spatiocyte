@@ -180,14 +180,7 @@ void MicrotubuleProcess::removeAdjoinsFromNonBindingSide(Voxel& interface)
          !theSpecies[getID(adjoin)]->getIsInterface() &&
          !isBindingSide(adjoin.coord))
         {
-          for(unsigned j(0); j != adjoin.diffuseSize; ++j)
-            {
-              if(adjoin.adjoiningCoords[j] == interface.coord)
-                {
-                  (*theLattice)[adjoin.adjoiningCoords[j]].idx = 
-                    theNullID*theStride;;
-                }
-            }
+          adjoin.idx = theNullID*theStride;;
         }
     }
 }

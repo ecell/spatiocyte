@@ -1231,7 +1231,7 @@ void CompartmentProcess::removeAdjoinsFromNonBindingSide(Voxel& interface)
             {
               if(adjoin.adjoiningCoords[j] == interface.coord)
                 {
-                  //Point to itself it is pointing to interface:
+                  //Point to itself if it is pointing to interface:
                   adjoin.adjoiningCoords[j] = adjoin.coord;
                 }
             }
