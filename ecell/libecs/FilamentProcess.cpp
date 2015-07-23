@@ -587,7 +587,7 @@ void FilamentProcess::extendInterfacesOverSurface()
           if(getFilamentAdjoin(&interface, direction, j, 1, aSurfaceDisp,
                                0.2, adjPoint, adjDist, adjDisp, &adjoin))
             { 
-              if(getMinDistanceFromLineEnd(adjPoint) > -2*nRadius)
+              if(getMinDistanceFromLineEnd(adjPoint) >= -3*nRadius)
                 {
                   for(unsigned k(0); k != theAdjoiningCoordSize; ++k)
                     {
@@ -599,8 +599,8 @@ void FilamentProcess::extendInterfacesOverSurface()
                          aSurfaceDisp, adjDisp, subPoint, subDist, subDisp,
                          &sub))
                         {
-                          if(getMinDistanceFromLineEnd(subPoint) > 
-                             -2*nRadius)
+                          if(getMinDistanceFromLineEnd(subPoint) >= 
+                             -3*nRadius)
                             {
                               for(unsigned l(0); l != theAdjoiningCoordSize;
                                   ++l)
@@ -615,7 +615,7 @@ void FilamentProcess::extendInterfacesOverSurface()
                                     {
                                       if(!isAdjoin(subSub, adjoin) &&
                                          getMinDistanceFromLineEnd(subSubPoint)
-                                         > 0)
+                                         >= -nRadius)
                                         {
                                           if(subSubDist+subDist+adjDist < 
                                              thirdDist && 
@@ -659,11 +659,13 @@ void FilamentProcess::extendInterfacesOverSurface()
           std::cout << "-dist1:" << getMinDistanceFromLineEnd(adjPoint) << std::endl;
           std::cout << "dist1:" << getMinDistanceFromLineEnd(subPoint) << std::endl;
           std::cout << "dist1:" << getMinDistanceFromLineEnd(subSubPoint) << std::endl;
+          //if(theSpecies[getID(thirdAdj)]->getIsCompVacant())
           //if(getMinDistanceFromLineEnd(adjPoint) >= 0 &&
           if(isInside(adjPoint) && 
              theSpecies[getID(thirdAdj)]->getIsCompVacant())
             {
               addInterfaceVoxel(*thirdAdj);
+              //if(theSpecies[getID(thirdSub)]->getIsCompVacant())
               //if(getMinDistanceFromLineEnd(subPoint) >= 0 &&
               if(isInside(subPoint) &&
                  theSpecies[getID(thirdSub)]->getIsCompVacant())
@@ -685,11 +687,13 @@ void FilamentProcess::extendInterfacesOverSurface()
           Point subPoint(theSpatiocyteStepper->coord2point(secondSub->coord));
           std::cout << "dist2:" << getMinDistanceFromLineEnd(adjPoint) << std::endl;
           std::cout << "dist2:" << getMinDistanceFromLineEnd(subPoint) << std::endl;
+          //if(theSpecies[getID(secondAdj)]->getIsCompVacant())
           //if(getMinDistanceFromLineEnd(adjPoint) >= 0 &&
           if(isInside(adjPoint) &&
              theSpecies[getID(secondAdj)]->getIsCompVacant())
             {
               addInterfaceVoxel(*secondAdj);
+              //if(theSpecies[getID(secondSub)]->getIsCompVacant())
               //if(getMinDistanceFromLineEnd(subPoint) >= 0 &&
               if(isInside(subPoint) &&
                  theSpecies[getID(secondSub)]->getIsCompVacant())
@@ -702,6 +706,7 @@ void FilamentProcess::extendInterfacesOverSurface()
         {
           Point adjPoint(theSpatiocyteStepper->coord2point(firstAdj->coord));
           std::cout << "dist3:" << getMinDistanceFromLineEnd(adjPoint) << std::endl;
+          //if(theSpecies[getID(firstAdj)]->getIsCompVacant())
           //if(getMinDistanceFromLineEnd(adjPoint) >= 0 &&
           if(isInside(adjPoint) &&
              theSpecies[getID(firstAdj)]->getIsCompVacant())
