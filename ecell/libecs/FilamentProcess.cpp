@@ -128,31 +128,12 @@ void FilamentProcess::initialize() {
     {
       thePlusSpecies = theVacantSpecies;
     }
-  if(!DiffuseRadius)
-    {
-      if(SubunitRadius)
-        {
-          DiffuseRadius = SubunitRadius;
-        }
-      else
-        {
-          DiffuseRadius = theSpatiocyteStepper->getVoxelRadius();
-        }
-    }
-  if(!SubunitRadius)
-    {
-      SubunitRadius = DiffuseRadius;
-    }
-  VoxelRadius = theSpatiocyteStepper->getVoxelRadius();
-  //Normalized off-lattice voxel radius:
-  nSubunitRadius = SubunitRadius/(VoxelRadius*2);
-  nDiffuseRadius = DiffuseRadius/(VoxelRadius*2);
+  initializeConstants();
   if(!Radius)
     {
       Radius = DiffuseRadius;
     }
   nRadius = Radius/(VoxelRadius*2);
-  nGridSize = 10*nDiffuseRadius;
 }
 
 void FilamentProcess::initializeFirst() {
@@ -461,8 +442,7 @@ void FilamentProcess::elongateFilaments(Species* aVacant,
 bool FilamentProcess::isInside(Point& aPoint)
 {
   double dispA(point2planeDisp(aPoint, lengthVector, lengthDisplace));
-  std::cout << "displacement:" << dispA << std::endl;
-  if(dispA >= 0 && dispA <= nLength)
+  if(dispA >= -nMaxRadius/2 && dispA <= nLength+nMaxRadius/2)
     {
       return true;
     }
@@ -587,7 +567,7 @@ void FilamentProcess::extendInterfacesOverSurface()
           if(getFilamentAdjoin(&interface, direction, j, 1, aSurfaceDisp,
                                0.2, adjPoint, adjDist, adjDisp, &adjoin))
             { 
-              if(getMinDistanceFromLineEnd(adjPoint) >= -3*nRadius)
+              if(getMinDistanceFromLineEnd(adjPoint) >= -4*nMaxRadius)
                 {
                   for(unsigned k(0); k != theAdjoiningCoordSize; ++k)
                     {
@@ -600,7 +580,7 @@ void FilamentProcess::extendInterfacesOverSurface()
                          &sub))
                         {
                           if(getMinDistanceFromLineEnd(subPoint) >= 
-                             -3*nRadius)
+                             -4*nMaxRadius)
                             {
                               for(unsigned l(0); l != theAdjoiningCoordSize;
                                   ++l)
@@ -615,7 +595,7 @@ void FilamentProcess::extendInterfacesOverSurface()
                                     {
                                       if(!isAdjoin(subSub, adjoin) &&
                                          getMinDistanceFromLineEnd(subSubPoint)
-                                         >= -nRadius)
+                                         >= -3*nMaxRadius)
                                         {
                                           if(subSubDist+subDist+adjDist < 
                                              thirdDist && 
@@ -656,9 +636,9 @@ void FilamentProcess::extendInterfacesOverSurface()
           Point adjPoint(theSpatiocyteStepper->coord2point(thirdAdj->coord));
           Point subPoint(theSpatiocyteStepper->coord2point(thirdSub->coord));
           Point subSubPoint(theSpatiocyteStepper->coord2point(thirdSubSub->coord));
-          std::cout << "-dist1:" << getMinDistanceFromLineEnd(adjPoint) << std::endl;
-          std::cout << "dist1:" << getMinDistanceFromLineEnd(subPoint) << std::endl;
-          std::cout << "dist1:" << getMinDistanceFromLineEnd(subSubPoint) << std::endl;
+          //std::cout << "-dist1:" << getMinDistanceFromLineEnd(adjPoint) << std::endl;
+          //std::cout << "dist1:" << getMinDistanceFromLineEnd(subPoint) << std::endl;
+          //std::cout << "dist1:" << getMinDistanceFromLineEnd(subSubPoint) << std::endl;
           //if(theSpecies[getID(thirdAdj)]->getIsCompVacant())
           //if(getMinDistanceFromLineEnd(adjPoint) >= 0 &&
           if(isInside(adjPoint) && 
@@ -671,12 +651,6 @@ void FilamentProcess::extendInterfacesOverSurface()
                  theSpecies[getID(thirdSub)]->getIsCompVacant())
                 {
                   addInterfaceVoxel(*thirdSub);
-                  /*
-                  //if(getMinDistanceFromLineEnd(subPoint) >= 0)
-                    {
-                      addInterfaceVoxel(*thirdSubSub);
-                    }
-                    */
                 }
             }
           //addInterfaceVoxel(*thirdSubSub);
@@ -685,8 +659,8 @@ void FilamentProcess::extendInterfacesOverSurface()
         {
           Point adjPoint(theSpatiocyteStepper->coord2point(secondAdj->coord));
           Point subPoint(theSpatiocyteStepper->coord2point(secondSub->coord));
-          std::cout << "dist2:" << getMinDistanceFromLineEnd(adjPoint) << std::endl;
-          std::cout << "dist2:" << getMinDistanceFromLineEnd(subPoint) << std::endl;
+          //std::cout << "dist2:" << getMinDistanceFromLineEnd(adjPoint) << std::endl;
+          //std::cout << "dist2:" << getMinDistanceFromLineEnd(subPoint) << std::endl;
           //if(theSpecies[getID(secondAdj)]->getIsCompVacant())
           //if(getMinDistanceFromLineEnd(adjPoint) >= 0 &&
           if(isInside(adjPoint) &&
@@ -705,7 +679,7 @@ void FilamentProcess::extendInterfacesOverSurface()
       else if(firstDist != libecs::INF)
         {
           Point adjPoint(theSpatiocyteStepper->coord2point(firstAdj->coord));
-          std::cout << "dist3:" << getMinDistanceFromLineEnd(adjPoint) << std::endl;
+          //std::cout << "dist3:" << getMinDistanceFromLineEnd(adjPoint) << std::endl;
           //if(theSpecies[getID(firstAdj)]->getIsCompVacant())
           //if(getMinDistanceFromLineEnd(adjPoint) >= 0 &&
           if(isInside(adjPoint) &&

@@ -146,7 +146,7 @@ bool MicrotubuleProcess::isInside(Point& aPoint)
   unsigned nearestFilament(getNearestFilament(aPoint));
   double aLengthDisplace(dot(lengthVector, theMinusPoints[nearestFilament]));
   double dispA(point2planeDisp(aPoint, lengthVector, aLengthDisplace));
-  if(dispA >= -nDiffuseRadius/2 && dispA <= nLength+nDiffuseRadius/2)
+  if(dispA >= -nMaxRadius/2 && dispA <= nLength+nMaxRadius/2)
     {
       return true;
     }
@@ -160,7 +160,6 @@ void MicrotubuleProcess::extendInterfacesOverSurface()
   if(nVoxelRadius >= nRadius)
     {
       FilamentProcess::extendInterfacesOverSurface();
-      //CompartmentProcess::extendInterfacesOverSurface();
     }
   else
     { 

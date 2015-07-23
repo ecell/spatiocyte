@@ -188,6 +188,7 @@ public:
   Voxel* getNearestVoxelToSurface(const unsigned, double&, const bool);
   Voxel* addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
   virtual void removeAdjoinsFromNonBindingSide(Voxel&);
+  void initializeConstants();
 protected:
   bool isThisCompInterface(const unsigned);
   void removeInterfaceCompVoxels();
@@ -228,6 +229,8 @@ protected:
   double nLipidRadius;
   double nSubunitRadius;
   double nVoxelRadius;
+  double nMaxRadius;
+  double nMinRadius;
   double nWidth;
   double OriginX;
   double OriginY;

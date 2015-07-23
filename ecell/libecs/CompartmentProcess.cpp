@@ -122,6 +122,11 @@ void CompartmentProcess::initialize()
       theLipidSpecies = theSpatiocyteStepper->addSpecies(
                                                    theLipidVariable);
     }
+  initializeConstants();
+}
+
+void CompartmentProcess::initializeConstants()
+{
   if(!DiffuseRadius)
     {
       if(SubunitRadius)
@@ -148,7 +153,9 @@ void CompartmentProcess::initialize()
   nSubunitRadius = SubunitRadius/(VoxelRadius*2);
   //Normalized lipid voxel radius:
   nLipidRadius = LipidRadius/(VoxelRadius*2);
-  nGridSize = 10*nDiffuseRadius;
+  nMaxRadius = std::max(nVoxelRadius, nDiffuseRadius);
+  nMinRadius = std::min(nVoxelRadius, nDiffuseRadius);
+  nGridSize = 10*nMinRadius;
 }
 
 void CompartmentProcess::initializeFirst()
