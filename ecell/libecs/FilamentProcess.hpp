@@ -79,7 +79,7 @@ public:
   virtual bool isInside(Point&);
   virtual bool isOnAboveSurface(Point&);
   virtual void extendInterfacesOverSurface();
-  virtual double getDistanceToSurface(Point&);
+  virtual double getDisplacementToSurface(Point&);
   //virtual void addLineIntersectInterfaceVoxel(Voxel&, Point&, const bool, const bool);
   void connectTrailSubunits(unsigned, unsigned, unsigned);
   void setTrailSize(unsigned, unsigned);

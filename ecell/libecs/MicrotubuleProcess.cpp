@@ -139,6 +139,10 @@ unsigned MicrotubuleProcess::getNearestFilament(Point& aPoint)
 //Is inside the parent compartment and confined by the length of the MT:
 bool MicrotubuleProcess::isInside(Point& aPoint)
 {
+  if(nVoxelRadius >= nRadius)
+    {
+      return FilamentProcess::isInside(aPoint);
+    }
   unsigned nearestFilament(getNearestFilament(aPoint));
   double aLengthDisplace(dot(lengthVector, theMinusPoints[nearestFilament]));
   double dispA(point2planeDisp(aPoint, lengthVector, aLengthDisplace));
@@ -167,6 +171,10 @@ void MicrotubuleProcess::extendInterfacesOverSurface()
 //nRadius is the radius of MT cylinder
 double MicrotubuleProcess::getDisplacementToSurface(Point& aPoint)
 {
+  if(nVoxelRadius >= nRadius)
+    {
+      return FilamentProcess::getDisplacementToSurface(aPoint);
+    }
   return point2lineDist(aPoint, lengthVector, lengthStart)-nRadius;
 }
 

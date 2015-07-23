@@ -40,12 +40,13 @@ fil.VariableReferenceList = [['_', 'Variable:/:sA']]
 fil.LineX = 1
 fil.LineY = 0
 fil.LineZ = 0
+fil.Verbose = 1
 
 logger = theSimulator.createEntity('IteratingLogProcess', 'Process:/:iter')
 logger.VariableReferenceList = [['_', 'Variable:/:sA']]
 logger.LogInterval = 1
-logger.LogEnd = 20
+logger.LogEnd = 2
 logger.Iterations = 1
 logger.FileName = "IterateLogX.csv"
 
-run(21)
+run(3)
