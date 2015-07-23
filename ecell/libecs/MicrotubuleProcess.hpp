@@ -80,7 +80,7 @@ protected:
   unsigned getNearestFilament(Point&);
   double MonomerPitch;
   double nMonomerPitch;
-  std::vector<Point> theMinusPoints;
+  std::vector<Point> theLengthStarts;
   std::vector<Species*> theKinesinSpecies;
 };
 

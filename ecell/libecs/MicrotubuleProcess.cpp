@@ -106,7 +106,7 @@ void MicrotubuleProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
                                              unsigned aStartCoord) {
   Voxel* aVoxel(addCompVoxel(0, 0, aStartPoint, aVacant, aStartCoord, aCols));
   theMinusSpecies->addMolecule(aVoxel);
-  theMinusPoints.push_back(aStartPoint);
+  theLengthStarts.push_back(disp(aStartPoint, lengthVector, -nDiffuseRadius));
   Point U(aStartPoint);
   for(unsigned i(1); i < aRows; ++i)
     {
@@ -115,7 +115,7 @@ void MicrotubuleProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
       disp_(U, lengthVector, aRadius/(aRows-1));
       aVoxel = addCompVoxel(i, 0, U, aVacant, aStartCoord, aCols);
       theMinusSpecies->addMolecule(aVoxel);
-      theMinusPoints.push_back(U);
+      theLengthStarts.push_back(disp(U, lengthVector, -nDiffuseRadius));
     }
 }
 
@@ -123,9 +123,9 @@ unsigned MicrotubuleProcess::getNearestFilament(Point& aPoint)
 {
   double nearestDist(libecs::INF);
   unsigned nearestFilament(0);
-  for(unsigned i(0); i != theMinusPoints.size(); ++i)
+  for(unsigned i(0); i != theLengthStarts.size(); ++i)
     {
-      double aDist(point2lineDist(aPoint, lengthVector, theMinusPoints[i]));
+      double aDist(point2lineDist(aPoint, lengthVector, theLengthStarts[i]));
       if(aDist < nearestDist)
         {
           nearestDist = aDist;
@@ -144,9 +144,9 @@ bool MicrotubuleProcess::isInside(Point& aPoint)
       return FilamentProcess::isInside(aPoint);
     }
   unsigned nearestFilament(getNearestFilament(aPoint));
-  double aLengthDisplace(dot(lengthVector, theMinusPoints[nearestFilament]));
+  double aLengthDisplace(dot(lengthVector, theLengthStarts[nearestFilament]));
   double dispA(point2planeDisp(aPoint, lengthVector, aLengthDisplace));
-  if(dispA >= -nMaxRadius/2 && dispA <= nLength+nMaxRadius/2)
+  if(dispA >= 0 && dispA <= nLength)
     {
       return true;
     }
