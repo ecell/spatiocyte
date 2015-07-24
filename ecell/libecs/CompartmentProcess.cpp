@@ -219,6 +219,9 @@ unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
     }
   //The compartment center point (origin):
   Origin = aComp->centerPoint;
+  theComp->rotateX = RotateX;
+  theComp->rotateY = RotateY;
+  theComp->rotateZ = RotateZ;
   setCompartmentDimension();
   theComp->dimension = theDimension;
   theVacantSpecies->setDimension(theDimension);
@@ -469,15 +472,14 @@ void CompartmentProcess::setCompartmentDimension()
       LipidCols = (unsigned)(Length/(LipidRadius*2));
       LipidRows = (unsigned)((Width-2*LipidRadius)/(LipidRadius*sqrt(3)))+1;
     }
-  //TODO: make length, width, height consistent with the definitions
+  nLength = Length/(VoxelRadius*2);
+  nWidth = Width/(VoxelRadius*2);
+  nHeight = Height/(VoxelRadius*2);
   allocateGrid();
 }
 
 void CompartmentProcess::allocateGrid()
 {
-  nLength = Length/(VoxelRadius*2);
-  nWidth = Width/(VoxelRadius*2);
-  nHeight = Height/(VoxelRadius*2);
   theComp->lengthX = nHeight;
   theComp->lengthY = nWidth;
   theComp->lengthZ = nLength;
@@ -785,17 +787,18 @@ void CompartmentProcess::initializeVectors()
 
 void CompartmentProcess::rotateAsParent(Point& V)
 {
-  theSpatiocyteStepper->rotateX(theComp->rotateX, &V, -1);
-  theSpatiocyteStepper->rotateY(theComp->rotateY, &V, -1);
-  theSpatiocyteStepper->rotateZ(theComp->rotateZ, &V, -1);
+  Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
+  theSpatiocyteStepper->rotateX(aComp->rotateX, &V, -1);
+  theSpatiocyteStepper->rotateY(aComp->rotateY, &V, -1);
+  theSpatiocyteStepper->rotateZ(aComp->rotateZ, &V, -1);
 }
 
 void CompartmentProcess::rotate(Point& V)
 {
   rotateAsParent(V);
-  theSpatiocyteStepper->rotateX(RotateX, &V, 1);
-  theSpatiocyteStepper->rotateY(RotateY, &V, 1);
-  theSpatiocyteStepper->rotateZ(RotateZ, &V, 1);
+  theSpatiocyteStepper->rotateX(theComp->rotateX, &V, 1);
+  theSpatiocyteStepper->rotateY(theComp->rotateY, &V, 1);
+  theSpatiocyteStepper->rotateZ(theComp->rotateZ, &V, 1);
 }
 
 void CompartmentProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
@@ -1088,8 +1091,15 @@ Voxel* CompartmentProcess::getNearestVoxelToSubunit(const unsigned subIndex,
                                                     double& nearestDist,
                                                     const bool isInterface)
 {
+  return getNearestVoxelToPoint(*(*theLattice)[subIndex+subStartCoord].point,
+                                nearestDist, isInterface);
+}
+
+Voxel* CompartmentProcess::getNearestVoxelToPoint(Point& subPoint,
+                                                  double& nearestDist,
+                                                  const bool isInterface)
+{
   Voxel* nearestVoxel;
-  Point subPoint(*(*theLattice)[subIndex+subStartCoord].point);
   Point a(subPoint);
   Point b(subPoint);
   Point c(Point(1, 1, 1));
@@ -1131,7 +1141,6 @@ Voxel* CompartmentProcess::getNearestVoxelToSubunit(const unsigned subIndex,
     }
   return nearestVoxel;
 }
-
 
 //get a voxel that intersects either a subunit or surface, with the
 //shortest distance

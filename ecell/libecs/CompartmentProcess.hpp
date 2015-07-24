@@ -185,6 +185,7 @@ public:
                                 const bool isSingle=false);
   Species* coefficient2species(int);
   Voxel* getNearestVoxelToSubunit(const unsigned, double&, const bool);
+  Voxel* getNearestVoxelToPoint(Point&, double&, const bool);
   Voxel* getNearestVoxelToSurface(const unsigned, double&, const bool);
   Voxel* addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
   virtual void removeAdjoinsFromNonBindingSide(Voxel&);
@@ -258,6 +259,7 @@ protected:
   Point lipidStart;
   Point Origin;
   Point subunitStart;
+  Point subunitEnd;
   Point surfaceNormal;
   Point widthEnd;
   Point widthVector;

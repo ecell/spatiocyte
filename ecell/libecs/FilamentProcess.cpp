@@ -205,25 +205,30 @@ void FilamentProcess::setCompartmentDimension() {
     {
       Subunits = (unsigned)rint(Length/(2*DiffuseRadius));
     }
-  //Length is from the center point of the first subunit to the center point
-  //of the last subunit
-  Length = Subunits*2*DiffuseRadius-2*DiffuseRadius;
+  Length = Subunits*2*DiffuseRadius;
   Width = Radius*2;
   Height = Radius*2;
   theDimension = 1;
+  nLength = Length/(VoxelRadius*2);
+  nWidth = Width/(VoxelRadius*2);
+  nHeight = Height/(VoxelRadius*2);
   allocateGrid();
 }
 
 void FilamentProcess::setSubunitStart()
 {
-  //row => z
   //col => x
   //layer => y
+  //row => z
   Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
   //lengths denote the parent's length in x, y and z
   Point lengths(aComp->lengthX, aComp->lengthY, aComp->lengthZ);
-  if(aComp->geometry == CUBOID && aComp->rotateX == 0 && aComp->rotateY == 0 && 
-     aComp->rotateZ == 0)
+  if(aComp->geometry != CUBOID || aComp->rotateX != 0 || aComp->rotateY != 0 || 
+     aComp->rotateZ != 0)
+    {
+      Autofit = 0;
+    }
+  else
     {
       const unsigned minCoord(theSpatiocyteStepper->global2coord(
                                               aComp->minCoord.row,
@@ -236,62 +241,127 @@ void FilamentProcess::setSubunitStart()
       Point maxPoint(theSpatiocyteStepper->coord2point(maxCoord));
       Point minPoint(theSpatiocyteStepper->coord2point(minCoord)); 
       lengths = sub(maxPoint, minPoint);
-    }
-  //Set the current compartment's center point:
-  Point& parentCenter(aComp->centerPoint);
-  Point& center(theComp->centerPoint);
-  center.x = lengths.x*0.5*OriginX;
-  center.y = lengths.y*0.5*OriginY;
-  center.z = lengths.z*0.5*OriginZ;
-  rotateAsParent(center);
-  add_(center, parentCenter);
-  subunitStart = Point(0, 0, 0);
-  if(LineZ)
-    {
-      lengthVector = Point(0, 0, 1);
-      widthVector = Point(1, 0, 0);
-      heightVector = Point(0, 1, 0);
-      //If the Length is not specified, take up the parent's length:
-      if(!Length && !Subunits)
+      if(theComp->rotateX != 0 || theComp->rotateY != 0 || 
+         theComp->rotateZ != 0 || Length || Subunits)
         {
-          Length = lengths.z*VoxelRadius*2;
+          Autofit = 0;
         }
+    }
+  if(Autofit)
+    {
+      const unsigned midRow(rint((aComp->maxCoord.row-
+                          aComp->minCoord.row)/2.0+aComp->minCoord.row));
+      const unsigned midCol(rint((aComp->maxCoord.col-
+                          aComp->minCoord.col)/2.0+aComp->minCoord.col));
+      const unsigned midLayer(rint((aComp->maxCoord.layer-
+                          aComp->minCoord.layer)/2.0+aComp->minCoord.layer));
+      unsigned min;
+      unsigned max;
+      if(LineZ)
+        {
+          lengthVector = Point(0, 0, 1);
+          widthVector = Point(1, 0, 0);
+          heightVector = Point(0, 1, 0);
+          min = theSpatiocyteStepper->global2coord(aComp->minCoord.row,
+                                                   midLayer,
+                                                   midCol);
+          max = theSpatiocyteStepper->global2coord(aComp->maxCoord.row,
+                                                   midLayer,
+                                                   midCol);
+        }
+      else if(LineY)
+        {
+          lengthVector = Point(0, 1, 0);
+          widthVector = Point(1, 0, 0);
+          heightVector = Point(0, 0, 1);
+          min = theSpatiocyteStepper->global2coord(midRow,
+                                                   aComp->minCoord.layer,
+                                                   midCol);
+          max = theSpatiocyteStepper->global2coord(midRow,
+                                                   aComp->maxCoord.layer,
+                                                   midCol);
+        }
+      //LineX 
       else
         {
-          lengths.z = Length/(VoxelRadius*2);
+          lengthVector = Point(1, 0, 0);
+          widthVector = Point(0, 0, 1);
+          heightVector = Point(0, 1, 0);
+          min = theSpatiocyteStepper->global2coord(midRow, midLayer,
+                                                   aComp->minCoord.col);
+          max = theSpatiocyteStepper->global2coord(midRow, midLayer,
+                                                   aComp->maxCoord.col);
         }
-      subunitStart.z = -lengths.z*0.5;
+      Point minPoint(theSpatiocyteStepper->coord2point(min));
+      Point maxPoint(theSpatiocyteStepper->coord2point(max));
+      nLength = distance(minPoint, maxPoint)+2*nVoxelRadius;
+      Length = nLength*2*VoxelRadius;
+      subunitStart = minPoint;
     }
-  else if(LineY)
-    {
-      lengthVector = Point(0, 1, 0);
-      widthVector = Point(1, 0, 0);
-      heightVector = Point(0, 0, 1);
-      if(!Length && !Subunits)
-        {
-          Length = lengths.y*VoxelRadius*2;
-        }
-      else
-        {
-          lengths.y = Length/(VoxelRadius*2);
-        }
-      subunitStart.y = -lengths.y*0.5;
-    }
-  //LineX 
   else
     {
-      lengthVector = Point(1, 0, 0);
-      widthVector = Point(0, 0, 1);
-      heightVector = Point(0, 1, 0);
-      if(!Length && !Subunits)
+      //Set the current compartment's center point:
+      Point& parentCenter(aComp->centerPoint);
+      Point& center(theComp->centerPoint);
+      center.x = lengths.x*0.5*OriginX;
+      center.y = lengths.y*0.5*OriginY;
+      center.z = lengths.z*0.5*OriginZ;
+      rotateAsParent(center);
+      add_(center, parentCenter);
+      subunitStart = Point(0, 0, 0);
+      if(LineZ)
         {
-          Length = lengths.x*VoxelRadius*2;
+          lengthVector = Point(0, 0, 1);
+          widthVector = Point(1, 0, 0);
+          heightVector = Point(0, 1, 0);
+          //If the Length is not specified, take up the parent's length:
+          if(!Length && !Subunits)
+            {
+              Length = lengths.z*VoxelRadius*2;
+            }
+          else
+            {
+              lengths.z = Length/(VoxelRadius*2);
+            }
+          subunitStart.z = -lengths.z*0.5;
         }
+      else if(LineY)
+        {
+          lengthVector = Point(0, 1, 0);
+          widthVector = Point(1, 0, 0);
+          heightVector = Point(0, 0, 1);
+          if(!Length && !Subunits)
+            {
+              Length = lengths.y*VoxelRadius*2;
+            }
+          else
+            {
+              lengths.y = Length/(VoxelRadius*2);
+            }
+          subunitStart.y = -lengths.y*0.5;
+        }
+      //LineX 
       else
         {
-          lengths.x = Length/(VoxelRadius*2);
+          lengthVector = Point(1, 0, 0);
+          widthVector = Point(0, 0, 1);
+          heightVector = Point(0, 1, 0);
+          if(!Length && !Subunits)
+            {
+              Length = lengths.x*VoxelRadius*2;
+            }
+          else
+            {
+              lengths.x = Length/(VoxelRadius*2);
+            }
+          subunitStart.x = -lengths.x*0.5;
         }
-      subunitStart.x = -lengths.x*0.5;
+      //subunitStart is the center point of the first vacant species voxel:
+      //subunitStart coordinate is at present is relative to the theComp center
+      //point, so we rotate it first before adding the coordinate of the
+      //center point to make it an absolute coordinate.
+      rotate(subunitStart);
+      add_(subunitStart, theComp->centerPoint);
     }
 }
 //                                     nLength
@@ -300,15 +370,6 @@ void FilamentProcess::setSubunitStart()
 //lengthtStart <------------> Minus <------------> Plus <------------> lengthEnd
 //                         subunitStart
 void FilamentProcess::initializeVectors() { 
-  nLength = Subunits*2*nDiffuseRadius;
-
-  //subunitStart is the center point of the first vacant species voxel:
-  //subunitStart coordinate is at present is relative to the theComp center
-  //point, so we rotate it first before adding the coordinate of the
-  //center point to make it an absolute coordinate.
-  rotate(subunitStart);
-  add_(subunitStart, theComp->centerPoint);
-
   Minus = subunitStart;
   rotate(lengthVector);
 
@@ -324,10 +385,6 @@ void FilamentProcess::initializeVectors() {
   heightEnd = disp(widthEnd, heightVector, nHeight);
 
   lengthDisplace = dot(lengthVector, lengthStart);
-  /*
-  heightDisplace = dot(heightVector, lengthStart);
-  widthDisplace = dot(widthVector, lengthStart);
-  */
 }
 /*
 void FilamentProcess::initializeVectors() { 
