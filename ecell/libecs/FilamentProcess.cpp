@@ -296,7 +296,7 @@ void FilamentProcess::setSubunitStart()
       Point maxPoint(theSpatiocyteStepper->coord2point(max));
       nLength = distance(minPoint, maxPoint)+2*nVoxelRadius;
       Length = nLength*2*VoxelRadius;
-      subunitStart = minPoint;
+      subunitStart = disp(minPoint, lengthVector, -nVoxelRadius+nDiffuseRadius);
     }
   else
     {
