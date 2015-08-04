@@ -257,12 +257,6 @@ void FilamentProcess::setSubunitStart()
       const unsigned rows(aComp->maxCoord.row-aComp->minCoord.row);
       const unsigned cols(aComp->maxCoord.col-aComp->minCoord.col);
       const unsigned layers(aComp->maxCoord.layer-aComp->minCoord.layer);
-      std::cout << "row min:" << aComp->minCoord.row << std::endl;
-      std::cout << "row max:" << aComp->maxCoord.row << std::endl;
-      std::cout << "col min:" << aComp->minCoord.col << std::endl;
-      std::cout << "col max:" << aComp->maxCoord.col << std::endl;
-      std::cout << "layer min:" << aComp->minCoord.layer << std::endl;
-      std::cout << "layer max:" << aComp->maxCoord.layer << std::endl;
       //Start with the center point of parent:
       unsigned row(rint(rows/2.0+aComp->minCoord.row));
       unsigned col(rint(cols/2.0+aComp->minCoord.col));
@@ -277,15 +271,9 @@ void FilamentProcess::setSubunitStart()
         }
       else if(OriginX)
         {
-      std::cout << "in2" << std::endl;
           col += rint(cols/2*OriginX);
           col = std::min(col, aComp->maxCoord.col);
           col = std::max(col, aComp->minCoord.col);
-          /*
-      std::cout << "min:" << aComp->minCoord.col << std::endl;
-      std::cout << "max:" << aComp->maxCoord.col << std::endl;
-      std::cout << "col:" << col << std::endl;
-      */
         }
       if(OriginY == 1)
         {
@@ -300,9 +288,6 @@ void FilamentProcess::setSubunitStart()
           layer += rint(layers/2*OriginY);
           layer = std::min(layer, aComp->maxCoord.layer);
           layer = std::max(layer, aComp->minCoord.layer);
-      std::cout << "min:" << aComp->minCoord.layer << std::endl;
-      std::cout << "max:" << aComp->maxCoord.layer << std::endl;
-      std::cout << "col:" << layer << std::endl;
         }
       if(OriginZ == 1)
         {
@@ -351,10 +336,8 @@ void FilamentProcess::setSubunitStart()
           lengthVector = Point(0, 1, 0);
           widthVector = Point(1, 0, 0);
           heightVector = Point(0, 0, 1);
-          std::cout << "nLength:" << nLength << " lenghts.y:" << lengths.y << " layers:" << layers << " layer:" << layer << std::endl;
           unsigned minLayer(layer-rint(nLength/lengths.y*layers*0.5));
           unsigned maxLayer(layer+rint(nLength/lengths.y*layers*0.5));
-          std::cout << "min:" << minLayer << " max:" << maxLayer << std::endl;
           if(!nLength)
             {
               minLayer = layer-layers/2;
@@ -365,23 +348,19 @@ void FilamentProcess::setSubunitStart()
                   maxLayer = aComp->maxCoord.layer;
                 }
             }
-          std::cout << "fminLayer:" << minLayer << std::endl;
-          std::cout << "fmaxLayer:" << maxLayer << std::endl;
           minLayer = std::min(minLayer, aComp->maxCoord.layer);
           minLayer = std::max(minLayer, aComp->minCoord.layer);
           maxLayer = std::min(maxLayer, aComp->maxCoord.layer);
           maxLayer = std::max(maxLayer, aComp->minCoord.layer);
           min = theSpatiocyteStepper->global2coord(row, minLayer, col);
           max = theSpatiocyteStepper->global2coord(row, maxLayer, col);
-          std::cout << "minLayer:" << minLayer << std::endl;
-          std::cout << "maxLayer:" << maxLayer << std::endl;
-          std::cout << "row:" << row << std::endl;
-          std::cout << "col:" << col << std::endl;
+          /*
           for(unsigned i(minLayer); i != maxLayer; ++i)
             {
               unsigned coord(theSpatiocyteStepper->global2coord(row, i, col));
               //theSpecies[1]->softAddMolecule(&(*theLattice)[coord]);
             }
+            */
         }
       //LineX 
       else
@@ -389,10 +368,8 @@ void FilamentProcess::setSubunitStart()
           lengthVector = Point(1, 0, 0);
           widthVector = Point(0, 0, 1);
           heightVector = Point(0, 1, 0);
-          std::cout << "nLength:" << nLength << " lenghts.x:" << lengths.x << " cols:" << cols << " col:" << col << std::endl;
           unsigned minCol(col-rint(nLength/lengths.x*cols*0.5));
           unsigned maxCol(col+rint(nLength/lengths.x*cols*0.5));
-          std::cout << "min:" << minCol << " max:" << maxCol << std::endl;
           if(!nLength)
             {
               minCol = col-cols/2;
@@ -413,15 +390,16 @@ void FilamentProcess::setSubunitStart()
       Point minPoint(theSpatiocyteStepper->coord2point(min));
       Point maxPoint(theSpatiocyteStepper->coord2point(max));
       nLength = distance(minPoint, maxPoint)+2*nVoxelRadius;
-      std::cout << "nLength:" << nLength << std::endl;
       Length = nLength*2*VoxelRadius;
       subunitStart = disp(minPoint, lengthVector, -nVoxelRadius+nDiffuseRadius);
+      /*
       unsigned blRow(0);
       unsigned blLayer(0);
       unsigned blCol(0);
       theSpatiocyteStepper->point2global(subunitStart, blRow, blLayer, blCol);
       unsigned coord(theSpatiocyteStepper->global2coord(blRow, blLayer, blCol));
       //theSpecies[3]->softAddMolecule(&(*theLattice)[coord]);
+      */
     }
   else
     {
@@ -752,7 +730,8 @@ void FilamentProcess::extendInterfacesOverSurface()
           if(getFilamentAdjoin(&interface, direction, j, 1, aSurfaceDisp,
                                0.2, adjPoint, adjDist, adjDisp, &adjoin))
             { 
-              //std::cout << "adjDist:" << adjDist << " adjDisp:" << adjDisp << std::endl;
+              //std::cout << "adjDist:" << adjDist << " adjDisp:" << adjDisp
+              //<< std::endl;
               if(getMinDistanceFromLineEnd(adjPoint) >= -4*nMaxRadius)
                 {
                   for(unsigned k(0); k != theAdjoiningCoordSize; ++k)
@@ -765,7 +744,8 @@ void FilamentProcess::extendInterfacesOverSurface()
                          aSurfaceDisp, adjDisp, subPoint, subDist, subDisp,
                          &sub))
                         {
-              //std::cout << "subDist:" << subDist << " subDisp:" << subDisp << std::endl;
+                          //std::cout << "subDist:" << subDist << " subDisp:"
+                          //<< subDisp << std::endl;
                           if(getMinDistanceFromLineEnd(subPoint) >= 
                              -4*nMaxRadius)
                             {
@@ -780,7 +760,9 @@ void FilamentProcess::extendInterfacesOverSurface()
                                      aSurfaceDisp, subDisp, subSubPoint,
                                      subSubDist, subSubDisp, &subSub))
                                     {
-              //std::cout << "subsDist:" << subSubDist << " subsDisp:" << subSubDisp << std::endl;
+                                      //std::cout << "subsDist:" << subSubDist
+                                      //<< " subsDisp:" << subSubDisp <<
+                                      //std::endl;
                                       if(!isAdjoin(subSub, adjoin) &&
                                          getMinDistanceFromLineEnd(subSubPoint)
                                          >= -3*nMaxRadius)
@@ -793,7 +775,8 @@ void FilamentProcess::extendInterfacesOverSurface()
                                             {
                                               thirdDist = 
                                                 subSubDist+subDist+adjDist;
-                                              //std::cout << "thirdDist:" << thirdDist << std::endl;
+                                              //std::cout << "thirdDist:" <<
+                                              //thirdDist << std::endl;
                                               thirdAdj = adjoin;
                                               thirdSub = sub;
                                               thirdSubSub = subSub;
@@ -824,10 +807,14 @@ void FilamentProcess::extendInterfacesOverSurface()
         {
           Point adjPoint(theSpatiocyteStepper->coord2point(thirdAdj->coord));
           Point subPoint(theSpatiocyteStepper->coord2point(thirdSub->coord));
-          Point subSubPoint(theSpatiocyteStepper->coord2point(thirdSubSub->coord));
-          //std::cout << "-dist1:" << getMinDistanceFromLineEnd(adjPoint) << "id:" << getID(thirdAdj) << " null:" << theNullID << std::endl;
-          //std::cout << "dist1:" << getMinDistanceFromLineEnd(subPoint) << " id:" << getID(thirdSub) << std::endl;
-          //std::cout << "dist1:" << getMinDistanceFromLineEnd(subSubPoint) << std::endl;
+          //Point subSubPoint(theSpatiocyteStepper->coord2point(
+          //thirdSubSub->coord));
+          //std::cout << "-dist1:" << getMinDistanceFromLineEnd(adjPoint) <<
+          //"id:" << getID(thirdAdj) << " null:" << theNullID << std::endl;
+          //std::cout << "dist1:" << getMinDistanceFromLineEnd(subPoint) << 
+          //" id:" << getID(thirdSub) << std::endl;
+          //std::cout << "dist1:" << getMinDistanceFromLineEnd(subSubPoint) <<
+          //std::endl;
           //if(theSpecies[getID(thirdAdj)]->getIsCompVacant())
           //if(getMinDistanceFromLineEnd(adjPoint) >= 0 &&
           if(isInside(adjPoint) && 
@@ -848,8 +835,10 @@ void FilamentProcess::extendInterfacesOverSurface()
         {
           Point adjPoint(theSpatiocyteStepper->coord2point(secondAdj->coord));
           Point subPoint(theSpatiocyteStepper->coord2point(secondSub->coord));
-          //std::cout << "dist2:" << getMinDistanceFromLineEnd(adjPoint) << std::endl;
-          //std::cout << "dist2:" << getMinDistanceFromLineEnd(subPoint) << std::endl;
+          //std::cout << "dist2:" << getMinDistanceFromLineEnd(adjPoint) <<
+          //std::endl;
+          //std::cout << "dist2:" << getMinDistanceFromLineEnd(subPoint) <<
+          //std::endl;
           //if(theSpecies[getID(secondAdj)]->getIsCompVacant())
           //if(getMinDistanceFromLineEnd(adjPoint) >= 0 &&
           if(isInside(adjPoint) &&
@@ -868,7 +857,8 @@ void FilamentProcess::extendInterfacesOverSurface()
       else if(firstDist != libecs::INF)
         {
           Point adjPoint(theSpatiocyteStepper->coord2point(firstAdj->coord));
-          //std::cout << "dist3:" << getMinDistanceFromLineEnd(adjPoint) << "id:" << getID(firstAdj) << " null:" << theNullID << std::endl;
+          //std::cout << "dist3:" << getMinDistanceFromLineEnd(adjPoint) << 
+          //"id:" << getID(firstAdj) << " null:" << theNullID << std::endl;
           //if(theSpecies[getID(firstAdj)]->getIsCompVacant())
           //if(getMinDistanceFromLineEnd(adjPoint) >= 0 &&
           if(isInside(adjPoint) &&

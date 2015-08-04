@@ -25,12 +25,12 @@ logger.LogInterval = 0.0001
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
 populator.VariableReferenceList = [['_', 'Variable:/:A']]
 populator.OriginX = -1
-populator.UniformRadiusX = 1
+populator.UniformLengthX = 1
 
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:popB')
 populator.VariableReferenceList = [['_', 'Variable:/:B']]
 populator.OriginX = 1
-populator.UniformRadiusX = 1
+populator.UniformLengthX = 1
 
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseA')

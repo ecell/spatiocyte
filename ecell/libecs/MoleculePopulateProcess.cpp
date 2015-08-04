@@ -147,7 +147,7 @@ void MoleculePopulateProcess::populateUniformOnMultiscale(Species* aSpecies)
     aSpecies->size() << ", populate size:" << aSize << std::endl;
   if(!aSpecies->getIsPopulated())
     {
-      if(UniformRadiusX == 1 && UniformRadiusY == 1 && UniformRadiusZ == 1 &&
+      if(UniformLengthX == 1 && UniformLengthY == 1 && UniformLengthZ == 1 &&
          !OriginX && !OriginY && !OriginZ)
         {
           if(aVacantSize < aSize)
@@ -195,7 +195,7 @@ void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
     aSpecies->size() << ", populate size:" << aSize << std::endl;
   if(!aSpecies->getIsPopulated())
     {
-      if(UniformRadiusX == 1 && UniformRadiusY == 1 && UniformRadiusZ == 1 &&
+      if(UniformLengthX == 1 && UniformLengthY == 1 && UniformLengthZ == 1 &&
          !OriginX && !OriginY && !OriginZ)
         {
           if(aVacantSize < aSize)
@@ -239,7 +239,7 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
   Species* aVacantSpecies(aSpecies->getVacantSpecies());
   if(!aSpecies->getIsPopulated())
     {
-      if(UniformRadiusX == 1 && UniformRadiusY == 1 && UniformRadiusZ == 1 &&
+      if(UniformLengthX == 1 && UniformLengthY == 1 && UniformLengthZ == 1 &&
          !OriginX && !OriginY && !OriginZ)
         {
           unsigned int aSize(aSpecies->getPopulateCoordSize());
@@ -270,7 +270,7 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
   Species* aVacantSpecies(aSpecies->getVacantSpecies());
   if(!aSpecies->getIsPopulated())
     {
-      if(UniformRadiusX == 1 && UniformRadiusY == 1 && UniformRadiusZ == 1 &&
+      if(UniformLengthX == 1 && UniformLengthY == 1 && UniformLengthZ == 1 &&
          !OriginX && !OriginY && !OriginZ)
         {
           unsigned int aSize(aSpecies->getPopulateCoordSize());
@@ -317,12 +317,12 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
       deltaZ = theSpatiocyteStepper->getNormalizedVoxelRadius()*6/
         aComp->lengthZ;
     }
-  double maxX(std::min(1.0, OriginX+UniformRadiusX));
-  double minX(std::max(-1.0, OriginX-UniformRadiusX));
-  double maxY(std::min(1.0, OriginY+UniformRadiusY));
-  double minY(std::max(-1.0, OriginY-UniformRadiusY));
-  double maxZ(std::min(1.0, OriginZ+UniformRadiusZ));
-  double minZ(std::max(-1.0, OriginZ-UniformRadiusZ)); 
+  double maxX(std::min(1.0, OriginX+UniformLengthX));
+  double minX(std::max(-1.0, OriginX-UniformLengthX));
+  double maxY(std::min(1.0, OriginY+UniformLengthY));
+  double minY(std::max(-1.0, OriginY-UniformLengthY));
+  double maxZ(std::min(1.0, OriginZ+UniformLengthZ));
+  double minZ(std::max(-1.0, OriginZ-UniformLengthZ)); 
   maxX = aComp->centerPoint.x + maxX*aComp->lengthX/2*(1+deltaX);
   minX = aComp->centerPoint.x + minX*aComp->lengthX/2*(1+deltaX);
   maxY = aComp->centerPoint.y + maxY*aComp->lengthY/2*(1+deltaY);

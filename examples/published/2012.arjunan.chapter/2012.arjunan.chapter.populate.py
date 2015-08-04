@@ -12,11 +12,11 @@ logger.VariableReferenceList = [['_', 'Variable:/Surface:A'], ['_', 'Variable:/S
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:populateLeft')
 populator.VariableReferenceList = [['_', 'Variable:/Surface:A']]
 populator.OriginX = -1
-populator.UniformRadiusX = 0.5
+populator.UniformLengthX = 0.5
 populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:populateRight')
 populator.VariableReferenceList = [['_', 'Variable:/Surface:B']]
 populator.OriginX = 1
-populator.UniformRadiusX = 0.5
+populator.UniformLengthX = 0.5
 # Create the surface compartment:
 theSimulator.createEntity('System', 'System:/:Surface').StepperID = 'SS'
 theSimulator.createEntity('Variable', 'Variable:/Surface:DIMENSION').Value = 2

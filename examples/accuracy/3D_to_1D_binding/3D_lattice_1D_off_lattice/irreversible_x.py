@@ -5,12 +5,12 @@ sim.SearchVacant = 0
 
 theSimulator.rootSystem.StepperID = 'SS'
 theSimulator.createEntity('Variable', 'Variable:/:GEOMETRY').Value = 0
-theSimulator.createEntity('Variable', 'Variable:/:LENGTHX').Value = 1e-6
-theSimulator.createEntity('Variable', 'Variable:/:LENGTHY').Value = 2e-6
+theSimulator.createEntity('Variable', 'Variable:/:LENGTHX').Value = 3e-6
+theSimulator.createEntity('Variable', 'Variable:/:LENGTHY').Value = 3e-6
 theSimulator.createEntity('Variable', 'Variable:/:LENGTHZ').Value = 3e-6
 theSimulator.createEntity('Variable', 'Variable:/:VACANT')
 theSimulator.createEntity('Variable', 'Variable:/:Vacant').Value = 0
-theSimulator.createEntity('Variable', 'Variable:/:A').Value = 500
+theSimulator.createEntity('Variable', 'Variable:/:A').Value = 1000
 s = theSimulator.createEntity('Variable', 'Variable:/:sA')
 s.Value = 0
 s.Name = "HD"
@@ -21,8 +21,11 @@ logger.VariableReferenceList = [['_', 'Variable:/:A']]
 logger.VariableReferenceList = [['_', 'Variable:/:Interface']]
 logger.LogInterval = 0.01
 
-populator = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
-populator.VariableReferenceList = [['_', 'Variable:/:A']]
+pop = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
+pop.VariableReferenceList = [['_', 'Variable:/:A']]
+pop.UniformLengthY = 0.15
+pop.UniformLengthZ = 0.15
+
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseA')
 diffuser.VariableReferenceList = [['_', 'Variable:/:A']]
@@ -40,7 +43,6 @@ fil.VariableReferenceList = [['_', 'Variable:/:sA']]
 fil.LineX = 1
 fil.LineY = 0
 fil.LineZ = 0
-fil.Verbose = 1
 
 logger = theSimulator.createEntity('IteratingLogProcess', 'Process:/:iter')
 logger.VariableReferenceList = [['_', 'Variable:/:sA']]
@@ -49,4 +51,4 @@ logger.LogEnd = 2
 logger.Iterations = 1
 logger.FileName = "IterateLogX.csv"
 
-run(3)
+run(0.3)
