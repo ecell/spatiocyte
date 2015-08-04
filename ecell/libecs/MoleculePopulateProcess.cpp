@@ -148,7 +148,8 @@ void MoleculePopulateProcess::populateUniformOnMultiscale(Species* aSpecies)
   if(!aSpecies->getIsPopulated())
     {
       if(UniformLengthX == 1 && UniformLengthY == 1 && UniformLengthZ == 1 &&
-         !UniformRadiusYZ && !OriginX && !OriginY && !OriginZ)
+         !UniformRadiusXY && !UniformRadiusXZ && !UniformRadiusYZ &&
+         !OriginX && !OriginY && !OriginZ)
         {
           if(aVacantSize < aSize)
             {
@@ -196,7 +197,8 @@ void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
   if(!aSpecies->getIsPopulated())
     {
       if(UniformLengthX == 1 && UniformLengthY == 1 && UniformLengthZ == 1 &&
-         !UniformRadiusYZ && !OriginX && !OriginY && !OriginZ)
+         !UniformRadiusXY && !UniformRadiusXZ && !UniformRadiusYZ &&
+         !OriginX && !OriginY && !OriginZ)
         {
           if(aVacantSize < aSize)
             {
@@ -240,7 +242,8 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
   if(!aSpecies->getIsPopulated())
     {
       if(UniformLengthX == 1 && UniformLengthY == 1 && UniformLengthZ == 1 &&
-         !UniformRadiusYZ && !OriginX && !OriginY && !OriginZ)
+         !UniformRadiusXY && !UniformRadiusXZ && !UniformRadiusYZ &&
+         !OriginX && !OriginY && !OriginZ)
         {
           unsigned int aSize(aSpecies->getPopulateCoordSize());
           for(unsigned int j(0); j != aSize; ++j)
@@ -271,7 +274,8 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
   if(!aSpecies->getIsPopulated())
     {
       if(UniformLengthX == 1 && UniformLengthY == 1 && UniformLengthZ == 1 &&
-         !UniformRadiusYZ && !OriginX && !OriginY && !OriginZ)
+         !UniformRadiusXY && !UniformRadiusXZ && !UniformRadiusYZ &&
+         !OriginX && !OriginY && !OriginZ)
         {
           unsigned int aSize(aSpecies->getPopulateCoordSize());
           int availableVoxelSize(aVacantSpecies->size());
@@ -319,7 +323,7 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
     }
   std::vector<unsigned int> aCoords;
   unsigned int aVacantSize(aVacantSpecies->getPopulatableSize());
-  if(!UniformRadiusYZ)
+  if(!UniformRadiusXY && !UniformRadiusXZ && !UniformRadiusYZ)
     {
       double maxX(std::min(1.0, OriginX+UniformLengthX));
       double minX(std::max(-1.0, OriginX-UniformLengthX));
@@ -348,12 +352,23 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
     }
   else
     {
-      const double nRadiusYZ(UniformRadiusYZ/
-                      (theSpatiocyteStepper->getVoxelRadius()*2));
+      double nRadius(0);
+      if(UniformRadiusXY)
+        {
+          nRadius = UniformRadiusXY/(theSpatiocyteStepper->getVoxelRadius()*2);
+        }
+      else if(UniformRadiusXZ)
+        {
+          nRadius = UniformRadiusXZ/(theSpatiocyteStepper->getVoxelRadius()*2);
+        }
+      else
+        {
+          nRadius = UniformRadiusYZ/(theSpatiocyteStepper->getVoxelRadius()*2);
+        }
       double nStart(0);
       if(UniformRadiusWidth > 0)
         {
-          nStart = nRadiusYZ-UniformRadiusWidth/
+          nStart = nRadius-UniformRadiusWidth/
             (theSpatiocyteStepper->getVoxelRadius()*2);
           nStart = std::max(0.0, nStart);
         }
@@ -362,10 +377,21 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
         {
           const unsigned int aCoord(aVacantSpecies->getPopulatableCoord(i));
           Point aPoint(aVacantSpecies->coord2point(aCoord));
-          aPoint.x = center.x;
+          if(UniformRadiusXY)
+            {
+              aPoint.z = center.z;
+            }
+          else if(UniformRadiusXZ)
+            {
+              aPoint.y = center.y;
+            }
+          else
+            {
+              aPoint.x = center.x;
+            }
           const double aDist(distance(aPoint, center));
           if(getID((*theLattice)[aCoord]) == aSpecies->getVacantID() &&
-             aDist >= nStart && aDist <= nRadiusYZ) 
+             aDist >= nStart && aDist <= nRadius) 
             {
               aCoords.push_back(aCoord);
             }

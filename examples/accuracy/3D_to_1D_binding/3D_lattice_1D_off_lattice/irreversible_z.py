@@ -10,7 +10,7 @@ theSimulator.createEntity('Variable', 'Variable:/:LENGTHY').Value = 3e-6
 theSimulator.createEntity('Variable', 'Variable:/:LENGTHZ').Value = 3e-6
 theSimulator.createEntity('Variable', 'Variable:/:VACANT')
 theSimulator.createEntity('Variable', 'Variable:/:Vacant').Value = 0
-theSimulator.createEntity('Variable', 'Variable:/:A').Value = 2944
+theSimulator.createEntity('Variable', 'Variable:/:A').Value = 4050
 #theSimulator.createEntity('Variable', 'Variable:/:tmp').Value = 0
 s = theSimulator.createEntity('Variable', 'Variable:/:sA')
 s.Value = 0
@@ -26,7 +26,7 @@ logger.LogInterval = 0.01
 pop = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
 pop.VariableReferenceList = [['_', 'Variable:/:A']]
 pop.UniformRadiusWidth = 5e-9
-pop.UniformRadiusYZ = 0.2e-6
+pop.UniformRadiusXY = 0.2e-6
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseA')
 diffuser.VariableReferenceList = [['_', 'Variable:/:A']]
@@ -41,9 +41,9 @@ binder.p = 1
 fil = theSimulator.createEntity('FilamentProcess', 'Process:/:filam')
 fil.VariableReferenceList = [['_', 'Variable:/:Vacant', '-1']]
 fil.VariableReferenceList = [['_', 'Variable:/:sA']]
-fil.LineX = 1
+fil.LineX = 0
 fil.LineY = 0
-fil.LineZ = 0
+fil.LineZ = 1
 fil.Autofit = 0
 
 logger = theSimulator.createEntity('IteratingLogProcess', 'Process:/:iter')
@@ -51,6 +51,6 @@ logger.VariableReferenceList = [['_', 'Variable:/:sA']]
 logger.LogInterval = 1e-3
 logger.LogEnd = 0.25
 logger.Iterations = 1
-logger.FileName = "IterateLogX.csv"
+logger.FileName = "IterateLogZ.csv"
 
 run(0.3)
