@@ -148,7 +148,7 @@ void MoleculePopulateProcess::populateUniformOnMultiscale(Species* aSpecies)
   if(!aSpecies->getIsPopulated())
     {
       if(UniformLengthX == 1 && UniformLengthY == 1 && UniformLengthZ == 1 &&
-         !OriginX && !OriginY && !OriginZ)
+         !UniformRadiusYZ && !OriginX && !OriginY && !OriginZ)
         {
           if(aVacantSize < aSize)
             {
@@ -196,7 +196,7 @@ void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
   if(!aSpecies->getIsPopulated())
     {
       if(UniformLengthX == 1 && UniformLengthY == 1 && UniformLengthZ == 1 &&
-         !OriginX && !OriginY && !OriginZ)
+         !UniformRadiusYZ && !OriginX && !OriginY && !OriginZ)
         {
           if(aVacantSize < aSize)
             {
@@ -240,7 +240,7 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
   if(!aSpecies->getIsPopulated())
     {
       if(UniformLengthX == 1 && UniformLengthY == 1 && UniformLengthZ == 1 &&
-         !OriginX && !OriginY && !OriginZ)
+         !UniformRadiusYZ && !OriginX && !OriginY && !OriginZ)
         {
           unsigned int aSize(aSpecies->getPopulateCoordSize());
           for(unsigned int j(0); j != aSize; ++j)
@@ -271,7 +271,7 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
   if(!aSpecies->getIsPopulated())
     {
       if(UniformLengthX == 1 && UniformLengthY == 1 && UniformLengthZ == 1 &&
-         !OriginX && !OriginY && !OriginZ)
+         !UniformRadiusYZ && !OriginX && !OriginY && !OriginZ)
         {
           unsigned int aSize(aSpecies->getPopulateCoordSize());
           int availableVoxelSize(aVacantSpecies->size());
@@ -317,30 +317,58 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
       deltaZ = theSpatiocyteStepper->getNormalizedVoxelRadius()*6/
         aComp->lengthZ;
     }
-  double maxX(std::min(1.0, OriginX+UniformLengthX));
-  double minX(std::max(-1.0, OriginX-UniformLengthX));
-  double maxY(std::min(1.0, OriginY+UniformLengthY));
-  double minY(std::max(-1.0, OriginY-UniformLengthY));
-  double maxZ(std::min(1.0, OriginZ+UniformLengthZ));
-  double minZ(std::max(-1.0, OriginZ-UniformLengthZ)); 
-  maxX = aComp->centerPoint.x + maxX*aComp->lengthX/2*(1+deltaX);
-  minX = aComp->centerPoint.x + minX*aComp->lengthX/2*(1+deltaX);
-  maxY = aComp->centerPoint.y + maxY*aComp->lengthY/2*(1+deltaY);
-  minY = aComp->centerPoint.y + minY*aComp->lengthY/2*(1+deltaY);
-  maxZ = aComp->centerPoint.z + maxZ*aComp->lengthZ/2*(1+deltaZ);
-  minZ = aComp->centerPoint.z + minZ*aComp->lengthZ/2*(1+deltaZ);
   std::vector<unsigned int> aCoords;
   unsigned int aVacantSize(aVacantSpecies->getPopulatableSize());
-  for(unsigned int i(0); i != aVacantSize; ++i)
+  if(!UniformRadiusYZ)
     {
-      unsigned int aCoord(aVacantSpecies->getPopulatableCoord(i));
-      Point aPoint(aVacantSpecies->coord2point(aCoord));
-      if(getID((*theLattice)[aCoord]) == aSpecies->getVacantID() &&
-         aPoint.x < maxX && aPoint.x > minX &&
-         aPoint.y < maxY && aPoint.y > minY &&
-         aPoint.z < maxZ && aPoint.z > minZ)
+      double maxX(std::min(1.0, OriginX+UniformLengthX));
+      double minX(std::max(-1.0, OriginX-UniformLengthX));
+      double maxY(std::min(1.0, OriginY+UniformLengthY));
+      double minY(std::max(-1.0, OriginY-UniformLengthY));
+      double maxZ(std::min(1.0, OriginZ+UniformLengthZ));
+      double minZ(std::max(-1.0, OriginZ-UniformLengthZ)); 
+      maxX = aComp->centerPoint.x + maxX*aComp->lengthX/2*(1+deltaX);
+      minX = aComp->centerPoint.x + minX*aComp->lengthX/2*(1+deltaX);
+      maxY = aComp->centerPoint.y + maxY*aComp->lengthY/2*(1+deltaY);
+      minY = aComp->centerPoint.y + minY*aComp->lengthY/2*(1+deltaY);
+      maxZ = aComp->centerPoint.z + maxZ*aComp->lengthZ/2*(1+deltaZ);
+      minZ = aComp->centerPoint.z + minZ*aComp->lengthZ/2*(1+deltaZ);
+      for(unsigned int i(0); i != aVacantSize; ++i)
         {
-          aCoords.push_back(aCoord);
+          unsigned int aCoord(aVacantSpecies->getPopulatableCoord(i));
+          Point aPoint(aVacantSpecies->coord2point(aCoord));
+          if(getID((*theLattice)[aCoord]) == aSpecies->getVacantID() &&
+             aPoint.x < maxX && aPoint.x > minX &&
+             aPoint.y < maxY && aPoint.y > minY &&
+             aPoint.z < maxZ && aPoint.z > minZ)
+            {
+              aCoords.push_back(aCoord);
+            }
+        }
+    }
+  else
+    {
+      const double nRadiusYZ(UniformRadiusYZ/
+                      (theSpatiocyteStepper->getVoxelRadius()*2));
+      double nStart(0);
+      if(UniformRadiusWidth > 0)
+        {
+          nStart = nRadiusYZ-UniformRadiusWidth/
+            (theSpatiocyteStepper->getVoxelRadius()*2);
+          nStart = std::max(0.0, nStart);
+        }
+      const Point center(aComp->centerPoint);
+      for(unsigned int i(0); i != aVacantSize; ++i)
+        {
+          const unsigned int aCoord(aVacantSpecies->getPopulatableCoord(i));
+          Point aPoint(aVacantSpecies->coord2point(aCoord));
+          aPoint.x = center.x;
+          const double aDist(distance(aPoint, center));
+          if(getID((*theLattice)[aCoord]) == aSpecies->getVacantID() &&
+             aDist >= nStart && aDist <= nRadiusYZ) 
+            {
+              aCoords.push_back(aCoord);
+            }
         }
     }
   unsigned int aSize(aSpecies->getPopulateCoordSize());

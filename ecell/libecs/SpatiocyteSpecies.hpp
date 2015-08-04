@@ -49,6 +49,13 @@ static String int2str(int anInt)
   return aStream.str();
 }
 
+static String double2str(double aVal)
+{
+  std::stringstream aStream;
+  aStream << aVal;
+  return aStream.str();
+}
+
 /*
  * isVacant: vacant species definition: a species on which other species can
  * diffuse on or occupy. One major optimization in speed for vacant species is

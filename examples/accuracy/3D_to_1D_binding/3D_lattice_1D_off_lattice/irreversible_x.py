@@ -10,7 +10,8 @@ theSimulator.createEntity('Variable', 'Variable:/:LENGTHY').Value = 3e-6
 theSimulator.createEntity('Variable', 'Variable:/:LENGTHZ').Value = 3e-6
 theSimulator.createEntity('Variable', 'Variable:/:VACANT')
 theSimulator.createEntity('Variable', 'Variable:/:Vacant').Value = 0
-theSimulator.createEntity('Variable', 'Variable:/:A').Value = 1000
+theSimulator.createEntity('Variable', 'Variable:/:A').Value = 1
+theSimulator.createEntity('Variable', 'Variable:/:tmp').Value = 0
 s = theSimulator.createEntity('Variable', 'Variable:/:sA')
 s.Value = 0
 s.Name = "HD"
@@ -18,14 +19,14 @@ s.Name = "HD"
 logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:logger')
 logger.VariableReferenceList = [['_', 'Variable:/:Vacant']]
 logger.VariableReferenceList = [['_', 'Variable:/:A']]
+logger.VariableReferenceList = [['_', 'Variable:/:tmp']]
 logger.VariableReferenceList = [['_', 'Variable:/:Interface']]
 logger.LogInterval = 0.01
 
 pop = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
 pop.VariableReferenceList = [['_', 'Variable:/:A']]
-pop.UniformLengthY = 0.15
-pop.UniformLengthZ = 0.15
-
+pop.UniformRadiusWidth = 10e-9
+pop.UniformRadiusYZ = 0.2e-6
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseA')
 diffuser.VariableReferenceList = [['_', 'Variable:/:A']]
@@ -43,6 +44,8 @@ fil.VariableReferenceList = [['_', 'Variable:/:sA']]
 fil.LineX = 1
 fil.LineY = 0
 fil.LineZ = 0
+fil.Autofit = 0
+fil.Length = 1.5e-6
 
 logger = theSimulator.createEntity('IteratingLogProcess', 'Process:/:iter')
 logger.VariableReferenceList = [['_', 'Variable:/:sA']]

@@ -1146,7 +1146,7 @@ Voxel* CompartmentProcess::getNearestVoxelToPoint(Point& subPoint,
 //shortest distance
 void CompartmentProcess::addFirstInterface()
 {
-  const double delta(std::max(nDiffuseRadius, nVoxelRadius));
+  const double delta(1.1*std::max(nDiffuseRadius, nVoxelRadius));
   double nearestDist(libecs::INF);
   Voxel* nearestVoxel(NULL);
   unsigned subIndex(0);
@@ -1169,7 +1169,7 @@ void CompartmentProcess::addFirstInterface()
         }
       ++subIndex;
     }
-  if(nearestVoxel != NULL && nearestDist <= 1.01*delta)
+  if(nearestVoxel != NULL && nearestDist <= delta)
     {
       if(Verbose)
         {
@@ -1181,8 +1181,10 @@ void CompartmentProcess::addFirstInterface()
     }
   else
     {
-      std::cout << "Couldn't find the first interface voxel, dist:" <<
-       nearestDist << std::endl;
+      THROW_EXCEPTION(ValueError, getPropertyInterface().getClassName() +
+            " [" + getFullID().asString() + "]: " +  
+            "Could not find the first interface voxel, dist: " + 
+            double2str(nearestDist) + " delta:" + double2str(delta));
     }
 }
 

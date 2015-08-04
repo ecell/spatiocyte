@@ -52,6 +52,8 @@ public:
       PROPERTYSLOT_SET_GET(Real, UniformLengthX);
       PROPERTYSLOT_SET_GET(Real, UniformLengthY);
       PROPERTYSLOT_SET_GET(Real, UniformLengthZ);
+      PROPERTYSLOT_SET_GET(Real, UniformRadiusWidth);
+      PROPERTYSLOT_SET_GET(Real, UniformRadiusYZ);
     }
   MoleculePopulateProcess():
     GaussianSigma(0),
@@ -60,6 +62,8 @@ public:
     OriginZ(0),
     ResetTime(libecs::INF),
     StartTime(0),
+    UniformRadiusWidth(-1),
+    UniformRadiusYZ(0),
     UniformLengthX(1),
     UniformLengthY(1),
     UniformLengthZ(1) {}
@@ -73,6 +77,8 @@ public:
   SIMPLE_SET_GET_METHOD(Real, UniformLengthX);
   SIMPLE_SET_GET_METHOD(Real, UniformLengthY);
   SIMPLE_SET_GET_METHOD(Real, UniformLengthZ);
+  SIMPLE_SET_GET_METHOD(Real, UniformRadiusWidth);
+  SIMPLE_SET_GET_METHOD(Real, UniformRadiusYZ);
   virtual void initialize();
   virtual void initializeSecond();
   virtual void initializeFourth();
@@ -104,6 +110,8 @@ protected:
   double UniformLengthX;
   double UniformLengthY;
   double UniformLengthZ;
+  double UniformRadiusWidth;
+  double UniformRadiusYZ;
 };
 
 }

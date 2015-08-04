@@ -190,8 +190,8 @@ void FilamentProcess::initializeCompartment() {
   thePlusSpecies->setIsPopulated();
   /*
   theSpecies[1]->setIsPopulated();
-  theSpecies[3]->setIsPopulated();
   */
+  theSpecies[3]->setIsPopulated();
 }
 
 void FilamentProcess::setTrailSize(unsigned start, unsigned end) {
