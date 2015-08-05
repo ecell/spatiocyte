@@ -42,6 +42,7 @@ Point sub(const Point& L, const Point& R);
 void sub_(Point& L, const Point& R);
 Point add(const Point& L, const Point& R);
 Point addDivide(const Point& L, const Point& R);
+Point subDivide(const Point& L, const Point& R);
 void add_(Point& L, const Point& R);
 Point norm(const Point& P);
 void norm_(Point& P);

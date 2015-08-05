@@ -83,6 +83,7 @@ public:
   //virtual void addLineIntersectInterfaceVoxel(Voxel&, Point&, const bool, const bool);
   void connectTrailSubunits(unsigned, unsigned, unsigned);
   void setTrailSize(unsigned, unsigned);
+  void extendInterfacesOverFilamentSurface(const bool);
 protected:
   unsigned getAdjoiningInterfaceCnt(Voxel&);
   bool getFilamentAdjoin(Voxel*, const bool, const unsigned, const unsigned,

@@ -65,7 +65,7 @@ public:
     DebugLevel(1),
     LatticeType(HCP_LATTICE),
     theMoleculeID(0),
-    theNormalizedVoxelRadius(0.5),
+    nVoxelRadius(0.5),
     VoxelRadius(10e-9),
     cout(std::cout) {}
   virtual ~SpatiocyteStepper() {}
@@ -141,6 +141,7 @@ private:
   void addSurfaceAdjoins(const unsigned, const Comp*);
   void interruptProcesses(const double);
   void setCompsCenterPoint();
+  void setCuboidCompsCenterPoint();
   void setIntersectingCompartmentList();
   void setIntersectingParent();
   void setIntersectingPeers();
@@ -230,7 +231,7 @@ private:
   unsigned theRowSize;
   unsigned theStride;
   unsigned theMoleculeID;
-  double theNormalizedVoxelRadius;
+  double nVoxelRadius;
   double theHCPl;
   double theHCPx;
   double theHCPy;
