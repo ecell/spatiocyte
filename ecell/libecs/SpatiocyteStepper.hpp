@@ -91,7 +91,7 @@ public:
   std::vector<Species*> getSpecies();
   Point coord2point(unsigned);
   bool setSurfaceDiffuseSize(const unsigned, const unsigned, const unsigned,
-                             const unsigned, const bool);
+                             const unsigned, const bool, const unsigned);
   Species* id2species(unsigned short);
   Comp* id2Comp(unsigned short);
   void coord2global(unsigned, unsigned&, unsigned&, unsigned&);

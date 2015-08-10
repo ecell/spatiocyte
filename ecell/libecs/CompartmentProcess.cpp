@@ -1146,7 +1146,7 @@ Voxel* CompartmentProcess::getNearestVoxelToPoint(Point& subPoint,
 //shortest distance
 void CompartmentProcess::addFirstInterface()
 {
-  const double delta(1.1*std::max(nDiffuseRadius, nVoxelRadius));
+  const double delta(1.2*std::max(nDiffuseRadius, nVoxelRadius));
   double nearestDist(libecs::INF);
   Voxel* nearestVoxel(NULL);
   unsigned subIndex(0);
@@ -1542,12 +1542,14 @@ bool CompartmentProcess::isThisCompInterface(const unsigned intIndexGlobal)
 //To get better accuracy of actual volume size:
 void CompartmentProcess::removeInterfaceCompVoxels()
 {
+  /*
   Species* aCompVacant(theInterfaceSpecies->getVacantSpecies());
   for(unsigned i(0); i != aCompVacant->size(); )
     { 
       Voxel* aVoxel(aCompVacant->getMolecule(i));
       if(theSpecies[getID(aVoxel)]->getIsInterface())
         {
+          //need to update
           aCompVacant->removeCompVoxel(i);
         }
       else
@@ -1555,6 +1557,7 @@ void CompartmentProcess::removeInterfaceCompVoxels()
           ++i;
         }
     }
+    */
 }
 
 

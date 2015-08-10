@@ -2865,9 +2865,9 @@ public:
       theCompVoxels->push_back(&theLattice[aCoord]);
       theVariable->setValue(theMoleculeSize);
     }
-  void removeCompVoxel(const unsigned aCoord)
+  //must use anIndex to get the voxel. Using coord and getIndex may not work.
+  void removeCompVoxel(const unsigned anIndex)
     {
-      const unsigned anIndex(getIndex(&theLattice[aCoord]));
       --theMoleculeSize;
       (*theCompVoxels)[anIndex]->idx = theVacantID*theStride;
       (*theCompVoxels)[anIndex] = (*theCompVoxels)[theMoleculeSize];

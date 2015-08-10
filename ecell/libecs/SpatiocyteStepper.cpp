@@ -2554,15 +2554,29 @@ void SpatiocyteStepper::setSurfaceVoxelProperties(Comp* aComp)
         }
       Species* aVacantSpecies(aComp->vacantSpecies);
       const unsigned surfaceID(aVacantSpecies->getID());
+      //std::cout << "before:" << aVacantSpecies->size() << std::endl;
       for(unsigned i(0); i != aVacantSpecies->size(); )
         {
           const unsigned aCoord(aVacantSpecies->getCoord(i));
           if(setSurfaceDiffuseSize(aCoord, surfaceID, intID, extID,
-                                   aSuperComp->system->isRootSystem()))
+                                   aSuperComp->system->isRootSystem(), i))
             {
               ++i;
             }
         }
+      /*
+      std::cout << "after:" << aVacantSpecies->size() << std::endl;
+      for(unsigned i(0); i != aVacantSpecies->size(); )
+        {
+          const unsigned aCoord(aVacantSpecies->getCoord(i));
+          if(setSurfaceDiffuseSize(aCoord, surfaceID, intID, extID,
+                                   aSuperComp->system->isRootSystem(), i))
+            {
+              ++i;
+            }
+        }
+      std::cout << "final:" << aVacantSpecies->size() << std::endl;
+      */
       if(RemoveSurfaceBias)
         {
           for(unsigned i(0); i != aVacantSpecies->size(); ++i)
@@ -2579,7 +2593,8 @@ bool SpatiocyteStepper::setSurfaceDiffuseSize(const unsigned aCoord,
                                               const unsigned surfaceID,
                                               const unsigned intID,
                                               const unsigned extID,
-                                              const bool isRemoveOrphan)
+                                              const bool isRemoveOrphan,
+                                              const unsigned anIndex)
 {
   Voxel& aVoxel(theLattice[aCoord]);
   unsigned* adjoins(aVoxel.adjoiningCoords);
@@ -2620,7 +2635,7 @@ bool SpatiocyteStepper::setSurfaceDiffuseSize(const unsigned aCoord,
   //orphaned surface voxels and update its neighbours.
   if(isRemoveOrphan && (!intCnt || !extCnt))
     {
-      theSpecies[surfaceID]->removeCompVoxel(aCoord);
+      theSpecies[surfaceID]->removeCompVoxel(anIndex);
       if(!intCnt)
         {
           if(extID == theNullID)
@@ -2639,7 +2654,7 @@ bool SpatiocyteStepper::setSurfaceDiffuseSize(const unsigned aCoord,
       for(unsigned i(0); i != f; ++i)
         {
           const unsigned adjCoord(adjoins[i]);
-          setSurfaceDiffuseSize(adjCoord, surfaceID, intID, extID, false);
+          setSurfaceDiffuseSize(adjCoord, surfaceID, intID, extID, false, 0);
         }
       return false;
     }
