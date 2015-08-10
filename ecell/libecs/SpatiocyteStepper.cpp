@@ -1259,7 +1259,7 @@ void SpatiocyteStepper::setLatticeProperties()
   //row, layer and column according to the boundary condition of its surfaces
   //to reflect the correct volume. This is because periodic boundary will
   //consume a layer of the surface voxels:
-  if(aRootComp->geometry == CUBOID)
+  if(aRootComp->geometry == CUBOID || aRootComp->geometry == OPEN_CYLINDER)
     {
       //We need to increase the row, layer and col size by 2 because
       //the entire volume must be surrounded by nullID voxels to avoid
@@ -1426,6 +1426,7 @@ void SpatiocyteStepper::printSimulationParameters()
           cout << "   Ellipsoid ";
           break;
         case CYLINDER:
+        case OPEN_CYLINDER:
           cout << "   Cylinder (radius=" << aComp->lengthY*VoxelRadius
             << "m, length=" << (aComp->lengthX)*VoxelRadius*2 << "m) ";
           break;
@@ -1490,7 +1491,7 @@ void SpatiocyteStepper::readjustSurfaceBoundarySizes()
   //REMOVE_BOTH. To make the actualVolume of the root compartment equivalent
   //to the specVolume we need to increase the size of the row, col and layer
   //according to the additional voxels required to occupy the surface voxels.
-  if(aRootComp->surfaceSub)
+  if(aRootComp->geometry == CUBOID && aRootComp->surfaceSub)
     {
       if(aRootComp->xyPlane == REFLECTIVE)
         {
@@ -1618,7 +1619,7 @@ void SpatiocyteStepper::constructLattice()
             }
         }
     }
-  if(aRootComp->geometry == CUBOID)
+  if(aRootComp->geometry == CUBOID || aRootComp->geometry == OPEN_CYLINDER)
     {
       concatenatePeriodicSurfaces();
     }
@@ -1817,6 +1818,7 @@ void SpatiocyteStepper::setCompProperties(Comp* aComp)
              pow(aComp->lengthZ/2, 1.6075))/ 3, 1/1.6075); 
       break;
     case CYLINDER:
+    case OPEN_CYLINDER:
       if(!aComp->lengthX)
         {
           THROW_EXCEPTION(NotFound, "Property LENGTHX of the Cylinder Comp "
@@ -3368,8 +3370,19 @@ bool SpatiocyteStepper::isInsideCoord(unsigned aCoord,
       aRadius = aComp->lengthY/2+nVoxelRadius;
       //If the distance between the voxel and the center point is less than 
       //or equal to the radius, then the voxel must be inside the Comp:
-      if((aPoint.x >= aWestPoint.x && aPoint.x <= anEastPoint.x &&
+      if((aPoint.x >= aWestPoint.x-delta && aPoint.x <= anEastPoint.x+delta &&
           distance(aPoint, aCenterPoint) <= aRadius+delta))
+        { 
+          return true;
+        }
+      break;
+    case OPEN_CYLINDER: 
+      //The axial point of the cylindrical portion of the rod:
+      aCenterPoint.x = aPoint.x; 
+      aRadius = aComp->lengthY/2+nVoxelRadius;
+      //If the distance between the voxel and the center point is less than 
+      //or equal to the radius, then the voxel must be inside the Comp:
+      if(distance(aPoint, aCenterPoint) <= aRadius+delta)
         { 
           return true;
         }
@@ -3382,7 +3395,7 @@ bool SpatiocyteStepper::isInsideCoord(unsigned aCoord,
       aRadius = aComp->lengthY/2+nVoxelRadius;
       //If the distance between the voxel and the center point is less than 
       //or equal to the radius, then the voxel must be inside the Comp:
-      if((aPoint.x >= aWestPoint.x && aPoint.x <= anEastPoint.x &&
+      if((aPoint.x >= aWestPoint.x-delta && aPoint.x <= anEastPoint.x+delta &&
           distance(aPoint, aCenterPoint) <= aRadius+delta) ||
          (aPoint.x < aWestPoint.x &&
           distance(aPoint, aWestPoint) <= aRadius+delta) ||

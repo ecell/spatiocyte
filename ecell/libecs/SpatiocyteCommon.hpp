@@ -65,6 +65,7 @@ typedef ProcessPriorityQueue::ID ProcessID;
 #define ROD           3
 #define PYRAMID       4
 #define ERYTHROCYTE   5
+#define OPEN_CYLINDER 6
 
 //CUBOID Comp surface boundary conditions:
 #define REFLECTIVE     0 
