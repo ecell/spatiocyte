@@ -26,7 +26,7 @@ tickFontSize = 14
 legendFontSize = 14
 lineFontSize = 14
 
-filenames = ['3D_lattice_1D_off_lattice/IterateLogX.csv', '3D_lattice_1D_off_lattice/greens_function.csv']
+filenames = ['3D_lattice_2D_lattice/IterateLogX.csv', '3D_lattice_2D_lattice/greens_function.csv']
 legendTitles = []
 lines = ['--', '--', '--', '--', '--', '--', '-', '-']
 colors = ['y', 'r', 'b', 'm', 'c', 'g', '#6b420c']
@@ -43,7 +43,7 @@ P.yticks(fontsize=tickFontSize)
 div = 1.0
 for i in range(len(filenames)):
   if(i == 0):
-    div = 1.0
+    div = 228.0
   else:
     div = 1.0
   f = open(filenames[i], 'r')

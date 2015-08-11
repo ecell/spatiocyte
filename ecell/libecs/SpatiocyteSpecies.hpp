@@ -697,7 +697,8 @@ public:
     }
   bool getIsLipid() const
     {
-      return (isCompVacant && theComp->dimension == 2);
+      return (isCompVacant && (theComp->dimension == 2 || 
+                               theComp->dimension == 1));
     }
   bool getIsInContact() const
     {
