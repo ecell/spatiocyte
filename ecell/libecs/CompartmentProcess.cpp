@@ -476,6 +476,8 @@ void CompartmentProcess::setCompartmentDimension()
   nWidth = Width/(VoxelRadius*2);
   nHeight = Height/(VoxelRadius*2);
   allocateGrid();
+  theComp->actualArea = Width*Length;
+  theComp->specArea = Width*Length;
 }
 
 void CompartmentProcess::allocateGrid()
@@ -513,8 +515,6 @@ void CompartmentProcess::allocateGrid()
     }
     */
   //Actual surface area = Width*Length
-  theComp->actualArea = Width*Length;
-  theComp->specArea = Width*Length;
 }
 
 void CompartmentProcess::initializeCompartment()
@@ -1844,8 +1844,13 @@ void CompartmentProcess::printParameters()
   switch (theComp->dimension)
     { 
       case 1:
-          cout << "  Line compartment:" << std::endl;
-          cout << "   Actual length:"<< Length << std::endl;
+          cout << "  Filament compartment:" << std::endl;
+          cout << "   Length:"<< Length << std::endl;
+          cout << "   Width:"<< Width << std::endl;
+          cout << "   Filaments:" << Filaments << std::endl;
+          cout << "   Subunits:" << Subunits << std::endl;
+          cout << "   Actual length:"<< theComp->actualLength << std::endl;
+          cout << "   Specified length:"<< theComp->specLength << std::endl;
           break;
       case 2:
       default:

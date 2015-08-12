@@ -1178,7 +1178,8 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
             }
         }
     }
-  else if(A->getDimension() == 3 && B->getIsLipid())
+  else if(A->getDimension() == 3 && B->getIsCompVacant() && 
+          B->getDimension() == 2)
     {
       double nv(A->getComp()->vacantSpecies->size());
       double ns(B->size());
@@ -1202,7 +1203,8 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
           k = p*3*ns*V*D_A/(8*nv*r_v*r_v*S); //more accurate for full lattice
         }
     }
-  else if(A->getIsLipid() && B->getDimension() == 3)
+  else if(A->getIsCompVacant() && A->getDimension() == 2 &&
+          B->getDimension() == 3)
     {
       double nv(B->getComp()->vacantSpecies->size());
       double ns(A->size());
@@ -1224,6 +1226,52 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
         {
           //k = p*((6+3*sqrt(3)+2*sqrt(6))*D_B)/(24*r_v); //averaged hcp surf
           k = p*3*ns*V*D_B/(8*nv*r_v*r_v*S); //more accurate for full lattice
+        }
+    }
+  else if(A->getDimension() == 3 && B->getIsCompVacant() && 
+          B->getDimension() == 1)
+    {
+      double nv(A->getComp()->vacantSpecies->size());
+      double nl(B->size());
+      std::cout << "1st nl:" << nl << " " << getIDString() << std::endl;
+      if(B->getComp()->interfaceID != theSpecies.size())
+        {
+          nl = theSpecies[B->getComp()->interfaceID]->size();
+        }
+      double L(B->getComp()->specLength);
+      double V(A->getComp()->actualVolume);
+      std::cout << "1: nv:" << nv << " nl:" << nl << " L:" << L << " V:" <<
+        V << std::endl;
+      if(p == -1)
+        {
+          p = 4*k*nv*r_v*r_v*L/(5*nl*V*D_A);
+        }
+      else
+        {
+          k = p*5*nl*V*D_A/(4*nv*r_v*r_v*L);
+        }
+    }
+  else if(A->getIsCompVacant() && A->getDimension() == 1 &&
+          B->getDimension() == 3)
+    {
+      double nv(B->getComp()->vacantSpecies->size());
+      double nl(A->size());
+      std::cout << "2nd nl:" << nl << " " << getIDString() << std::endl;
+      if(A->getComp()->interfaceID != theSpecies.size())
+        {
+          nl = theSpecies[A->getComp()->interfaceID]->size();
+        }
+      double L(A->getComp()->specLength);
+      double V(B->getComp()->actualVolume);
+      std::cout << "1: nv:" << nv << " nl:" << nl << " L:" << L << " V:" << 
+        V << std::endl;
+      if(p == -1)
+        {
+          p = 4*k*nv*r_v*r_v*L/(5*nl*V*D_B);
+        }
+      else
+        {
+          k = p*5*nl*V*D_B/(4*nv*r_v*r_v*L);
         }
     }
   else if(A->getDimension() == 3 && B->getDimension() != 3)

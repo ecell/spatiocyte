@@ -185,8 +185,10 @@ struct Comp
   double rotateZ;
   double specVolume;
   double specArea;
+  double specLength;
   double actualVolume;
   double actualArea;
+  double actualLength;
   System* system;
   Comp* surfaceSub;
   //Even if there are many adjacent diffusive compartents, use only one single

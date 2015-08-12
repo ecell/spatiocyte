@@ -43,7 +43,7 @@ P.yticks(fontsize=tickFontSize)
 div = 1.0
 for i in range(len(filenames)):
   if(i == 0):
-    div = 1.0
+    div = 228.0
   else:
     div = 1.0
   f = open(filenames[i], 'r')

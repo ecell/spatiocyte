@@ -1415,8 +1415,10 @@ void SpatiocyteStepper::printSimulationParameters()
         }
       double aSpecVolume(aComp->specVolume);
       double aSpecArea(aComp->specArea);
+      double aSpecLength(aComp->specLength);
       double anActualVolume(aComp->actualVolume);
       double anActualArea(aComp->actualArea);
+      double anActualLength(aComp->actualLength);
       switch(aComp->geometry)
         {
         case CUBOID:
@@ -1440,7 +1442,11 @@ void SpatiocyteStepper::printSimulationParameters()
       switch (aComp->dimension)
       { 
       case 1:
-          cout << " Line compartment:" << std::endl;
+          cout << " Filament compartment:" << std::endl;
+          cout << "     [" << aSpecLength << " m] Specified filament length " <<
+            std::endl;
+          cout << "     [" << anActualLength << " m] Actual filament area " <<
+            std::endl;
           break;
       case 2:
           cout << " Surface compartment:" << std::endl;

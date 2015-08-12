@@ -138,10 +138,13 @@ void FilamentProcess::initialize() {
 
 void FilamentProcess::initializeFirst() {
   CompartmentProcess::initializeFirst();
+  theVacantSpecies->setDimension(1);
   theMinusSpecies->setIsOffLattice();
   theMinusSpecies->setComp(theComp);
+  theMinusSpecies->setDimension(1);
   thePlusSpecies->setIsOffLattice();
   thePlusSpecies->setComp(theComp);
+  thePlusSpecies->setDimension(1);
   for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
     {
       theVacantCompSpecies[i]->setIsOffLattice();
@@ -214,10 +217,12 @@ void FilamentProcess::setCompartmentDimension() {
   nLength = Length/(VoxelRadius*2);
   Width = Radius*2;
   Height = Radius*2;
-  theDimension = 1;
   nWidth = Width/(VoxelRadius*2);
   nHeight = Height/(VoxelRadius*2);
   allocateGrid();
+  theDimension = 1;
+  theComp->actualLength = Length;
+  theComp->specLength = Length;
 }
 
 void FilamentProcess::setSubunitStart()
