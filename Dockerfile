@@ -4,5 +4,6 @@ RUN mkdir ~/.vnc; touch ~/.vnc/passwd
 RUN echo password | vncpasswd -f > ~/.vnc/passwd; chmod 600 ~/.vnc/passwd
 RUN cd; echo "export LD_LIBRARY_PATH=/usr/local/lib" >> .bashrc; echo "ecell3-session-monitor" >> .bashrc
 
+USER root
 CMD vncserver :1 -geometry 1360x768 -depth 24
 EXPOSE 5901
