@@ -3002,8 +3002,10 @@ bool SpatiocyteStepper::isRootSurfaceVoxel(Voxel& aVoxel, unsigned aCoord,
 {
   for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
     {
-      if(theLattice[aVoxel.adjoiningCoords[i]].idx == theNullID*theStride ||
-         aVoxel.adjoiningCoords[i] == aCoord)
+      const unsigned adjoinCoord(aVoxel.adjoiningCoords[i]);
+      Voxel& adjoin(theLattice[adjoinCoord]);
+      if((adjoin.idx == theNullID*theStride || adjoinCoord == aCoord) &&
+         !isInsideCoord(adjoinCoord, aComp, 0))
         {
           return true;
         }
