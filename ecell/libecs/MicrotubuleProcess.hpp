@@ -55,8 +55,6 @@ public:
     //because each subunit may have different diffuseSize
     RegularLattice = 0;
     Filaments = 13;
-    DiffuseRadius = 8e-9/2;
-    SubunitRadius = DiffuseRadius;
     //Only allow kinesins to bind from and dissociate to the outside of the MT
     //surface, not from the cylindrical tube inside MT
     BindingDirection = 0; 

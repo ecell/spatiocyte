@@ -38,6 +38,11 @@ LIBECS_DM_INIT_STATIC(MicrotubuleProcess, Process);
 void MicrotubuleProcess::initialize() {
   FilamentProcess::initialize();
   nMonomerPitch = MonomerPitch/(VoxelRadius*2);
+  if(Filaments <= 0)
+    {
+      double rad(asin(SubunitRadius/Radius));
+      Filaments = 2*M_PI/(2*rad);
+    }
 }
 
 void MicrotubuleProcess::initializeVectors() {
