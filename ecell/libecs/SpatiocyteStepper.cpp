@@ -1435,7 +1435,7 @@ void SpatiocyteStepper::printSimulationParameters()
         case ROD:
           cout << "   Rod (radius=" << aComp->lengthY*VoxelRadius << 
             "m, cylinder length=" <<
-            (aComp->lengthX-aComp->lengthY*2)*VoxelRadius*2 << "m) ";
+            (aComp->lengthX-aComp->lengthY)*VoxelRadius*2 << "m) ";
           break;
         }
       cout << aComp->system->getFullID().asString();
