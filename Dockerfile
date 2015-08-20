@@ -3,4 +3,4 @@ RUN apt-get update; apt-get install -y xfce4 tightvncserver git autoconf automak
 RUN mkdir ~/.vnc; touch ~/.vnc/passwd; echo password | vncpasswd -f > ~/.vnc/passwd; chmod 600 ~/.vnc/passwd
 RUN cd; echo "export LD_LIBRARY_PATH=/usr/local/lib" >> .bashrc
 EXPOSE 5901
-CMD USER=root vncserver :1 -geometry 1360x768 -depth 24
+#CMD USER=root vncserver :1 -geometry 1360x768 -depth 24
