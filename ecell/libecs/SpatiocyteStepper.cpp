@@ -108,31 +108,34 @@ void SpatiocyteStepper::initialize()
   cout << "10. setting up compartment voxels properties..." << std::endl;
   setCompVoxelProperties();
   resizeProcessLattice();
-  cout << "11. initializing processes the third time..." << std::endl;
+  cout << "11. updating species..." << std::endl;
   updateSpecies();
+  cout << "12. initializing compartments..." << std::endl;
   initializeCompartments();
+  cout << "13. storing simulation parameters..." << std::endl;
   storeSimulationParameters();
+  cout << "14. initializing processes the third time..." << std::endl;
   initializeThird();
-  cout << "12. printing simulation parameters..." << std::endl;
+  cout << "15. printing simulation parameters..." << std::endl;
   printSimulationParameters();
-  cout << "13. initializing before populate..." << std::endl;
+  cout << "16. initializing before populate..." << std::endl;
   initializeBeforePopulate();
-  cout << "14. populating compartments with molecules..." << std::endl;
+  cout << "17. populating compartments with molecules..." << std::endl;
   populateComps();
-  cout << "15. initializing processes the fourth time..." << std::endl;
+  cout << "18. initializing processes the fourth time..." << std::endl;
   initializeFourth();
-  cout << "16. initializing the priority queue..." << std::endl;
+  cout << "19. initializing the priority queue..." << std::endl;
   initPriorityQueue();
-  cout << "17. initializing processes the fifth time..." << std::endl;
+  cout << "20. initializing processes the fifth time..." << std::endl;
   initializeFifth();
-  cout << "18. initializing processes the last time..." << std::endl;
+  cout << "21. initializing processes the last time..." << std::endl;
   initializeLastOnce();
-  cout << "19. finalizing species..." << std::endl;
+  cout << "22. finalizing species..." << std::endl;
   finalizeSpecies();
-  cout << "20. printing final process parameters..." << std::endl <<
+  cout << "23. printing final process parameters..." << std::endl <<
     std::endl;
   printProcessParameters();
-  cout << "21. simulation is started..." << std::endl;
+  cout << "24. simulation is started..." << std::endl;
 }
 
 

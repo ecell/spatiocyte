@@ -612,6 +612,7 @@ void CompartmentProcess::setSpeciesIntersectVacants()
                                                    surfaceNormal, widthVector,
                                                    lengthVector);
     }
+  /*might need to uncomment this for multi
   for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
     {
       theVacantCompSpecies[i]->setProductPairOffsets(theAdjoinOffsets,
@@ -623,6 +624,7 @@ void CompartmentProcess::setSpeciesIntersectVacants()
                                                      surfaceNormal, widthVector,
                                                      lengthVector);
     }
+    */
 }
 void CompartmentProcess::setSpeciesIntersectLipids()
 {
@@ -1851,6 +1853,8 @@ void CompartmentProcess::printParameters()
           cout << "   Subunits:" << Subunits << std::endl;
           cout << "   Actual length:"<< theComp->actualLength << std::endl;
           cout << "   Specified length:"<< theComp->specLength << std::endl;
+          cout << "   SubunitRadius:" << SubunitRadius << std::endl;
+          cout << "   DiffuseRadius:" << DiffuseRadius << std::endl;
           break;
       case 2:
       default:
@@ -1861,6 +1865,8 @@ void CompartmentProcess::printParameters()
           cout << "   Subunits:" << Subunits << std::endl;
           cout << "   Actual area:"<< theComp->actualArea << std::endl;
           cout << "   Specified area:"<< theComp->specArea << std::endl;
+          cout << "   SubunitRadius:" << SubunitRadius << std::endl;
+          cout << "   DiffuseRadius:" << DiffuseRadius << std::endl;
           break;
     }
   cout << "   Comp interface species size:" << intSize <<
