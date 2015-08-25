@@ -42,7 +42,7 @@ logger = theSimulator.createEntity('IteratingLogProcess', 'Process:/:iter')
 logger.VariableReferenceList = [['_', 'Variable:/Surface:A']]
 logger.LogInterval = 1
 logger.LogEnd = 200
-logger.Iterations = 1000
+logger.Iterations = 250
 logger.FileName = "IterateLogXZ.csv"
 
 run(201)
