@@ -163,4 +163,34 @@ void ReactionProcess::calculateOrder()
     }
 } 
 
+
+void ReactionProcess::logEvent()
+{
+  if(LogEvent && theSpatiocyteStepper->getCurrentTime() >= LogStart)
+    {
+      if(!theEventCnt)
+        {
+          if(FileName == "LogEvent.csv")
+            {
+              FileName = String(getFullID().getID()) + String(".csv");
+              std::cout << FileName << std::endl;
+            }
+          theLogFile.open(FileName.c_str(), std::ios::trunc);
+        }
+      unsigned number(0);
+      if(variableA)
+        {
+          number = variableA->getValue();
+        }
+      else if(A)
+        {
+          number = A->getVariable()->getValue();
+        }
+      theLogFile << theSpatiocyteStepper->getCurrentTime()-LogStart<< "," <<
+        ++theEventCnt << "," << 
+        theEventCnt/(theSpatiocyteStepper->getCurrentTime()-LogStart)/number
+        << std::endl;
+    }
+}
+
 }

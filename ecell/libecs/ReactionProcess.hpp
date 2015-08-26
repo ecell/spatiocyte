@@ -32,6 +32,7 @@
 #ifndef __ReactionProcess_hpp
 #define __ReactionProcess_hpp
 
+#include <fstream>
 #include <libecs/SpatiocyteProcess.hpp>
 
 namespace libecs
@@ -45,8 +46,11 @@ public:
       INHERIT_PROPERTIES(SpatiocyteProcess);
       PROPERTYSLOT_SET_GET(Real, k);
       PROPERTYSLOT_SET_GET(Real, p);
+      PROPERTYSLOT_SET_GET(Real, LogStart);
+      PROPERTYSLOT_SET_GET(Integer, LogEvent);
       PROPERTYSLOT_SET_GET(Integer, SearchVacant);
       PROPERTYSLOT_GET_NO_LOAD_SAVE(Integer, Order);
+      PROPERTYSLOT_SET_GET(String, FileName);
     }
   ReactionProcess():
     coefficientA(0),
@@ -57,8 +61,11 @@ public:
     coefficientF(0),
     coefficientG(0),
     coefficientH(0),
+    LogStart(0),
+    LogEvent(0),
     SearchVacant(-1),
     theOrder(0),
+    theEventCnt(0),
     k(-1),
     p(-1),
     A(NULL),
@@ -86,11 +93,15 @@ public:
     moleculeG(NULL),
     moleculeH(NULL),
     moleculeP(NULL),
-    moleculeS(NULL) {}
+    moleculeS(NULL),
+    FileName("LogEvent.csv") {}
   virtual ~ReactionProcess() {}
   SIMPLE_SET_GET_METHOD(Real, k);
   SIMPLE_SET_GET_METHOD(Real, p);
+  SIMPLE_SET_GET_METHOD(Real, LogStart);
+  SIMPLE_SET_GET_METHOD(Integer, LogEvent);
   SIMPLE_SET_GET_METHOD(Integer, SearchVacant);
+  SIMPLE_SET_GET_METHOD(String, FileName);
   virtual void fire()
     {
       requeue(); //theTop in thePriorityQueue is still this process since
@@ -112,6 +123,7 @@ public:
     }
   virtual void interruptProcessesPost()
     {
+      logEvent();
       for(unsigned i(0); i != theInterruptedProcessesPost.size(); ++i)
         {
           theInterruptedProcessesPost[i]->interruptedPost(this);
@@ -121,6 +133,7 @@ public:
     {
       return theOrder;
     }
+  void logEvent();
   virtual void initialize()
     {
       if(isInitialized)
@@ -261,8 +274,11 @@ protected:
   int coefficientH;
   int SearchVacant;
   int theOrder;
+  unsigned theEventCnt;
+  unsigned LogEvent;
   double k;
   double p;
+  double LogStart;
   //Species are for non HD species:
   Species* A;
   Species* B;
@@ -291,6 +307,8 @@ protected:
   Voxel* moleculeH;
   Voxel* moleculeP;
   Voxel* moleculeS;
+  String FileName;
+  std::ofstream theLogFile;
   std::vector<SpatiocyteProcess*> theInterruptedProcesses;
   std::vector<SpatiocyteProcess*> theInterruptedProcessesPre;
   std::vector<SpatiocyteProcess*> theInterruptedProcessesPost;

@@ -591,8 +591,8 @@ void GLScene::on_realize()
       return;
     }
   //background color3D:
-  //glClearColor (0, 0, 0, 0);
-  glClearColor (1, 1, 1, 0);
+  glClearColor (0, 0, 0, 0);
+  //glClearColor (1, 1, 1, 0);
   glClearDepth (1);
   if(!theMeanCount)
     {
