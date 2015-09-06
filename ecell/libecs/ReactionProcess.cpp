@@ -173,7 +173,8 @@ void ReactionProcess::logEvent()
           if(FileName == "LogEvent.csv")
             {
               FileName = String(getFullID().getID()) + String(".csv");
-              std::cout << FileName << std::endl;
+              std::cout << "LogEvent for reaction " << getIDString() << ":" <<
+                FileName << std::endl;
             }
           theLogFile.open(FileName.c_str(), std::ios::trunc);
         }
