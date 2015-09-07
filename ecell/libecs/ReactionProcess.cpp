@@ -177,20 +177,77 @@ void ReactionProcess::logEvent()
                 FileName << std::endl;
             }
           theLogFile.open(FileName.c_str(), std::ios::trunc);
+          if(variableA)
+            {
+              theLogFile << getIDString(variableA);
+            }
+          else if(A)
+            {
+              theLogFile << getIDString(A);
+            }
+          if(variableB)
+            {
+              theLogFile << "," << getIDString(variableB);
+            }
+          else if(B)
+            {
+              theLogFile << "," << getIDString(B);
+            }
+          theLogFile << std::endl;
         }
-      unsigned number(0);
+      unsigned numberA(0);
+      unsigned numberB(0);
       if(variableA)
         {
-          number = variableA->getValue();
+          numberA = variableA->getValue()+1;
         }
       else if(A)
         {
-          number = A->getVariable()->getValue();
+          numberA = A->getVariable()->getValue()+1;
+          if(A->getIsCompVacant())
+            {
+              for(unsigned i(0); i != theSpecies.size(); ++i)
+                {
+                  if(theSpecies[i] != A &&
+                     theSpecies[i]->getVacantSpecies() == A)
+                    {
+                      numberA -= theSpecies[i]->size();
+                    }
+                }
+            }
+        }
+      if(variableB)
+        {
+          numberB = variableB->getValue()+1;
+        }
+      else if(B)
+        {
+          numberB = B->getVariable()->getValue()+1;
+          if(B->getIsCompVacant())
+            {
+              for(unsigned i(0); i != theSpecies.size(); ++i)
+                {
+                  if(theSpecies[i] != B && 
+                     theSpecies[i]->getVacantSpecies() == B)
+                    {
+                      numberB -= theSpecies[i]->size();
+                    }
+                }
+            }
         }
       theLogFile << theSpatiocyteStepper->getCurrentTime()-LogStart<< "," <<
-        ++theEventCnt << "," << 
-        theEventCnt/(theSpatiocyteStepper->getCurrentTime()-LogStart)/number
-        << std::endl;
+        ++theEventCnt << "," << numberA;
+      if(variableB || B)
+        {
+          theLogFile << "," << numberB << "," << theEventCnt/
+            (theSpatiocyteStepper->getCurrentTime()-LogStart)/(numberA*numberB);
+        }
+      else
+        {
+          theLogFile << "," << theEventCnt/
+            (theSpatiocyteStepper->getCurrentTime()-LogStart)/(numberA);
+        }
+      theLogFile << std::endl;
     }
 }
 
