@@ -177,7 +177,7 @@ void ReactionProcess::logEvent()
                 FileName << std::endl;
             }
           theLogFile.open(FileName.c_str(), std::ios::trunc);
-          theLogFile << "CurrentTime-LogStart,Events," << std::endl;
+          theLogFile << "CurrentTime-LogStart,Events,";
           String strA;
           String strB;
           if(variableA)
