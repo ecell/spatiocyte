@@ -177,23 +177,36 @@ void ReactionProcess::logEvent()
                 FileName << std::endl;
             }
           theLogFile.open(FileName.c_str(), std::ios::trunc);
+          theLogFile << "CurrentTime-LogStart,Events," << std::endl;
+          String strA;
+          String strB;
           if(variableA)
             {
-              theLogFile << getIDString(variableA);
+              strA = getIDString(variableA);
             }
           else if(A)
             {
-              theLogFile << getIDString(A);
+              strA = getIDString(A);
             }
           if(variableB)
             {
-              theLogFile << "," << getIDString(variableB);
+              strB = getIDString(variableB);
             }
           else if(B)
             {
-              theLogFile << "," << getIDString(B);
+              strB = getIDString(B);
             }
-          theLogFile << std::endl;
+          if(!strB.empty())
+            {
+              theLogFile << strA << "," << strB << 
+                ",Rate=Events/((CurrentTime-LogStart)*" << strA << "*" <<
+                strB << std::endl;
+            }
+          else
+            {
+              theLogFile << strA << ",Rate=Events/((CurrentTime-LogStart)*" <<
+                strA << std::endl;
+            }
         }
       unsigned numberA(0);
       unsigned numberB(0);
