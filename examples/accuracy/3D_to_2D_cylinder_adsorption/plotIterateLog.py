@@ -26,10 +26,10 @@ tickFontSize = 14
 legendFontSize = 14
 lineFontSize = 14
 
-filenames = ['3D_lattice_2D_lattice/IterateLogX.csv', '3D_lattice_2D_lattice/greens_function.csv']
-legendTitles = []
-lines = ['--', '--', '--', '--', '--', '--', '-', '-']
-colors = ['y', 'r', 'b', 'm', 'c', 'g', '#6b420c']
+filenames = ['3D_lattice_2D_lattice/greens_function.csv', '3D_lattice_2D_lattice/IterateLogX.csv']
+titles = ["Green's Function", "Spatiocyte"]
+lines = ['-', '--', '--', '--', '--', '--', '-', '-']
+colors = ['k', 'r', 'y', 'm', 'c', 'g', '#6b420c']
 
 P.xticks(fontsize=tickFontSize)
 P.yticks(fontsize=tickFontSize)
@@ -42,7 +42,7 @@ P.yticks(fontsize=tickFontSize)
 #P.plot(col0, col1, label="Mathematica", color='k')
 div = 1.0
 for i in range(len(filenames)):
-  if(i == 0):
+  if(i == 1):
     div = 228.0
   else:
     div = 1.0
@@ -65,7 +65,7 @@ for i in range(len(filenames)):
 
   colSize = len(data)-1
   for j in range(colSize):
-    P.plot(data[0], data[j+1]/div, ls=lines[i], color=colors[i], label=filenames[i], linewidth=1.5)
+    P.plot(data[0], data[j+1]/div, ls=lines[i], color=colors[i], label=titles[i], linewidth=1.5)
 
 
 ax = P.gca()
@@ -74,5 +74,7 @@ ax.grid(color='b', linestyle='--')
 leg = P.legend(loc=0, labelspacing=0.2, handletextpad=0.2, fancybox=True)
 P.ylabel('# Survival Probability')
 P.xlabel('Time (s)')
+P.ylim(ymax=1.02)
+P.suptitle('2D Cylinder Absorption', fontsize=tickFontSize)
 P.show()
 

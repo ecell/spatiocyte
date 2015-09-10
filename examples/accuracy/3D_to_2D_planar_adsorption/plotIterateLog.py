@@ -27,7 +27,7 @@ legendFontSize = 14
 lineFontSize = 14
 
 filenames = ['3D_lattice_2D_lattice/IterateLogXY.csv', '3D_lattice_2D_lattice/IterateLogXZ.csv', '3D_lattice_2D_lattice/IterateLogYZ.csv', '3D_lattice_2D_off_lattice/IterateLogXY.csv', '3D_lattice_2D_off_lattice/IterateLogXZ.csv', '3D_lattice_2D_off_lattice/IterateLogYZ.csv']
-legendTitles = []
+titles = ['Lattice XY-plane', 'Lattice XZ-plane', 'Lattice YZ-plane', 'Off-lattice XY-plane', 'Off-lattice XZ-plane', 'Off-lattice YZ-plane']
 lines = ['--', '--', '--', '--', '--', '--', '-', '-']
 colors = ['y', 'r', 'b', 'm', 'c', 'g', '#6b420c']
 
@@ -40,7 +40,7 @@ rows,cols = data.shape
 col0 = data[0:rows, cols-2:cols-1]
 col1 = data[0:rows, cols-1:cols]
 
-P.plot(col0, col1, label="Mathematica", color='k')
+P.plot(col0, col1, label="Analytic Solution", color='k')
 
 for i in range(len(filenames)):
   f = open(filenames[i], 'r')
@@ -62,7 +62,7 @@ for i in range(len(filenames)):
 
   colSize = len(data)-1
   for j in range(colSize):
-    P.plot(data[0], data[j+1], ls=lines[i], color=colors[i], label=filenames[i], linewidth=1.5)
+    P.plot(data[0], data[j+1], ls=lines[i], color=colors[i], label=titles[i], linewidth=1.5)
 
 
 ax = P.gca()
@@ -71,5 +71,6 @@ ax.grid(color='b', linestyle='--')
 leg = P.legend(loc=0, labelspacing=0.2, handletextpad=0.2, fancybox=True)
 P.ylabel('# Molecules')
 P.xlabel('Time (s)')
+P.suptitle('2D Planar Absorption', fontsize=tickFontSize)
 P.show()
 
