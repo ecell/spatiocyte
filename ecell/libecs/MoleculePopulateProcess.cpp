@@ -323,30 +323,76 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
     }
   std::vector<unsigned int> aCoords;
   unsigned int aVacantSize(aVacantSpecies->getPopulatableSize());
+  //This is for CompartmentProcess that has defined Comp->widthVector,
+  //Comp->heightVector and Comp->lengthVector:
   if(!UniformRadiusXY && !UniformRadiusXZ && !UniformRadiusYZ)
     {
-      double maxX(std::min(1.0, OriginX+UniformLengthX));
-      double minX(std::max(-1.0, OriginX-UniformLengthX));
-      double maxY(std::min(1.0, OriginY+UniformLengthY));
-      double minY(std::max(-1.0, OriginY-UniformLengthY));
-      double maxZ(std::min(1.0, OriginZ+UniformLengthZ));
-      double minZ(std::max(-1.0, OriginZ-UniformLengthZ)); 
-      maxX = aComp->centerPoint.x + maxX*aComp->lengthX/2*(1+deltaX);
-      minX = aComp->centerPoint.x + minX*aComp->lengthX/2*(1+deltaX);
-      maxY = aComp->centerPoint.y + maxY*aComp->lengthY/2*(1+deltaY);
-      minY = aComp->centerPoint.y + minY*aComp->lengthY/2*(1+deltaY);
-      maxZ = aComp->centerPoint.z + maxZ*aComp->lengthZ/2*(1+deltaZ);
-      minZ = aComp->centerPoint.z + minZ*aComp->lengthZ/2*(1+deltaZ);
-      for(unsigned int i(0); i != aVacantSize; ++i)
+      if(UniformWidth != 1 || UniformLength != 1 || UniformHeight != 1)
         {
-          unsigned int aCoord(aVacantSpecies->getPopulatableCoord(i));
-          Point aPoint(aVacantSpecies->coord2point(aCoord));
-          if(getID((*theLattice)[aCoord]) == aSpecies->getVacantID() &&
-             aPoint.x < maxX && aPoint.x > minX &&
-             aPoint.y < maxY && aPoint.y > minY &&
-             aPoint.z < maxZ && aPoint.z > minZ)
+          double maxL(std::min(1.0, OriginX+UniformLength));
+          double minL(std::max(-1.0, OriginX-UniformLength));
+          double maxW(std::min(1.0, OriginY+UniformWidth));
+          double minW(std::max(-1.0, OriginY-UniformWidth));
+          double maxH(std::min(1.0, OriginZ+UniformHeight));
+          double minH(std::max(-1.0, OriginZ-UniformHeight)); 
+          /*double delW(1+3/aComp->nWidth);
+          double delH(1+3/aComp->nHeight);
+          double delL(1+3/aComp->nLength);
+          */
+          double delW(1);
+          double delH(1);
+          double delL(1);
+          Point C(aComp->centerPoint);
+          Point start(disp(C, aComp->widthVector, minW*aComp->nWidth/2*delW));
+          start = disp(start, aComp->lengthVector, minL*aComp->nLength/2*delL);
+          start = disp(start, aComp->heightVector, minH*aComp->nHeight/2*delH);
+          Point end(disp(C, aComp->widthVector, maxW*aComp->nWidth/2*delW));
+          end = disp(end, aComp->lengthVector, maxL*aComp->nLength/2*delL);
+          end = disp(end, aComp->heightVector, maxH*aComp->nHeight/2*delH);
+          double maxX(std::max(start.x, end.x));
+          double minX(std::min(start.x, end.x));
+          double maxY(std::max(start.y, end.y));
+          double minY(std::min(start.y, end.y));
+          double maxZ(std::max(start.z, end.z));
+          double minZ(std::min(start.z, end.z));
+          for(unsigned int i(0); i != aVacantSize; ++i)
             {
-              aCoords.push_back(aCoord);
+              unsigned int aCoord(aVacantSpecies->getPopulatableCoord(i));
+              Point aPoint(aVacantSpecies->coord2point(aCoord));
+              if(getID((*theLattice)[aCoord]) == aSpecies->getVacantID() &&
+                 aPoint.x < maxX && aPoint.x > minX &&
+                 aPoint.y < maxY && aPoint.y > minY &&
+                 aPoint.z < maxZ && aPoint.z > minZ)
+                {
+                  aCoords.push_back(aCoord);
+                }
+            }
+        }
+      else
+        {
+          double maxX(std::min(1.0, OriginX+UniformLengthX));
+          double minX(std::max(-1.0, OriginX-UniformLengthX));
+          double maxY(std::min(1.0, OriginY+UniformLengthY));
+          double minY(std::max(-1.0, OriginY-UniformLengthY));
+          double maxZ(std::min(1.0, OriginZ+UniformLengthZ));
+          double minZ(std::max(-1.0, OriginZ-UniformLengthZ)); 
+          maxX = aComp->centerPoint.x + maxX*aComp->lengthX/2*(1+deltaX);
+          minX = aComp->centerPoint.x + minX*aComp->lengthX/2*(1+deltaX);
+          maxY = aComp->centerPoint.y + maxY*aComp->lengthY/2*(1+deltaY);
+          minY = aComp->centerPoint.y + minY*aComp->lengthY/2*(1+deltaY);
+          maxZ = aComp->centerPoint.z + maxZ*aComp->lengthZ/2*(1+deltaZ);
+          minZ = aComp->centerPoint.z + minZ*aComp->lengthZ/2*(1+deltaZ);
+          for(unsigned int i(0); i != aVacantSize; ++i)
+            {
+              unsigned int aCoord(aVacantSpecies->getPopulatableCoord(i));
+              Point aPoint(aVacantSpecies->coord2point(aCoord));
+              if(getID((*theLattice)[aCoord]) == aSpecies->getVacantID() &&
+                 aPoint.x < maxX && aPoint.x > minX &&
+                 aPoint.y < maxY && aPoint.y > minY &&
+                 aPoint.z < maxZ && aPoint.z > minZ)
+                {
+                  aCoords.push_back(aCoord);
+                }
             }
         }
     }

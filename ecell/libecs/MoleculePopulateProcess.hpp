@@ -52,10 +52,14 @@ public:
       PROPERTYSLOT_SET_GET(Real, UniformLengthX);
       PROPERTYSLOT_SET_GET(Real, UniformLengthY);
       PROPERTYSLOT_SET_GET(Real, UniformLengthZ);
-      PROPERTYSLOT_SET_GET(Real, UniformRadiusWidth);
-      PROPERTYSLOT_SET_GET(Real, UniformRadiusXY);
-      PROPERTYSLOT_SET_GET(Real, UniformRadiusXZ);
-      PROPERTYSLOT_SET_GET(Real, UniformRadiusYZ);
+      PROPERTYSLOT_SET_GET(Real, UniformLength);
+      PROPERTYSLOT_SET_GET(Real, UniformWidth);
+      PROPERTYSLOT_SET_GET(Real, UniformHeight);
+      PROPERTYSLOT_SET_GET(Real, UniformRadiusWidth); //Inner radius of 
+                                                      //circular population
+      PROPERTYSLOT_SET_GET(Real, UniformRadiusXY); //For circular population
+      PROPERTYSLOT_SET_GET(Real, UniformRadiusXZ); //For circular population
+      PROPERTYSLOT_SET_GET(Real, UniformRadiusYZ); //For circular population
     }
   MoleculePopulateProcess():
     GaussianSigma(0),
@@ -64,6 +68,9 @@ public:
     OriginZ(0),
     ResetTime(libecs::INF),
     StartTime(0),
+    UniformLength(1),
+    UniformWidth(1),
+    UniformHeight(1),
     UniformRadiusWidth(-1),
     UniformRadiusXY(0),
     UniformRadiusXZ(0),
@@ -78,6 +85,9 @@ public:
   SIMPLE_SET_GET_METHOD(Real, GaussianSigma);
   SIMPLE_SET_GET_METHOD(Real, ResetTime);
   SIMPLE_SET_GET_METHOD(Real, StartTime);
+  SIMPLE_SET_GET_METHOD(Real, UniformLength);
+  SIMPLE_SET_GET_METHOD(Real, UniformWidth);
+  SIMPLE_SET_GET_METHOD(Real, UniformHeight);
   SIMPLE_SET_GET_METHOD(Real, UniformLengthX);
   SIMPLE_SET_GET_METHOD(Real, UniformLengthY);
   SIMPLE_SET_GET_METHOD(Real, UniformLengthZ);
@@ -113,6 +123,9 @@ protected:
   double OriginZ;
   double ResetTime;
   double StartTime;
+  double UniformLength;
+  double UniformWidth;
+  double UniformHeight;
   double UniformLengthX;
   double UniformLengthY;
   double UniformLengthZ;

@@ -776,6 +776,12 @@ void CompartmentProcess::initializeVectors()
   disp_(center, lengthVector, nLength/2);
   disp_(center, widthVector, nWidth/2);
   theComp->centerPoint = center;
+  theComp->widthVector = widthVector;
+  theComp->heightVector = heightVector;
+  theComp->lengthVector = lengthVector;
+  theComp->nWidth = nWidth;
+  theComp->nLength = nLength;
+  theComp->nHeight = nHeight;
 
   //Set up surface vectors:
   surfaceNormal = cross(lengthVector, widthVector);

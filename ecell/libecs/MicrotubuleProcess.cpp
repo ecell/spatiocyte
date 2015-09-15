@@ -73,6 +73,8 @@ void MicrotubuleProcess::initializeVectors() {
   Point D(sub(R, Minus));
   norm_(D);
   subunitStart = disp(Minus, D, nRadius);
+  theComp->nWidth = (nRadius+nDiffuseRadius)*2;
+  theComp->nHeight = (nRadius+nDiffuseRadius)*2;
 }
 
 void MicrotubuleProcess::initializeCompartment() {

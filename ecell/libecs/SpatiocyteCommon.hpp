@@ -189,12 +189,18 @@ struct Comp
   double actualVolume;
   double actualArea;
   double actualLength;
+  double nLength;
+  double nWidth;
+  double nHeight;
   System* system;
   Comp* surfaceSub;
   //Even if there are many adjacent diffusive compartents, use only one single
   //common id. So there is only one common diffusive Comp:
   Comp* diffusiveComp;
   Point centerPoint;
+  Point widthVector;
+  Point lengthVector;
+  Point heightVector;
   Point minPoint;
   Point maxPoint;
   Coordinate minCoord;

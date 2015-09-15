@@ -475,6 +475,12 @@ void FilamentProcess::initializeVectors() {
   heightEnd = disp(widthEnd, heightVector, nHeight);
 
   lengthDisplace = dot(lengthVector, lengthStart);
+  theComp->widthVector = widthVector;
+  theComp->lengthVector = lengthVector;
+  theComp->heightVector = heightVector;
+  theComp->nWidth = nWidth;
+  theComp->nLength = nLength;
+  theComp->nHeight = nHeight;
 }
 /*
 void FilamentProcess::initializeVectors() { 
