@@ -300,11 +300,12 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
   aSpecies->updateMolecules();
 }
 
+//Doesn't work yet for multiscale
 void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
 {
   cout << "        Populating uniformly ranged:" <<
     getIDString(aSpecies) << " current size:" << aSpecies->size() <<
-    ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
+    ", populate size:" << aSpecies->getPopulateCoordSize();
   Comp* aComp(aSpecies->getComp());
   Species* aVacantSpecies(aSpecies->getVacantSpecies());
   double deltaX(0);
@@ -322,47 +323,40 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
         aComp->lengthZ;
     }
   std::vector<unsigned int> aCoords;
-  unsigned int aVacantSize(aVacantSpecies->getPopulatableSize());
   //This is for CompartmentProcess that has defined Comp->widthVector,
   //Comp->heightVector and Comp->lengthVector:
   if(!UniformRadiusXY && !UniformRadiusXZ && !UniformRadiusYZ)
     {
       if(UniformWidth != 1 || UniformLength != 1 || UniformHeight != 1)
         {
-          double maxL(std::min(1.0, OriginX+UniformLength));
-          double minL(std::max(-1.0, OriginX-UniformLength));
-          double maxW(std::min(1.0, OriginY+UniformWidth));
-          double minW(std::max(-1.0, OriginY-UniformWidth));
-          double maxH(std::min(1.0, OriginZ+UniformHeight));
-          double minH(std::max(-1.0, OriginZ-UniformHeight)); 
-          /*double delW(1+3/aComp->nWidth);
-          double delH(1+3/aComp->nHeight);
-          double delL(1+3/aComp->nLength);
-          */
-          double delW(1);
-          double delH(1);
-          double delL(1);
+          double del(0.0125);
+          double maxL(std::min(1.1, OriginX+UniformLength+del));
+          double minL(std::max(-1.1, OriginX-UniformLength-del));
+          double maxW(std::min(1.1, OriginY+UniformWidth+del));
+          double minW(std::max(-1.1, OriginY-UniformWidth-del));
+          double maxH(std::min(1.1, OriginZ+UniformHeight+del));
+          double minH(std::max(-1.1, OriginZ-UniformHeight-del)); 
           Point C(aComp->centerPoint);
-          Point start(disp(C, aComp->widthVector, minW*aComp->nWidth/2*delW));
-          start = disp(start, aComp->lengthVector, minL*aComp->nLength/2*delL);
-          start = disp(start, aComp->heightVector, minH*aComp->nHeight/2*delH);
-          Point end(disp(C, aComp->widthVector, maxW*aComp->nWidth/2*delW));
-          end = disp(end, aComp->lengthVector, maxL*aComp->nLength/2*delL);
-          end = disp(end, aComp->heightVector, maxH*aComp->nHeight/2*delH);
+          Point start(disp(C, aComp->widthVector, minW*aComp->nWidth/2));
+          start = disp(start, aComp->lengthVector, minL*aComp->nLength/2);
+          start = disp(start, aComp->heightVector, minH*aComp->nHeight/2);
+          Point end(disp(C, aComp->widthVector, maxW*aComp->nWidth/2));
+          end = disp(end, aComp->lengthVector, maxL*aComp->nLength/2);
+          end = disp(end, aComp->heightVector, maxH*aComp->nHeight/2);
           double maxX(std::max(start.x, end.x));
           double minX(std::min(start.x, end.x));
           double maxY(std::max(start.y, end.y));
           double minY(std::min(start.y, end.y));
           double maxZ(std::max(start.z, end.z));
           double minZ(std::min(start.z, end.z));
-          for(unsigned int i(0); i != aVacantSize; ++i)
+          for(unsigned int i(0); i != aVacantSpecies->size(); ++i)
             {
-              unsigned int aCoord(aVacantSpecies->getPopulatableCoord(i));
+              unsigned int aCoord(aVacantSpecies->getCoord(i));
               Point aPoint(aVacantSpecies->coord2point(aCoord));
               if(getID((*theLattice)[aCoord]) == aSpecies->getVacantID() &&
-                 aPoint.x < maxX && aPoint.x > minX &&
-                 aPoint.y < maxY && aPoint.y > minY &&
-                 aPoint.z < maxZ && aPoint.z > minZ)
+                 aPoint.x <= maxX && aPoint.x >= minX &&
+                 aPoint.y <= maxY && aPoint.y >= minY &&
+                 aPoint.z <= maxZ && aPoint.z >= minZ)
                 {
                   aCoords.push_back(aCoord);
                 }
@@ -382,9 +376,9 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
           minY = aComp->centerPoint.y + minY*aComp->lengthY/2*(1+deltaY);
           maxZ = aComp->centerPoint.z + maxZ*aComp->lengthZ/2*(1+deltaZ);
           minZ = aComp->centerPoint.z + minZ*aComp->lengthZ/2*(1+deltaZ);
-          for(unsigned int i(0); i != aVacantSize; ++i)
+          for(unsigned int i(0); i != aVacantSpecies->size(); ++i)
             {
-              unsigned int aCoord(aVacantSpecies->getPopulatableCoord(i));
+              unsigned int aCoord(aVacantSpecies->getCoord(i));
               Point aPoint(aVacantSpecies->coord2point(aCoord));
               if(getID((*theLattice)[aCoord]) == aSpecies->getVacantID() &&
                  aPoint.x < maxX && aPoint.x > minX &&
@@ -419,9 +413,9 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
           nStart = std::max(0.0, nStart);
         }
       const Point center(aComp->centerPoint);
-      for(unsigned int i(0); i != aVacantSize; ++i)
+      for(unsigned int i(0); i != aVacantSpecies->size(); ++i)
         {
-          const unsigned int aCoord(aVacantSpecies->getPopulatableCoord(i));
+          const unsigned int aCoord(aVacantSpecies->getCoord(i));
           Point aPoint(aVacantSpecies->coord2point(aCoord));
           if(UniformRadiusXY)
             {
@@ -444,6 +438,7 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
         }
     }
   unsigned int aSize(aSpecies->getPopulateCoordSize());
+  cout << ", vacant size:" << aCoords.size() << std::endl;
   if(aCoords.size() < aSize)
     {
       THROW_EXCEPTION(ValueError, String(
