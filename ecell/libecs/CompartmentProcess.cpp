@@ -529,6 +529,7 @@ void CompartmentProcess::initializeCompartment()
                           theVacantSpecies, subStartCoord);
       elongateFilaments(theVacantSpecies, subStartCoord, Filaments, Subunits,
                         nDiffuseRadius);
+      theVacantSpecies->shuffle();
       connectFilaments(subStartCoord, Filaments, Subunits);
       setDiffuseSize(subStartCoord, lipStartCoord);
       setGrid(theVacantSpecies, theVacGrid, subStartCoord);

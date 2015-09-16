@@ -526,6 +526,14 @@ public:
       theInitCoordSize = theMoleculeSize;
       getVariable()->setValue(theMoleculeSize);
     }
+  void shuffle()
+    {
+      std::random_shuffle(theMolecules.begin(), theMolecules.end());
+      for(unsigned i(0); i != theMoleculeSize; ++i)
+        {
+          theMolecules[i]->idx = i+theStride*theID;
+        }
+    }
   void finalizeSpecies()
     {
       if(theCollision)
@@ -545,7 +553,7 @@ public:
             {
               if(theComp->species[i]->getIsDiffusiveVacant())
                 {
-                  std::random_shuffle(theMolecules.begin(), theMolecules.end());
+                  shuffle();
                   break;
                 }
             }

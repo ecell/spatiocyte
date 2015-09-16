@@ -88,6 +88,7 @@ void MicrotubuleProcess::initializeCompartment() {
                           theVacantSpecies, subStartCoord);
       elongateFilaments(theVacantSpecies, subStartCoord, Filaments, Subunits,
                         nDiffuseRadius);
+      theVacantSpecies->shuffle();
       connectFilaments(subStartCoord, Filaments, Subunits);
       setDiffuseSize(subStartCoord, lipStartCoord);
       connectTrailSubunits(subStartCoord, Filaments, Subunits);
