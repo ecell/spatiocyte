@@ -94,8 +94,13 @@ bool SpatiocyteNextReactionProcess::react()
     }
   else if(theOrder == 1)
     { 
+      //nonHD_A -> nonHD_C + nonHD_D + nonHD_E + nonHD_F + nonHD_H:
+      if(BindingSite != -1 && A && C && D && E && F && H)
+        {
+          return reactACDorFbind(A, C, D, E, F, H);
+        }
       //nonHD_A -> nonHD_C + nonHD_D:
-      if(A && C && D)
+      else if(A && C && D)
         {
           if(BindingSite == -1)
             {
@@ -740,6 +745,46 @@ bool SpatiocyteNextReactionProcess::reactACbind(Species* a, Species* c)
   c->addMolecule(moleculeC, tagA);
   return true;
 }
+
+//molA <- SpeciesC
+//
+bool SpatiocyteNextReactionProcess::reactACDorFbind(Species* a, Species* c,
+                                                    Species* d, Species* e,
+                                                    Species* f, Species* h)
+{
+  unsigned indexA(a->getRandomValidIndex());
+  if(indexA == a->size())
+    {
+      return false;
+    }
+  //moleculeA will be replaced with species C:
+  moleculeC = a->getMolecule(indexA);
+  //Get valid molecule D or F to create a product at the binding site:
+  moleculeD = d->getBindingSiteAdjoiningVoxel(moleculeC, BindingSite, e);
+  if(moleculeD == NULL)
+    {
+      moleculeF = f->getBindingSiteAdjoiningVoxel(moleculeC, BindingSite, h);
+      if(moleculeF == NULL)
+        {
+          return false;
+        }
+      interruptProcessesPre();
+      Tag tagA(a->getTag(indexA));
+      a->removeMolecule(indexA);
+      c->addMolecule(moleculeC);
+      h->softRemoveMolecule(moleculeF);
+      f->addMolecule(moleculeF, tagA);
+      return true;
+    }
+  interruptProcessesPre();
+  Tag tagA(a->getTag(indexA));
+  a->removeMolecule(indexA);
+  c->addMolecule(moleculeC);
+  e->softRemoveMolecule(moleculeD);
+  d->addMolecule(moleculeD, tagA);
+  return true;
+}
+
 
 //A (+Vacant[BindingSite] || +D[BindingSite]) -> 
 //[molA <- D_trailA] + (Vacant[BindingSite] || D[BindingSite] <- C)

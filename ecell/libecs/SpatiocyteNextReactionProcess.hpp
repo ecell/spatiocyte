@@ -169,6 +169,8 @@ protected:
   virtual bool reactDeoligomerize(Species*, Species*);
   virtual bool reactACbind(Species*, Species*);
   virtual bool reactACDbind(Species*, Species*, Species*);
+  virtual bool reactACDorFbind(Species*, Species*, Species*, Species*, Species*,
+                               Species*);
   virtual void reactABCD();
   virtual void reactABC();
   virtual bool reactMultiAC();

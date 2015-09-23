@@ -3398,7 +3398,7 @@ public:
     } 
   Voxel* getBindingSiteAdjoiningVoxel(Voxel* source, int bindingSite)
     {
-      if(bindingSite < source->adjoiningSize)
+      if(bindingSite < source->diffuseSize)
         { 
           unsigned aCoord(source->adjoiningCoords[bindingSite]);
           if(isPopulatable(&theLattice[aCoord]))
@@ -3411,7 +3411,7 @@ public:
   Voxel* getBindingSiteAdjoiningVoxel(Voxel* source, int bindingSite,
                                       Species* aSpecies)
     {
-      if(bindingSite < source->adjoiningSize)
+      if(bindingSite < source->diffuseSize)
         { 
           unsigned aCoord(source->adjoiningCoords[bindingSite]);
           if(getID(&theLattice[aCoord]) == aSpecies->getID())
