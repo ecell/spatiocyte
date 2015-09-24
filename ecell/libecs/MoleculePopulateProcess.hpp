@@ -60,6 +60,9 @@ public:
       PROPERTYSLOT_SET_GET(Real, UniformRadiusXY); //For circular population
       PROPERTYSLOT_SET_GET(Real, UniformRadiusXZ); //For circular population
       PROPERTYSLOT_SET_GET(Real, UniformRadiusYZ); //For circular population
+      //Populate along the length of the compartment in bins given as
+      //fraction of total available vacant voxels in the bin 
+      PROPERTYSLOT_SET_GET(Polymorph, LengthBinFractions);
     }
   MoleculePopulateProcess():
     GaussianSigma(0),
@@ -95,15 +98,26 @@ public:
   SIMPLE_SET_GET_METHOD(Real, UniformRadiusXY);
   SIMPLE_SET_GET_METHOD(Real, UniformRadiusXZ);
   SIMPLE_SET_GET_METHOD(Real, UniformRadiusYZ);
+  SIMPLE_GET_METHOD(Polymorph, LengthBinFractions);
+  void setLengthBinFractions(const Polymorph& aValue)
+    {
+      LengthBinFractions = aValue;
+      PolymorphVector aValueVector(aValue.as<PolymorphVector>());
+      for(unsigned i(0); i != aValueVector.size(); ++i)
+        {
+          theLengthBinFractions.push_back(aValueVector[i].as<double>());
+        }
+    }
   virtual void initialize();
   virtual void initializeSecond();
   virtual void initializeFourth();
   virtual void populateGaussian(Species*);
   virtual void populateUniformDense(Species*, unsigned int*, unsigned int*);
-  virtual void populateUniformSparse(Species* aSpecies);
-  virtual void populateUniformRanged(Species* aSpecies);
-  virtual void populateUniformOnDiffusiveVacant(Species* aSpecies);
-  virtual void populateUniformOnMultiscale(Species* aSpecies);
+  virtual void populateUniformSparse(Species*);
+  virtual void populateBinFractions(Species*);
+  virtual void populateUniformRanged(Species*);
+  virtual void populateUniformOnDiffusiveVacant(Species*);
+  virtual void populateUniformOnMultiscale(Species*);
   virtual void fire();
   virtual void initializeFifth()
     {
@@ -133,6 +147,8 @@ protected:
   double UniformRadiusXY;
   double UniformRadiusXZ;
   double UniformRadiusYZ;
+  std::vector<double> theLengthBinFractions;
+  Polymorph LengthBinFractions;
 };
 
 }

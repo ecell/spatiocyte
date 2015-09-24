@@ -194,8 +194,8 @@ Point point2lineIntersect(const Point& P, const Point& N, const Point& Q)
   return A;
 }
 
-//Get the shortest distance from a point, P to a line defined by the direction
-//vector, N that passes through a point, Q:
+//Get the shortest distance from a point, P to a line, which is defined by the
+//direction vector, N that passes through a point, Q:
 double point2lineDist(const Point& P, const Point& N, const Point& Q)
 {
   Point A(point2lineIntersect(P, N, Q));

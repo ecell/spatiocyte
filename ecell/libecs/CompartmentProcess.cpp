@@ -789,9 +789,7 @@ void CompartmentProcess::initializeVectors()
   surfaceNormal = norm(surfaceNormal);
   surfaceDisplace = dot(surfaceNormal, widthEnd);
   lengthDisplace = dot(lengthVector, lengthStart);
-  lengthDisplaceOpp = dot(lengthVector, lengthEnd);
   widthDisplace = dot(widthVector, lengthEnd);
-  widthDisplaceOpp = dot(widthVector, widthEnd);
 }
 
 void CompartmentProcess::rotateAsParent(Point& V)

@@ -308,7 +308,7 @@ public:
       else if(theMoleculeSize)
         {
           cout << "Species:" << theVariable->getFullID().asString() <<
-            " not CoordPopulated." << std::endl;
+            " not populated." << std::endl;
         }
     }
   void populateCompUniformSparse()
@@ -320,7 +320,7 @@ public:
       else if(theMoleculeSize)
         {
           cout << "Species:" << theVariable->getFullID().asString() <<
-            " not CoordPopulated." << std::endl;
+            " not populated." << std::endl;
         }
     }
   void populateUniformOnDiffusiveVacant()
@@ -332,7 +332,7 @@ public:
       else if(theMoleculeSize)
         {
           cout << "Species:" << theVariable->getFullID().asString() <<
-            " not CoordPopulated." << std::endl;
+            " not populated." << std::endl;
         }
     }
   void populateUniformOnMultiscale()
@@ -344,7 +344,7 @@ public:
       else if(theMoleculeSize)
         {
           cout << "Species:" << theVariable->getFullID().asString() <<
-            " not CoordPopulated." << std::endl;
+            " not populated." << std::endl;
         }
     }
   Variable* getVariable() const
