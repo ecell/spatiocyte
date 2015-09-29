@@ -142,9 +142,11 @@ void FilamentProcess::initializeFirst() {
   theMinusSpecies->setIsOffLattice();
   theMinusSpecies->setComp(theComp);
   theMinusSpecies->setDimension(1);
+  theMinusSpecies->setVacantSpecies(theVacantSpecies);
   thePlusSpecies->setIsOffLattice();
   thePlusSpecies->setComp(theComp);
   thePlusSpecies->setDimension(1);
+  thePlusSpecies->setVacantSpecies(theVacantSpecies);
   for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
     {
       theVacantCompSpecies[i]->setIsOffLattice();
@@ -190,12 +192,31 @@ void FilamentProcess::initializeCompartment() {
     }
   theVacantSpecies->setIsPopulated();
   theInterfaceSpecies->setIsPopulated();
-  theMinusSpecies->setIsPopulated();
-  thePlusSpecies->setIsPopulated();
+  populateMinusPlusSpecies();
   /*
   theSpecies[1]->setIsPopulated();
   theSpecies[3]->setIsPopulated();
   */
+}
+
+void FilamentProcess::populateMinusPlusSpecies()
+{
+  if(theMinusSpecies != theVacantSpecies)
+    {
+      for(unsigned i(0); i != theMinusVoxels.size(); ++i)
+        {
+          theMinusSpecies->addMolecule(theMinusVoxels[i]);
+        }
+    }
+  if(thePlusSpecies != theVacantSpecies)
+    {
+      for(unsigned i(0); i != thePlusVoxels.size(); ++i)
+        {
+          thePlusSpecies->addMolecule(thePlusVoxels[i]);
+        }
+    }
+  theMinusSpecies->setIsPopulated();
+  thePlusSpecies->setIsPopulated();
 }
 
 void FilamentProcess::setTrailSize(unsigned start, unsigned end) {
@@ -524,7 +545,7 @@ void FilamentProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
                                           Species* aVacant,
                                           unsigned aStartCoord) {
   Voxel* aVoxel(addCompVoxel(0, 0, aStartPoint, aVacant, aStartCoord, aCols));
-  theMinusSpecies->addMolecule(aVoxel);
+  theMinusVoxels.push_back(aVoxel);
 }
 
 // y:width:rows:filaments
@@ -586,7 +607,7 @@ void FilamentProcess::elongateFilaments(Species* aVacant,
           Voxel* aVoxel(addCompVoxel(i, j, A, aVacant, aStartCoord, aCols));
           if(j == aCols-1)
             {
-              thePlusSpecies->addMolecule(aVoxel);
+              thePlusVoxels.push_back(aVoxel);
             }
         }
     }

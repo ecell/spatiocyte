@@ -49,12 +49,12 @@ public:
       PROPERTYSLOT_SET_GET(Real, GaussianSigma);
       PROPERTYSLOT_SET_GET(Real, ResetTime);
       PROPERTYSLOT_SET_GET(Real, StartTime);
-      PROPERTYSLOT_SET_GET(Real, UniformLengthX);
-      PROPERTYSLOT_SET_GET(Real, UniformLengthY);
-      PROPERTYSLOT_SET_GET(Real, UniformLengthZ);
-      PROPERTYSLOT_SET_GET(Real, UniformLength);
-      PROPERTYSLOT_SET_GET(Real, UniformWidth);
-      PROPERTYSLOT_SET_GET(Real, UniformHeight);
+      PROPERTYSLOT_SET_GET(Real, UniformLengthX); //Should be deprecated
+      PROPERTYSLOT_SET_GET(Real, UniformLengthY); //Should be deprecated
+      PROPERTYSLOT_SET_GET(Real, UniformLengthZ); //Should be deprecated
+      PROPERTYSLOT_SET_GET(Real, UniformLength); //For CompProcess
+      PROPERTYSLOT_SET_GET(Real, UniformWidth);  //For CompProcess
+      PROPERTYSLOT_SET_GET(Real, UniformHeight); //For CompProcess
       PROPERTYSLOT_SET_GET(Real, UniformRadiusWidth); //Inner radius of 
                                                       //circular population
       PROPERTYSLOT_SET_GET(Real, UniformRadiusXY); //For circular population

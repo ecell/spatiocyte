@@ -84,6 +84,7 @@ public:
   void connectTrailSubunits(unsigned, unsigned, unsigned);
   void setTrailSize(unsigned, unsigned);
   void extendInterfacesOverFilamentSurface(const bool);
+  void populateMinusPlusSpecies();
 protected:
   unsigned getAdjoiningInterfaceCnt(Voxel&);
   bool getFilamentAdjoin(Voxel*, const bool, const unsigned, const unsigned,
@@ -100,6 +101,8 @@ protected:
   Point Plus; //Plus end
   Species* theMinusSpecies;
   Species* thePlusSpecies;
+  std::vector<Voxel*> theMinusVoxels;
+  std::vector<Voxel*> thePlusVoxels;
 };
 
 }

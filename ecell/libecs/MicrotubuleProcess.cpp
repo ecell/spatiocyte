@@ -99,8 +99,7 @@ void MicrotubuleProcess::initializeCompartment() {
     }
   theVacantSpecies->setIsPopulated();
   theInterfaceSpecies->setIsPopulated();
-  theMinusSpecies->setIsPopulated();
-  thePlusSpecies->setIsPopulated();
+  populateMinusPlusSpecies();
   /*
   theSpecies[0]->setIsPopulated();
   theSpecies[9]->setIsPopulated();

@@ -284,6 +284,7 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
         }
       else if(UniformLengthX == 1 && UniformLengthY == 1 && 
               UniformLengthZ == 1 &&
+              UniformLength == 1 && UniformWidth == 1 && UniformHeight == 1 &&
               !UniformRadiusXY && !UniformRadiusXZ && !UniformRadiusYZ &&
               !OriginX && !OriginY && !OriginZ)
         {
@@ -375,10 +376,10 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
         aComp->lengthZ;
     }
   std::vector<unsigned> aCoords;
-  //This is for CompartmentProcess that has defined Comp->widthVector,
-  //Comp->heightVector and Comp->lengthVector:
   if(!UniformRadiusXY && !UniformRadiusXZ && !UniformRadiusYZ)
     {
+      //This is for CompartmentProcess that has defined Comp->widthVector,
+      //Comp->heightVector and Comp->lengthVector:
       if(UniformWidth != 1 || UniformLength != 1 || UniformHeight != 1)
         {
           double del(0.0125);
