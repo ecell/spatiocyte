@@ -76,7 +76,7 @@ logger = theSimulator.createEntity('IteratingLogProcess', 'Process:/:iter')
 logger.VariableReferenceList = [['_', 'Variable:/:A']]
 logger.LogInterval = 1e-2
 logger.LogEnd = 10
-logger.Iterations = 1000
+logger.Iterations = 10000
 logger.FileName = "IterateLogX.csv"
 
 run(10.01)

@@ -112,7 +112,7 @@ void MicrotubuleProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
                                              Species* aVacant,
                                              unsigned aStartCoord) {
   Voxel* aVoxel(addCompVoxel(0, 0, aStartPoint, aVacant, aStartCoord, aCols));
-  theMinusSpecies->addMolecule(aVoxel);
+  theMinusVoxels.push_back(aVoxel);
   theLengthStarts.push_back(disp(aStartPoint, lengthVector, -nDiffuseRadius));
   Point U(aStartPoint);
   for(unsigned i(1); i < aRows; ++i)
@@ -121,7 +121,7 @@ void MicrotubuleProcess::initializeFilaments(Point& aStartPoint, unsigned aRows,
       rotatePointAlongVector(U, Minus, lengthVector, angle);
       disp_(U, lengthVector, aRadius/(aRows-1));
       aVoxel = addCompVoxel(i, 0, U, aVacant, aStartCoord, aCols);
-      theMinusSpecies->addMolecule(aVoxel);
+      theMinusVoxels.push_back(aVoxel);
       theLengthStarts.push_back(disp(U, lengthVector, -nDiffuseRadius));
     }
 }
