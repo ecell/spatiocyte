@@ -1,82 +1,64 @@
 import math 
-sim = theSimulator.createStepper('SpatiocyteStepper', 'SS')
-sim.VoxelRadius = 10e-9 
-sim.SearchVacant = 0
+sim = theSimulator
+s = sim.createStepper('SpatiocyteStepper', 'SS')
+s.VoxelRadius = 10e-9 
+s.SearchVacant = 0
 
-theSimulator.rootSystem.StepperID = 'SS'
-theSimulator.createEntity('Variable', 'Variable:/:GEOMETRY').Value = 6
-theSimulator.createEntity('Variable', 'Variable:/:LENGTHX').Value = 16e-6
-theSimulator.createEntity('Variable', 'Variable:/:LENGTHY').Value = 0.25e-6
-theSimulator.createEntity('Variable', 'Variable:/:YZPLANE').Value = 1
-theSimulator.createEntity('Variable', 'Variable:/:VACANT')
-theSimulator.createEntity('Variable', 'Variable:/:Vacant').Value = 0
-theSimulator.createEntity('Variable', 'Variable:/:A').Value = 2
-theSimulator.createEntity('Variable', 'Variable:/:C').Value = 1
-theSimulator.createEntity('Variable', 'Variable:/:M').Value = 0
-theSimulator.createEntity('Variable', 'Variable:/:P').Value = 0
-s = theSimulator.createEntity('Variable', 'Variable:/:sA')
-s.Value = 0
-s.Name = "HD"
+sim.rootSystem.StepperID = 'SS'
+sim.createEntity('Variable', 'Variable:/:GEOMETRY').Value = 6
+sim.createEntity('Variable', 'Variable:/:LENGTHX').Value = 8e-6
+sim.createEntity('Variable', 'Variable:/:LENGTHY').Value = 0.25e-6
+sim.createEntity('Variable', 'Variable:/:YZPLANE').Value = 1
+sim.createEntity('Variable', 'Variable:/:VACANT')
+sim.createEntity('Variable', 'Variable:/:Vacant').Value = 0
+sim.createEntity('Variable', 'Variable:/:A').Value = 1
+sim.createEntity('Variable', 'Variable:/:M').Value = 0
+sim.createEntity('Variable', 'Variable:/:P').Value = 0
 
-#logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:logger')
-#logger.VariableReferenceList = [['_', 'Variable:/:Vacant']]
-#logger.VariableReferenceList = [['_', 'Variable:/:A']]
-#logger.VariableReferenceList = [['_', 'Variable:/:C']]
-#logger.VariableReferenceList = [['_', 'Variable:/:M']]
-#logger.VariableReferenceList = [['_', 'Variable:/:P']]
-#logger.LogInterval = 0.01
+l = sim.createEntity('VisualizationLogProcess', 'Process:/:logger')
+l.VariableReferenceList = [['_', 'Variable:/:Vacant']]
+l.VariableReferenceList = [['_', 'Variable:/:A']]
+l.VariableReferenceList = [['_', 'Variable:/:M']]
+l.VariableReferenceList = [['_', 'Variable:/:P']]
+l.LogInterval = 0.01
 
-pop = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:p1')
-pop.VariableReferenceList = [['_', 'Variable:/:A']]
-pop.UniformRadiusWidth = 15e-9
-pop.UniformRadiusXZ = 0.8e-6
+p = sim.createEntity('MoleculePopulateProcess', 'Process:/:p1')
+p.VariableReferenceList = [['_', 'Variable:/:A']]
+p.OriginX = -1
+p.UniformRadiusWidth = 20e-9
+p.UniformRadiusXZ = 0.8e-6
 
-pop = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:p2')
-pop.VariableReferenceList = [['_', 'Variable:/:C']]
-pop.UniformRadiusXZ = 10e-9
+d = sim.createEntity('DiffusionProcess', 'Process:/:diffuseA')
+d.VariableReferenceList = [['_', 'Variable:/:A']]
+d.D = 1e-12
 
-diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseA')
-diffuser.VariableReferenceList = [['_', 'Variable:/:A']]
-diffuser.D = 1e-12
+b = sim.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:r1')
+b.VariableReferenceList = [['_', 'Variable:/:M','-1']]
+b.VariableReferenceList = [['_', 'Variable:/:A','-1']]
+b.VariableReferenceList = [['_', 'Variable:/:M','1']]
+b.p = 1
 
-binder = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:r1')
-binder.VariableReferenceList = [['_', 'Variable:/:M','-1']]
-binder.VariableReferenceList = [['_', 'Variable:/:A','-1']]
-binder.VariableReferenceList = [['_', 'Variable:/:M','1']]
-binder.VariableReferenceList = [['_', 'Variable:/:sA','1']]
-binder.p = 1
+b = sim.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:r2')
+b.VariableReferenceList = [['_', 'Variable:/:P','-1']]
+b.VariableReferenceList = [['_', 'Variable:/:A','-1']]
+b.VariableReferenceList = [['_', 'Variable:/:P','1']]
+b.p = 1
 
-binder = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:r2')
-binder.VariableReferenceList = [['_', 'Variable:/:P','-1']]
-binder.VariableReferenceList = [['_', 'Variable:/:A','-1']]
-binder.VariableReferenceList = [['_', 'Variable:/:P','1']]
-binder.VariableReferenceList = [['_', 'Variable:/:sA','1']]
-binder.p = 1
+f = sim.createEntity('FilamentProcess', 'Process:/:filam')
+f.VariableReferenceList = [['_', 'Variable:/:Vacant', '-1']]
+f.VariableReferenceList = [['_', 'Variable:/:M', '-2']]
+f.VariableReferenceList = [['_', 'Variable:/:P', '-3']]
+f.VariableReferenceList = [['_', 'Variable:/:A']]
+f.LineX = 1
+f.LineY = 0
+f.LineZ = 0
+f.Autofit = 0
 
-binder = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:r3')
-binder.VariableReferenceList = [['_', 'Variable:/:C','-1']]
-binder.VariableReferenceList = [['_', 'Variable:/:A','-1']]
-binder.VariableReferenceList = [['_', 'Variable:/:C','1']]
-binder.VariableReferenceList = [['_', 'Variable:/:sA','1']]
-binder.p = 1
-
-fil = theSimulator.createEntity('FilamentProcess', 'Process:/:filam')
-fil.VariableReferenceList = [['_', 'Variable:/:Vacant', '-1']]
-fil.VariableReferenceList = [['_', 'Variable:/:M', '-2']]
-fil.VariableReferenceList = [['_', 'Variable:/:P', '-3']]
-fil.VariableReferenceList = [['_', 'Variable:/:sA']]
-fil.VariableReferenceList = [['_', 'Variable:/:A']]
-fil.VariableReferenceList = [['_', 'Variable:/:C']]
-fil.LineX = 1
-fil.LineY = 0
-fil.LineZ = 0
-fil.Autofit = 0
-
-logger = theSimulator.createEntity('IteratingLogProcess', 'Process:/:iter')
-logger.VariableReferenceList = [['_', 'Variable:/:A']]
-logger.LogInterval = 1e-2
-logger.LogEnd = 10
-logger.Iterations = 10000
-logger.FileName = "IterateLogX.csv"
+l = sim.createEntity('IteratingLogProcess', 'Process:/:iter')
+l.VariableReferenceList = [['_', 'Variable:/:A']]
+l.LogInterval = 1e-2
+l.LogEnd = 10
+l.Iterations = 1
+l.FileName = "IterateLogX.csv"
 
 run(10.01)

@@ -192,7 +192,9 @@ public:
       if(D > 0)
         {
           double r_v(theDiffusionSpecies->getDiffuseRadius());
-          //From 4rv^2 = 2lDt, alpha = 4/(2l), where l is the dimension:
+          //From 4rv^2 = 2lDt, with l is the dimension:
+          //  t = 4rv^2/(2lD)
+          //  set alpha = 4/(2l)
           double alpha(2); //default value for 1D diffusion
           if(theDiffusionSpecies->getDimension() == 2)
             {

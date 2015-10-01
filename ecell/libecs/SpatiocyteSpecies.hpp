@@ -538,6 +538,7 @@ public:
     {
       if(theCollision)
         {
+          theSpeciesCollisionCnt = 0;
           collisionCnts.resize(theMoleculeSize);
           for(std::vector<unsigned>::iterator 
               i(collisionCnts.begin()); i != collisionCnts.end(); ++i)
@@ -609,6 +610,10 @@ public:
   unsigned getCollisionCnt(unsigned anIndex)
     {
       return collisionCnts[anIndex];
+    }
+  unsigned getSpeciesCollisionCnt()
+    {
+      return theSpeciesCollisionCnt;
     }
   unsigned getCollision() const
     {
@@ -847,11 +852,6 @@ public:
                     }
                 }
             }
-        }
-      if(theCollision==3)
-        { 
-          std::cout << getIDString() << " collision/time:" << 
-            theSpeciesCollisionCnt/theStepper->getCurrentTime() << std::endl;
         }
     }
   //Just perform DIRP at every diffusion step interval without walking
@@ -1259,11 +1259,6 @@ public:
                 }
             }
         }
-      if(theCollision==3)
-        { 
-          std::cout << getIDString() << " collision/time:" << 
-            theSpeciesCollisionCnt/theStepper->getCurrentTime() << std::endl;
-        }
     }
   void walkReactRegular()
     {
@@ -1484,11 +1479,6 @@ public:
                     }
                 }
             }
-        }
-      if(theCollision==3)
-        { 
-          std::cout << getIDString() << " collision/time:" << 
-            theSpeciesCollisionCnt/theStepper->getCurrentTime() << std::endl;
         }
     }
   void walkOnMultiscaleRegular()

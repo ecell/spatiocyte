@@ -26,8 +26,12 @@ tickFontSize = 14
 legendFontSize = 14
 lineFontSize = 14
 
-filenames = ['greens_function_1D.csv', 'IterateLogX.csv']
-titles = ["Green's Function", "Spatiocyte"]
+#filenames = ['greens_function_1Dd.csv', 'greens_function_1Db.csv', 'IterateLogX.csv', 'IterateLogX_1order_p1.csv', 'IterateLogX_1order_p0.001.csv']
+#titles = ["Green's Function1","Green's Function2", "Spatiocyte", "1order_p1", "1order_p0.001"]
+filenames = ['IterateLogX_1order_p0.001.csv', 'IterateLogX_snrp_1order_p0.001.csv', 'IterateLogX_mass_1order_p0.001.csv']
+#filenames = ['IterateLogX_1order_p0.01.csv', 'IterateLogX_snrp_1order_p0.01.csv']
+titles = ["1order_p0.001", "snrp_1order_p0.001", "mass_1order_p0.001"]
+#titles = ["1order_p0.01", "snrp_1order_p0.01"]
 lines = ['-', '--', '--', '--', '--', '--', '-', '-']
 colors = ['k', 'r', 'y', 'm', 'c', 'g', '#6b420c']
 
@@ -42,8 +46,8 @@ P.yticks(fontsize=tickFontSize)
 #P.plot(col0, col1, label="Mathematica", color='k')
 div = 1.0
 for i in range(len(filenames)):
-  if(i == 1):
-    div = 2.0
+  if(i == 2):
+    div = 100000.0
   else:
     div = 1.0
   f = open(filenames[i], 'r')

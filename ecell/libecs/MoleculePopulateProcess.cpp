@@ -465,24 +465,27 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
             (theSpatiocyteStepper->getVoxelRadius()*2);
           nStart = std::max(0.0, nStart);
         }
-      const Point center(aComp->centerPoint);
+      Point C(aComp->centerPoint);
+      disp_(C, aComp->widthVector, OriginY*aComp->nWidth/2);
+      disp_(C, aComp->lengthVector, OriginX*aComp->nLength/2);
+      disp_(C, aComp->heightVector, OriginZ*aComp->nHeight/2);
       for(unsigned i(0); i != aVacantSpecies->size(); ++i)
         {
           const unsigned aCoord(aVacantSpecies->getCoord(i));
           Point aPoint(aVacantSpecies->coord2point(aCoord));
           if(UniformRadiusXY)
             {
-              aPoint.z = center.z;
+              aPoint.z = C.z;
             }
           else if(UniformRadiusXZ)
             {
-              aPoint.y = center.y;
+              aPoint.y = C.y;
             }
           else
             {
-              aPoint.x = center.x;
+              aPoint.x = C.x;
             }
-          const double aDist(distance(aPoint, center));
+          const double aDist(distance(aPoint, C));
           if(getID((*theLattice)[aCoord]) == aSpecies->getVacantID() &&
              aDist >= nStart && aDist <= nRadius) 
             {

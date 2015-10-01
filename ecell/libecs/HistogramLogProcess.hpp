@@ -47,7 +47,6 @@ public:
     {
       INHERIT_PROPERTIES(IteratingLogProcess);
       PROPERTYSLOT_SET_GET(Integer, Bins);
-      PROPERTYSLOT_SET_GET(Integer, Collision);
       PROPERTYSLOT_SET_GET(Real, Radius);
       PROPERTYSLOT_SET_GET(Real, Length);
       PROPERTYSLOT_SET_GET(Real, OriginX);
@@ -58,7 +57,6 @@ public:
       PROPERTYSLOT_SET_GET(Real, RotateZ);
     }
   SIMPLE_SET_GET_METHOD(Integer, Bins);
-  SIMPLE_SET_GET_METHOD(Integer, Collision);
   SIMPLE_SET_GET_METHOD(Real, Radius);
   SIMPLE_SET_GET_METHOD(Real, Length);
   SIMPLE_SET_GET_METHOD(Real, OriginX);
@@ -69,7 +67,6 @@ public:
   SIMPLE_SET_GET_METHOD(Real, RotateZ);
   HistogramLogProcess():
     Bins(1),
-    Collision(0),
     OriginX(0),
     OriginY(0),
     OriginZ(0),
@@ -95,8 +92,7 @@ public:
   void initializeVectors();
   bool isInside(unsigned int&, Point);
 protected:
-  unsigned int Bins;
-  unsigned int Collision;
+  unsigned Bins;
   double binInterval;
   double Length;
   double nLength;
