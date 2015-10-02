@@ -6,12 +6,8 @@ import select
 import shlex
 import time
 
-def get_param(T, V1, cnt):
-  filename = ('spatiocyte_1D_%0.00e.csv' %(V1))
-  #if (filename == "HistogramCooperativity_1.000000e-02_1.000000e+00_1.000000e-01_1.000000e+03.csv"):
-  #  print "jobCnt:",cnt
-  #  exit()
-  param = ("--parameters=\"{'T':%0.00e, 'V1':%0.00e, 'filename':'%s'}\"" %(T, V1, filename))
+def get_param(T, Iterations, String, V1, V2, V3, V4, cnt):
+  param = ("--parameters=\"{'T':%0.00e, 'Iterations':%d, 'String':'%s', 'V1':%0.00e, 'V2':%0.00e, 'V3':%0.00e, 'V4':%0.00e}\"" %(T, Iterations, String, V1, V2, V3, V4))
   return param
 
 def add_job(param):
@@ -25,39 +21,35 @@ def register_job(param, obj, fdmap, epoll, jobCnt):
   epoll.register(obj, select.EPOLLHUP)
   print "started job:", jobCnt, "id:", fd, param
 
-T = 10
-#V1 = [0.05]
-#V2 = [0.05]
-#V3 = [0.05]
-#V4 = [0.05]
-V1 = [1.0, 0.5, 0.1, 0.01, 0.001]
-V2 = []
-V3 = []
-V4 = []
+T = 100
+Iterations = 100000
+V1 = [1.0, 0.5, 0.1, 0.05, 0.01, 0.005, 0.001]
+V2 = [0]
+V3 = [0]
+V4 = [0]
+String = 'None'
 if __name__ == '__main__':
   params = []
   cnt = 0
   for i in range(len(V1)):
-    cnt = cnt + 1
-    print cnt
-    params.append(get_param(T, V1[i], cnt))
+    for j in range(len(V2)):
+      for k in range(len(V3)):
+        for l in range(len(V4)):
+          cnt = cnt + 1
+          params.append(get_param(T, Iterations, String, V1[i], V2[j], V3[k],
+            V4[l], cnt))
 
   SLICE_IN_SECONDS = 0.1
-  param = get_param(0.001, V1[0], 0)
+  param = get_param(0.001, 1, String, V1[0], V2[0], V3[0], V4[0], 0)
   subproc = add_job(param)
   resultTable = []
   startTime = time.time()
-  cnt = 0
   while subproc.poll() == None:
-    cnt = cnt + 1
-    print 'ne', cnt
-    resultTable.append(psutil.Process(subproc.pid).memory_info().vms)
-    #resultTable.append(psutil.Process(subproc.pid).get_memory_info().vms)
+    #resultTable.append(psutil.Process(subproc.pid).memory_info().vms)
+    resultTable.append(psutil.Process(subproc.pid).get_memory_info().vms)
     time.sleep(SLICE_IN_SECONDS)
   duration = time.time()-startTime
   typicalMemory = max(resultTable)*1.7
-
-  print 'done'
 
   jobStart = 0
   #jobStart = 4300
@@ -98,7 +90,7 @@ if __name__ == '__main__':
         jobCnt = jobCnt + 1
         if (psutil.virtual_memory().available > skipCnt*typicalMemory):
           skipCnt = skipCnt + 1
-          print "fast",skipCnt,"virt:",psutil.virtual_memory().available/1024/1024,"typ:",skipCnt*typicalMemory/1024/1024
+          #print "fast",skipCnt,"virt:",psutil.virtual_memory().available/1024/1024,"typ:",skipCnt*typicalMemory/1024/1024
         else: 
           skipCnt = 1
           print "sleep before break",skipCnt,"virt:",psutil.virtual_memory().available/1024/1024,"typ:",skipCnt*typicalMemory/1024/1024

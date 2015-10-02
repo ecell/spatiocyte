@@ -3,7 +3,9 @@ try:
 except NameError:
   T = 100
   V1 = 0.1
-  filename = "spatiocyte_1D_p%.3f.csv" %V1
+  Iterations = 1000
+
+filename = "spatiocyte_1D_p%.3f.csv" %V1
 
 import math 
 sim = theSimulator
@@ -63,9 +65,9 @@ f.Autofit = 0
 
 l = sim.createEntity('IteratingLogProcess', 'Process:/:iter')
 l.VariableReferenceList = [['_', 'Variable:/:A']]
-l.LogInterval = 1e-1
+l.LogInterval = 1e-2
 l.LogEnd = T
-l.Iterations = 100000
+l.Iterations = Iterations
 l.FileName = filename
 
 run(T+0.01)
