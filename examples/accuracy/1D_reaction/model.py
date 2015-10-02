@@ -3,7 +3,7 @@ try:
 except NameError:
   T = 100
   V1 = 0.1
-  Iterations = 1000
+  Iterations = 10
 
 filename = "spatiocyte_1D_p%.3f.csv" %V1
 
@@ -12,6 +12,7 @@ sim = theSimulator
 s = sim.createStepper('SpatiocyteStepper', 'SS')
 s.VoxelRadius = 10e-9 
 s.SearchVacant = 0
+s.DebugLevel = 0
 
 sim.rootSystem.StepperID = 'SS'
 sim.createEntity('Variable', 'Variable:/:GEOMETRY').Value = 6
@@ -69,5 +70,6 @@ l.LogInterval = 1e-2
 l.LogEnd = T
 l.Iterations = Iterations
 l.FileName = filename
+l.Verbose = 0
 
 run(T+0.01)

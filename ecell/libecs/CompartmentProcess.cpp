@@ -1180,7 +1180,7 @@ void CompartmentProcess::addFirstInterface()
     {
       if(Verbose)
         {
-          std::cout << "Found the first interface voxel, dist:" <<
+          cout << "Found the first interface voxel, dist:" <<
             nearestDist << " subIndex:" << subIndex << " subMax:" <<
             lipStartCoord-subStartCoord << std::endl;
         }
@@ -1460,7 +1460,7 @@ void CompartmentProcess::setNearestSubunit(const unsigned intIndex,
     }
   else
     {
-      std::cout << getIDString() << " nearestDist of subunit from " <<
+      cout << getIDString() << " nearestDist of subunit from " <<
         "orphan interface:" <<  nearestDist << " delta:" << delta <<
        std::endl;
     }
@@ -1486,7 +1486,7 @@ void CompartmentProcess::setNearestInterfaceForOrphanSubunits()
             }
           else
             {
-              std::cout << getIDString() << " nearestDist of interface from " <<
+              cout << getIDString() << " nearestDist of interface from " <<
                 "orphan subunit:" <<  nearestDist << " delta:" << delta <<
                 std::endl;
               /*
