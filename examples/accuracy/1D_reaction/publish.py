@@ -26,13 +26,14 @@ tickFontSize = 14
 legendFontSize = 14
 lineFontSize = 14
 
+filenames = ['greens_function_1D_p1.csv', 'spatiocyte_1D_p1.csv', 'greens_function_1D_p0.5.csv', 'spatiocyte_1D_p0.5.csv','greens_function_1D_p0.1.csv', 'spatiocyte_1D_p0.1.csv','greens_function_1D_p0.05.csv', 'spatiocyte_1D_p0.05.csv','greens_function_1D_p0.01.csv', 'spatiocyte_1D_p0.01.csv','greens_function_1D_p0.005.csv', 'spatiocyte_1D_p0.005.csv', 'greens_function_1D_p0.001.csv', 'spatiocyte_1D_p0.001.csv']
 #filenames = ['greens_function_1Dd.csv', 'greens_function_1Db.csv', 'IterateLogX.csv', 'IterateLogX_1order_p1.csv', 'IterateLogX_1order_p0.001.csv']
-#titles = ["Green's Function1","Green's Function2", "Spatiocyte", "1order_p1", "1order_p0.001"]
-filenames = ['IterateLogX_1order_p0.001.csv', 'IterateLogX_snrp_1order_p0.001.csv', 'IterateLogX_mass_1order_p0.001.csv']
+titles = ['greens_function_1D_p1.csv', 'spatiocyte_1D_p1.csv', 'greens_function_1D_p0.5.csv', 'spatiocyte_1D_p0.5.csv','greens_function_1D_p0.1.csv', 'spatiocyte_1D_p0.1.csv','greens_function_1D_p0.05.csv', 'spatiocyte_1D_p0.05.csv','greens_function_1D_p0.01.csv', 'spatiocyte_1D_p0.01.csv','greens_function_1D_p0.005.csv', 'spatiocyte_1D_p0.005.csv', 'greens_function_1D_p0.001.csv', 'spatiocyte_1D_p0.001.csv']
+#filenames = ['IterateLogX_1order_p0.001.csv', 'IterateLogX_snrp_1order_p0.001.csv', 'IterateLogX_mass_1order_p0.001.csv']
 #filenames = ['IterateLogX_1order_p0.01.csv', 'IterateLogX_snrp_1order_p0.01.csv']
-titles = ["1order_p0.001", "snrp_1order_p0.001", "mass_1order_p0.001"]
+#titles = ["1order_p0.001", "snrp_1order_p0.001", "mass_1order_p0.001"]
 #titles = ["1order_p0.01", "snrp_1order_p0.01"]
-lines = ['-', '--', '--', '--', '--', '--', '-', '-']
+lines = ['-', '--', '-', '--', '-', '--', '-', '--', '-', '--', '-', '--', '-', '--']
 colors = ['k', 'r', 'y', 'm', 'c', 'g', '#6b420c']
 
 P.xticks(fontsize=tickFontSize)
@@ -46,8 +47,8 @@ P.yticks(fontsize=tickFontSize)
 #P.plot(col0, col1, label="Mathematica", color='k')
 div = 1.0
 for i in range(len(filenames)):
-  if(i == 2):
-    div = 100000.0
+  if(i == 1):
+    div = 1.0
   else:
     div = 1.0
   f = open(filenames[i], 'r')
@@ -69,7 +70,7 @@ for i in range(len(filenames)):
 
   colSize = len(data)-1
   for j in range(colSize):
-    P.plot(data[0], data[j+1]/div, ls=lines[i], color=colors[i], label=titles[i], linewidth=1.5)
+    P.plot(data[0], data[j+1]/div, ls=lines[i], label=titles[i], linewidth=1.5)
 
 
 ax = P.gca()
