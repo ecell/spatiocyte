@@ -417,6 +417,28 @@ bool DiffusionInfluencedReactionProcess::reactAtoC_BeqD(Voxel* molA,
   return true;
 }
 
+//A + B -> [C <- molA] + [B == D] + [F <- molN]
+bool DiffusionInfluencedReactionProcess::reactAtoC_BeqD_NtoF(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  moleculeF = F->getRandomAdjoiningVoxel(molA, SearchVacant);
+  if(moleculeF == NULL)
+    {
+      moleculeF = F->getRandomAdjoiningVoxel(molB, SearchVacant);
+      if(moleculeF == NULL)
+        {
+          return false;
+        }
+    }
+  interruptProcessesPre();
+  C->addMolecule(molA);
+  A->softRemoveMolecule(indexA);
+  F->addMolecule(moleculeF);
+  return true;
+}
+
 
 //A + B -> [C <- molA] + [tagC <- tagA] + [B == D]
 bool DiffusionInfluencedReactionProcess::reactAtoC_BeqD_tagAtoC(Voxel* molA,
@@ -806,8 +828,17 @@ void DiffusionInfluencedReactionProcess::setGeneralForcedSequenceReactMethod()
         {
           if(B->isReplaceable(D))
             {
-              //A + B -> [C <- molA] + [D <- molB]
-              reactM = &DiffusionInfluencedReactionProcess::reactAtoC_BtoD;
+              if(B == D && F)
+                {
+                  //A + B -> [C <- molA] + [B == D] + [D <- molN]
+                  reactM = 
+                    &DiffusionInfluencedReactionProcess::reactAtoC_BeqD_NtoF;
+                }
+              else
+                {
+                  //A + B -> [C <- molA] + [D <- molB]
+                  reactM = &DiffusionInfluencedReactionProcess::reactAtoC_BtoD;
+                }
             }
           else
             {
@@ -978,9 +1009,22 @@ void DiffusionInfluencedReactionProcess::setFreeSequenceReactMethod()
                 }
               else
                 {
-              //std::cout << "reactAtoC_BeqD:" << getIDString() << std::endl;
-                  //A + B -> [C <- molA] + [B == D]
-                  reactM = &DiffusionInfluencedReactionProcess::reactAtoC_BeqD;
+                  if(F)
+                    {
+                      //std::cout << "reactAtoC_BeqD_NtoF:" << getIDString() <<
+                      //  std::endl;
+                      //A + B -> [C <- molA] + [B == D] + [D <- molN]
+                      reactM = 
+                        &DiffusionInfluencedReactionProcess::reactAtoC_BeqD_NtoF;
+                    }
+                  else
+                    {
+                      //std::cout << "reactAtoC_BeqD:" << getIDString() <<
+                      //std::endl;
+                      //A + B -> [C <- molA] + [B == D]
+                      reactM = 
+                        &DiffusionInfluencedReactionProcess::reactAtoC_BeqD;
+                    }
                 }
             }
           else

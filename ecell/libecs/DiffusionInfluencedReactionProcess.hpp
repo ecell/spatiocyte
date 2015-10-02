@@ -132,6 +132,7 @@ protected:
   bool reactBtoC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
   bool reactNtoC_AeqD(Voxel*, Voxel*, const unsigned, const unsigned);
   bool reactAtoC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactAtoC_BeqD_NtoF(Voxel*, Voxel*, const unsigned, const unsigned);
   bool reactAtoC_BeqD_tagAtoC(Voxel*, Voxel*, const unsigned, const unsigned);
   bool reactNtoC_BeqD(Voxel*, Voxel*, const unsigned, const unsigned);
   bool reactAtoC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
