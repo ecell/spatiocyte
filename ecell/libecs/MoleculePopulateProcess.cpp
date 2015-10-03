@@ -149,7 +149,7 @@ void MoleculePopulateProcess::populateUniformOnMultiscale(Species* aSpecies)
     {
       if(UniformLengthX == 1 && UniformLengthY == 1 && UniformLengthZ == 1 &&
          !UniformRadiusXY && !UniformRadiusXZ && !UniformRadiusYZ &&
-         !OriginX && !OriginY && !OriginZ)
+         !OriginX && !OriginY && !OriginZ && !EdgeX)
         {
           if(aVacantSize < aSize)
             {
@@ -198,7 +198,7 @@ void MoleculePopulateProcess::populateUniformOnDiffusiveVacant(Species*
     {
       if(UniformLengthX == 1 && UniformLengthY == 1 && UniformLengthZ == 1 &&
          !UniformRadiusXY && !UniformRadiusXZ && !UniformRadiusYZ &&
-         !OriginX && !OriginY && !OriginZ)
+         !OriginX && !OriginY && !OriginZ && !EdgeX)
         {
           if(aVacantSize < aSize)
             {
@@ -248,7 +248,7 @@ void MoleculePopulateProcess::populateUniformDense(Species* aSpecies,
       else if(UniformLengthX == 1 && UniformLengthY == 1 &&
               UniformLengthZ == 1 &&
               !UniformRadiusXY && !UniformRadiusXZ && !UniformRadiusYZ &&
-              !OriginX && !OriginY && !OriginZ)
+              !OriginX && !OriginY && !OriginZ && !EdgeX)
         {
           unsigned aSize(aSpecies->getPopulateCoordSize());
           for(unsigned j(0); j != aSize; ++j)
@@ -286,7 +286,7 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
               UniformLengthZ == 1 &&
               UniformLength == 1 && UniformWidth == 1 && UniformHeight == 1 &&
               !UniformRadiusXY && !UniformRadiusXZ && !UniformRadiusYZ &&
-              !OriginX && !OriginY && !OriginZ)
+              !OriginX && !OriginY && !OriginZ && !EdgeX)
         {
           unsigned aSize(aSpecies->getPopulateCoordSize());
           int availableVoxelSize(aVacantSpecies->size());
@@ -376,7 +376,49 @@ void MoleculePopulateProcess::populateUniformRanged(Species* aSpecies)
         aComp->lengthZ;
     }
   std::vector<unsigned> aCoords;
-  if(!UniformRadiusXY && !UniformRadiusXZ && !UniformRadiusYZ)
+  //Get coords at the edge most 
+  if(EdgeX)
+    {
+      unsigned aSize(aSpecies->getPopulateCoordSize());
+      std::vector<double> pos;
+      for(unsigned i(0); i != aVacantSpecies->size(); ++i)
+        {
+          unsigned aCoord(aVacantSpecies->getCoord(i));
+          if(getID((*theLattice)[aCoord]) == aSpecies->getVacantID())
+            {
+              Point aPoint(aVacantSpecies->coord2point(aCoord));
+              if(aCoords.size() < aSize)
+                {
+                  aCoords.push_back(aCoord);
+                  pos.push_back(aPoint.x);
+                }
+              else
+                {
+                  int index(-1);
+                  double max(-1);
+                  for(unsigned j(0); j != pos.size(); ++j)
+                    { 
+                      if(EdgeX > 0 && aPoint.x-pos[j] > max)
+                        {
+                          index = j;
+                          max = aPoint.x-pos[j];
+                        }
+                      else if(EdgeX < 0 && pos[j]-aPoint.x > max)
+                        {
+                          index = j;
+                          max = pos[j]-aPoint.x;
+                        }
+                    }
+                  if(index != -1)
+                    {
+                      pos[index] = aPoint.x;
+                      aCoords[index] = aCoord;
+                    }
+                }
+            }
+        }
+    }
+  else if(!UniformRadiusXY && !UniformRadiusXZ && !UniformRadiusYZ)
     {
       //This is for CompartmentProcess that has defined Comp->widthVector,
       //Comp->heightVector and Comp->lengthVector:

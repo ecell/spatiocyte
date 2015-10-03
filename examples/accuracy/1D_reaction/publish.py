@@ -26,9 +26,9 @@ tickFontSize = 14
 legendFontSize = 14
 lineFontSize = 14
 
-filenames = ['greens_function_1D_p1.csv', 'spatiocyte_1D_p1.csv', 'greens_function_1D_p0.5.csv', 'spatiocyte_1D_p0.5.csv','greens_function_1D_p0.1.csv', 'spatiocyte_1D_p0.1.csv','greens_function_1D_p0.05.csv', 'spatiocyte_1D_p0.05.csv','greens_function_1D_p0.01.csv', 'spatiocyte_1D_p0.01.csv','greens_function_1D_p0.005.csv', 'spatiocyte_1D_p0.005.csv', 'greens_function_1D_p0.001.csv', 'spatiocyte_1D_p0.001.csv']
+filenames = ['greens_function_1D_p1.csv', 'spatiocyte_1D_p1.000.csv', 'greens_function_1D_p0.5.csv', 'spatiocyte_1D_p0.500.csv','greens_function_1D_p0.1.csv', 'spatiocyte_1D_p0.100.csv','greens_function_1D_p0.05.csv', 'spatiocyte_1D_p0.050.csv','greens_function_1D_p0.01.csv', 'spatiocyte_1D_p0.010.csv','greens_function_1D_p0.005.csv', 'spatiocyte_1D_p0.005.csv', 'greens_function_1D_p0.001.csv', 'spatiocyte_1D_p0.001.csv']
 #filenames = ['greens_function_1Dd.csv', 'greens_function_1Db.csv', 'IterateLogX.csv', 'IterateLogX_1order_p1.csv', 'IterateLogX_1order_p0.001.csv']
-titles = ['greens_function_1D_p1.csv', 'spatiocyte_1D_p1.csv', 'greens_function_1D_p0.5.csv', 'spatiocyte_1D_p0.5.csv','greens_function_1D_p0.1.csv', 'spatiocyte_1D_p0.1.csv','greens_function_1D_p0.05.csv', 'spatiocyte_1D_p0.05.csv','greens_function_1D_p0.01.csv', 'spatiocyte_1D_p0.01.csv','greens_function_1D_p0.005.csv', 'spatiocyte_1D_p0.005.csv', 'greens_function_1D_p0.001.csv', 'spatiocyte_1D_p0.001.csv']
+titles = ["Green'sfunction (p=1.0)", 'Spatiocyte (p=1.0)', "Green's Function (p=0.5", "Spatiocyte (p=0.5)", "Green's Function (p=0.1)", "Spatiocyte (p=0.1)", "Green's Function (p=0.05)", "Spatiocyte (p=0.05)", "Green's Function (p=0.01)", "Spatiocyte (p=0.01)", "Green's Function (p=0.005)", "Spatiocyte (p=0.005)", "Green's Function (p=0.001)", "Spatiocyte (p=0.001)"]
 #filenames = ['IterateLogX_1order_p0.001.csv', 'IterateLogX_snrp_1order_p0.001.csv', 'IterateLogX_mass_1order_p0.001.csv']
 #filenames = ['IterateLogX_1order_p0.01.csv', 'IterateLogX_snrp_1order_p0.01.csv']
 #titles = ["1order_p0.001", "snrp_1order_p0.001", "mass_1order_p0.001"]
@@ -80,6 +80,6 @@ leg = P.legend(loc=0, labelspacing=0.2, handletextpad=0.2, fancybox=True)
 P.ylabel('# Survival Probability')
 P.xlabel('Time (s)')
 P.ylim(ymax=1.02)
-P.suptitle('1D Filament-Cylinder Absorption', fontsize=tickFontSize)
+P.suptitle('1D Reaction Validation', fontsize=tickFontSize)
 P.show()
 

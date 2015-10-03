@@ -43,6 +43,7 @@ public:
   LIBECS_DM_OBJECT(MoleculePopulateProcess, Process)
     {
       INHERIT_PROPERTIES(Process);
+      PROPERTYSLOT_SET_GET(Real, EdgeX);
       PROPERTYSLOT_SET_GET(Real, OriginX);
       PROPERTYSLOT_SET_GET(Real, OriginY);
       PROPERTYSLOT_SET_GET(Real, OriginZ);
@@ -66,6 +67,7 @@ public:
     }
   MoleculePopulateProcess():
     GaussianSigma(0),
+    EdgeX(0),
     OriginX(0),
     OriginY(0),
     OriginZ(0),
@@ -82,6 +84,7 @@ public:
     UniformLengthY(1),
     UniformLengthZ(1) {}
   virtual ~MoleculePopulateProcess() {}
+  SIMPLE_SET_GET_METHOD(Real, EdgeX);
   SIMPLE_SET_GET_METHOD(Real, OriginX);
   SIMPLE_SET_GET_METHOD(Real, OriginY);
   SIMPLE_SET_GET_METHOD(Real, OriginZ);
@@ -132,6 +135,7 @@ public:
     }
 protected:
   double GaussianSigma;
+  double EdgeX;
   double OriginX;
   double OriginY;
   double OriginZ;
