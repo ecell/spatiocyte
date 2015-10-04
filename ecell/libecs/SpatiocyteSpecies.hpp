@@ -753,6 +753,10 @@ public:
           theInterruptedProcessesEndDiffusion[i]->interruptedEndDiffusion(this);
         }
     }
+  void addCollisionCnt()
+    {
+      ++theSpeciesCollisionCnt;
+    }
   void addCollision(Voxel* aVoxel)
     {
       for(unsigned i(0); i < theMoleculeSize; ++i)
@@ -818,6 +822,8 @@ public:
                   if(aReaction->getCollision() == 3)
                     { 
                       ++theSpeciesCollisionCnt;
+                      Species* targetSpecies(theSpecies[tarID]);
+                      targetSpecies->addCollisionCnt();
                       return;
                     }
                   //If it meets the reaction probability:
@@ -888,6 +894,8 @@ public:
               if(aReaction->getCollision() == 3)
                 { 
                   ++theSpeciesCollisionCnt;
+                  Species* targetSpecies(theSpecies[tarID]);
+                  targetSpecies->addCollisionCnt();
                   return;
                 }
               //If it meets the reaction probability:
@@ -1234,6 +1242,8 @@ public:
                   if(aReaction->getCollision() == 3)
                     { 
                       ++theSpeciesCollisionCnt;
+                      Species* targetSpecies(theSpecies[tarID]);
+                      targetSpecies->addCollisionCnt();
                       return;
                     }
                   //If it meets the reaction probability:
@@ -1307,6 +1317,8 @@ public:
               if(aReaction->getCollision() == 3)
                 { 
                   ++theSpeciesCollisionCnt;
+                  Species* targetSpecies(theSpecies[tarID]);
+                  targetSpecies->addCollisionCnt();
                   return;
                 }
               //If it meets the reaction probability:
@@ -1380,6 +1392,8 @@ public:
               if(aReaction->getCollision() == 3)
                 { 
                   ++theSpeciesCollisionCnt;
+                  Species* targetSpecies(theSpecies[tarID]);
+                  targetSpecies->addCollisionCnt();
                   return;
                 }
               //If it meets the reaction probability:
@@ -1465,6 +1479,8 @@ public:
                   if(aReaction->getCollision() == 3)
                     { 
                       ++theSpeciesCollisionCnt;
+                      Species* targetSpecies(theSpecies[tarID]);
+                      targetSpecies->addCollisionCnt();
                       return;
                     }
                   //If it meets the reaction probability:
