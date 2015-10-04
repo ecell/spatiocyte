@@ -119,7 +119,6 @@ public:
     isTagged(false),
     isVacant(false),
     theID(anID),
-    theCollision(0),
     theInitCoordSize(anInitCoordSize),
     theMoleculeSize(0),
     theRotateSize(1),
@@ -486,10 +485,6 @@ public:
       disp_(aPoint, theLengthVector, anOrigin.col*lipCols*nDiffuseRadius*2);
       return aPoint;
     }
-  void setCollision(unsigned aCollision)
-    {
-      theCollision = aCollision;
-    }
   void setIsSubunitInitialized()
     {
       isSubunitInitialized = true;
@@ -536,14 +531,19 @@ public:
     }
   void finalizeSpecies()
     {
-      if(theCollision)
+      for(unsigned i(0); i != theDiffusionInfluencedReactions.size(); ++i)
         {
-          theSpeciesCollisionCnt = 0;
-          collisionCnts.resize(theMoleculeSize);
-          for(std::vector<unsigned>::iterator 
-              i(collisionCnts.begin()); i != collisionCnts.end(); ++i)
+          if(theDiffusionInfluencedReactions[i] &&
+             theDiffusionInfluencedReactions[i]->getCollision())
             {
-              *i = 0;
+              theSpeciesCollisionCnt = 0;
+              collisionCnts.resize(theMoleculeSize);
+              for(std::vector<unsigned>::iterator 
+                  i(collisionCnts.begin()); i != collisionCnts.end(); ++i)
+                {
+                  *i = 0;
+                }
+              break;
             }
         }
       //need to shuffle molecules of the compVacant species if it has
@@ -614,10 +614,6 @@ public:
   unsigned getSpeciesCollisionCnt()
     {
       return theSpeciesCollisionCnt;
-    }
-  unsigned getCollision() const
-    {
-      return theCollision;
     }
   void setIsDiffusiveVacant()
     {
@@ -815,9 +811,11 @@ public:
                   target = &theLattice[coord];
                 }
               const unsigned tarID(getID(target));
-              if(theDiffusionInfluencedReactions[tarID])
+              DiffusionInfluencedReactionProcess* 
+                aReaction(theDiffusionInfluencedReactions[tarID]);
+              if(aReaction)
                 {
-                  if(theCollision==3)
+                  if(aReaction->getCollision() == 3)
                     { 
                       ++theSpeciesCollisionCnt;
                       return;
@@ -826,12 +824,13 @@ public:
                   if(theReactionProbabilities[tarID] == 1 ||
                      theRng.Fixed() < theReactionProbabilities[tarID])
                     { 
-                      if(theCollision && theCollision != 3)
+                      if(aReaction->getCollision() && 
+                         aReaction->getCollision() != 3)
                         { 
                           ++collisionCnts[i];
                           Species* targetSpecies(theSpecies[tarID]);
                           targetSpecies->addCollision(target);
-                          if(theCollision != 2)
+                          if(aReaction->getCollision() != 2)
                             {
                               return;
                             }
@@ -882,9 +881,11 @@ public:
               target = &theLattice[coord];
             }
           const unsigned tarID(getID(target));
-          if(theDiffusionInfluencedReactions[tarID])
+          DiffusionInfluencedReactionProcess* 
+            aReaction(theDiffusionInfluencedReactions[tarID]);
+          if(aReaction)
             {
-              if(theCollision==3)
+              if(aReaction->getCollision() == 3)
                 { 
                   ++theSpeciesCollisionCnt;
                   return;
@@ -893,12 +894,13 @@ public:
               if(theReactionProbabilities[tarID] == 1 ||
                  theRng.Fixed() < theReactionProbabilities[tarID])
                 { 
-                  if(theCollision && theCollision != 3)
+                  if(aReaction->getCollision() &&
+                     aReaction->getCollision() != 3)
                     { 
                       ++collisionCnts[i];
                       Species* targetSpecies(theSpecies[tarID]);
                       targetSpecies->addCollision(target);
-                      if(theCollision != 2)
+                      if(aReaction->getCollision() != 2)
                         {
                           return;
                         }
@@ -998,18 +1000,20 @@ public:
                   target = &theLattice[coord];
                 }
               const unsigned tarID(getID(target));
-              if(theDiffusionInfluencedReactions[tarID])
+              DiffusionInfluencedReactionProcess* 
+                aReaction(theDiffusionInfluencedReactions[tarID]);
+              if(aReaction)
                 {
                   //If it meets the reaction probability:
                   if(theReactionProbabilities[tarID] == 1 ||
                      theRng.Fixed() < theReactionProbabilities[tarID])
                     { 
-                      if(theCollision)
+                      if(aReaction->getCollision())
                         { 
                           ++collisionCnts[i];
                           Species* targetSpecies(theSpecies[tarID]);
                           targetSpecies->addCollision(target);
-                          if(theCollision != 2)
+                          if(aReaction->getCollision() != 2)
                             {
                               return;
                             }
@@ -1100,18 +1104,20 @@ public:
                   target = &theLattice[coord];
                 }
               const unsigned tarID(getID(target));
-              if(theDiffusionInfluencedReactions[tarID])
+              DiffusionInfluencedReactionProcess* 
+                aReaction(theDiffusionInfluencedReactions[tarID]);
+              if(aReaction)
                 {
                   //If it meets the reaction probability:
                   if(theReactionProbabilities[tarID] == 1 ||
                      theRng.Fixed() < theReactionProbabilities[tarID])
                     { 
-                      if(theCollision)
+                      if(aReaction->getCollision())
                         { 
                           ++collisionCnts[i];
                           Species* targetSpecies(theSpecies[tarID]);
                           targetSpecies->addCollision(target);
-                          if(theCollision != 2)
+                          if(aReaction->getCollision() != 2)
                             {
                               return;
                             }
@@ -1221,9 +1227,11 @@ public:
                   target = &theLattice[coord];
                 }
               const unsigned tarID(getID(target));
-              if(theDiffusionInfluencedReactions[tarID])
+              DiffusionInfluencedReactionProcess* 
+                aReaction(theDiffusionInfluencedReactions[tarID]);
+              if(aReaction)
                 {
-                  if(theCollision==3)
+                  if(aReaction->getCollision() == 3)
                     { 
                       ++theSpeciesCollisionCnt;
                       return;
@@ -1232,12 +1240,13 @@ public:
                   if(theReactionProbabilities[tarID] == 1 ||
                      theRng.Fixed() < theReactionProbabilities[tarID])
                     { 
-                      if(theCollision && theCollision != 3)
+                      if(aReaction->getCollision() &&
+                         aReaction->getCollision() != 3)
                         { 
                           ++collisionCnts[i];
                           Species* targetSpecies(theSpecies[tarID]);
                           targetSpecies->addCollision(target);
-                          if(theCollision != 2)
+                          if(aReaction->getCollision() != 2)
                             {
                               return;
                             }
@@ -1290,9 +1299,12 @@ public:
               target = &theLattice[coord];
             }
           const unsigned tarID(getID(target));
-          if(theDiffusionInfluencedReactions[tarID])
+
+          DiffusionInfluencedReactionProcess* 
+            aReaction(theDiffusionInfluencedReactions[tarID]);
+          if(aReaction)
             {
-              if(theCollision==3)
+              if(aReaction->getCollision() == 3)
                 { 
                   ++theSpeciesCollisionCnt;
                   return;
@@ -1301,12 +1313,13 @@ public:
               if(theReactionProbabilities[tarID] == 1 ||
                  theRng.Fixed() < theReactionProbabilities[tarID])
                 { 
-                  if(theCollision && theCollision != 3)
+                  if(aReaction->getCollision() &&
+                     aReaction->getCollision() != 3)
                     { 
                       ++collisionCnts[i];
                       Species* targetSpecies(theSpecies[tarID]);
                       targetSpecies->addCollision(target);
-                      if(theCollision != 2)
+                      if(aReaction->getCollision() != 2)
                         {
                           return;
                         }
@@ -1360,9 +1373,11 @@ public:
               target = &theLattice[coord];
             }
           const unsigned tarID(getID(target));
-          if(theDiffusionInfluencedReactions[tarID])
+          DiffusionInfluencedReactionProcess* 
+            aReaction(theDiffusionInfluencedReactions[tarID]);
+          if(aReaction)
             {
-              if(theCollision==3)
+              if(aReaction->getCollision() == 3)
                 { 
                   ++theSpeciesCollisionCnt;
                   return;
@@ -1371,12 +1386,13 @@ public:
               if(theReactionProbabilities[tarID] == 1 ||
                  theRng.Fixed() < theReactionProbabilities[tarID])
                 { 
-                  if(theCollision && theCollision != 3)
+                  if(aReaction->getCollision() &&
+                     aReaction->getCollision() != 3)
                     { 
                       ++collisionCnts[i];
                       Species* targetSpecies(theSpecies[tarID]);
                       targetSpecies->addCollision(target);
-                      if(theCollision != 2)
+                      if(aReaction->getCollision() != 2)
                         {
                           return;
                         }
@@ -1442,9 +1458,11 @@ public:
                   target = &theLattice[coord];
                 }
               const unsigned tarID(getID(target));
-              if(theDiffusionInfluencedReactions[tarID])
+              DiffusionInfluencedReactionProcess* 
+                aReaction(theDiffusionInfluencedReactions[tarID]);
+              if(aReaction)
                 {
-                  if(theCollision==3)
+                  if(aReaction->getCollision() == 3)
                     { 
                       ++theSpeciesCollisionCnt;
                       return;
@@ -1453,12 +1471,13 @@ public:
                   if(theReactionProbabilities[tarID] == 1 ||
                      theRng.Fixed() < theReactionProbabilities[tarID])
                     { 
-                      if(theCollision && theCollision != 3)
+                      if(aReaction->getCollision() &&
+                         aReaction->getCollision() != 3)
                         { 
                           ++collisionCnts[i];
                           Species* targetSpecies(theSpecies[tarID]);
                           targetSpecies->addCollision(target);
-                          if(theCollision != 2)
+                          if(aReaction->getCollision() != 2)
                             {
                               return;
                             }
@@ -4432,7 +4451,6 @@ private:
   int lipRows;
   unsigned lipStartCoord;
   unsigned theAdjoiningCoordSize;
-  unsigned theCollision;
   unsigned theDiffuseSize;
   unsigned theDimension;
   unsigned theInitCoordSize;

@@ -58,8 +58,6 @@ void DiffusionInfluencedReactionProcess::checkSubstrates()
 void DiffusionInfluencedReactionProcess::initializeSecond()
 {
   ReactionProcess::initializeSecond(); 
-  A->setCollision(Collision);
-  B->setCollision(Collision);
 }
 
 void DiffusionInfluencedReactionProcess::initializeThird()
