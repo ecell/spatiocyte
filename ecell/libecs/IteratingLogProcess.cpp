@@ -334,9 +334,16 @@ void IteratingLogProcess::logValues()
       else if(Collision)
         {
           unsigned val(0);
-          for(unsigned j(0); j != aSpecies->size(); ++j)
+          if(Collision == 3)
             {
-              val += aSpecies->getCollisionCnt(j);
+              val = aSpecies->getSpeciesCollisionCnt();
+            }
+          else
+            {
+              for(unsigned j(0); j != aSpecies->size(); ++j)
+                {
+                  val += aSpecies->getCollisionCnt(j);
+                }
             }
           theLogValues[timePointCnt][i] += val/(theTime-LogStart);
         }
