@@ -39,6 +39,10 @@ void HistogramLogProcess::initializeLastOnce()
   nRadius = Radius/VoxelDiameter;
   binInterval = nLength/(Bins+1);
   initializeVectors();
+  if(Density)
+    {
+      setVacantSizes();
+    }
 }
 
 void HistogramLogProcess::saveFileData(std::ofstream& aFile,
@@ -63,7 +67,19 @@ void HistogramLogProcess::saveATimePoint(std::ofstream& aFile,
       aFile << aTime << "," << i;
       for(unsigned j(0); j != theLogValues[aCnt][i].size(); ++j)
         {
-          aFile << "," << theLogValues[aCnt][i][j]/anIteration;
+          if(Density)
+            {
+              aFile << "," << theLogValues[aCnt][i][j]/anIteration/
+                theVacantSizes[j][i];
+              /*
+              aFile << "," << theLogValues[aCnt][i][j]/anIteration/
+                ((aTime-LogStart)/LogInterval)/theVacantSizes[j][i];
+                */
+            }
+          else
+            {
+              aFile << "," << theLogValues[aCnt][i][j]/anIteration;
+            }
         }
       aFile << std::endl << std::flush;
     }
@@ -145,6 +161,31 @@ void HistogramLogProcess::logCollision()
                 aSpecies->getCollisionCnt(j);
             }
         }
+    }
+}
+
+void HistogramLogProcess::setVacantSizes()
+{
+  theVacantSizes.resize(theProcessSpecies.size());
+  for(unsigned i(0); i != theProcessSpecies.size(); ++i)
+    {
+      theVacantSizes[i].resize(Bins);
+      Species* aSpecies(theProcessSpecies[i]->getVacantSpecies());
+      for(unsigned j(0); j != aSpecies->size(); ++j)
+        {
+          unsigned bin;
+          if(isInside(bin, aSpecies->getPoint(j)))
+            {
+              theVacantSizes[i][bin] += 1;
+            }
+        }
+      /*
+      for(unsigned j(0); j != Bins; ++j)
+        {
+          std::cout << "species:" << getIDString(theProcessSpecies[i]) <<
+            " bin:" << j << " size:" << theVacantSizes[i][j] << std::endl;
+        }
+        */
     }
 }
 

@@ -47,6 +47,7 @@ public:
     {
       INHERIT_PROPERTIES(IteratingLogProcess);
       PROPERTYSLOT_SET_GET(Integer, Bins);
+      PROPERTYSLOT_SET_GET(Integer, Density);
       PROPERTYSLOT_SET_GET(Real, Radius);
       PROPERTYSLOT_SET_GET(Real, Length);
       PROPERTYSLOT_SET_GET(Real, OriginX);
@@ -57,6 +58,7 @@ public:
       PROPERTYSLOT_SET_GET(Real, RotateZ);
     }
   SIMPLE_SET_GET_METHOD(Integer, Bins);
+  SIMPLE_SET_GET_METHOD(Integer, Density);
   SIMPLE_SET_GET_METHOD(Real, Radius);
   SIMPLE_SET_GET_METHOD(Real, Length);
   SIMPLE_SET_GET_METHOD(Real, OriginX);
@@ -66,6 +68,7 @@ public:
   SIMPLE_SET_GET_METHOD(Real, RotateY);
   SIMPLE_SET_GET_METHOD(Real, RotateZ);
   HistogramLogProcess():
+    Density(1),
     Bins(1),
     OriginX(0),
     OriginY(0),
@@ -90,8 +93,10 @@ public:
   virtual void saveATimePoint(std::ofstream&, const double, const unsigned,
                               const unsigned);
   void initializeVectors();
+  void setVacantSizes();
   bool isInside(unsigned int&, Point);
 protected:
+  unsigned Density;
   unsigned Bins;
   double binInterval;
   double Length;
@@ -109,6 +114,7 @@ protected:
   Point Minus; 
   Point Origin;
   std::vector<std::vector<std::vector<double> > > theLogValues;
+  std::vector<std::vector<double> > theVacantSizes;
 };
 
 }
