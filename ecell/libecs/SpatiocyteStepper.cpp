@@ -940,6 +940,9 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
   aComp->maxCoord.row = 0;
   aComp->maxCoord.col = 0;
   aComp->maxCoord.layer = 0;
+  aComp->lengthVector = Point(1, 0, 0);
+  aComp->widthVector = Point(0, 1, 0);
+  aComp->heightVector = Point(0, 0, 1);
   aComp->lengthX = 0;
   aComp->lengthY = 0;
   aComp->lengthZ = 0;
@@ -986,6 +989,9 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
       {
           aSubComp->geometry = aComp->geometry;
           aSubComp->specVolume = aComp->specVolume;
+          aSubComp->lengthVector = aComp->lengthVector;
+          aSubComp->widthVector = aComp->widthVector;
+          aSubComp->heightVector = aComp->heightVector;
           aSubComp->lengthX = aComp->lengthX;
           aSubComp->lengthY = aComp->lengthY;
           aSubComp->lengthZ = aComp->lengthZ;
@@ -1004,6 +1010,9 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
               Comp* lineComp(aSubComp->lineSubs[i]);
               lineComp->geometry = aComp->geometry;
               lineComp->specVolume = aComp->specVolume;
+              lineComp->lengthVector = aComp->lengthVector;
+              lineComp->widthVector = aComp->widthVector;
+              lineComp->heightVector = aComp->heightVector;
               lineComp->lengthX = aComp->lengthX;
               lineComp->lengthY = aComp->lengthY;
               lineComp->lengthZ = aComp->lengthZ;
@@ -1299,19 +1308,28 @@ void SpatiocyteStepper::setLatticeProperties()
 
 void SpatiocyteStepper::rotateCompartment(Comp* aComp)
 {
+  rotate(aComp, aComp->lengthVector);
+  rotate(aComp, aComp->widthVector);
+  rotate(aComp, aComp->heightVector);
   Point min(-aComp->lengthX/2, -aComp->lengthY/2, -aComp->lengthZ/2);
   Point max(aComp->lengthX/2, aComp->lengthY/2, aComp->lengthZ/2);
-  rotateX(aComp->rotateX, &min);
-  rotateY(aComp->rotateY, &min);
-  rotateZ(aComp->rotateZ, &min);
-  rotateX(aComp->rotateX, &max);
-  rotateY(aComp->rotateY, &max);
-  rotateZ(aComp->rotateZ, &max);
+  rotate(aComp, min);
+  rotate(aComp, max);
   aComp->lengthX = std::max(min.x, max.x)-std::min(min.x, max.x);
   aComp->lengthY = std::max(min.y, max.y)-std::min(min.y, max.y);
   aComp->lengthZ = std::max(min.z, max.z)-std::min(min.z, max.z);
+  aComp->nLength = aComp->lengthX;
+  aComp->nWidth = aComp->lengthY;
+  aComp->nHeight = aComp->lengthZ;
   //for cylinder and rod compartment need to create lengthVector and
   //rotate it, only then it would work.
+}
+
+void SpatiocyteStepper::rotate(Comp* aComp, Point& V)
+{
+  rotateX(aComp->rotateX, &V);
+  rotateY(aComp->rotateY, &V);
+  rotateZ(aComp->rotateZ, &V);
 }
 
 void SpatiocyteStepper::storeSimulationParameters()

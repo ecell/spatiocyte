@@ -313,10 +313,11 @@ void MoleculePopulateProcess::populateUniformSparse(Species* aSpecies)
 
 void MoleculePopulateProcess::populateBinFractions(Species* aSpecies)
 {
+
   cout << "        Populating bin fractions:" <<
     getIDString(aSpecies) << " current size:" << aSpecies->size() <<
     ", populate size:" << aSpecies->getPopulateCoordSize();
-  Comp* aComp(aSpecies->getComp());
+  Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
   Species* aVacantSpecies(aSpecies->getVacantSpecies());
   Point C(aComp->centerPoint);
   Point start(disp(C, aComp->lengthVector, -aComp->nLength/2));
