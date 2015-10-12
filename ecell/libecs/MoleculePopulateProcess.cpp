@@ -332,7 +332,12 @@ void MoleculePopulateProcess::populateBinFractions(Species* aSpecies)
       Point aPoint(aVacantSpecies->coord2point(aCoord));
       const double disp(point2planeDisp(aPoint, aComp->lengthVector,
                                         lengthDisplace));
-      unsigned bin(std::max(disp/binLength, 0.0));
+      double tbin(disp/binLength);
+      if(tbin < -1 || tbin > nBins)
+        {
+          continue;
+        }
+      unsigned bin(std::max(tbin, 0.0));
       bin = std::min(bin, nBins-1);
       Voxel* aVoxel(&(*theLattice)[aCoord]);
       if(aSpecies->isPopulatable(aVoxel))

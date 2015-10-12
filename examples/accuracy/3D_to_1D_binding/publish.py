@@ -26,15 +26,10 @@ tickFontSize = 20
 legendFontSize = 20
 lineFontSize = 20
 
-filenames = ['greens_function_1D_p1.csv', 'spatiocyte_1D_p1.000.csv', 'greens_function_1D_p0.5.csv', 'spatiocyte_1D_p0.500.csv','greens_function_1D_p0.1.csv', 'spatiocyte_1D_p0.100.csv','greens_function_1D_p0.05.csv', 'spatiocyte_1D_p0.050.csv','greens_function_1D_p0.01.csv', 'spatiocyte_1D_p0.010.csv','greens_function_1D_p0.005.csv', 'spatiocyte_1D_p0.005.csv', 'greens_function_1D_p0.001.csv', 'spatiocyte_1D_p0.001.csv']
-#filenames = ['greens_function_1Dd.csv', 'greens_function_1Db.csv', 'IterateLogX.csv', 'IterateLogX_1order_p1.csv', 'IterateLogX_1order_p0.001.csv']
-titles = ["Green'sfunction (p=1.0)", 'Spatiocyte (p=1.0)', "Green's Function (p=0.5", "Spatiocyte (p=0.5)", "Green's Function (p=0.1)", "Spatiocyte (p=0.1)", "Green's Function (p=0.05)", "Spatiocyte (p=0.05)", "Green's Function (p=0.01)", "Spatiocyte (p=0.01)", "Green's Function (p=0.005)", "Spatiocyte (p=0.005)", "Green's Function (p=0.001)", "Spatiocyte (p=0.001)"]
-#filenames = ['IterateLogX_1order_p0.001.csv', 'IterateLogX_snrp_1order_p0.001.csv', 'IterateLogX_mass_1order_p0.001.csv']
-#filenames = ['IterateLogX_1order_p0.01.csv', 'IterateLogX_snrp_1order_p0.01.csv']
-#titles = ["1order_p0.001", "snrp_1order_p0.001", "mass_1order_p0.001"]
-#titles = ["1order_p0.01", "snrp_1order_p0.01"]
-lines = ['-', '--', '-', '--', '-', '--', '-', '--', '-', '--', '-', '--', '-', '--']
-colors = ['k', 'r', 'y', 'm', 'c', 'g', '#6b420c']
+filenames = ['3D_lattice_1D_off_lattice/greens_function.csv', '3D_lattice_1D_off_lattice/IterateLogX.csv']
+titles = ["Green's Function", "Spatiocyte"]
+lines = ['-', '--', '--', '--', '--', '--', '-', '-']
+colors = ['c', 'k', 'y', 'm', 'g', 'r', '#6b420c']
 
 P.xticks(fontsize=tickFontSize)
 P.yticks(fontsize=tickFontSize)
@@ -48,7 +43,7 @@ P.yticks(fontsize=tickFontSize)
 div = 1.0
 for i in range(len(filenames)):
   if(i == 1):
-    div = 1.0
+    div = 228.0
   else:
     div = 1.0
   f = open(filenames[i], 'r')
@@ -70,17 +65,16 @@ for i in range(len(filenames)):
 
   colSize = len(data)-1
   for j in range(colSize):
-    P.plot(data[0], data[j+1]/div, ls=lines[i], label=titles[i], linewidth=3)
+    P.plot(data[0], data[j+1]/div, ls=lines[i], color=colors[i], label=titles[i], linewidth=3)
 
 
 ax = P.gca()
 ax.grid(color='b', linestyle='--')
-ax.set_xlim(0, 100)
 #ax.yaxis.set_major_locator(MaxNLocator(14))
 leg = P.legend(loc=0, labelspacing=0.2, handletextpad=0.2, fancybox=True, fontsize=18)
 P.ylabel('Survival Probability', fontsize=20)
 P.xlabel('Time (s)', fontsize=20)
 P.ylim(ymax=1.02)
-P.suptitle('1D Reaction Validation', fontsize=tickFontSize)
+P.suptitle('1D Filament-Cylinder Absorption', fontsize=tickFontSize)
 P.show()
 
