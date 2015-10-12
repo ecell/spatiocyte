@@ -316,7 +316,7 @@ void MoleculePopulateProcess::populateBinFractions(Species* aSpecies)
 
   cout << "        Populating bin fractions:" <<
     getIDString(aSpecies) << " current size:" << aSpecies->size() <<
-    ", populate size:" << aSpecies->getPopulateCoordSize();
+    ", populate size:" << aSpecies->getPopulateCoordSize() << std::endl;
   Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
   Species* aVacantSpecies(aSpecies->getVacantSpecies());
   Point C(aComp->centerPoint);
@@ -345,6 +345,11 @@ void MoleculePopulateProcess::populateBinFractions(Species* aSpecies)
       std::vector<unsigned>& binCoords(aCoords[i]);
       std::random_shuffle(binCoords.begin(), binCoords.end());
       const unsigned size(binCoords.size()*theLengthBinFractions[i]);
+      if(size)
+        {
+          std::cout << "          bin:" << i << " fraction:" <<
+            theLengthBinFractions[i] << " populated size:" << size << std::endl;
+        }
       for(unsigned j(0); j != size; ++j)
         {
           Voxel* aVoxel(&(*theLattice)[binCoords[j]]);

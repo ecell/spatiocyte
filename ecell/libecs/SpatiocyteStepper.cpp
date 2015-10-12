@@ -1325,11 +1325,11 @@ void SpatiocyteStepper::rotateCompartment(Comp* aComp)
   //rotate it, only then it would work.
 }
 
-void SpatiocyteStepper::rotate(Comp* aComp, Point& V)
+void SpatiocyteStepper::rotate(Comp* aComp, Point& V, int sign)
 {
-  rotateX(aComp->rotateX, &V);
-  rotateY(aComp->rotateY, &V);
-  rotateZ(aComp->rotateZ, &V);
+  rotateX(aComp->rotateX, &V, sign);
+  rotateY(aComp->rotateY, &V, sign);
+  rotateZ(aComp->rotateZ, &V, sign);
 }
 
 void SpatiocyteStepper::storeSimulationParameters()
@@ -1946,6 +1946,12 @@ void SpatiocyteStepper::setCompProperties(Comp* aComp)
   aComp->lengthX /= VoxelRadius*2;
   aComp->lengthY /= VoxelRadius*2;
   aComp->lengthZ /= VoxelRadius*2;
+  aComp->nLength = aComp->lengthX;
+  aComp->nWidth = aComp->lengthY;
+  aComp->nHeight = aComp->lengthZ;
+  rotate(aComp, aComp->lengthVector, -1);
+  rotate(aComp, aComp->widthVector, -1);
+  rotate(aComp, aComp->heightVector, -1);
 }
 
 double SpatiocyteStepper::getCuboidSpecArea(Comp* aComp)
