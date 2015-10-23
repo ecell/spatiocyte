@@ -50,6 +50,10 @@ binder.VariableReferenceList = [['_', 'Variable:/:B','1']]
 binder.p = 1
 binder.Collision = 1
 
+# pB = (#A/nl)*(2*DB)/(2*r)^2
+# pA = (#B/nl)*(2*DA)/(2*r)^2
+# Z = #A*pA + #B*pB
+
 fil = theSimulator.createEntity('FilamentProcess', 'Process:/:filam')
 fil.VariableReferenceList = [['_', 'Variable:/:Vacant', '-1']]
 fil.VariableReferenceList = [['_', 'Variable:/:sA']]
