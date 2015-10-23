@@ -50,10 +50,6 @@ binder.VariableReferenceList = [['_', 'Variable:/:B','1']]
 binder.p = 1
 binder.Collision = 1
 
-# pB = (#A/nl)*(2*DB)/(2*r)^2
-# pA = (#B/nl)*(2*DA)/(2*r)^2
-# Z = #A*pA + #B*pB
-
 fil = theSimulator.createEntity('FilamentProcess', 'Process:/:filam')
 fil.VariableReferenceList = [['_', 'Variable:/:Vacant', '-1']]
 fil.VariableReferenceList = [['_', 'Variable:/:sA']]
@@ -68,9 +64,9 @@ fil.Periodic = 0
 logger = theSimulator.createEntity('IteratingLogProcess', 'Process:/:iter')
 logger.VariableReferenceList = [['_', 'Variable:/:A']]
 logger.LogInterval = 1e-2
-logger.LogEnd = 10
-logger.Iterations = 10000
+logger.LogEnd = 1000
+logger.Iterations = 1
 logger.Collision = 1
 logger.FileName = "collision.csv"
 
-run(10.01)
+run(1000.01)

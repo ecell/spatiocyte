@@ -529,6 +529,16 @@ public:
           theMolecules[i]->idx = i+theStride*theID;
         }
     }
+  void initCollisionCnt()
+    {
+      theSpeciesCollisionCnt = 0;
+      collisionCnts.resize(theMoleculeSize);
+      for(std::vector<unsigned>::iterator 
+          i(collisionCnts.begin()); i != collisionCnts.end(); ++i)
+        {
+          *i = 0;
+        }
+    }
   void finalizeSpecies()
     {
       for(unsigned i(0); i != theDiffusionInfluencedReactions.size(); ++i)
@@ -536,13 +546,10 @@ public:
           if(theDiffusionInfluencedReactions[i] &&
              theDiffusionInfluencedReactions[i]->getCollision())
             {
-              theSpeciesCollisionCnt = 0;
-              collisionCnts.resize(theMoleculeSize);
-              for(std::vector<unsigned>::iterator 
-                  i(collisionCnts.begin()); i != collisionCnts.end(); ++i)
-                {
-                  *i = 0;
-                }
+              initCollisionCnt();
+              //For non-diffusing target species that does not have
+              //DIRP list:
+              theSpecies[i]->initCollisionCnt();
               break;
             }
         }
