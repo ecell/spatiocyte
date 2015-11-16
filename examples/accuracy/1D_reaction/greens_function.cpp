@@ -12,7 +12,7 @@ int main()
   const Real D(1e-12); //Diffusion coefficient
   const Real a(8e-6); //Distance from middle to the outer boundary
 
-  const Real kf(D*p/r/2); //Spatiocyte rate is k = (DA+DB)*p/rv (unit m/s)
+  const Real kf(D*p/(2*r)); //Spatiocyte rate is k = (DA+DB)*p/(2*rv) (unit m/s)
   const Real r0(0.8e-6); //Distance from the middle to the molecule
   const Real sigma(10e-9); //Distance from the middle to the surface of center molecule 
 

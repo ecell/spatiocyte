@@ -5,7 +5,7 @@ sim.SearchVacant = 0
 
 theSimulator.rootSystem.StepperID = 'SS'
 theSimulator.createEntity('Variable', 'Variable:/:GEOMETRY').Value = 6
-theSimulator.createEntity('Variable', 'Variable:/:LENGTHX').Value = 16e-6
+theSimulator.createEntity('Variable', 'Variable:/:LENGTHX').Value = 1.6e-6
 theSimulator.createEntity('Variable', 'Variable:/:LENGTHY').Value = 0.25e-6
 theSimulator.createEntity('Variable', 'Variable:/:YZPLANE').Value = 1
 theSimulator.createEntity('Variable', 'Variable:/:VACANT')
@@ -18,13 +18,13 @@ s = theSimulator.createEntity('Variable', 'Variable:/:sA')
 s.Value = 0
 s.Name = "HD"
 
-#logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:logger')
-#logger.VariableReferenceList = [['_', 'Variable:/:Vacant']]
-#logger.VariableReferenceList = [['_', 'Variable:/:A']]
-#logger.VariableReferenceList = [['_', 'Variable:/:B']]
-#logger.VariableReferenceList = [['_', 'Variable:/:M']]
-#logger.VariableReferenceList = [['_', 'Variable:/:P']]
-#logger.LogInterval = 0.001
+logger = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:logger')
+logger.VariableReferenceList = [['_', 'Variable:/:Vacant']]
+logger.VariableReferenceList = [['_', 'Variable:/:A']]
+logger.VariableReferenceList = [['_', 'Variable:/:B']]
+logger.VariableReferenceList = [['_', 'Variable:/:M']]
+logger.VariableReferenceList = [['_', 'Variable:/:P']]
+logger.LogInterval = 0.001
 
 pop = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:p1')
 pop.VariableReferenceList = [['_', 'Variable:/:A']]
@@ -41,7 +41,7 @@ diffuser.D = 1e-12
 
 diffuser = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffuseB')
 diffuser.VariableReferenceList = [['_', 'Variable:/:B']]
-diffuser.D = 0
+diffuser.D = 1e-12
 
 binder = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:r3')
 binder.VariableReferenceList = [['_', 'Variable:/:B','-1']]
@@ -50,11 +50,15 @@ binder.VariableReferenceList = [['_', 'Variable:/:B','1']]
 binder.p = 1
 binder.Collision = 1
 
+# pB = (#A/nl)*(2*DB)/(2*r)^2
+# pA = (#B/nl)*(2*DA)/(2*r)^2
+# Z = #A*pA + #B*pB
+
 fil = theSimulator.createEntity('FilamentProcess', 'Process:/:filam')
 fil.VariableReferenceList = [['_', 'Variable:/:Vacant', '-1']]
 fil.VariableReferenceList = [['_', 'Variable:/:sA']]
 fil.VariableReferenceList = [['_', 'Variable:/:A']]
-fil.VariableReferenceList = [['_', 'Variable:/:B']]
+fil.VariableReferenceList = [['_', 'Variable:/:B', '-2']]
 fil.LineX = 1
 fil.LineY = 0
 fil.LineZ = 0
@@ -64,9 +68,9 @@ fil.Periodic = 0
 logger = theSimulator.createEntity('IteratingLogProcess', 'Process:/:iter')
 logger.VariableReferenceList = [['_', 'Variable:/:A']]
 logger.LogInterval = 1e-2
-logger.LogEnd = 1000
+logger.LogEnd = 10
 logger.Iterations = 1
 logger.Collision = 1
 logger.FileName = "collision.csv"
 
-run(1000.01)
+run(10.01)
