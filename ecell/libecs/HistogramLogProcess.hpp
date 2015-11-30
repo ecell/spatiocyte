@@ -53,6 +53,7 @@ public:
       PROPERTYSLOT_SET_GET(Real, OriginX);
       PROPERTYSLOT_SET_GET(Real, OriginY);
       PROPERTYSLOT_SET_GET(Real, OriginZ);
+      PROPERTYSLOT_SET_GET(Real, RadialHeight);
       PROPERTYSLOT_SET_GET(Real, RotateX);
       PROPERTYSLOT_SET_GET(Real, RotateY);
       PROPERTYSLOT_SET_GET(Real, RotateZ);
@@ -64,6 +65,7 @@ public:
   SIMPLE_SET_GET_METHOD(Real, OriginX);
   SIMPLE_SET_GET_METHOD(Real, OriginY);
   SIMPLE_SET_GET_METHOD(Real, OriginZ);
+  SIMPLE_SET_GET_METHOD(Real, RadialHeight);
   SIMPLE_SET_GET_METHOD(Real, RotateX);
   SIMPLE_SET_GET_METHOD(Real, RotateY);
   SIMPLE_SET_GET_METHOD(Real, RotateZ);
@@ -73,6 +75,7 @@ public:
     OriginX(0),
     OriginY(0),
     OriginZ(0),
+    RadialHeight(0),
     Radius(12.5e-9),
     RotateX(0),
     RotateY(0),
@@ -95,24 +98,35 @@ public:
   void initializeVectors();
   void setVacantSizes();
   bool isInside(unsigned int&, Point);
+  bool isInsideLength(unsigned int&, Point);
+  bool isInsideRadial(unsigned int&, Point);
 protected:
   unsigned Density;
   unsigned Bins;
   double binInterval;
   double Length;
   double nLength;
+  double nHeight;
+  double Width;
+  double nWidth;
   double nRadius;
   double OriginX;
   double OriginY;
   double OriginZ;
+  double RadialHeight;
   double Radius;
   double RotateX;
   double RotateY;
   double RotateZ;
   double VoxelDiameter;
   Point lengthVector; 
-  Point Minus; 
-  Point Origin;
+  Point heightVector; 
+  Point widthVector; 
+  Point MinusLength; 
+  Point MinusHeight; 
+  Point MinusWidth; 
+  Point SuperOrigin;
+  Point CompOrigin;
   std::vector<std::vector<std::vector<double> > > theLogValues;
   std::vector<std::vector<double> > theVacantSizes;
 };

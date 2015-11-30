@@ -1586,7 +1586,6 @@ void CompartmentProcess::interfaceSubunits()
   setSubunitInterfaces();
 
 
-  /*
   std::vector<unsigned> sizes(12,0);
   for(unsigned i(subStartCoord); i != lipStartCoord; ++i)
     {
@@ -1597,13 +1596,11 @@ void CompartmentProcess::interfaceSubunits()
       std::cout << "before setNearestInterfaceForOrphanSubunits subunit size i:" << i << " " << sizes[i] <<
         std::endl;
     }
-    */
 
 
   setNearestInterfaceForOrphanSubunits();
 
 
-  /*
   for(unsigned i(0); i != sizes.size(); ++i)
     {
       sizes[i] = 0;
@@ -1635,13 +1632,11 @@ void CompartmentProcess::interfaceSubunits()
       std::cout << "before setNearestSubunitForOrphanInterfaces interface size i:" << i << " " << pairs[i] <<
       std::endl;
     }
-    */
 
 
   setNearestSubunitForOrphanInterfaces();
 
 
-  /*
   for(unsigned i(0); i!= interfaceSubunitPairs.size(); ++i)
     {
       interfaceSubunitPairs[i] = 0;
@@ -1667,7 +1662,6 @@ void CompartmentProcess::interfaceSubunits()
       std::cout << "after interface size i:" << i << " " << pairs[i] <<
       std::endl;
     }
-    */
 
 
   connectSubunitInterfaceAdjoins();

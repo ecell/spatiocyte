@@ -33,11 +33,20 @@
 void HistogramLogProcess::initializeLastOnce()
 {
   theTotalIterations = Iterations;
-  Origin = theSpatiocyteStepper->system2Comp(getSuperSystem())->centerPoint;
+  SuperOrigin = theSpatiocyteStepper->system2Comp(getSuperSystem()
+                                                  )->centerPoint;
   VoxelDiameter = theSpatiocyteStepper->getVoxelRadius()*2;
   nLength = Length/VoxelDiameter;
+  nWidth = Width/VoxelDiameter;
+  nHeight = RadialHeight/VoxelDiameter;
   nRadius = Radius/VoxelDiameter;
   binInterval = nLength/(Bins+1);
+  if(RadialHeight)
+    {
+      nLength = nHeight;
+      nWidth = nHeight;
+      binInterval = 2*M_PI/Bins;
+    }
   initializeVectors();
   if(Density)
     {
@@ -113,7 +122,15 @@ void HistogramLogProcess::saveFileHeader(std::ofstream& aFile)
     {
       aFile << std::setprecision(15);
     }
-  aFile << "Time," << std::scientific << binInterval*VoxelDiameter;
+  aFile << "Time," << std::scientific;
+  if(RadialHeight)
+    {
+      aFile << binInterval*180/M_PI;
+    }
+  else
+    {
+      aFile << binInterval*VoxelDiameter;
+    }
   for(unsigned i(0); i != theProcessSpecies.size(); ++i)
     {
       aFile << "," << getIDString(theProcessSpecies[i]);
@@ -208,38 +225,97 @@ void HistogramLogProcess::logDensity()
 void HistogramLogProcess::initializeVectors()
 {
   //Minus end
-  Minus.x = -nLength/2;
-  Minus.y = 0;
-  Minus.z = 0;
+  MinusLength.x = -nLength/2;
+  MinusLength.y = 0;
+  MinusLength.z = 0;
+  MinusHeight.x = 0;
+  MinusHeight.y = -nHeight/2;
+  MinusHeight.z = 0;
+  MinusWidth.x = 0;
+  MinusWidth.y = 0;
+  MinusWidth.z = -nWidth/2;
   Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
-  Point tmpOrigin;
-  tmpOrigin.x = OriginX*aComp->lengthX/2;
-  tmpOrigin.y = OriginY*aComp->lengthY/2;
-  tmpOrigin.z = OriginZ*aComp->lengthZ/2;
+  CompOrigin.x = OriginX*aComp->lengthX/2;
+  CompOrigin.y = OriginY*aComp->lengthY/2;
+  CompOrigin.z = OriginZ*aComp->lengthZ/2;
   //Rotated Minus end
-  theSpatiocyteStepper->rotateX(aComp->rotateX, &Minus, -1);
-  theSpatiocyteStepper->rotateY(aComp->rotateY, &Minus, -1);
-  theSpatiocyteStepper->rotateZ(aComp->rotateZ, &Minus, -1);
-  theSpatiocyteStepper->rotateX(RotateX, &Minus, 1);
-  theSpatiocyteStepper->rotateY(RotateY, &Minus, 1);
-  theSpatiocyteStepper->rotateZ(RotateZ, &Minus, 1);
-  theSpatiocyteStepper->rotateX(aComp->rotateX, &tmpOrigin, -1);
-  theSpatiocyteStepper->rotateY(aComp->rotateY, &tmpOrigin, -1);
-  theSpatiocyteStepper->rotateZ(aComp->rotateZ, &tmpOrigin, -1);
-  add_(tmpOrigin, Origin);
-  add_(Minus, tmpOrigin);
-  //Direction vector from the Minus end to center
-  //Direction vector from the Minus end to center
-  lengthVector = sub(tmpOrigin, Minus);
-  //Make direction vector a unit vector
-  norm_(lengthVector);
-}
+  theSpatiocyteStepper->rotateX(aComp->rotateX, &MinusLength, -1);
+  theSpatiocyteStepper->rotateY(aComp->rotateY, &MinusLength, -1);
+  theSpatiocyteStepper->rotateZ(aComp->rotateZ, &MinusLength, -1);
+  theSpatiocyteStepper->rotateX(RotateX, &MinusLength, 1);
+  theSpatiocyteStepper->rotateY(RotateY, &MinusLength, 1);
+  theSpatiocyteStepper->rotateZ(RotateZ, &MinusLength, 1);
+  theSpatiocyteStepper->rotateX(aComp->rotateX, &MinusHeight, -1);
+  theSpatiocyteStepper->rotateY(aComp->rotateY, &MinusHeight, -1);
+  theSpatiocyteStepper->rotateZ(aComp->rotateZ, &MinusHeight, -1);
+  theSpatiocyteStepper->rotateX(RotateX, &MinusHeight, 1);
+  theSpatiocyteStepper->rotateY(RotateY, &MinusHeight, 1);
+  theSpatiocyteStepper->rotateZ(RotateZ, &MinusHeight, 1);
+  theSpatiocyteStepper->rotateX(aComp->rotateX, &MinusWidth, -1);
+  theSpatiocyteStepper->rotateY(aComp->rotateY, &MinusWidth, -1);
+  theSpatiocyteStepper->rotateZ(aComp->rotateZ, &MinusWidth, -1);
+  theSpatiocyteStepper->rotateX(RotateX, &MinusWidth, 1);
+  theSpatiocyteStepper->rotateY(RotateY, &MinusWidth, 1);
+  theSpatiocyteStepper->rotateZ(RotateZ, &MinusWidth, 1);
+  theSpatiocyteStepper->rotateX(aComp->rotateX, &CompOrigin, -1);
+  theSpatiocyteStepper->rotateY(aComp->rotateY, &CompOrigin, -1);
+  theSpatiocyteStepper->rotateZ(aComp->rotateZ, &CompOrigin, -1);
 
+  add_(CompOrigin, SuperOrigin);
+  add_(MinusLength, CompOrigin);
+  add_(MinusHeight, CompOrigin);
+  add_(MinusWidth, CompOrigin);
+  lengthVector = sub(CompOrigin, MinusLength);
+  heightVector = sub(CompOrigin, MinusHeight);
+  widthVector = sub(CompOrigin, MinusWidth);
+  norm_(lengthVector);
+  norm_(heightVector);
+  norm_(widthVector);
+}
 
 bool HistogramLogProcess::isInside(unsigned& bin, Point N)
 {
+  if(RadialHeight)
+    {
+      return isInsideRadial(bin, N);
+    }
+  else
+    {
+      return isInsideLength(bin, N);
+    }
+}
+
+bool HistogramLogProcess::isInsideRadial(unsigned& bin, Point N)
+{
+  Point D(heightVector);
+  Point E(MinusHeight);
+  double t((D.x*N.x+D.y*N.y+D.z*N.z-D.x*E.x-D.y*E.y-D.z*E.z)/
+           (D.x*D.x +D.y*D.y+D.z*D.z));
+  if(t < 0 || t > nHeight)
+    {
+      return false;
+    }
+  D = widthVector;
+  E = CompOrigin;
+  t = (D.x*N.x+D.y*N.y+D.z*N.z-D.x*E.x-D.y*E.y-D.z*E.z)/
+    (D.x*D.x +D.y*D.y+D.z*D.z);
+  Point radialVector(sub(N, CompOrigin));
+  norm_(radialVector);
+  double angle(acos(dot(radialVector, lengthVector)));
+  if(t < 0)
+    {
+      angle = 2*M_PI-angle;
+    }
+  //std::cout << "angle:" << angle*180/M_PI << std::endl;
+  bin = (unsigned)floor(angle/binInterval);
+  //std::cout << "bin:" << bin << std::endl;
+  return true;
+}
+
+bool HistogramLogProcess::isInsideLength(unsigned& bin, Point N)
+{
   Point D(lengthVector);
-  Point E(Minus);
+  Point E(MinusLength);
   double t((D.x*N.x+D.y*N.y+D.z*N.z-D.x*E.x-D.y*E.y-D.z*E.z)/
            (D.x*D.x +D.y*D.y+D.z*D.z));
   if(t < 0)
