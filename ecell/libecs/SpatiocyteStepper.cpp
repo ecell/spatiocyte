@@ -3024,6 +3024,8 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
   return false;
 }
 
+/*
+ * This causes surface voxel bug in amoeba spiral
 bool SpatiocyteStepper::isRootSurfaceVoxel(Voxel& aVoxel, unsigned aCoord,
                                            Comp* aComp)
 {
@@ -3039,6 +3041,23 @@ bool SpatiocyteStepper::isRootSurfaceVoxel(Voxel& aVoxel, unsigned aCoord,
     }
   return false;
 }
+*/
+
+bool SpatiocyteStepper::isRootSurfaceVoxel(Voxel& aVoxel, unsigned aCoord,
+                                           Comp* aComp)
+{
+  for(unsigned i(0); i != theAdjoiningCoordSize; ++i)
+    {
+      const unsigned adjoinCoord(aVoxel.adjoiningCoords[i]);
+      const Voxel& adjoin(theLattice[adjoinCoord]);
+      if(adjoin.idx == theNullID*theStride || adjoinCoord == aCoord)
+        {
+          return true;
+        }
+    }
+  return false;
+}
+
 
 bool SpatiocyteStepper::isParentSurfaceVoxel(Voxel& aVoxel, unsigned aCoord,
                                              Comp* aComp)
