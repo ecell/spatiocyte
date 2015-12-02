@@ -53,7 +53,14 @@ void HistogramLogProcess::initialize()
             }
           else
             {
-              theMarkerSpecies.push_back(aSpecies);
+              if((*i).getCoefficient() == -1)
+                {
+                  theCenterSpecies = aSpecies;
+                }
+              else
+                {
+                  theMarkerSpecies = aSpecies;
+                }
             }
         }
     }
@@ -81,7 +88,11 @@ void HistogramLogProcess::initializeLastOnce()
     {
       setVacantSizes();
     }
-  if(theMarkerSpecies.size())
+  if(theCenterSpecies)
+    {
+      populateCenterSpecies();
+    }
+  if(theMarkerSpecies)
     {
       populateMarkerSpecies();
     }
@@ -241,19 +252,36 @@ void HistogramLogProcess::setVacantSizes()
 
 void HistogramLogProcess::populateMarkerSpecies()
 {
-  if(theMarkerSpecies.size())
+  if(theMarkerSpecies)
     {
-      theMarkerSpecies[0]->clearMolecules();
+      theMarkerSpecies->clearMolecules();
       for(unsigned i(0); i != theLattice->size(); ++i)
         {
-          Point aPoint(theMarkerSpecies[0]->coord2point(i));
+          Point aPoint(theMarkerSpecies->coord2point(i));
           unsigned bin;
           if(isInside(bin, aPoint))
             {
-              theMarkerSpecies[0]->softAddMolecule(&(*theLattice)[i]);
+              theMarkerSpecies->softAddMolecule(&(*theLattice)[i]);
             }
         }
-      theMarkerSpecies[0]->setIsPopulated();
+      theMarkerSpecies->setIsPopulated();
+    }
+}
+
+void HistogramLogProcess::populateCenterSpecies()
+{
+  if(theCenterSpecies)
+    {
+      theCenterSpecies->clearMolecules();
+      for(unsigned i(0); i != theLattice->size(); ++i)
+        {
+          Point aPoint(theCenterSpecies->coord2point(i));
+          if(distance(CompOrigin, aPoint) < nHeight/2)
+            {
+              theCenterSpecies->softAddMolecule(&(*theLattice)[i]);
+            }
+        }
+      theCenterSpecies->setIsPopulated();
     }
 }
 
@@ -343,6 +371,15 @@ bool HistogramLogProcess::isInsideRadial(unsigned& bin, Point N)
   double t((D.x*N.x+D.y*N.y+D.z*N.z-D.x*E.x-D.y*E.y-D.z*E.z)/
            (D.x*D.x +D.y*D.y+D.z*D.z));
   if(t < 0 || t > nHeight)
+    {
+      return false;
+    }
+  double dist(distance(CompOrigin, N));
+  if(InnerRadius > 0 && dist < InnerRadius/VoxelDiameter)
+    {
+      return false;
+    }
+  if(OuterRadius != libecs::INF && dist > OuterRadius/VoxelDiameter)
     {
       return false;
     }

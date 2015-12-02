@@ -49,10 +49,12 @@ public:
       PROPERTYSLOT_SET_GET(Integer, Bins);
       PROPERTYSLOT_SET_GET(Integer, Density);
       PROPERTYSLOT_SET_GET(Real, Radius);
+      PROPERTYSLOT_SET_GET(Real, InnerRadius);
       PROPERTYSLOT_SET_GET(Real, Length);
       PROPERTYSLOT_SET_GET(Real, OriginX);
       PROPERTYSLOT_SET_GET(Real, OriginY);
       PROPERTYSLOT_SET_GET(Real, OriginZ);
+      PROPERTYSLOT_SET_GET(Real, OuterRadius);
       PROPERTYSLOT_SET_GET(Real, RadialHeight);
       PROPERTYSLOT_SET_GET(Real, RotateX);
       PROPERTYSLOT_SET_GET(Real, RotateY);
@@ -60,11 +62,13 @@ public:
     }
   SIMPLE_SET_GET_METHOD(Integer, Bins);
   SIMPLE_SET_GET_METHOD(Integer, Density);
+  SIMPLE_SET_GET_METHOD(Real, InnerRadius);
   SIMPLE_SET_GET_METHOD(Real, Radius);
   SIMPLE_SET_GET_METHOD(Real, Length);
   SIMPLE_SET_GET_METHOD(Real, OriginX);
   SIMPLE_SET_GET_METHOD(Real, OriginY);
   SIMPLE_SET_GET_METHOD(Real, OriginZ);
+  SIMPLE_SET_GET_METHOD(Real, OuterRadius);
   SIMPLE_SET_GET_METHOD(Real, RadialHeight);
   SIMPLE_SET_GET_METHOD(Real, RotateX);
   SIMPLE_SET_GET_METHOD(Real, RotateY);
@@ -72,14 +76,18 @@ public:
   HistogramLogProcess():
     Density(1),
     Bins(1),
+    InnerRadius(0),
     OriginX(0),
     OriginY(0),
     OriginZ(0),
+    OuterRadius(libecs::INF),
     RadialHeight(0),
     Radius(12.5e-9),
     RotateX(0),
     RotateY(0),
-    RotateZ(0) 
+    RotateZ(0),
+    theCenterSpecies(NULL),
+    theMarkerSpecies(NULL)
   {
     FileName = "HistogramLog.csv";
     LogStart = 1e-8;
@@ -98,6 +106,7 @@ public:
                               const unsigned);
   void initializeVectors();
   void setVacantSizes();
+  void populateCenterSpecies();
   void populateMarkerSpecies();
   bool isInside(unsigned int&, Point);
   bool isInsideLength(unsigned int&, Point);
@@ -106,6 +115,7 @@ protected:
   unsigned Density;
   unsigned Bins;
   double binInterval;
+  double InnerRadius;
   double Length;
   double nLength;
   double nHeight;
@@ -115,6 +125,7 @@ protected:
   double OriginX;
   double OriginY;
   double OriginZ;
+  double OuterRadius;
   double RadialHeight;
   double Radius;
   double RotateX;
@@ -129,7 +140,8 @@ protected:
   Point MinusWidth; 
   Point SuperOrigin;
   Point CompOrigin;
-  std::vector<Species*> theMarkerSpecies;
+  Species* theCenterSpecies;
+  Species* theMarkerSpecies;
   std::vector<std::vector<std::vector<double> > > theLogValues;
   std::vector<std::vector<double> > theVacantSizes;
 };
