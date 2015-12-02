@@ -30,6 +30,35 @@
 
 #include <HistogramLogProcess.hpp>
 
+
+void HistogramLogProcess::initialize()
+{
+  if(isInitialized)
+    {
+      return;
+    }
+  IteratingLogProcess::initialize();
+  theProcessSpecies.resize(0);
+  for(VariableReferenceVector::iterator
+      i(theSortedVariableReferences.begin());
+      i != theSortedVariableReferences.end(); ++i)
+    {
+      Variable* aVariable((*i).getVariable()); 
+      if(aVariable->getName() != "HD")
+        {
+          Species* aSpecies(theSpatiocyteStepper->addSpecies(aVariable));
+          if((*i).getCoefficient() >= 0)
+            {
+              theProcessSpecies.push_back(aSpecies);
+            }
+          else
+            {
+              theMarkerSpecies.push_back(aSpecies);
+            }
+        }
+    }
+}
+
 void HistogramLogProcess::initializeLastOnce()
 {
   theTotalIterations = Iterations;
@@ -51,6 +80,10 @@ void HistogramLogProcess::initializeLastOnce()
   if(Density)
     {
       setVacantSizes();
+    }
+  if(theMarkerSpecies.size())
+    {
+      populateMarkerSpecies();
     }
 }
 
@@ -203,6 +236,24 @@ void HistogramLogProcess::setVacantSizes()
             " bin:" << j << " size:" << theVacantSizes[i][j] << std::endl;
         }
         */
+    }
+}
+
+void HistogramLogProcess::populateMarkerSpecies()
+{
+  if(theMarkerSpecies.size())
+    {
+      theMarkerSpecies[0]->clearMolecules();
+      for(unsigned i(0); i != theLattice->size(); ++i)
+        {
+          Point aPoint(theMarkerSpecies[0]->coord2point(i));
+          unsigned bin;
+          if(isInside(bin, aPoint))
+            {
+              theMarkerSpecies[0]->softAddMolecule(&(*theLattice)[i]);
+            }
+        }
+      theMarkerSpecies[0]->setIsPopulated();
     }
 }
 

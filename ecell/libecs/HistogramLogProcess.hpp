@@ -85,6 +85,7 @@ public:
     LogStart = 1e-8;
   }
   virtual ~HistogramLogProcess() {}
+  virtual void initialize();
   virtual void initializeLastOnce();
   virtual void saveBackup();
   virtual void logValues();
@@ -97,6 +98,7 @@ public:
                               const unsigned);
   void initializeVectors();
   void setVacantSizes();
+  void populateMarkerSpecies();
   bool isInside(unsigned int&, Point);
   bool isInsideLength(unsigned int&, Point);
   bool isInsideRadial(unsigned int&, Point);
@@ -127,6 +129,7 @@ protected:
   Point MinusWidth; 
   Point SuperOrigin;
   Point CompOrigin;
+  std::vector<Species*> theMarkerSpecies;
   std::vector<std::vector<std::vector<double> > > theLogValues;
   std::vector<std::vector<double> > theVacantSizes;
 };
