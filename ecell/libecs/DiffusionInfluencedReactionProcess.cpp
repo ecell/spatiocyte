@@ -214,15 +214,15 @@ bool DiffusionInfluencedReactionProcess::reactVarD_AtoC(Voxel* molA,
                                                         const unsigned indexA,
                                                         const unsigned indexB)
 {
-  std::cout << getIDString(variableD) << " beg:" << variableD->getValue() <<
-    std::endl;
+  //std::cout << getIDString(variableD) << " beg:" << variableD->getValue() <<
+  //  std::endl;
   interruptProcessesPre();
   variableD->addValue(1);
   C->addMolecule(molA, A->getTag(indexA));
   A->softRemoveMolecule(indexA);
   removeMolecule(B, molB, indexB);
-  std::cout << getIDString(variableD) << " end:" << variableD->getValue() <<
-    std::endl;
+  //std::cout << getIDString(variableD) << " end:" << variableD->getValue() <<
+  //  std::endl;
   return true;
 }
 
