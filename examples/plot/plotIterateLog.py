@@ -25,7 +25,7 @@ scale = voxelRadius*2
 speciesNames = []
 speciesRadii = []
 for i in range(len(legendTitles)-5):
-  speciesNames.append(legendTitles[i+5].split("=")[0])
+  speciesNames.append(legendTitles[i+5].split("=")[0].split(']')[0].strip('['))
   speciesRadii.append(float(legendTitles[i+5].split("=")[1]))
 speciesSize = len(speciesNames)
 

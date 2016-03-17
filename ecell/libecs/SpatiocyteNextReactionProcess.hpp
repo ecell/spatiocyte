@@ -165,6 +165,7 @@ protected:
   void updateSubstrates();
   virtual void setPropensityMethod();
   virtual bool reactACD(Species*, Species*, Species*);
+  virtual bool reactACDF(Species*, Species*, Species*, Species*);
   virtual bool reactAC(Species*, Species*);
   virtual bool reactDeoligomerize(Species*, Species*);
   virtual bool reactACbind(Species*, Species*);

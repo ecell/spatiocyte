@@ -99,6 +99,11 @@ bool SpatiocyteNextReactionProcess::react()
         {
           return reactACDorFbind(A, C, D, E, F, H);
         }
+      //nonHD_A -> nonHD_C + nonHD_D + nonHD_F:
+      else if(A && C && D && F)
+        {
+          return reactACDF(A, C, D, F);
+        }
       //nonHD_A -> nonHD_C + nonHD_D:
       else if(A && C && D)
         {
@@ -155,6 +160,72 @@ bool SpatiocyteNextReactionProcess::react()
           //std::cout << "sn3" << std::endl;
           variableC->addValue(coefficientC);
           //std::cout << "sn4" << std::endl;
+        }
+      //nonHD_A -> nonHD_C + HD_D + HD_F:
+      //nonHD_A -> HD_C + nonHD_D + HD_F:
+      //nonHD_A -> HD_C + HD_D + nonHD_F:
+      else if(A && ((C && variableD && variableF) ||
+                    (variableC && D && variableF) ||
+                    (variableC && variableD && F)))
+        {
+          Variable* HD_p1(variableD);
+          Variable* HD_p2(variableF);
+          int coefficient1(coefficientD);
+          int coefficient2(coefficientF);
+          Species* nonHD_p(C);
+          if(D)
+            {
+              HD_p1 = variableC;
+              coefficient1 = coefficientC;
+              nonHD_p = D;
+            }
+          else if(F)
+            {
+              HD_p2 = variableC;
+              coefficient2 = coefficientC;
+              nonHD_p = F;
+            }
+          if(reactAC(A, nonHD_p))
+             {
+               HD_p1->addValue(coefficient1);
+               HD_p2->addValue(coefficient2);
+             }
+          else
+            {
+              return false;
+            }
+        }
+      //nonHD_A -> HD_C + nonHD_D + nonHD_F:
+      //nonHD_A -> nonHD_C + HD_D + nonHD_F:
+      //nonHD_A -> nonHD_C + nonHD_D + HD_F:
+      else if(A && ((variableC && D && F) ||
+                    (C && variableD && F) ||
+                    (C && D && variableF)))
+        {
+          Variable* HD_p(variableC);
+          int coefficient(coefficientC);
+          Species* nonHD_p1(D);
+          Species* nonHD_p2(F);
+          if(variableD)
+            {
+              HD_p = variableD;
+              coefficient = coefficientD;
+              nonHD_p1 = C;
+            }
+          else if(variableF)
+            {
+              HD_p = variableF;
+              coefficient = coefficientF;
+              nonHD_p2 = C;
+            }
+          if(reactACD(A, nonHD_p1, nonHD_p2))
+             {
+               HD_p->addValue(coefficient);
+             }
+          else
+            {
+              return false;
+            }
         }
       //nonHD_A -> nonHD_C + HD_D:
       //nonHD_A -> HD_C + nonHD_D:
@@ -561,6 +632,98 @@ void SpatiocyteNextReactionProcess::reactABCD()
       B->removeMolecule(indexB);
       D->addMolecule(moleculeB, tagB);
     }
+}
+
+//nonHD -> nonHD + nonHD + nonHD
+bool SpatiocyteNextReactionProcess::reactACDF(Species* a, Species* c,
+                                              Species* d, Species* f)
+{
+  unsigned indexA(a->getRandomValidIndex());
+  if(indexA == a->size())
+    {
+      return false;
+    }
+  moleculeA = a->getMolecule(indexA);
+  //This is needed when a is species B, used by interruptedPre:
+  moleculeB = moleculeA;
+  moleculeC = NULL;
+  moleculeD = NULL;
+  moleculeF = NULL;
+  if(a->getVacantID() == c->getVacantID() || a->getID() == c->getVacantID())
+    {
+      moleculeC = moleculeA;
+      moleculeD = d->getRandomAdjoiningVoxel(moleculeC, SearchVacant);
+      if(moleculeD == NULL)
+        {
+          return false;
+        }
+      moleculeF = f->getRandomAdjoiningVoxel(moleculeC, moleculeD,
+                                             SearchVacant);
+      if(moleculeF == NULL)
+        {
+          return false;
+        }
+    }
+  else if(a->getVacantID() == d->getVacantID() ||
+          a->getID() == d->getVacantID())
+    {
+      moleculeD = moleculeA;
+      moleculeC = c->getRandomAdjoiningVoxel(moleculeD, SearchVacant);
+      if(moleculeC == NULL)
+        {
+          return false;
+        }
+      moleculeF = f->getRandomAdjoiningVoxel(moleculeC, moleculeD,
+                                             SearchVacant);
+      if(moleculeF == NULL)
+        {
+          return false;
+        }
+    }
+  else if(a->getVacantID() == f->getVacantID() ||
+          a->getID() == f->getVacantID())
+    {
+      moleculeF = moleculeA;
+      moleculeC = c->getRandomAdjoiningVoxel(moleculeF, SearchVacant);
+      if(moleculeC == NULL)
+        {
+          return false;
+        }
+      moleculeD = d->getRandomAdjoiningVoxel(moleculeC, moleculeF,
+                                             SearchVacant);
+      if(moleculeD == NULL)
+        {
+          return false;
+        }
+    }
+  else
+    {
+      moleculeC = c->getRandomAdjoiningVoxel(moleculeA, SearchVacant);
+      if(moleculeC == NULL)
+        {
+          //Only proceed if we can find an adjoining vacant voxel
+          //of nonND which can be occupied by C:
+          return false;
+        }
+      moleculeD = d->getRandomAdjoiningVoxel(moleculeC, SearchVacant);
+      if(moleculeD == NULL)
+        {
+          return false;
+        }
+      moleculeF = f->getRandomAdjoiningVoxel(moleculeC, moleculeD,
+                                             SearchVacant);
+      if(moleculeF == NULL)
+        {
+          return false;
+        }
+    }
+  interruptProcessesPre();
+  Tag tagA(a->getTag(indexA));
+  a->removeMolecule(indexA);
+  c->addMolecule(moleculeC, tagA);
+  d->addMolecule(moleculeD);
+  f->addMolecule(moleculeF);
+  return true;
 }
 
 //nonHD -> nonHD + nonHD
