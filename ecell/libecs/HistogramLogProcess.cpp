@@ -81,7 +81,7 @@ void HistogramLogProcess::initializeLastOnce()
     {
       nLength = nHeight;
       nWidth = nHeight;
-      binInterval = 2*M_PI/(Bins+1);
+      binInterval = 2*M_PI/(Bins);
     }
   initializeVectors();
   if(Density)
