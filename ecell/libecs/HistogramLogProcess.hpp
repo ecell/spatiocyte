@@ -47,6 +47,7 @@ public:
     {
       INHERIT_PROPERTIES(IteratingLogProcess);
       PROPERTYSLOT_SET_GET(Integer, Bins);
+      PROPERTYSLOT_SET_GET(Integer, StartBin);
       PROPERTYSLOT_SET_GET(Integer, Density);
       PROPERTYSLOT_SET_GET(Real, Radius);
       PROPERTYSLOT_SET_GET(Real, InnerRadius);
@@ -61,6 +62,7 @@ public:
       PROPERTYSLOT_SET_GET(Real, RotateZ);
     }
   SIMPLE_SET_GET_METHOD(Integer, Bins);
+  SIMPLE_SET_GET_METHOD(Integer, StartBin);
   SIMPLE_SET_GET_METHOD(Integer, Density);
   SIMPLE_SET_GET_METHOD(Real, InnerRadius);
   SIMPLE_SET_GET_METHOD(Real, Radius);
@@ -76,6 +78,7 @@ public:
   HistogramLogProcess():
     Density(1),
     Bins(1),
+    StartBin(0),
     InnerRadius(0),
     OriginX(0),
     OriginY(0),
@@ -114,6 +117,7 @@ public:
 protected:
   unsigned Density;
   unsigned Bins;
+  unsigned StartBin;
   double binInterval;
   double InnerRadius;
   double Length;

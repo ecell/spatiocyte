@@ -81,7 +81,7 @@ void HistogramLogProcess::initializeLastOnce()
     {
       nLength = nHeight;
       nWidth = nHeight;
-      binInterval = 2*M_PI/Bins;
+      binInterval = 2*M_PI/(Bins+1);
     }
   initializeVectors();
   if(Density)
@@ -394,9 +394,15 @@ bool HistogramLogProcess::isInsideRadial(unsigned& bin, Point N)
     {
       angle = 2*M_PI-angle;
     }
-  //std::cout << "angle:" << angle*180/M_PI << std::endl;
   bin = (unsigned)floor(angle/binInterval);
-  //std::cout << "bin:" << bin << std::endl;
+  if(bin >= StartBin)
+    {
+      bin = bin-StartBin;
+    }
+  else
+    {
+      bin = Bins+bin-StartBin;
+    }
   return true;
 }
 
