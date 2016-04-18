@@ -1,10 +1,15 @@
 import numpy as np
 import pylab as P
+import matplotlib as mpl
 
-labelFontSize = 14
-tickFontSize = 14
-legendFontSize = 14
-lineFontSize = 14
+fontsize = 15
+mpl.rcParams.update({'font.size': fontsize})
+
+
+labelFontSize = fontsize
+tickFontSize = fontsize
+legendFontSize = fontsize
+lineFontSize = fontsize
 
 fileNames = ["IterateLog.csv"]
 legendTitles = []
@@ -25,7 +30,7 @@ scale = voxelRadius*2
 speciesNames = []
 speciesRadii = []
 for i in range(len(legendTitles)-5):
-  speciesNames.append(legendTitles[i+5].split("=")[0].split(']')[0].strip('['))
+  speciesNames.append(legendTitles[i+5].split("=")[0].split(']')[0].strip('[').split(':')[1])
   speciesRadii.append(float(legendTitles[i+5].split("=")[1]))
 speciesSize = len(speciesNames)
 
@@ -47,5 +52,5 @@ frame.set_facecolor('0.95')
 frame.set_edgecolor('0.75')
 P.ylabel('# Molecules')
 P.xlabel('Time (s)')
+P.savefig('iterate.png', bbox_inches='tight')
 P.show()
-
