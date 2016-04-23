@@ -57,9 +57,13 @@ void HistogramLogProcess::initialize()
                 {
                   theCenterSpecies = aSpecies;
                 }
-              else
+              else if((*i).getCoefficient() == -2)
                 {
                   theMarkerSpecies = aSpecies;
+                }
+              else
+                {
+                  theFirstBinSpecies = aSpecies;
                 }
             }
         }
@@ -95,6 +99,10 @@ void HistogramLogProcess::initializeLastOnce()
   if(theMarkerSpecies)
     {
       populateMarkerSpecies();
+    }
+  if(theFirstBinSpecies)
+    {
+      populateFirstBinSpecies();
     }
 }
 
@@ -273,15 +281,38 @@ void HistogramLogProcess::populateCenterSpecies()
   if(theCenterSpecies)
     {
       theCenterSpecies->clearMolecules();
+      double dist(nHeight/2);
+      if(!dist)
+        {
+          dist = nRadius/2;
+        }
       for(unsigned i(0); i != theLattice->size(); ++i)
         {
           Point aPoint(theCenterSpecies->coord2point(i));
-          if(distance(CompOrigin, aPoint) < nHeight/2)
+          if(distance(CompOrigin, aPoint) < dist)
             {
               theCenterSpecies->softAddMolecule(&(*theLattice)[i]);
             }
         }
       theCenterSpecies->setIsPopulated();
+    }
+}
+
+void HistogramLogProcess::populateFirstBinSpecies()
+{
+  if(theFirstBinSpecies)
+    {
+      theFirstBinSpecies->clearMolecules();
+      for(unsigned i(0); i != theLattice->size(); ++i)
+        {
+          Point aPoint(theFirstBinSpecies->coord2point(i));
+          unsigned bin;
+          if(isInside(bin, aPoint) && bin == 0)
+            {
+              theFirstBinSpecies->softAddMolecule(&(*theLattice)[i]);
+            }
+        }
+      theFirstBinSpecies->setIsPopulated();
     }
 }
 

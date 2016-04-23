@@ -90,6 +90,7 @@ public:
     RotateY(0),
     RotateZ(0),
     theCenterSpecies(NULL),
+    theFirstBinSpecies(NULL),
     theMarkerSpecies(NULL)
   {
     FileName = "HistogramLog.csv";
@@ -110,6 +111,7 @@ public:
   void initializeVectors();
   void setVacantSizes();
   void populateCenterSpecies();
+  void populateFirstBinSpecies();
   void populateMarkerSpecies();
   bool isInside(unsigned int&, Point);
   bool isInsideLength(unsigned int&, Point);
@@ -145,6 +147,7 @@ protected:
   Point SuperOrigin;
   Point CompOrigin;
   Species* theCenterSpecies;
+  Species* theFirstBinSpecies;
   Species* theMarkerSpecies;
   std::vector<std::vector<std::vector<double> > > theLogValues;
   std::vector<std::vector<double> > theVacantSizes;
