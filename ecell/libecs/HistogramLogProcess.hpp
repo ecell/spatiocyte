@@ -91,6 +91,7 @@ public:
     RotateZ(0),
     theCenterSpecies(NULL),
     theFirstBinSpecies(NULL),
+    theLastBinSpecies(NULL),
     theMarkerSpecies(NULL)
   {
     FileName = "HistogramLog.csv";
@@ -145,6 +146,7 @@ protected:
   Point CompOrigin;
   Species* theCenterSpecies;
   Species* theFirstBinSpecies;
+  Species* theLastBinSpecies;
   Species* theMarkerSpecies;
   std::vector<std::vector<std::vector<double> > > theLogValues;
   std::vector<std::vector<double> > theVacantSizes;

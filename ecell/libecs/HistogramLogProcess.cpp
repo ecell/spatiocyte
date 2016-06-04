@@ -61,9 +61,13 @@ void HistogramLogProcess::initialize()
                 {
                   theMarkerSpecies = aSpecies;
                 }
-              else
+              else if((*i).getCoefficient() == -3)
                 {
                   theFirstBinSpecies = aSpecies;
+                }
+              else if((*i).getCoefficient() == -4)
+                {
+                  theLastBinSpecies = aSpecies;
                 }
             }
         }
@@ -80,7 +84,7 @@ void HistogramLogProcess::initializeLastOnce()
   nWidth = Width/VoxelDiameter;
   nHeight = RadialHeight/VoxelDiameter;
   nRadius = Radius/VoxelDiameter;
-  binInterval = nLength/(Bins+1);
+  binInterval = nLength/Bins;
   if(RadialHeight)
     {
       nLength = nHeight;
@@ -88,7 +92,8 @@ void HistogramLogProcess::initializeLastOnce()
       binInterval = 2*M_PI/(Bins);
     }
   initializeVectors();
-  if(Density || theCenterSpecies || theMarkerSpecies || theFirstBinSpecies)
+  if(Density || theCenterSpecies || theMarkerSpecies || theFirstBinSpecies ||
+     theLastBinSpecies)
     {
       setVacantSizes();
     }
@@ -267,6 +272,12 @@ void HistogramLogProcess::setVacantSizes()
                       theFirstBinSpecies->softAddMolecule(
                                               aSpecies->getMolecule(j));
                     }
+                  if(theLastBinSpecies && !aSpecies->getIsOffLattice() &&
+                     bin == Bins-1)
+                    {
+                      theLastBinSpecies->softAddMolecule(
+                                              aSpecies->getMolecule(j));
+                    }
                 }
               if(theCenterSpecies && !aSpecies->getIsOffLattice() &&
                  distance(CompOrigin, aPoint) < dist)
@@ -287,6 +298,10 @@ void HistogramLogProcess::setVacantSizes()
   if(theFirstBinSpecies)
     {
       theFirstBinSpecies->setIsPopulated();
+    }
+  if(theLastBinSpecies)
+    {
+      theLastBinSpecies->setIsPopulated();
     }
 }
 
