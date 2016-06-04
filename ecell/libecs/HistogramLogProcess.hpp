@@ -110,9 +110,6 @@ public:
                               const unsigned);
   void initializeVectors();
   void setVacantSizes();
-  void populateCenterSpecies();
-  void populateFirstBinSpecies();
-  void populateMarkerSpecies();
   bool isInside(unsigned int&, Point);
   bool isInsideLength(unsigned int&, Point);
   bool isInsideRadial(unsigned int&, Point);

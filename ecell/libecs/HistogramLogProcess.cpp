@@ -88,21 +88,9 @@ void HistogramLogProcess::initializeLastOnce()
       binInterval = 2*M_PI/(Bins);
     }
   initializeVectors();
-  if(Density)
+  if(Density || theCenterSpecies || theMarkerSpecies || theFirstBinSpecies)
     {
       setVacantSizes();
-    }
-  if(theCenterSpecies)
-    {
-      populateCenterSpecies();
-    }
-  if(theMarkerSpecies)
-    {
-      populateMarkerSpecies();
-    }
-  if(theFirstBinSpecies)
-    {
-      populateFirstBinSpecies();
     }
 }
 
@@ -236,82 +224,68 @@ void HistogramLogProcess::logCollision()
 void HistogramLogProcess::setVacantSizes()
 {
   theVacantSizes.resize(theProcessSpecies.size());
+  double dist(nHeight/2);
+  if(!dist)
+    {
+      dist = nRadius/2;
+    }
   for(unsigned i(0); i != theProcessSpecies.size(); ++i)
     {
       theVacantSizes[i].resize(Bins);
       Species* aSpecies(theProcessSpecies[i]->getVacantSpecies());
-      for(unsigned j(0); j != aSpecies->size(); ++j)
+      bool isSet(false);
+      for(unsigned j(0); j != theProcessSpecies.size() && j < i; ++j)
         {
-          unsigned bin;
-          if(isInside(bin, aSpecies->getPoint(j)))
+          Species* bSpecies(theProcessSpecies[j]->getVacantSpecies());
+          if(aSpecies == bSpecies)
             {
-              theVacantSizes[i][bin] += 1;
+              for(unsigned k(0); k != Bins; ++k)
+                {
+                  theVacantSizes[i][k] = theVacantSizes[j][k];
+                }
+              isSet = true;
+              break;
             }
         }
-      /*
-      for(unsigned j(0); j != Bins; ++j)
+      if(!isSet)
         {
-          std::cout << "species:" << getIDString(theProcessSpecies[i]) <<
-            " bin:" << j << " size:" << theVacantSizes[i][j] << std::endl;
+          for(unsigned j(0); j != aSpecies->size(); ++j)
+            {
+              unsigned bin;
+              Point aPoint(aSpecies->getPoint(j));
+              if(isInside(bin, aPoint))
+                {
+                  theVacantSizes[i][bin] += 1;
+                  if(theMarkerSpecies && !aSpecies->getIsOffLattice())
+                    {
+                      theMarkerSpecies->softAddMolecule(
+                                              aSpecies->getMolecule(j));
+                    }
+                  if(theFirstBinSpecies && !aSpecies->getIsOffLattice() &&
+                     bin == 0)
+                    {
+                      theFirstBinSpecies->softAddMolecule(
+                                              aSpecies->getMolecule(j));
+                    }
+                }
+              if(theCenterSpecies && !aSpecies->getIsOffLattice() &&
+                 distance(CompOrigin, aPoint) < dist)
+                {
+                  theCenterSpecies->softAddMolecule(aSpecies->getMolecule(j));
+                }
+            }
         }
-        */
     }
-}
-
-void HistogramLogProcess::populateMarkerSpecies()
-{
   if(theMarkerSpecies)
     {
-      theMarkerSpecies->clearMolecules();
-      for(unsigned i(0); i != theLattice->size(); ++i)
-        {
-          Point aPoint(theMarkerSpecies->coord2point(i));
-          unsigned bin;
-          if(isInside(bin, aPoint))
-            {
-              theMarkerSpecies->softAddMolecule(&(*theLattice)[i]);
-            }
-        }
       theMarkerSpecies->setIsPopulated();
     }
-}
-
-void HistogramLogProcess::populateCenterSpecies()
-{
   if(theCenterSpecies)
     {
-      theCenterSpecies->clearMolecules();
-      double dist(nHeight/2);
-      if(!dist)
-        {
-          dist = nRadius/2;
-        }
-      for(unsigned i(0); i != theLattice->size(); ++i)
-        {
-          Point aPoint(theCenterSpecies->coord2point(i));
-          if(distance(CompOrigin, aPoint) < dist)
-            {
-              theCenterSpecies->softAddMolecule(&(*theLattice)[i]);
-            }
-        }
       theCenterSpecies->setIsPopulated();
     }
-}
-
-void HistogramLogProcess::populateFirstBinSpecies()
-{
   if(theFirstBinSpecies)
     {
-      theFirstBinSpecies->clearMolecules();
-      for(unsigned i(0); i != theLattice->size(); ++i)
-        {
-          Point aPoint(theFirstBinSpecies->coord2point(i));
-          unsigned bin;
-          if(isInside(bin, aPoint) && bin == 0)
-            {
-              theFirstBinSpecies->softAddMolecule(&(*theLattice)[i]);
-            }
-        }
       theFirstBinSpecies->setIsPopulated();
     }
 }
