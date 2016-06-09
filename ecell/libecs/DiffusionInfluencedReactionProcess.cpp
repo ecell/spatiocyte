@@ -794,7 +794,7 @@ void DiffusionInfluencedReactionProcess::setForcedSequenceReactMethod()
           else
             {
               setGeneralForcedSequenceReactMethod();
-            }
+            }/mo
         }
       //A + B => B + D
       else if(B == C)
@@ -816,6 +816,61 @@ void DiffusionInfluencedReactionProcess::setForcedSequenceReactMethod()
         }
     }
     */
+}
+
+void DiffusionInfluencedReactionProcess::reactAdjoinsPost()
+{
+  if(theAdjoinSubstratesPostA.size())
+    {
+      reactAdjoins(moleculeA, moleculeB, theAdjoinSubstratesPostA,
+                   theAdjoinProductsPostA);
+    }
+  if(theAdjoinSubstratesPostB.size())
+    {
+      reactAdjoins(moleculeB, moleculeA, theAdjoinSubstratesPostB,
+                   theAdjoinProductsPostB);
+    }
+}
+
+void DiffusionInfluencedReactionProcess::reactAdjoinsPre()
+{
+  if(theAdjoinSubstratesPreA.size())
+    {
+      reactAdjoins(moleculeA, moleculeB, theAdjoinSubstratesPreA,
+                   theAdjoinProductsPreA);
+    }
+  if(theAdjoinSubstratesPreB.size())
+    {
+      reactAdjoins(moleculeB, moleculeA, theAdjoinSubstratesPreB,
+                   theAdjoinProductsPreB);
+    }
+}
+
+void DiffusionInfluencedReactionProcess::reactAdjoins(Voxel* source,
+                                      Voxel* excluded,
+                                      std::vector<unsigned>& adjoinSubstrates,
+                                      std::vector<unsigned>& adjoinProducts)
+{
+  for(unsigned i(0); i != source->diffuseSize; ++i)
+    { 
+      Voxel* mol(&(*theLattice)[source->adjoiningCoords[i]]);
+      if(mol != excluded)
+        {
+          Species* substrate(theSpecies[getID(mol)]);
+          std::vector<unsigned>::iterator iterator(std::find(
+            adjoinSubstrates.begin(), adjoinSubstrates.end(),
+            substrate->getID())); 
+          if(iterator != adjoinSubstrates.end())
+            {
+              Species* product(theSpecies[adjoinProducts[iterator-
+                               adjoinSubstrates.begin()]]);
+
+              unsigned index(substrate->getIndex(mol));
+              product->addMolecule(mol, substrate->getTag(index));
+              substrate->softRemoveMolecule(index);
+            }
+        }
+    }
 }
 
 void DiffusionInfluencedReactionProcess::setGeneralForcedSequenceReactMethod()

@@ -47,86 +47,152 @@ void ReactionProcess::calculateOrder()
       Variable* aVariable((*i).getVariable());
       if(aCoefficient < 0)
         {
-          theOrder -= aCoefficient; 
-          //The first reactant, A:
-          if(A == NULL && variableA == NULL)
+          if(aCoefficient <= -10)
             {
-              coefficientA = aCoefficient;
               if(aVariable->getName() == "HD")
                 {
-                  variableA = aVariable;
+                  THROW_EXCEPTION(ValueError,
+                     String(getPropertyInterface().getClassName()) +
+                     "[" + getFullID().asString() + "]: For <= -10" +
+                      " coefficients, only nonHD species allowed.");
                 }
               else
                 {
-                  A = theSpatiocyteStepper->getSpecies(aVariable);
+                  Species* species(theSpatiocyteStepper->getSpecies(aVariable));
+                  if(aCoefficient == -10)
+                    {
+                      theAdjoinSubstratesPreA.push_back(species->getID());
+                    }
+                  else if(aCoefficient == -20)
+                    {
+                      theAdjoinSubstratesPreB.push_back(species->getID());
+                    }
+                  if(aCoefficient == -11)
+                    {
+                      theAdjoinSubstratesPostA.push_back(species->getID());
+                    }
+                  else if(aCoefficient == -21)
+                    {
+                      theAdjoinSubstratesPostB.push_back(species->getID());
+                    }
                 }
             }
-          //The second reactant, B:
-          else if(B == NULL && variableB == NULL)
-            {
-              coefficientB = aCoefficient;
-              if(aVariable->getName() == "HD")
-                {
-                  variableB = aVariable;
-                }
-              else
-                {
-                  B = theSpatiocyteStepper->getSpecies(aVariable);
-                }
-            }
-          //The third reactant, G:
           else
             {
-              coefficientG = aCoefficient;
-              if(aVariable->getName() == "HD")
+              theOrder -= aCoefficient; 
+              //The first reactant, A:
+              if(A == NULL && variableA == NULL)
                 {
-                  variableG = aVariable;
+                  coefficientA = aCoefficient;
+                  if(aVariable->getName() == "HD")
+                    {
+                      variableA = aVariable;
+                    }
+                  else
+                    {
+                      A = theSpatiocyteStepper->getSpecies(aVariable);
+                    }
                 }
+              //The second reactant, B:
+              else if(B == NULL && variableB == NULL)
+                {
+                  coefficientB = aCoefficient;
+                  if(aVariable->getName() == "HD")
+                    {
+                      variableB = aVariable;
+                    }
+                  else
+                    {
+                      B = theSpatiocyteStepper->getSpecies(aVariable);
+                    }
+                }
+              //The third reactant, G:
               else
                 {
-                  G = theSpatiocyteStepper->getSpecies(aVariable);
+                  coefficientG = aCoefficient;
+                  if(aVariable->getName() == "HD")
+                    {
+                      variableG = aVariable;
+                    }
+                  else
+                    {
+                      G = theSpatiocyteStepper->getSpecies(aVariable);
+                    }
                 }
             }
         }
       else if(aCoefficient > 0)
         {
-          //The first product, C:
-          if(C == NULL && variableC == NULL)
+          if(aCoefficient >= 10)
             {
-              coefficientC = aCoefficient;
               if(aVariable->getName() == "HD")
                 {
-                  variableC = aVariable;
+                  THROW_EXCEPTION(ValueError,
+                     String(getPropertyInterface().getClassName()) +
+                     "[" + getFullID().asString() + "]: For >= 10" +
+                      " coefficients, only nonHD species allowed.");
                 }
               else
                 {
-                  C = theSpatiocyteStepper->getSpecies(aVariable);
+                  Species* species(theSpatiocyteStepper->getSpecies(aVariable));
+                  if(aCoefficient == 10)
+                    {
+                      theAdjoinProductsPreA.push_back(species->getID());
+                    }
+                  else if(aCoefficient == 20)
+                    {
+                      theAdjoinProductsPreB.push_back(species->getID());
+                    }
+                  if(aCoefficient == 11)
+                    {
+                      theAdjoinProductsPostA.push_back(species->getID());
+                    }
+                  else if(aCoefficient == 21)
+                    {
+                      theAdjoinProductsPostB.push_back(species->getID());
+                    }
                 }
             }
-          //The second product, D:
-          else if(D == NULL && variableD == NULL)
+          else
             {
-              coefficientD = aCoefficient;
-              if(aVariable->getName() == "HD")
+              //The first product, C:
+              if(C == NULL && variableC == NULL)
                 {
-                  variableD = aVariable;
+                  coefficientC = aCoefficient;
+                  if(aVariable->getName() == "HD")
+                    {
+                      variableC = aVariable;
+                    }
+                  else
+                    {
+                      C = theSpatiocyteStepper->getSpecies(aVariable);
+                    }
                 }
-              else
+              //The second product, D:
+              else if(D == NULL && variableD == NULL)
                 {
-                  D = theSpatiocyteStepper->getSpecies(aVariable);
+                  coefficientD = aCoefficient;
+                  if(aVariable->getName() == "HD")
+                    {
+                      variableD = aVariable;
+                    }
+                  else
+                    {
+                      D = theSpatiocyteStepper->getSpecies(aVariable);
+                    }
                 }
-            }
-          //The third product, F:
-          else if(F == NULL && variableF == NULL)
-            {
-              coefficientF = aCoefficient;
-              if(aVariable->getName() == "HD")
+              //The third product, F:
+              else if(F == NULL && variableF == NULL)
                 {
-                  variableF = aVariable;
-                }
-              else
-                {
-                  F = theSpatiocyteStepper->getSpecies(aVariable);
+                  coefficientF = aCoefficient;
+                  if(aVariable->getName() == "HD")
+                    {
+                      variableF = aVariable;
+                    }
+                  else
+                    {
+                      F = theSpatiocyteStepper->getSpecies(aVariable);
+                    }
                 }
             }
         }
@@ -161,6 +227,7 @@ void ReactionProcess::calculateOrder()
             }
         }
     }
+  std::cout << "theOrder:" << theOrder << std::endl;
 } 
 
 

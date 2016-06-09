@@ -83,7 +83,9 @@ public:
       moleculeB = molB;
       if((this->*reactM)(molA, molB, indexA, indexB))
         {
-          interruptProcessesPost();
+          reactAdjoinsPre();
+          reactAdjoinsPost();
+          interruptProcessesPost(); 
           return true;
         }
       return false;
@@ -104,9 +106,13 @@ public:
   virtual void printParameters();
   virtual void setReactMethod();
 protected:
+  void reactAdjoinsPre();
+  void reactAdjoinsPost();
   void calculateReactionProbability();
   void throwException(String);
   void addMoleculeF();
+  void reactAdjoins(Voxel*, Voxel*, std::vector<unsigned>&,
+                    std::vector<unsigned>&);
   void removeMolecule(Species*, Voxel*, const unsigned) const;
   void removeMolecule(Species*, Voxel*, unsigned, Species*) const;
   Voxel* getPopulatableVoxel(Species*, Voxel*, Voxel*);

@@ -309,6 +309,14 @@ protected:
   Voxel* moleculeS;
   String FileName;
   std::ofstream theLogFile;
+  std::vector<unsigned> theAdjoinSubstratesPreA; //-10
+  std::vector<unsigned> theAdjoinProductsPreA;   //10
+  std::vector<unsigned> theAdjoinSubstratesPreB; //-20
+  std::vector<unsigned> theAdjoinProductsPreB;   //20
+  std::vector<unsigned> theAdjoinSubstratesPostA; //-11
+  std::vector<unsigned> theAdjoinProductsPostA;   //11
+  std::vector<unsigned> theAdjoinSubstratesPostB; //-21
+  std::vector<unsigned> theAdjoinProductsPostB;   //21
   std::vector<SpatiocyteProcess*> theInterruptedProcesses;
   std::vector<SpatiocyteProcess*> theInterruptedProcessesPre;
   std::vector<SpatiocyteProcess*> theInterruptedProcessesPost;
