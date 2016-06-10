@@ -931,7 +931,7 @@ public:
                   //decrementing i.
                   if(theMoleculeSize < aMoleculeSize)
                     {
-                      --i;
+                      i -= aMoleculeSize-theMoleculeSize;
                     }
                 }
             }

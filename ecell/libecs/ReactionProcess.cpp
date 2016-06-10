@@ -61,19 +61,11 @@ void ReactionProcess::calculateOrder()
                   Species* species(theSpatiocyteStepper->getSpecies(aVariable));
                   if(aCoefficient == -10)
                     {
-                      theAdjoinSubstratesPreA.push_back(species->getID());
+                      theAdjoinSubstratesA.push_back(species->getID());
                     }
                   else if(aCoefficient == -20)
                     {
-                      theAdjoinSubstratesPreB.push_back(species->getID());
-                    }
-                  if(aCoefficient == -11)
-                    {
-                      theAdjoinSubstratesPostA.push_back(species->getID());
-                    }
-                  else if(aCoefficient == -21)
-                    {
-                      theAdjoinSubstratesPostB.push_back(species->getID());
+                      theAdjoinSubstratesB.push_back(species->getID());
                     }
                 }
             }
@@ -137,19 +129,11 @@ void ReactionProcess::calculateOrder()
                   Species* species(theSpatiocyteStepper->getSpecies(aVariable));
                   if(aCoefficient == 10)
                     {
-                      theAdjoinProductsPreA.push_back(species->getID());
+                      theAdjoinProductsA.push_back(species->getID());
                     }
                   else if(aCoefficient == 20)
                     {
-                      theAdjoinProductsPreB.push_back(species->getID());
-                    }
-                  if(aCoefficient == 11)
-                    {
-                      theAdjoinProductsPostA.push_back(species->getID());
-                    }
-                  else if(aCoefficient == 21)
-                    {
-                      theAdjoinProductsPostB.push_back(species->getID());
+                      theAdjoinProductsB.push_back(species->getID());
                     }
                 }
             }

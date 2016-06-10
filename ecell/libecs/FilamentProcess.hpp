@@ -52,6 +52,7 @@ public:
     LineX(1),
     LineY(0),
     LineZ(0),
+    Radius(0),
     theMinusSpecies(NULL),
     thePlusSpecies(NULL)
   {

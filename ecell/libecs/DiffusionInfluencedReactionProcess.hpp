@@ -83,8 +83,7 @@ public:
       moleculeB = molB;
       if((this->*reactM)(molA, molB, indexA, indexB))
         {
-          reactAdjoinsPre();
-          reactAdjoinsPost();
+          reactAdjoins();
           interruptProcessesPost(); 
           return true;
         }
@@ -106,8 +105,7 @@ public:
   virtual void printParameters();
   virtual void setReactMethod();
 protected:
-  void reactAdjoinsPre();
-  void reactAdjoinsPost();
+  void reactAdjoins();
   void calculateReactionProbability();
   void throwException(String);
   void addMoleculeF();

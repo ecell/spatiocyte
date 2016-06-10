@@ -81,6 +81,10 @@ String SpatiocyteProcess::getIDString(Comp* aComp) const
 
 String SpatiocyteProcess::getIDString(unsigned int id) const
 {
+  if(id == theNullID)
+    {
+      return "theNullID";
+    }
   Variable* aVariable(theSpecies[id]->getVariable());
   return "["+aVariable->getSystemPath().asString()+":"+
     aVariable->getID()+"]["+int2str(id)+"]";

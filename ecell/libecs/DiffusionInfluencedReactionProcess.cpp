@@ -818,31 +818,17 @@ void DiffusionInfluencedReactionProcess::setForcedSequenceReactMethod()
     */
 }
 
-void DiffusionInfluencedReactionProcess::reactAdjoinsPost()
+void DiffusionInfluencedReactionProcess::reactAdjoins()
 {
-  if(theAdjoinSubstratesPostA.size())
+  if(theAdjoinSubstratesA.size())
     {
-      reactAdjoins(moleculeA, moleculeB, theAdjoinSubstratesPostA,
-                   theAdjoinProductsPostA);
+      reactAdjoins(moleculeA, moleculeB, theAdjoinSubstratesA,
+                   theAdjoinProductsA);
     }
-  if(theAdjoinSubstratesPostB.size())
+  if(theAdjoinSubstratesB.size())
     {
-      reactAdjoins(moleculeB, moleculeA, theAdjoinSubstratesPostB,
-                   theAdjoinProductsPostB);
-    }
-}
-
-void DiffusionInfluencedReactionProcess::reactAdjoinsPre()
-{
-  if(theAdjoinSubstratesPreA.size())
-    {
-      reactAdjoins(moleculeA, moleculeB, theAdjoinSubstratesPreA,
-                   theAdjoinProductsPreA);
-    }
-  if(theAdjoinSubstratesPreB.size())
-    {
-      reactAdjoins(moleculeB, moleculeA, theAdjoinSubstratesPreB,
-                   theAdjoinProductsPreB);
+      reactAdjoins(moleculeB, moleculeA, theAdjoinSubstratesB,
+                   theAdjoinProductsB);
     }
 }
 
