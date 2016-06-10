@@ -163,6 +163,11 @@ public:
   virtual double getNewPropensity();
 protected:
   void updateSubstrates();
+  /*
+  virtual void reactAdjoins();
+  virtual void reactAdjoins(Voxel*, Voxel*, std::vector<unsigned>&,
+                            std::vector<unsigned>&);
+                            */
   virtual void setPropensityMethod();
   virtual bool reactACD(Species*, Species*, Species*);
   virtual bool reactACDF(Species*, Species*, Species*, Species*);
@@ -211,6 +216,8 @@ protected:
   double SpaceB;
   double SpaceC;
   double thePropensity;
+  Variable* substrateA;
+  Variable* substrateB;
   std::vector<double> theNextTimes;
   std::vector<double> thePropensities;
   std::vector<double> theRates;

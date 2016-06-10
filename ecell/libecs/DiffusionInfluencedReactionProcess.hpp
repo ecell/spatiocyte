@@ -105,12 +105,9 @@ public:
   virtual void printParameters();
   virtual void setReactMethod();
 protected:
-  void reactAdjoins();
   void calculateReactionProbability();
   void throwException(String);
   void addMoleculeF();
-  void reactAdjoins(Voxel*, Voxel*, std::vector<unsigned>&,
-                    std::vector<unsigned>&);
   void removeMolecule(Species*, Voxel*, const unsigned) const;
   void removeMolecule(Species*, Voxel*, unsigned, Species*) const;
   Voxel* getPopulatableVoxel(Species*, Voxel*, Voxel*);

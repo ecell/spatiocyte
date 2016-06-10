@@ -263,6 +263,9 @@ public:
   virtual void removeSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
 protected:
   virtual void calculateOrder();
+  virtual void reactAdjoins();
+  virtual void reactAdjoins(Voxel*, Voxel*, std::vector<unsigned>&,
+                            std::vector<unsigned>&);
 protected:
   int coefficientA;
   int coefficientB;

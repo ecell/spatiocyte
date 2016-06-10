@@ -41,12 +41,51 @@ void SpatiocyteNextReactionProcess::fire()
 {
   if(react())
     {
+      reactAdjoins();
       interruptProcessesPost();
       ReactionProcess::fire();
       return;
     }
   requeue();
 }
+
+/*
+void SpatiocyteNextReactionProcess::reactAdjoins()
+{
+  if(theAdjoinSubstratesA.size())
+    {
+      reactAdjoins(moleculeA, NULL, theAdjoinSubstratesA,
+                   theAdjoinProductsA);
+    }
+}
+
+void SpatiocyteNextReactionProcess::reactAdjoins(Voxel* source,
+                                      Voxel* excluded,
+                                      std::vector<unsigned>& adjoinSubstrates,
+                                      std::vector<unsigned>& adjoinProducts)
+{
+  for(unsigned i(0); i != source->diffuseSize; ++i)
+    { 
+      Voxel* mol(&(*theLattice)[source->adjoiningCoords[i]]);
+      if(mol != excluded)
+        {
+          Species* substrate(theSpecies[getID(mol)]);
+          std::vector<unsigned>::iterator iterator(std::find(
+            adjoinSubstrates.begin(), adjoinSubstrates.end(),
+            substrate->getID())); 
+          if(iterator != adjoinSubstrates.end())
+            {
+              Species* product(theSpecies[adjoinProducts[iterator-
+                               adjoinSubstrates.begin()]]);
+
+              unsigned index(substrate->getIndex(mol));
+              product->addMolecule(mol, substrate->getTag(index));
+              substrate->softRemoveMolecule(index);
+            }
+        }
+    }
+}
+*/
 
 
 void SpatiocyteNextReactionProcess::updateSubstrates()
@@ -1063,7 +1102,7 @@ double SpatiocyteNextReactionProcess::getPropensityZerothOrder()
 
 double SpatiocyteNextReactionProcess::getPropensityFirstOrder() 
 {
-  double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
+  double sizeA(substrateA->getValue());
   if(sizeA < -coefficientA)
     {
       sizeA = 0;
@@ -1073,7 +1112,7 @@ double SpatiocyteNextReactionProcess::getPropensityFirstOrder()
 
 double SpatiocyteNextReactionProcess::getPropensityFirstOrderMultiAC() 
 {
-  double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
+  double sizeA(substrateA->getValue());
   if(sizeA < -coefficientA)
     {
       sizeA = 0;
@@ -1135,8 +1174,8 @@ double SpatiocyteNextReactionProcess::getPropensitySecondOrderHetero()
       B->updateMoleculeSize();
     }
     */
-  double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
-  double sizeB(theVariableReferenceVector[1].getVariable()->getValue());
+  double sizeA(substrateA->getValue());
+  double sizeB(substrateB->getValue());
   //Required for HD species when substrate coefficient is < -1
   if(sizeA < -coefficientA)
     {
@@ -1168,7 +1207,7 @@ double SpatiocyteNextReactionProcess::getPropensitySecondOrderHomo()
       A->updateMoleculeSize();
     }
     */
-  double sizeA(theVariableReferenceVector[0].getVariable()->getValue());
+  double sizeA(substrateA->getValue());
   if(sizeA < -coefficientA)
     {
       sizeA = 1;
@@ -1235,6 +1274,22 @@ void SpatiocyteNextReactionProcess::setVariableReferences(const
 void SpatiocyteNextReactionProcess::initializeSecond()
 {
   ReactionProcess::initializeSecond();
+  if(A)
+    {
+      substrateA = A->getVariable();
+    }
+  else if(variableA)
+    {
+      substrateA = variableA;
+    }
+  if(B)
+    {
+      substrateB = B->getVariable();
+    }
+  else if(variableA)
+    {
+      substrateB = variableB;
+    }
   //if second order, with A and B substrates, both of them
   //must be immobile, or A must be multiscale:
   if(A && B)

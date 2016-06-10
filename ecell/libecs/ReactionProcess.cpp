@@ -315,4 +315,47 @@ void ReactionProcess::logEvent()
     }
 }
 
+
+void ReactionProcess::reactAdjoins()
+{
+  if(theAdjoinSubstratesA.size())
+    {
+      reactAdjoins(moleculeA, moleculeB, theAdjoinSubstratesA,
+                   theAdjoinProductsA);
+    }
+  if(theAdjoinSubstratesB.size())
+    {
+      reactAdjoins(moleculeB, moleculeA, theAdjoinSubstratesB,
+                   theAdjoinProductsB);
+    }
+}
+
+void ReactionProcess::reactAdjoins(Voxel* source,
+                                      Voxel* excluded,
+                                      std::vector<unsigned>& adjoinSubstrates,
+                                      std::vector<unsigned>& adjoinProducts)
+{
+  for(unsigned i(0); i != source->diffuseSize; ++i)
+    { 
+      Voxel* mol(&(*theLattice)[source->adjoiningCoords[i]]);
+      if(mol != excluded)
+        {
+          Species* substrate(theSpecies[getID(mol)]);
+          std::vector<unsigned>::iterator iterator(std::find(
+            adjoinSubstrates.begin(), adjoinSubstrates.end(),
+            substrate->getID())); 
+          if(iterator != adjoinSubstrates.end())
+            {
+              Species* product(theSpecies[adjoinProducts[iterator-
+                               adjoinSubstrates.begin()]]);
+
+              unsigned index(substrate->getIndex(mol));
+              product->addMolecule(mol, substrate->getTag(index));
+              substrate->softRemoveMolecule(index);
+            }
+        }
+    }
+}
+
+
 }
