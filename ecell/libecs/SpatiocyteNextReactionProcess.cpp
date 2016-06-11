@@ -88,35 +88,33 @@ void SpatiocyteNextReactionProcess::reactAdjoins(Voxel* source,
 */
 
 
-void SpatiocyteNextReactionProcess::updateSubstrates()
+void SpatiocyteNextReactionProcess::updateSubstrateSize()
 {
   if(A && A->getIsReactiveVacant())
     {
-      if(A->getIsCompVacant())
-        {
-          A->updateMoleculeSize();
-        }
-      else
-        {
-          A->updateMolecules();
-        }
+      A->updateMoleculeSize();
     }
   if(B && B->getIsReactiveVacant())
     {
-      if(B->getIsCompVacant())
-        {
-          B->updateMoleculeSize();
-        }
-      else
-        {
-          B->updateMolecules();
-        }
+      B->updateMoleculeSize();
+    }
+}
+
+void SpatiocyteNextReactionProcess::updateSubstrateMolecules()
+{
+  if(A && A->getIsReactiveVacant())
+    {
+      A->updateMolecules();
+    }
+  if(B && B->getIsReactiveVacant())
+    {
+      B->updateMolecules();
     }
 }
 
 bool SpatiocyteNextReactionProcess::react()
 {
-  //updateSubstrates();
+  updateSubstrateMolecules();
   if(theOrder == 0)
     {
       if(C)
@@ -1879,7 +1877,7 @@ double SpatiocyteNextReactionProcess::getInterval(double aCurrentTime)
 
 double SpatiocyteNextReactionProcess::getNewPropensity()
 {
-  updateSubstrates();
+  updateSubstrateSize();
   thePropensity = (this->*thePropensityMethod)();
   return thePropensity;
 }

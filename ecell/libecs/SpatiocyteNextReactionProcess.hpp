@@ -162,7 +162,8 @@ public:
   virtual double getPropensity() const;
   virtual double getNewPropensity();
 protected:
-  void updateSubstrates();
+  void updateSubstrateSize();
+  void updateSubstrateMolecules();
   /*
   virtual void reactAdjoins();
   virtual void reactAdjoins(Voxel*, Voxel*, std::vector<unsigned>&,
