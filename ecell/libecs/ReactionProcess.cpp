@@ -211,7 +211,6 @@ void ReactionProcess::calculateOrder()
             }
         }
     }
-  std::cout << "theOrder:" << theOrder << std::endl;
 } 
 
 

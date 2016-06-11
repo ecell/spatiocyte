@@ -108,14 +108,16 @@ void SpatiocyteStepper::initialize()
   cout << "10. setting up compartment voxels properties..." << std::endl;
   setCompVoxelProperties();
   resizeProcessLattice();
-  cout << "11. updating species..." << std::endl;
-  updateSpecies();
-  cout << "12. initializing compartments..." << std::endl;
+  cout << "11. initializing compartments..." << std::endl;
   initializeCompartments();
-  cout << "13. storing simulation parameters..." << std::endl;
+  cout << "12. storing simulation parameters..." << std::endl;
   storeSimulationParameters();
-  cout << "14. initializing processes the third time..." << std::endl;
+  cout << "13. initializing processes the third time..." << std::endl;
   initializeThird();
+  cout << "14. updating species..." << std::endl;
+  //Cannot put updateSpecies before initializeThird because SNRP declares
+  //a species isReactiveVacant in initializeThird
+  updateSpecies();
   cout << "15. printing simulation parameters..." << std::endl;
   printSimulationParameters();
   cout << "16. initializing before populate..." << std::endl;
@@ -3689,8 +3691,22 @@ void SpatiocyteStepper::clearComp(Comp* aComp)
   for(std::vector<Species*>::const_iterator i(aComp->species.begin());
       i != aComp->species.end(); ++i)
     {
-      (*i)->removeMolecules();
-      (*i)->updateMolecules();
+      if(!(*i)->getIsCompVacant())
+        {
+          (*i)->removeMolecules();
+          (*i)->updateMolecules();
+        }
+    }
+  //A Comp may have more than one CompVacant species. Some CompVacant species
+  //are isReactiveVacant or isDiffusiveVacant, so their numbers must be updated
+  //after species occupying on them removed first (above):
+  for(std::vector<Species*>::const_iterator i(aComp->species.begin());
+      i != aComp->species.end(); ++i)
+    {
+      if((*i)->getIsCompVacant())
+        {
+          (*i)->updateMolecules();
+        }
     }
 }
 

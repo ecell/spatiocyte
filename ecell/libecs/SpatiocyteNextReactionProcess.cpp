@@ -90,24 +90,33 @@ void SpatiocyteNextReactionProcess::reactAdjoins(Voxel* source,
 
 void SpatiocyteNextReactionProcess::updateSubstrates()
 {
-  //Don't do the instructions below, if it doesn't work without them,
-  //use interrupedEndDiffusion or interrupedAddMolecule or 
-  //interruptedRemoveMolecule
-  /*
-  if(A)
+  if(A && A->getIsReactiveVacant())
     {
-      A->updateMolecules();
+      if(A->getIsCompVacant())
+        {
+          A->updateMoleculeSize();
+        }
+      else
+        {
+          A->updateMolecules();
+        }
     }
-  if(B)
+  if(B && B->getIsReactiveVacant())
     {
-      B->updateMolecules();
+      if(B->getIsCompVacant())
+        {
+          B->updateMoleculeSize();
+        }
+      else
+        {
+          B->updateMolecules();
+        }
     }
-    */
 }
 
 bool SpatiocyteNextReactionProcess::react()
 {
-  updateSubstrates();
+  //updateSubstrates();
   if(theOrder == 0)
     {
       if(C)
@@ -1933,6 +1942,8 @@ bool SpatiocyteNextReactionProcess::isDependentOnEndDiffusion(Species* aSpecies)
   return false;
 }
 
+//Cannot put isReactiveVacant here because SpatiocyteSpecies does not
+//call this interrupt for vacant species:
 bool SpatiocyteNextReactionProcess::isDependentOnRemoveMolecule(Species*
                                                                 aSpecies)
 {
@@ -1955,6 +1966,8 @@ bool SpatiocyteNextReactionProcess::isDependentOnRemoveMolecule(Species*
   return false;
 }
 
+//Cannot put isReactiveVacant here because SpatiocyteSpecies does not
+//call this interrupt for vacant species:
 bool SpatiocyteNextReactionProcess::isDependentOnAddMolecule(Species* aSpecies)
 {
   if(isMultiAC)
@@ -2042,6 +2055,8 @@ void SpatiocyteNextReactionProcess::interruptedEndDiffusion(Species* aSpecies)
     }
 }
 
+//Cannot put isReactiveVacant here because SpatiocyteSpecies does not
+//call this interrupt for vacant species:
 //This method is called after the molecule pointed by the index is added
 //by aSpecies.
 void SpatiocyteNextReactionProcess::interruptedAddMolecule(Species* aSpecies,
@@ -2105,6 +2120,8 @@ void SpatiocyteNextReactionProcess::interruptedAddMolecule(Species* aSpecies,
     }
 }
 
+//Cannot put isReactiveVacant here because SpatiocyteSpecies does not
+//call this interrupt for vacant species:
 //This method is called before the molecule pointed by the index is removed
 //by aSpecies.
 void SpatiocyteNextReactionProcess::interruptedRemoveMolecule(Species* aSpecies,
