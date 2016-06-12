@@ -145,7 +145,9 @@ void IteratingLogProcess::fire()
     {
       doPreLog();
     }
-  if(theTime <= LogEnd)
+  //Need to add a small value to LogEnd because of precision issue with
+  //comparison of floating points:
+  if(theTime <= LogEnd+theInterval*1e-5)
     {
       logValues();
       //If all survival species are dead, go on to the next iteration:

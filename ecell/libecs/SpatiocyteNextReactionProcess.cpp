@@ -1293,7 +1293,7 @@ void SpatiocyteNextReactionProcess::initializeSecond()
     {
       substrateB = B->getVariable();
     }
-  else if(variableA)
+  else if(variableB)
     {
       substrateB = variableB;
     }
@@ -1503,7 +1503,13 @@ void SpatiocyteNextReactionProcess::initializeBeforePopulate()
       //the reactants must also belong to different compartments:
       if((compD && compD != compC) && (compA == compB))
         {
-          NEVER_GET_HERE;
+          THROW_EXCEPTION(ValueError, String(
+                            getPropertyInterface().getClassName()) +
+                            "[" + getFullID().asString() + 
+                            "]: In SpatiocyteNextReactionProcess if two " +
+                            "products don't belong to the same compartment, " +
+                            "the substrates must also belong to different " +
+                            " compartments.");
         }
       //If volume + surface <= k(volume)(surface) or
       //   volume + surface <= k(surface)(volume) or
@@ -1602,9 +1608,66 @@ void SpatiocyteNextReactionProcess::initializeBeforePopulate()
           p = k/(pow(anArea, fabs(totalCoefficient)-1));
           pFormula << "[k/anArea:" << k << "/" << anArea << "]";
         }
+      //If volume + filament <= k(volume)(filament) or
+      //   volume + filament <= k(filament)(volume) or
+      //   filament + volume <= k(volume)(filament) or
+      //   filament + volume <= k(filament)(volume)
+      else if((compD && (
+        (compC->dimension == 3 && compD->dimension == 1 &&
+         compA->dimension == 3 && compB->dimension == 1) ||
+        (compC->dimension == 3 && compD->dimension == 1 &&
+         compA->dimension == 1 && compB->dimension == 3) ||
+        (compC->dimension == 1 && compD->dimension == 3 &&
+         compA->dimension == 3 && compB->dimension == 1) ||
+        (compC->dimension == 1 && compD->dimension == 3 &&
+         compA->dimension == 1 && compB->dimension == 3))) ||
+         ((compC->dimension == 3 && compA->dimension == 3
+          && compB->dimension == 3) ||
+         (compC->dimension == 1 && compA->dimension == 3 
+          && compB->dimension == 1) ||
+         (compC->dimension == 1 && compA->dimension == 1 
+          && compB->dimension == 3)))
+        {
+          if(compA->dimension == 3)
+            {
+              if(SpaceA > 0)
+                {
+                  aVolume = SpaceA;
+                  pFormula << "[aVolume:SpaceA:" << aVolume << "]";
+                }
+              else
+                {
+                  aVolume = compA->actualVolume;
+                  pFormula << "[aVolume:compA.Volume:" << aVolume << "]";
+                }
+            }
+          else
+            {
+              if(SpaceB > 0)
+                {
+                  aVolume = SpaceB;
+                  pFormula << "[aVolume:SpaceB:" << aVolume << "]";
+                }
+              else
+                {
+                  aVolume = compB->actualVolume;
+                  pFormula << "[aVolume:compB.Volume:" << aVolume << "]";
+                }
+            }
+          //unit of k is in (m^3)^(totalCoefficient-1)/s
+          //we need to convert k to p which has the unit 1/s
+          int totalCoefficient(coefficientA+secondCoefficient);
+          p = k/(pow(aVolume, fabs(totalCoefficient)-1));
+          pFormula << "[k/aVolume:" << k << "/" << aVolume << "]";
+        }
       else
         {
-          NEVER_GET_HERE;
+          THROW_EXCEPTION(ValueError, String(
+                            getPropertyInterface().getClassName()) +
+                            "[" + getFullID().asString() + 
+                            "]: In SpatiocyteNextReactionProcess: " +
+                            "unexpected compartment dimension combinations " +
+                            "in pFormula calculation.");
         }
     }
 }
@@ -2296,7 +2359,7 @@ void SpatiocyteNextReactionProcess::setPropensityMethod()
         }
       //Two unique substrate species:
       //A + B -> products:
-      else if(getZeroVariableReferenceOffset() == 2)
+      else if(getZeroVariableReferenceOffset() >= 2)
         {
           thePropensityMethod = &SpatiocyteNextReactionProcess::
             getPropensitySecondOrderHetero;
