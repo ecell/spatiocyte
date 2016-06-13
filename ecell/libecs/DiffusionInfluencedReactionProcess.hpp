@@ -47,11 +47,16 @@ public:
       INHERIT_PROPERTIES(ReactionProcess);
       PROPERTYSLOT_SET_GET(Integer, Collision);
       PROPERTYSLOT_SET_GET(Integer, ForcedSequence);
+      //RandomC: Get random vacant voxel to be occupied by C. Useful to set
+      //unchanged concentration for species C after reaction.
+      PROPERTYSLOT_SET_GET(Integer, RandomC);
     }
   SIMPLE_SET_GET_METHOD(Integer, Collision);
   SIMPLE_SET_GET_METHOD(Integer, ForcedSequence);
+  SIMPLE_SET_GET_METHOD(Integer, RandomC);
   DiffusionInfluencedReactionProcess():
     ForcedSequence(false),
+    RandomC(false),
     Collision(0) {}
   virtual ~DiffusionInfluencedReactionProcess() {}
   virtual void addSubstrateInterrupt(Species* aSpecies, Voxel* aMolecule) {}
@@ -152,12 +157,15 @@ protected:
   bool reactNtoC(Voxel*, Voxel*, const unsigned, const unsigned);
   bool reactBtoC_tagBtoC(Voxel*, Voxel*, const unsigned, const unsigned);
   bool reactBtoC_tagAtoC(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactRtoC_BtoD(Voxel*, Voxel*, const unsigned, const unsigned);
+  bool reactRtoC_NtoD(Voxel*, Voxel*, const unsigned, const unsigned);
 private:
   void setFreeSequenceReactMethod();
   void setForcedSequenceReactMethod();
   void setGeneralForcedSequenceReactMethod();
 protected:
   bool ForcedSequence;
+  bool RandomC;
   unsigned Collision;
   double D_A;
   double D_B;

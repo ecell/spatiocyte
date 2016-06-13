@@ -1888,7 +1888,8 @@ void CompartmentProcess::printParameters()
         }
     } 
   cout << "  Vacant species:" << getIDString(theVacantSpecies) << 
-    " number:" << theVacantSpecies->size() << std::endl;
+    " comp voxel number:" << theVacantSpecies->compVoxelSize() << 
+    " vacant number:" << theVacantSpecies->size() << std::endl;
   for(unsigned i(0); i != theVacantCompSpecies.size(); ++i)
     {
       cout << "    " << getIDString(theVacantCompSpecies[i]) <<

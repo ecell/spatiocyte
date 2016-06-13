@@ -504,7 +504,53 @@ bool DiffusionInfluencedReactionProcess::reactAtoC_BtoD(Voxel* molA,
   return true;
 }
 
+//A + B -> [C <- molR] + [D <- molB]
+bool DiffusionInfluencedReactionProcess::reactRtoC_BtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  interruptProcessesPre();
+  Species* vac(C->getVacantSpecies());
+  unsigned indexV(vac->getRandomValidIndex());
+  if(indexV != vac->size())
+    {
+      A->removeMolecule(indexA);
+      C->addMolecule(vac->getMolecule(indexV));
+      removeMolecule(B, molB, indexB, D);
+      return true;
+    }
+  return false;
+}
 
+
+//A + B -> [C <- molR] + [D <- molN]
+bool DiffusionInfluencedReactionProcess::reactRtoC_NtoD(Voxel* molA,
+                                                        Voxel* molB,
+                                                        const unsigned indexA,
+                                                        const unsigned indexB)
+{
+  interruptProcessesPre();
+  Species* vac(C->getVacantSpecies());
+  unsigned indexV(vac->getRandomValidIndex());
+  if(indexV != vac->size())
+    {
+      Voxel* molD(getPopulatableVoxel(D, molA, molB));
+      if(molD)
+        {
+          Voxel* molC(vac->getMolecule(indexV)); 
+          if(molC != molD)
+            {
+              D->addMolecule(molD, B->getTag(indexB));
+              A->removeMolecule(indexA);
+              C->addMolecule(molC);
+              removeMolecule(B, molB, indexB);
+              return true;
+            }
+        }
+    }
+  return false;
+}
 
 
 //A + B => B + A
@@ -745,6 +791,10 @@ bool DiffusionInfluencedReactionProcess::reactNtoC(Voxel* molA, Voxel* molB,
 
 void DiffusionInfluencedReactionProcess::setReactMethod()
 {
+  if(RandomC)
+    {
+      ForcedSequence = true;
+    }
   if(ForcedSequence)
     {
       setForcedSequenceReactMethod();
@@ -761,8 +811,8 @@ void DiffusionInfluencedReactionProcess::setForcedSequenceReactMethod()
     {
       THROW_EXCEPTION(ValueError,
                    String(getPropertyInterface().getClassName()) +
-                  "[" + getFullID().asString() + "]: For DIRP ForcedSequence," +
-                  " A, B, C and D must all be nonHD species.");
+                  "[" + getFullID().asString() + "]: For DIRP ForcedSequence" +
+                  "or RandomC, A, B, C and D must all be nonHD species.");
     }
   setGeneralForcedSequenceReactMethod();
   /*
@@ -822,7 +872,21 @@ void DiffusionInfluencedReactionProcess::setGeneralForcedSequenceReactMethod()
 {
   if(C && D)
     {
-      if(A->isReplaceable(C))
+      if(RandomC)
+        {
+          if(B->isReplaceable(D))
+            { 
+              //A + B -> [C <- molR] + [D <- molB]
+              reactM = &DiffusionInfluencedReactionProcess::reactRtoC_BtoD;
+            }
+          else
+            {
+              //A + B -> [C <- molR] + [D <- molN]
+              reactM = &DiffusionInfluencedReactionProcess::reactRtoC_NtoD;
+            }
+
+        }
+      else if(A->isReplaceable(C))
         {
           if(B->isReplaceable(D))
             {
@@ -1277,8 +1341,8 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
   else if(A->getDimension() == 3 && B->getIsCompVacant() && 
           B->getDimension() == 1)
     {
-      double nv(A->getComp()->vacantSpecies->size());
-      double nl(B->size());
+      double nv(A->getComp()->vacantSpecies->compVoxelSize());
+      double nl(B->compVoxelSize());
       std::cout << "1st nl:" << nl << " " << getIDString() << std::endl;
       if(B->getComp()->interfaceID != theSpecies.size())
         {
@@ -1294,14 +1358,15 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
         }
       else
         {
+          // [m^s/s] = [m^3][m^2/s]/([m][m][m]) = [m^2/s]
           k = p*5*nl*V*D_A/(4*nv*r_v*r_v*L);
         }
     }
   else if(A->getIsCompVacant() && A->getDimension() == 1 &&
           B->getDimension() == 3)
     {
-      double nv(B->getComp()->vacantSpecies->size());
-      double nl(A->size());
+      double nv(B->getComp()->vacantSpecies->compVoxelSize());
+      double nl(A->compVoxelSize());
       std::cout << "2nd nl:" << nl << " " << getIDString() << std::endl;
       if(A->getComp()->interfaceID != theSpecies.size())
         {
@@ -1317,6 +1382,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
         }
       else
         {
+          // [m^s/s] = [m^3][m^2/s]/([m][m][m]) = [m^2/s]
           k = p*5*nl*V*D_B/(4*nv*r_v*r_v*L);
         }
     }
