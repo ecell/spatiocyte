@@ -1344,10 +1344,12 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
       double nv(A->getComp()->vacantSpecies->compVoxelSize());
       double nl(B->compVoxelSize());
       std::cout << "1st nl:" << nl << " " << getIDString() << std::endl;
+      /*
       if(B->getComp()->interfaceID != theSpecies.size())
         {
           nl = theSpecies[B->getComp()->interfaceID]->size();
         }
+        */
       double L(B->getComp()->specLength);
       double V(A->getComp()->actualVolume);
       std::cout << "1: nv:" << nv << " nl:" << nl << " L:" << L << " V:" <<
@@ -1368,10 +1370,12 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
       double nv(B->getComp()->vacantSpecies->compVoxelSize());
       double nl(A->compVoxelSize());
       std::cout << "2nd nl:" << nl << " " << getIDString() << std::endl;
+      /*
       if(A->getComp()->interfaceID != theSpecies.size())
         {
           nl = theSpecies[A->getComp()->interfaceID]->size();
         }
+        */
       double L(A->getComp()->specLength);
       double V(B->getComp()->actualVolume);
       std::cout << "1: nv:" << nv << " nl:" << nl << " L:" << L << " V:" << 
@@ -1386,8 +1390,9 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
           k = p*5*nl*V*D_B/(4*nv*r_v*r_v*L);
         }
     }
-  else if(A->getDimension() == 3 && B->getDimension() != 3)
+  else if(A->getDimension() == 3 && B->getDimension() == 2)
     {
+      /*
       //Need to use nInterface/nVacant ratio to improve accuracy when a 
       //molecule in an off-lattice compartment is connected by multiple
       //interface voxels.
@@ -1398,17 +1403,19 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
           double nVacant(B->getVacantSpecies()->compVoxelSize());
           i_v = nInterface/nVacant;
         }
+        */
       if(p == -1)
         {
-          p = sqrt(2)*k*i_v/(3*D_A*r_v);
+          p = sqrt(2)*k/(3*D_A*r_v);
         }
       else
         {
-          k = p*(3*D_A*r_v)/(sqrt(2)*i_v);
+          k = p*(3*D_A*r_v)/sqrt(2); //[m^3/s]
         }
     }
-  else if(A->getDimension() != 3 && B->getDimension() == 3)
+  else if(A->getDimension() == 2 && B->getDimension() == 3)
     {
+      /*
       //Need to use nInterface/nVacant ratio to improve accuracy when a 
       //molecule in an off-lattice compartment is connected by multiple
       //interface voxels.
@@ -1419,13 +1426,64 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
           double nVacant(A->getVacantSpecies()->compVoxelSize());
           i_v = nInterface/nVacant;
         }
+        */
       if(p == -1)
         {
-          p = sqrt(2)*k*i_v/(3*D_B*r_v);
+          p = sqrt(2)*k/(3*D_B*r_v);
         }
       else
         {
-          k = p*(3*D_B*r_v)/(sqrt(2)*i_v);
+          k = p*(3*D_B*r_v)/sqrt(2); //[m^3/s]
+        }
+    }
+  else if(A->getDimension() == 3 && B->getDimension() == 1)
+    {
+      double nv(A->getComp()->vacantSpecies->compVoxelSize());
+      double V(A->getComp()->actualVolume);
+      /*
+      //Need to use nInterface/nVacant ratio to improve accuracy when a 
+      //molecule in an off-lattice compartment is connected by multiple
+      //interface voxels.
+      double i_v(1);
+      if(B->getComp()->interfaceID != theSpecies.size())
+        {
+          double nInterface(theSpecies[B->getComp()->interfaceID]->size());
+          double nVacant(B->getVacantSpecies()->compVoxelSize());
+          i_v = nInterface/nVacant;
+        }
+        */
+      if(p == -1)
+        {
+          p = 4*k*nv*r_v*r_v/(5*V*D_A);
+        }
+      else
+        {
+          k = p*5*V*D_A/(4*nv*r_v*r_v); //[m^3/s]
+        }
+    }
+  else if(A->getDimension() == 1 && B->getDimension() == 3)
+    {
+      double nv(B->getComp()->vacantSpecies->compVoxelSize());
+      double V(B->getComp()->actualVolume);
+      /*
+      //Need to use nInterface/nVacant ratio to improve accuracy when a 
+      //molecule in an off-lattice compartment is connected by multiple
+      //interface voxels.
+      double i_v(1);
+      if(A->getComp()->interfaceID != theSpecies.size())
+        {
+          double nInterface(theSpecies[A->getComp()->interfaceID]->size());
+          double nVacant(A->getVacantSpecies()->compVoxelSize());
+          i_v = nInterface/nVacant;
+        }
+        */
+      if(p == -1)
+        {
+          p = 4*k*nv*r_v*r_v/(5*V*D_B);
+        }
+      else
+        {
+          k = p*5*V*D_B/(4*nv*r_v*r_v); //[m^3/s]
         }
     }
   else

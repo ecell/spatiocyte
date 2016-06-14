@@ -784,8 +784,17 @@ public:
     {
       return aVoxel.idx/theStride;
     }
+  void pushInterfaceConsts(std::vector<double>& interfaceConsts)
+    {
+      theInterfaceConsts.push_back(interfaceConsts);
+    }
+  double getInterfaceConst(Voxel* aVoxel, unsigned index)
+    {
+      return theInterfaceConsts[getIndex(aVoxel)][index];
+    }
   void walk()
     {
+      double pconst(1);
       const unsigned beginMoleculeSize(theMoleculeSize);
       unsigned size(theAdjoiningCoordSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
@@ -818,6 +827,8 @@ public:
                     }
                   unsigned coord(theRng.Integer(target->adjoiningSize-
                                                 target->diffuseSize));
+                  pconst = theSpecies[
+                    getID(target)]->getInterfaceConst(target, coord);
                   coord = target->adjoiningCoords[coord+target->diffuseSize];
                   target = &theLattice[coord];
                 }
@@ -835,7 +846,7 @@ public:
                     }
                   //If it meets the reaction probability:
                   if(theReactionProbabilities[tarID] == 1 ||
-                     theRng.Fixed() < theReactionProbabilities[tarID])
+                     theRng.Fixed() < theReactionProbabilities[tarID]*pconst)
                     { 
                       if(aReaction->getCollision() && 
                          aReaction->getCollision() != 3)
@@ -4550,6 +4561,7 @@ private:
   std::vector<unsigned> theBindList;
   std::vector<unsigned> theVacantList;
   std::vector<unsigned> theUnbindList;
+  std::vector<std::vector<double> > theInterfaceConsts;
 };
 
 }

@@ -86,6 +86,7 @@ public:
   void setTrailSize(unsigned, unsigned);
   void extendInterfacesOverFilamentSurface(const bool);
   void populateMinusPlusSpecies();
+  virtual void setCompSubunitBindFractions();
 protected:
   unsigned getAdjoiningInterfaceCnt(Voxel&);
   bool getFilamentAdjoin(Voxel*, const bool, const unsigned, const unsigned,

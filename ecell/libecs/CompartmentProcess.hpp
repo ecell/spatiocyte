@@ -189,8 +189,12 @@ public:
   Voxel* getNearestVoxelToSurface(const unsigned, double&, const bool);
   Voxel* addCompVoxel(unsigned, unsigned, Point&, Species*, unsigned, unsigned);
   virtual void removeAdjoinsFromNonBindingSide(Voxel&);
+  void setSubunitBindFractions();
+  virtual void setCompSubunitBindFractions();
   void initializeConstants();
+  void addSubunitBinder(unsigned, unsigned);
 protected:
+  void setInterfaceConsts();
   bool isThisCompInterface(const unsigned);
   void removeInterfaceCompVoxels();
   bool isDissociationSide(const unsigned);
@@ -270,12 +274,19 @@ protected:
   Variable* theInterfaceVariable;
   Variable* theLipidVariable;
   Variable* theVacantVariable;
+  std::vector<double> subunitBindFractions;
   std::vector<std::vector<unsigned> > theVacGrid;
   std::vector<std::vector<unsigned> > theLipGrid;
   std::vector<Point> thePoints;
   std::vector<Species*> theLipidCompSpecies;
   std::vector<Species*> theVacantCompSpecies;
   std::vector<std::vector<unsigned> > subunitInterfaces;
+  std::vector<std::vector<unsigned> > subunitBinders;
+  //Contains subunits connected by the interface:
+  std::vector<std::vector<unsigned> > interfaceSubs;
+  //Contains comp vacants that can bind to the subunits connected by the
+  //interface:
+  std::vector<std::vector<unsigned> > interfaceBinders;
   std::vector<std::vector<double> > subunitInterfaceDists;
   std::vector<std::vector<int> > theAdjoinOffsets;
   std::vector<int> theRowOffsets;

@@ -895,5 +895,13 @@ void FilamentProcess::extendInterfacesOverFilamentSurface(const bool direction)
     }
 }
 
+void FilamentProcess::setCompSubunitBindFractions()
+{
+  for(unsigned i(0); i != subunitBindFractions.size(); ++i)
+    {
+      subunitBindFractions[i] = 10/subunitBindFractions[i];
+    }
+}
+
 
 }

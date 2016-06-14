@@ -845,7 +845,7 @@ Voxel* CompartmentProcess::addCompVoxel(unsigned rowIndex,
     {
       aVoxel.adjoiningSize = theDiffuseSize;
       aVoxel.diffuseSize = theDiffuseSize;
-      aVoxel.adjoiningCoords = new unsigned int[theDiffuseSize];
+      aVoxel.adjoiningCoords = new unsigned[theDiffuseSize];
       for(unsigned i(0); i != theDiffuseSize; ++i)
         {
           aVoxel.adjoiningCoords[i] = theNullCoord;
@@ -1027,25 +1027,6 @@ void CompartmentProcess::setDiffuseSize(unsigned start, unsigned end)
     }
 }
 
-void CompartmentProcess::addAdjoin(Voxel& aVoxel, unsigned coord)
-{
-  unsigned* temp(new unsigned[aVoxel.adjoiningSize+1]);
-  for(unsigned int i(0); i != aVoxel.adjoiningSize; ++i)
-    {
-      //Avoid duplicated adjoins:
-      if(aVoxel.adjoiningCoords[i] == coord)
-        {
-          delete[] temp;
-          return;
-        }
-      temp[i] = aVoxel.adjoiningCoords[i];
-    }
-  delete[] aVoxel.adjoiningCoords;
-  temp[aVoxel.adjoiningSize++] = coord;
-  aVoxel.adjoiningCoords = temp;
-}
-
-
 Voxel* CompartmentProcess::getNearestVoxelToSurface(const unsigned subIndex,
                                                     double& nearestDist,
                                                     const bool isInterface)
@@ -1216,29 +1197,140 @@ void CompartmentProcess::addInterfaceVoxel(Voxel& aVoxel)
 */
 void CompartmentProcess::connectSubunitInterfaceAdjoins()
 {
+  interfaceBinders.resize(theInterfaceSpecies->size()-intStartIndex);
+  interfaceSubs.resize(theInterfaceSpecies->size()-intStartIndex);
   for(unsigned i(0); i != subunitInterfaces.size(); ++i)
     {
       for(unsigned j(0); j != subunitInterfaces[i].size(); ++j)
         {
           Voxel& subunit((*theLattice)[i+subStartCoord]);
-          Voxel& interface(*theInterfaceSpecies->getMolecule(
-                                                 subunitInterfaces[i][j]));
+          const unsigned intGlobalIndex(subunitInterfaces[i][j]);
+          interfaceSubs[intGlobalIndex-intStartIndex].push_back(i);
+          Voxel& interface(*theInterfaceSpecies->getMolecule(intGlobalIndex));
+          //Add to the interface adjoin list, an adjoin pointing to the 
+          //subunit, after the interface's diffuseSize:
           addAdjoin(interface, i+subStartCoord);
+          //Error check, this is important to make sure correct interfaceConst
+          //during reaction:
+          if(interface.adjoiningCoords[interface.diffuseSize+
+             interfaceSubs[intGlobalIndex-intStartIndex].size()-1] != 
+             subunit.coord)
+            {
+              std::cout << "wrong index in interfaceSubs" << std::endl;
+            }
           for(unsigned k(0); k != interface.diffuseSize; ++k)
             {
               unsigned coord(interface.adjoiningCoords[k]);
               Voxel& adjoin((*theLattice)[coord]);
               if(theSpecies[getID(adjoin)]->getIsCompVacant() && 
-                 !theSpecies[getID(adjoin)]->getIsInterface() &&
-                 isDissociationSide(adjoin.coord))
+                 !theSpecies[getID(adjoin)]->getIsInterface())
                 {
-                  addAdjoin(subunit, coord);
+                  if(isBindingSide(adjoin.coord))
+                    {
+                      //For each subunit, create a list of unique lattice
+                      //vacant voxels connected to it. This list is used
+                      //to calculate accurate binding probability:
+                      addSubunitBinder(i, coord);
+                    }
+                  if(isDissociationSide(adjoin.coord))
+                    {
+                      //Add to the subunit, an adjoin pointing to the lattice
+                      //vacant voxel, after the subunits's diffuseSize:
+                      addAdjoin(subunit, coord);
+                    }
                 }
             }
-          //Remove adjoins of volume voxels pointing to interface if
-          //they are not from the correct binding side of the surface:
-          removeAdjoinsFromNonBindingSide(interface);
         }
+    }
+  for(unsigned i(intStartIndex); i != theInterfaceSpecies->size(); ++i)
+    {
+      Voxel* interface(theInterfaceSpecies->getMolecule(i));
+      //Remove adjoins of volume voxels pointing to interface if
+      //they are not from the correct binding side of the surface:
+      removeAdjoinsFromNonBindingSide(*interface);
+    }
+}
+
+void CompartmentProcess::setSubunitBindFractions()
+{
+  for(unsigned i(0); i != subunitInterfaces.size(); ++i)
+    {
+      subunitBindFractions.push_back(0);
+      for(unsigned j(0); j != subunitInterfaces[i].size(); ++j)
+        {
+          const unsigned intIndex(subunitInterfaces[i][j]-intStartIndex);
+          subunitBindFractions[i] += double(interfaceBinders[intIndex].size())/
+            interfaceSubs[intIndex].size();
+        }
+    }
+  setCompSubunitBindFractions();
+  setInterfaceConsts();
+}
+
+void CompartmentProcess::setInterfaceConsts()
+{
+  double max(0);
+  double min(libecs::INF);
+  for(unsigned i(0); i != interfaceSubs.size(); ++i)
+    {
+      std::vector<double> interfaceConsts;
+      for(unsigned j(0); j != interfaceSubs[i].size(); ++j)
+        {
+          const double value(subunitBindFractions[interfaceSubs[i][j]]);
+          if(value > max)
+            {
+              max = value;
+            }
+          if(value < min)
+            {
+              min = value;
+            }
+          interfaceConsts.push_back(value);
+        }
+      theInterfaceSpecies->pushInterfaceConsts(interfaceConsts);
+    }
+  std::cout << "     " << getIDString() << ": interface const max:" << max <<
+    " min:" << min << std::endl;
+}
+
+void CompartmentProcess::setCompSubunitBindFractions()
+{
+  for(unsigned i(0); i != subunitBindFractions.size(); ++i)
+    {
+      //2D surface:
+      subunitBindFractions[i] = 3/subunitBindFractions[i];
+    }
+}
+
+
+void CompartmentProcess::addAdjoin(Voxel& aVoxel, unsigned coord)
+{
+  unsigned* temp(new unsigned[aVoxel.adjoiningSize+1]);
+  for(unsigned i(0); i != aVoxel.adjoiningSize; ++i)
+    {
+      //Avoid duplicated adjoins:
+      if(aVoxel.adjoiningCoords[i] == coord)
+        {
+          if(theSpecies[getID(aVoxel)] == theInterfaceSpecies)
+            {
+              std::cout << "---------------duplicates" << std::endl;
+            }
+          delete[] temp;
+          return;
+        }
+      temp[i] = aVoxel.adjoiningCoords[i];
+    }
+  delete[] aVoxel.adjoiningCoords;
+  temp[aVoxel.adjoiningSize++] = coord;
+  aVoxel.adjoiningCoords = temp;
+}
+
+void CompartmentProcess::addSubunitBinder(unsigned index, unsigned coord)
+{
+  std::vector<unsigned>& binders(subunitBinders[index]);
+  if(std::find(binders.begin(), binders.end(), coord) == binders.end())
+    {
+      binders.push_back(coord);
     }
 }
 
@@ -1249,15 +1341,25 @@ void CompartmentProcess::removeAdjoinsFromNonBindingSide(Voxel& interface)
       unsigned coord(interface.adjoiningCoords[i]);
       Voxel& adjoin((*theLattice)[coord]);
       if(theSpecies[getID(adjoin)]->getIsCompVacant() && 
-         !theSpecies[getID(adjoin)]->getIsInterface() &&
-         !isBindingSide(adjoin.coord))
+         !theSpecies[getID(adjoin)]->getIsInterface())
         {
-          for(unsigned j(0); j != adjoin.diffuseSize; ++j)
+          if(isBindingSide(adjoin.coord))
             {
-              if(adjoin.adjoiningCoords[j] == interface.coord)
+              //We assume the adjoins of this interface points back to 
+              //the interface and there should not be any duplicates here:
+              unsigned intIndex(theInterfaceSpecies->getIndex(&interface)-
+                                intStartIndex);
+              interfaceBinders[intIndex].push_back(adjoin.coord);
+            }
+          else
+            {
+              for(unsigned j(0); j != adjoin.diffuseSize; ++j)
                 {
-                  //Point to itself if it is pointing to interface:
-                  adjoin.adjoiningCoords[j] = adjoin.coord;
+                  if(adjoin.adjoiningCoords[j] == interface.coord)
+                    {
+                      //Point to itself if it is pointing to interface:
+                      adjoin.adjoiningCoords[j] = adjoin.coord;
+                    }
                 }
             }
         }
@@ -1305,6 +1407,7 @@ bool CompartmentProcess::isDissociationSide(const unsigned aCoord)
 void CompartmentProcess::setSubunitInterfaces()
 {
   subunitInterfaces.resize(Filaments*Subunits);
+  subunitBinders.resize(Filaments*Subunits);
   subunitInterfaceDists.resize(Filaments*Subunits);
   for(unsigned i(0); i != intSize; ++i)
     {
@@ -1736,6 +1839,7 @@ void CompartmentProcess::interfaceSubunits()
         }
     }
     */
+  setSubunitBindFractions();
 }
 
 void CompartmentProcess::extendInterfacesOverSurface()
