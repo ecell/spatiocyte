@@ -191,6 +191,8 @@ void CompartmentProcess::initializeFirst()
           theVacantCompSpecies[i]->setIsMultiscale();
         }
     }
+  Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
+  theInterfaceSpecies->setVacantSpecies(aComp->vacantSpecies);
 }
 
 unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
@@ -1251,6 +1253,12 @@ void CompartmentProcess::connectSubunitInterfaceAdjoins()
     }
 }
 
+void CompartmentProcess::initializeCompartmentOnce()
+{
+  setSubunitBindFractions();
+  setInterfaceConsts();
+}
+
 void CompartmentProcess::setSubunitBindFractions()
 {
   for(unsigned i(0); i != subunitInterfaces.size(); ++i)
@@ -1261,47 +1269,121 @@ void CompartmentProcess::setSubunitBindFractions()
           const unsigned intIndex(subunitInterfaces[i][j]-intStartIndex);
           subunitBindFractions[i] += double(interfaceBinders[intIndex].size())/
             interfaceSubs[intIndex].size();
+          /*
+          if(!interfaceSubs[intIndex].size())
+            {
+              Voxel* interface(theInterfaceSpecies->getMolecule(subunitInterfaces[i][j]));
+              std::cout << "i:" << i << " j:" << j << " nBinders:" << interfaceBinders[intIndex].size() << " adjoins:" <<  interface->adjoiningSize-interface->diffuseSize << std::endl;
+            }
+          if(!interfaceBinders[intIndex].size())
+            {
+              Voxel* interface(theInterfaceSpecies->getMolecule(subunitInterfaces[i][j]));
+              std::cout << "i:" << i << " j:" << j << " nSubs:" << interfaceSubs[intIndex].size() << " adjoins:" <<  interface->adjoiningSize-interface->diffuseSize << std::endl;
+            }
+            */
         }
     }
   setCompSubunitBindFractions();
-  setInterfaceConsts();
-}
-
-void CompartmentProcess::setInterfaceConsts()
-{
-  double max(0);
+  int cnt(0);
+  double bf(0);
   double min(libecs::INF);
-  for(unsigned i(0); i != interfaceSubs.size(); ++i)
+  double max(0);
+  std::cout << "subBF size:" << subunitBindFractions.size() << std::endl;
+  for(unsigned i(0); i != subunitBindFractions.size(); ++i)
     {
-      std::vector<double> interfaceConsts;
-      for(unsigned j(0); j != interfaceSubs[i].size(); ++j)
+      double sbf(subunitBindFractions[i]);
+      if(sbf < min)
         {
-          const double value(subunitBindFractions[interfaceSubs[i][j]]);
-          if(value > max)
-            {
-              max = value;
-            }
-          if(value < min)
-            {
-              min = value;
-            }
-          interfaceConsts.push_back(value);
+          min = sbf;
         }
-      theInterfaceSpecies->pushInterfaceConsts(interfaceConsts);
+      if(sbf > max)
+        {
+          max = sbf;
+        }
+      bf += sbf;
+      ++cnt;
     }
-  std::cout << "     " << getIDString() << ": interface const max:" << max <<
-    " min:" << min << std::endl;
+  std::cout << "average bf:" << bf/cnt << " max:" << max << " min:" << min << std::endl;
 }
 
 void CompartmentProcess::setCompSubunitBindFractions()
 {
+
+  /*
   for(unsigned i(0); i != subunitBindFractions.size(); ++i)
     {
       //2D surface:
       subunitBindFractions[i] = 3/subunitBindFractions[i];
     }
+    */
 }
 
+
+void CompartmentProcess::setInterfaceConsts()
+{
+  int sCnt(0);
+  double max(0);
+  double min(libecs::INF);
+  double mean(0);
+  unsigned cnt(0);
+  double nv(theInterfaceSpecies->getVacantSpecies()->compVoxelSize());
+  double rv(VoxelRadius);
+  Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
+  double V(aComp->actualVolume);
+  //Probability const for lattice molecules to bind to each subunit of
+  //off-lattice molecules via interface voxels:
+  double c(8*nv*rv*rv/V);
+  for(unsigned i(0); i != interfaceSubs.size(); ++i)
+    {
+      std::vector<double> interfaceConsts;
+      //bool same(true);
+      //double first(subunitBindFractions[interfaceSubs[i][0]]);
+      for(unsigned j(0); j != interfaceSubs[i].size(); ++j)
+        {
+          //unsigned sub(interfaceSubs[i][j]);
+          //std::cout << "i:" << i << " j:" << j << " sub:" << sub << " bf:" << subunitBindFractions[interfaceSubs[i][j]] << std::endl;
+          const double bf(subunitBindFractions[interfaceSubs[i][j]]);
+          /*
+          if(first != bf)
+            {
+              same = false;
+            }
+            */
+          mean += bf;
+          ++cnt;
+          if(bf > max)
+            {
+              max = bf;
+            }
+          if(bf < min)
+            {
+              min = bf;
+            }
+          interfaceConsts.push_back(c/bf);
+        }
+      /*
+      if(!same)
+        {
+          ++sCnt;
+          std::cout << sCnt << " i:" << i << "not same" << std::endl;
+        }
+        */
+      theInterfaceSpecies->pushInterfaceConsts(interfaceConsts);
+    }
+  std::cout << "     " << getIDString() << ": bind fraction max:" << max <<
+    " min:" << min << " mean:" << mean/cnt << std::endl;
+  std::cout << "     " << getIDString() << ": interface const max:" << c/max <<
+    " min:" << c/min << " mean:" << c/(mean/cnt) << std::endl;
+  /*
+  for(unsigned i(0); i != subunitInterfaces.size();  ++i)
+    {
+      for(unsigned j(0); j != subunitInterfaces[i].size(); ++j)
+        {
+          std::cout << "i:" << i << " j:" << j << " int:" << subunitInterfaces[i][j] << std::endl;
+        }
+    }
+    */
+}
 
 void CompartmentProcess::addAdjoin(Voxel& aVoxel, unsigned coord)
 {
@@ -1402,6 +1484,27 @@ bool CompartmentProcess::isDissociationSide(const unsigned aCoord)
       return true;
     }
   return false;
+}
+
+void CompartmentProcess::addSubunitInterfaces()
+{
+  const double delta(nDiffuseRadius+nVoxelRadius);
+  for(unsigned i(0); i != subunitInterfaces.size(); ++i)
+    {
+      Point& subPoint(*(*theLattice)[i+subStartCoord].point);
+      for(unsigned j(0); j != intSize; ++j)
+        {
+          unsigned intIndexGlobal(j+intStartIndex);
+          Point intPoint(theInterfaceSpecies->getPoint(intIndexGlobal));
+          const double dist(distance(subPoint, intPoint));
+          if(dist <= delta &&
+             std::find(subunitInterfaces[i].begin(), subunitInterfaces[i].end(),
+                       intIndexGlobal) == subunitInterfaces[i].end())
+            {
+              subunitInterfaces[i].push_back(intIndexGlobal);
+            }
+        }
+    }
 }
 
 void CompartmentProcess::setSubunitInterfaces()
@@ -1744,6 +1847,7 @@ void CompartmentProcess::interfaceSubunits()
   setNearestSubunitForOrphanInterfaces();
 
 
+
   /*
   for(unsigned i(0); i!= interfaceSubunitPairs.size(); ++i)
     {
@@ -1771,6 +1875,10 @@ void CompartmentProcess::interfaceSubunits()
       std::endl;
     }
     */
+  //At this stage, there is at most one interface per subunit. Below we
+  //add existing interfaces that overlaps with the subunit to subunitInterfaces:
+  
+  //addSubunitInterfaces();
 
 
   connectSubunitInterfaceAdjoins();
@@ -1839,7 +1947,6 @@ void CompartmentProcess::interfaceSubunits()
         }
     }
     */
-  setSubunitBindFractions();
 }
 
 void CompartmentProcess::extendInterfacesOverSurface()

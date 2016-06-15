@@ -101,8 +101,15 @@ void MicrotubuleProcess::initializeCompartment() {
   theInterfaceSpecies->setIsPopulated();
   populateMinusPlusSpecies();
   /*
+  for(unsigned i(0); i != theSpecies.size()-1; ++i)
+    {
+      std::cout << getIDString(theSpecies[i]) << std::endl;;
+    }
+    */
+
+  //theSpecies[9]->setIsPopulated();
+  /*
   theSpecies[0]->setIsPopulated();
-  theSpecies[9]->setIsPopulated();
   theSpecies[10]->setIsPopulated();
   */
 }
@@ -191,18 +198,50 @@ void MicrotubuleProcess::removeAdjoinsFromNonBindingSide(Voxel& interface)
       unsigned coord(interface.adjoiningCoords[i]);
       Voxel& adjoin((*theLattice)[coord]);
       if(theSpecies[getID(adjoin)]->getIsCompVacant() && 
-         !theSpecies[getID(adjoin)]->getIsInterface() &&
-         !isBindingSide(adjoin.coord))
+         !theSpecies[getID(adjoin)]->getIsInterface())
         {
-          /*
-          if(getID(adjoin) != theSpecies[10]->getID())
+          if(isBindingSide(adjoin.coord))
             {
-              theSpecies[10]->addMolecule(&adjoin);
+              //We assume the adjoins of this interface points back to 
+              //the interface and there should not be any duplicates here:
+              unsigned intIndex(theInterfaceSpecies->getIndex(&interface)-
+                                intStartIndex);
+              interfaceBinders[intIndex].push_back(adjoin.coord);
             }
-            */
-          adjoin.idx = theNullID*theStride;;
+          else
+            {
+              //theSpecies[9]->softAddMolecule(&adjoin);
+              //Make the voxels inside MT tube inaccessible:
+              adjoin.idx = theNullID*theStride;;
+            }
         }
     }
+}
+
+
+void MicrotubuleProcess::setCompSubunitBindFractions()
+{
+  /*
+  std::cout << "subBF size:" << subunitBindFractions.size() << std::endl;
+  for(unsigned i(0); i != subunitBindFractions.size(); ++i)
+    {
+      std::cout << "i:" << i << " " << subunitBindFractions[i] << std::endl;
+    }
+    */
+  /*
+  double ave(0);
+  double cnt(0);
+  double ave2(0);
+  for(unsigned i(0); i != subunitBinders.size(); ++i)
+    {
+      ++cnt;
+      ave += subunitBinders[i].size(); 
+      ave2 += double(subunitBinders[i].size())/subunitInterfaces[i].size();
+      /*
+      std::cout << "i:" << i << " size:" << subunitBinders[i].size() << " size2:" << double(subunitBinders[i].size())/subunitInterfaces[i].size() << std::endl;
+    }
+  std::cout << "ave:" << ave/cnt << " ave2:" << ave2/cnt << " mean:" << (ave+ave2)/(2*cnt) << std::endl;
+      */
 }
 
 

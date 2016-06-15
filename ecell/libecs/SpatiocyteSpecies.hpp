@@ -794,7 +794,7 @@ public:
     }
   void walk()
     {
-      double pconst(1);
+      double ic(1);
       const unsigned beginMoleculeSize(theMoleculeSize);
       unsigned size(theAdjoiningCoordSize);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
@@ -827,8 +827,12 @@ public:
                     }
                   unsigned coord(theRng.Integer(target->adjoiningSize-
                                                 target->diffuseSize));
-                  pconst = theSpecies[
-                    getID(target)]->getInterfaceConst(target, coord);
+                  //For interfaceSpecies, theReactionProbabilities[tarID]
+                  //contains the value k/DA, so 
+                  //p = (k/DA)*ic
+                  //  = (k/DA)*8*nv*rv*rv/(V*bf)
+                  ic = theSpecies[getID(target)]->getInterfaceConst(target,
+                                                                    coord);
                   coord = target->adjoiningCoords[coord+target->diffuseSize];
                   target = &theLattice[coord];
                 }
@@ -846,7 +850,7 @@ public:
                     }
                   //If it meets the reaction probability:
                   if(theReactionProbabilities[tarID] == 1 ||
-                     theRng.Fixed() < theReactionProbabilities[tarID]*pconst)
+                     theRng.Fixed() < theReactionProbabilities[tarID]*ic)
                     { 
                       if(aReaction->getCollision() && 
                          aReaction->getCollision() != 3)

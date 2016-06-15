@@ -112,6 +112,7 @@ void SpatiocyteStepper::initialize()
   initializeCompartments();
   cout << "12. storing simulation parameters..." << std::endl;
   storeSimulationParameters();
+  initializeCompartmentsOnce();
   cout << "13. initializing processes the third time..." << std::endl;
   initializeThird();
   cout << "14. updating species..." << std::endl;
@@ -592,6 +593,19 @@ void SpatiocyteStepper::initializeCompartments()
       if(aCompProcess)
         {
           aCompProcess->initializeCompartment();
+        }
+    }
+}
+
+void SpatiocyteStepper::initializeCompartmentsOnce()
+{
+  for(std::vector<SpatiocyteProcess*>::const_iterator 
+      i(theSpatiocyteProcesses.begin()); i != theSpatiocyteProcesses.end(); ++i)
+    {      
+      CompartmentProcess* aCompProcess(dynamic_cast<CompartmentProcess*>(*i));
+      if(aCompProcess)
+        {
+          aCompProcess->initializeCompartmentOnce();
         }
     }
 }

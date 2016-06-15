@@ -156,6 +156,7 @@ private:
   void initializeFirst();
   void initializeSecond();
   void initializeCompartments();
+  void initializeCompartmentsOnce();
   void initializeThird();
   void initializeBeforePopulate();
   void initializeFourth();

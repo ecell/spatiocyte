@@ -73,6 +73,7 @@ public:
   virtual bool isInside(Point&);
   virtual double getDisplacementToSurface(Point&);
   virtual void removeAdjoinsFromNonBindingSide(Voxel&);
+  virtual void setCompSubunitBindFractions();
   bool isWithinMTDiameter(Point&, Point&);
 protected:
   unsigned getNearestFilament(Point&);

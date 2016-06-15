@@ -897,10 +897,19 @@ void FilamentProcess::extendInterfacesOverFilamentSurface(const bool direction)
 
 void FilamentProcess::setCompSubunitBindFractions()
 {
-  for(unsigned i(0); i != subunitBindFractions.size(); ++i)
+  double ave(0);
+  double cnt(0);
+  double ave2(0);
+  for(unsigned i(0); i != subunitBinders.size(); ++i)
     {
-      subunitBindFractions[i] = 10/subunitBindFractions[i];
+      ++cnt;
+      ave += subunitBinders[i].size(); 
+      ave2 += double(subunitBinders[i].size())/subunitInterfaces[i].size();
+      /*
+      std::cout << "i:" << i << " size:" << subunitBinders[i].size() << " size2:" << double(subunitBinders[i].size())/subunitInterfaces[i].size() << std::endl;
+      */
     }
+  std::cout << "ave:" << ave/cnt << " ave2:" << ave2/cnt << " mean:" << (ave+ave2)/(2*cnt) << std::endl;
 }
 
 

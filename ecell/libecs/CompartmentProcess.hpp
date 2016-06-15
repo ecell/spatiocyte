@@ -138,6 +138,7 @@ public:
   virtual void prepreinitialize();
   virtual void initialize();
   virtual void initializeFirst();
+  virtual void initializeCompartmentOnce();
   virtual unsigned getLatticeResizeCoord(unsigned);
   virtual void initializeCompartment();
   virtual void printParameters();
@@ -161,6 +162,7 @@ public:
                                  const unsigned);
   unsigned getNearestInterface(const unsigned, double&);
   void setSubunitInterfaces();
+  void addSubunitInterfaces();
   void setNearestSubunitForOrphanInterfaces();
   void setNearestInterfaceForOrphanSubunits();
   void setVacantCompSpeciesProperties();

@@ -1294,10 +1294,12 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
       double nv(A->getComp()->vacantSpecies->size());
       double ns(B->size());
       std::cout << "1st ns:" << ns << " " << getIDString() << std::endl;
+      /*
       if(B->getComp()->interfaceID != theSpecies.size())
         {
           ns = theSpecies[B->getComp()->interfaceID]->size();
         }
+        */
       double S(B->getComp()->specArea);
       double V(A->getComp()->actualVolume);
       std::cout << "1: nv:" << nv << " ns:" << ns << " S:" << S << " V:" << V << std::endl;
@@ -1319,10 +1321,12 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
       double nv(B->getComp()->vacantSpecies->size());
       double ns(A->size());
       std::cout << "2nd ns:" << ns << " " << getIDString() << std::endl;
+      /*
       if(A->getComp()->interfaceID != theSpecies.size())
         {
           ns = theSpecies[A->getComp()->interfaceID]->size();
         }
+        */
       double S(A->getComp()->specArea);
       double V(B->getComp()->actualVolume);
       std::cout << "1: nv:" << nv << " ns:" << ns << " S:" << S << " V:" << V << std::endl;
@@ -1343,7 +1347,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
     {
       double nv(A->getComp()->vacantSpecies->compVoxelSize());
       double nl(B->compVoxelSize());
-      std::cout << "1st nl:" << nl << " " << getIDString() << std::endl;
+      std::cout << "31 1st nl:" << nl << " " << getIDString() << std::endl;
       /*
       if(B->getComp()->interfaceID != theSpecies.size())
         {
@@ -1356,7 +1360,29 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
         V << std::endl;
       if(p == -1)
         {
-          p = 4*k*nv*r_v*r_v*L/(5*nl*V*D_A);
+          if(B->getComp()->interfaceID != theSpecies.size())
+            {
+              p = k*L/(D_A*nl);
+              Species* interface(theSpecies[B->getComp()->interfaceID]);
+              std::cout << "process:" << getIDString() << " " << getIDString(interface) << " interface size:" << interface->size() << std::endl;
+              for(unsigned i(0); i != interface->size(); ++i)
+                {
+                  Voxel* mol(interface->getMolecule(i));
+                  for(unsigned j(0); j != mol->adjoiningSize-mol->diffuseSize;
+                      ++j)
+                    {
+                      double val(interface->getInterfaceConst(mol, j));
+                      if(val*p > 1)
+                        {
+                          std::cout << i << " " << j << " " << val*p << std::endl;
+                        }
+                    }
+                }
+            }
+          else
+            { 
+              p = 4*k*nv*r_v*r_v*L/(5*nl*V*D_A);
+            }
         }
       else
         {
@@ -1369,7 +1395,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
     {
       double nv(B->getComp()->vacantSpecies->compVoxelSize());
       double nl(A->compVoxelSize());
-      std::cout << "2nd nl:" << nl << " " << getIDString() << std::endl;
+      std::cout << "13 2nd nl:" << nl << " " << getIDString() << std::endl;
       /*
       if(A->getComp()->interfaceID != theSpecies.size())
         {
@@ -1382,7 +1408,29 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
         V << std::endl;
       if(p == -1)
         {
-          p = 4*k*nv*r_v*r_v*L/(5*nl*V*D_B);
+          if(A->getComp()->interfaceID != theSpecies.size())
+            {
+              p = k*L/(D_B*nl);
+              std::cout << "process:" << getIDString() << std::endl;
+              Species* interface(theSpecies[A->getComp()->interfaceID]);
+              for(unsigned i(0); i != interface->size(); ++i)
+                {
+                  Voxel* mol(interface->getMolecule(i));
+                  for(unsigned j(0); j != mol->adjoiningSize-mol->diffuseSize;
+                      ++j)
+                    {
+                      double val(interface->getInterfaceConst(mol, j));
+                      if(val*p > 1)
+                        {
+                          std::cout << i << " " << j << " " << val*p << std::endl;
+                        }
+                    }
+                }
+            }
+          else
+            {
+              p = 4*k*nv*r_v*r_v*L/(5*nl*V*D_B);
+            }
         }
       else
         {
@@ -1454,7 +1502,29 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
         */
       if(p == -1)
         {
-          p = 4*k*nv*r_v*r_v/(5*V*D_A);
+          if(B->getComp()->interfaceID != theSpecies.size())
+            {
+              p = k/D_A;
+              std::cout << "process:" << getIDString() << std::endl;
+              Species* interface(theSpecies[B->getComp()->interfaceID]);
+              for(unsigned i(0); i != interface->size(); ++i)
+                {
+                  Voxel* mol(interface->getMolecule(i));
+                  for(unsigned j(0); j != mol->adjoiningSize-mol->diffuseSize;
+                      ++j)
+                    {
+                      double val(interface->getInterfaceConst(mol, j));
+                      if(val*p > 1)
+                        {
+                          std::cout << i << " " << j << " " << val*p << std::endl;
+                        }
+                    }
+                }
+            }
+          else
+            {
+              p = 4*k*nv*r_v*r_v/(5*V*D_A);
+            }
         }
       else
         {
@@ -1479,7 +1549,29 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
         */
       if(p == -1)
         {
-          p = 4*k*nv*r_v*r_v/(5*V*D_B);
+          if(A->getComp()->interfaceID != theSpecies.size())
+            {
+              p = k/D_B;
+              std::cout << "process:" << getIDString() << std::endl;
+              Species* interface(theSpecies[A->getComp()->interfaceID]);
+              for(unsigned i(0); i != interface->size(); ++i)
+                {
+                  Voxel* mol(interface->getMolecule(i));
+                  for(unsigned j(0); j != mol->adjoiningSize-mol->diffuseSize;
+                      ++j)
+                    {
+                      double val(interface->getInterfaceConst(mol, j));
+                      if(val*p > 1)
+                        {
+                          std::cout << i << " " << j << " " << val*p << std::endl;
+                        }
+                    }
+                }
+            }
+          else
+            {
+              p = 4*k*nv*r_v*r_v/(5*V*D_B);
+            }
         }
       else
         {
