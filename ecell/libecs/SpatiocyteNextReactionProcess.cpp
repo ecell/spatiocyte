@@ -967,7 +967,9 @@ bool SpatiocyteNextReactionProcess::reactACDorFbind(Species* a, Species* c,
       return false;
     }
   //moleculeA will be replaced with species C:
-  moleculeC = a->getMolecule(indexA);
+  //we must define moleculeA since it will be used in reactAdjoins:
+  moleculeA = a->getMolecule(indexA);
+  moleculeC = moleculeA;
   //Get valid molecule D or F to create a product at the binding site:
   moleculeD = d->getBindingSiteAdjoiningVoxel(moleculeC, BindingSite, e);
   if(moleculeD == NULL)
@@ -977,6 +979,11 @@ bool SpatiocyteNextReactionProcess::reactACDorFbind(Species* a, Species* c,
         {
           return false;
         }
+      //Need to specify moleculeB since it will be used in reactAdjoins:
+      if(theAdjoinSubstratesB.size())
+        {
+          moleculeB = moleculeF;
+        }
       interruptProcessesPre();
       Tag tagA(a->getTag(indexA));
       a->removeMolecule(indexA);
@@ -984,6 +991,11 @@ bool SpatiocyteNextReactionProcess::reactACDorFbind(Species* a, Species* c,
       h->softRemoveMolecule(moleculeF);
       f->addMolecule(moleculeF, tagA);
       return true;
+    }
+  //Need to specify moleculeB since it will be used in reactAdjoins:
+  if(theAdjoinSubstratesB.size())
+    {
+      moleculeB = moleculeD;
     }
   interruptProcessesPre();
   Tag tagA(a->getTag(indexA));

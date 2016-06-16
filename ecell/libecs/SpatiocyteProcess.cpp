@@ -102,7 +102,9 @@ int SpatiocyteProcess::getVariableNetCoefficient(const Process* aProcess,
   for(VariableReferenceVector::const_iterator i(aVariableReferences.begin());
       i != aVariableReferences.end(); ++i)
     {
-      if((*i).getVariable() == aVariable)
+      //For adjoinReact substrates we must return negative netCoefficient:
+      if((*i).getVariable() == aVariable &&
+         (*i).getCoefficient() < 10)
         {
           netCoefficient += (*i).getCoefficient();
         }

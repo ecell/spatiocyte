@@ -187,6 +187,7 @@ public:
   //isDependentOn method of X with this process as the argument:
   virtual void setInterruption(std::vector<Process*> const &aProcessList)
     {
+      //std::cout << "me:" << getIDString() << std::endl;
       for(std::vector<Process*>::const_iterator i(aProcessList.begin());
           i != aProcessList.end(); ++i)
         {
@@ -197,6 +198,8 @@ public:
           const Process* me(dynamic_cast<Process*>(this));
           if(this != aReactionProcess && aSpatiocyteProcess->isDependentOn(me))
             {
+              //std::cout << "interrupts:" << aSpatiocyteProcess->getIDString()
+              //  << std::endl;
               theInterruptedProcesses.push_back(aSpatiocyteProcess);
             }
           //A ReactionProcess can interruptPre and interruptPost itself

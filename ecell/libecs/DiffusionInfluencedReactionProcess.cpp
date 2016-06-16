@@ -1362,7 +1362,8 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
         {
           if(B->getComp()->interfaceID != theSpecies.size())
             {
-              p = k*L/(D_A*nl);
+              p = k/D_A;
+              //p = k*L/(D_A*nl);
               Species* interface(theSpecies[B->getComp()->interfaceID]);
               std::cout << "process:" << getIDString() << " " << getIDString(interface) << " interface size:" << interface->size() << std::endl;
               for(unsigned i(0); i != interface->size(); ++i)
@@ -1388,6 +1389,11 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
         {
           // [m^s/s] = [m^3][m^2/s]/([m][m][m]) = [m^2/s]
           k = p*5*nl*V*D_A/(4*nv*r_v*r_v*L);
+          if(B->getComp()->interfaceID != theSpecies.size())
+            {
+              Species* interface(theSpecies[B->getComp()->interfaceID]);
+              interface->setUnityInterfaceConsts();
+            }
         }
     }
   else if(A->getIsCompVacant() && A->getDimension() == 1 &&
@@ -1410,7 +1416,8 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
         {
           if(A->getComp()->interfaceID != theSpecies.size())
             {
-              p = k*L/(D_B*nl);
+              p = k/D_B;
+              //p = k*L/(D_B*nl);
               std::cout << "process:" << getIDString() << std::endl;
               Species* interface(theSpecies[A->getComp()->interfaceID]);
               for(unsigned i(0); i != interface->size(); ++i)
@@ -1436,6 +1443,11 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
         {
           // [m^s/s] = [m^3][m^2/s]/([m][m][m]) = [m^2/s]
           k = p*5*nl*V*D_B/(4*nv*r_v*r_v*L);
+          if(A->getComp()->interfaceID != theSpecies.size())
+            {
+              Species* interface(theSpecies[A->getComp()->interfaceID]);
+              interface->setUnityInterfaceConsts();
+            }
         }
     }
   else if(A->getDimension() == 3 && B->getDimension() == 2)
@@ -1529,6 +1541,11 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
       else
         {
           k = p*5*V*D_A/(4*nv*r_v*r_v); //[m^3/s]
+          if(B->getComp()->interfaceID != theSpecies.size())
+            {
+              Species* interface(theSpecies[B->getComp()->interfaceID]);
+              interface->setUnityInterfaceConsts();
+            }
         }
     }
   else if(A->getDimension() == 1 && B->getDimension() == 3)
@@ -1576,6 +1593,11 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
       else
         {
           k = p*5*V*D_B/(4*nv*r_v*r_v); //[m^3/s]
+          if(A->getComp()->interfaceID != theSpecies.size())
+            {
+              Species* interface(theSpecies[A->getComp()->interfaceID]);
+              interface->setUnityInterfaceConsts();
+            }
         }
     }
   else

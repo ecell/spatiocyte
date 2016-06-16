@@ -788,6 +788,16 @@ public:
     {
       theInterfaceConsts.push_back(interfaceConsts);
     }
+  void setUnityInterfaceConsts()
+    {
+      for(unsigned i(0); i != theInterfaceConsts.size(); ++i)
+        {
+          for(unsigned j(0); j != theInterfaceConsts[i].size(); ++j)
+            {
+              theInterfaceConsts[i][j] = 1;
+            }
+        }
+    }
   double getInterfaceConst(Voxel* aVoxel, unsigned index)
     {
       return theInterfaceConsts[getIndex(aVoxel)][index];
