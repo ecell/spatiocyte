@@ -197,6 +197,8 @@ void CompartmentProcess::initializeFirst()
 
 unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
 {
+  //Whichever diffusive compartment that executes this method first, its
+  //interface species will become the master interface species for all:
   Comp* aComp(theSpatiocyteStepper->system2Comp(getSuperSystem()));
   if(aComp->diffusiveComp)
     {
@@ -210,7 +212,14 @@ unsigned CompartmentProcess::getLatticeResizeCoord(unsigned aStartCoord)
           theInterfaceSpecies = theSpecies[aDiffusiveComp->interfaceID];
         }
     }
-  aComp->interfaceID = theInterfaceSpecies->getID();
+  if(aComp->interfaceID == theSpecies.size())
+    {
+      aComp->interfaceID = theInterfaceSpecies->getID();
+    }
+  else
+    {
+      theInterfaceSpecies = theSpecies[aComp->interfaceID];
+    }
   *theComp = *aComp;
   theVacantSpecies->resetFixedAdjoins();
   theVacantSpecies->setMoleculeRadius(DiffuseRadius);
@@ -2086,7 +2095,8 @@ void CompartmentProcess::printParameters()
           break;
     }
   cout << "   Comp interface species size:" << intSize <<
-    ". Total interface species size:" << theInterfaceSpecies->size() <<
+    ". Total interface " << getIDString(theInterfaceSpecies) << 
+    " species size:" << theInterfaceSpecies->size() <<
     std::endl;
   if(theLipidSpecies)
     {
