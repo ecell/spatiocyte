@@ -214,14 +214,14 @@ bool DiffusionInfluencedReactionProcess::reactVarD_AtoC(Voxel* molA,
                                                         const unsigned indexA,
                                                         const unsigned indexB)
 {
-  //std::cout << getIDString(variableD) << " beg:" << variableD->getValue() <<
+  //cout << getIDString(variableD) << " beg:" << variableD->getValue() <<
   //  std::endl;
   interruptProcessesPre();
   variableD->addValue(1);
   C->addMolecule(molA, A->getTag(indexA));
   A->softRemoveMolecule(indexA);
   removeMolecule(B, molB, indexB);
-  //std::cout << getIDString(variableD) << " end:" << variableD->getValue() <<
+  //cout << getIDString(variableD) << " end:" << variableD->getValue() <<
   //  std::endl;
   return true;
 }
@@ -267,13 +267,13 @@ bool DiffusionInfluencedReactionProcess::reactVarD_AeqC(Voxel* molA,
                                                         const unsigned indexA,
                                                         const unsigned indexB)
 {
-  //std::cout << "first:" << getIDString() << " A:" << A->getIDString() << " B:" << B->getIDString() << " C:" << C->getIDString() << " vD:" << getIDString(variableD) << std::endl;
+  //cout << "first:" << getIDString() << " A:" << A->getIDString() << " B:" << B->getIDString() << " C:" << C->getIDString() << " vD:" << getIDString(variableD) << std::endl;
   interruptProcessesPre();
-  //std::cout << "dir1" << std::endl;
+  //cout << "dir1" << std::endl;
   variableD->addValue(1);
-  //std::cout << "dir2" << std::endl;
+  //cout << "dir2" << std::endl;
   B->removeMolecule(indexB);
-  //std::cout << "dir3" << std::endl;
+  //cout << "dir3" << std::endl;
   return true;
 }
 
@@ -961,7 +961,7 @@ void DiffusionInfluencedReactionProcess::setFreeSequenceReactMethod()
     {
       if(A == C)
         {
-          //std::cout << "reactVarD_AeqC" << std::endl;
+          //cout << "reactVarD_AeqC" << std::endl;
           //A + B -> variableD + [A == C]
           reactM = &DiffusionInfluencedReactionProcess::reactVarD_AeqC;
         }
@@ -1019,7 +1019,7 @@ void DiffusionInfluencedReactionProcess::setFreeSequenceReactMethod()
         {
           if(B->isReplaceable(D))
             {
-              //std::cout << "reactAeqC_BtoD:" << getIDString() << std::endl;
+              //cout << "reactAeqC_BtoD:" << getIDString() << std::endl;
               //A + B -> [A == C] + [D <- molB]
               reactM = &DiffusionInfluencedReactionProcess::reactAeqC_BtoD;
             }
@@ -1033,7 +1033,7 @@ void DiffusionInfluencedReactionProcess::setFreeSequenceReactMethod()
         {
           if(A->isReplaceable(D))
             {
-              //std::cout << "reactBeqC_AtoD:" << getIDString() << std::endl;
+              //cout << "reactBeqC_AtoD:" << getIDString() << std::endl;
               //A + B -> [B == C] + [D <- molA]
               reactM = &DiffusionInfluencedReactionProcess::reactBeqC_AtoD;
             }
@@ -1047,13 +1047,13 @@ void DiffusionInfluencedReactionProcess::setFreeSequenceReactMethod()
         {
           if(B->isReplaceable(C))
             {
-              //std::cout << "reactBtoC_AeqD:" << getIDString() << std::endl;
+              //cout << "reactBtoC_AeqD:" << getIDString() << std::endl;
               //A + B -> [C <- molB] + [A == D]
               reactM = &DiffusionInfluencedReactionProcess::reactBtoC_AeqD;
             }
           else
             {
-              //std::cout << "reactNtoC_AeqD:" << getIDString() << std::endl;
+              //cout << "reactNtoC_AeqD:" << getIDString() << std::endl;
               //A + B -> [C <- molN] + [A == D]
               reactM = &DiffusionInfluencedReactionProcess::reactNtoC_AeqD;
             }
@@ -1064,7 +1064,7 @@ void DiffusionInfluencedReactionProcess::setFreeSequenceReactMethod()
             {
               if(C->getIsTagged() && A->getIsTagged())
                 {
-              //std::cout << "reactAtoC_BeqD_tagAtoC:" << getIDString() << std::endl;
+              //cout << "reactAtoC_BeqD_tagAtoC:" << getIDString() << std::endl;
                   //A + B -> [C <- molA] + [tagC <- tagA] + [B == D]
                   reactM = 
                     &DiffusionInfluencedReactionProcess::reactAtoC_BeqD_tagAtoC;
@@ -1073,7 +1073,7 @@ void DiffusionInfluencedReactionProcess::setFreeSequenceReactMethod()
                 {
                   if(F)
                     {
-                      //std::cout << "reactAtoC_BeqD_NtoF:" << getIDString() <<
+                      //cout << "reactAtoC_BeqD_NtoF:" << getIDString() <<
                       //  std::endl;
                       //A + B -> [C <- molA] + [B == D] + [D <- molN]
                       reactM = 
@@ -1081,7 +1081,7 @@ void DiffusionInfluencedReactionProcess::setFreeSequenceReactMethod()
                     }
                   else
                     {
-                      //std::cout << "reactAtoC_BeqD:" << getIDString() <<
+                      //cout << "reactAtoC_BeqD:" << getIDString() <<
                       //std::endl;
                       //A + B -> [C <- molA] + [B == D]
                       reactM = 
@@ -1293,7 +1293,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
     {
       double nv(A->getComp()->vacantSpecies->size());
       double ns(B->size());
-      std::cout << "1st ns:" << ns << " " << getIDString() << std::endl;
+      cout << "1st ns:" << ns << " " << getIDString() << std::endl;
       /*
       if(B->getComp()->interfaceID != theSpecies.size())
         {
@@ -1302,7 +1302,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
         */
       double S(B->getComp()->specArea);
       double V(A->getComp()->actualVolume);
-      std::cout << "1: nv:" << nv << " ns:" << ns << " S:" << S << " V:" << V << std::endl;
+      cout << "1: nv:" << nv << " ns:" << ns << " S:" << S << " V:" << V << std::endl;
       if(p == -1)
         {
           //p = 24*k*r_v/((6+3*sqrt(3)+2*sqrt(6))*D_A); //averaged hcp surface
@@ -1320,7 +1320,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
     {
       double nv(B->getComp()->vacantSpecies->size());
       double ns(A->size());
-      std::cout << "2nd ns:" << ns << " " << getIDString() << std::endl;
+      cout << "2nd ns:" << ns << " " << getIDString() << std::endl;
       /*
       if(A->getComp()->interfaceID != theSpecies.size())
         {
@@ -1329,7 +1329,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
         */
       double S(A->getComp()->specArea);
       double V(B->getComp()->actualVolume);
-      std::cout << "1: nv:" << nv << " ns:" << ns << " S:" << S << " V:" << V << std::endl;
+      cout << "1: nv:" << nv << " ns:" << ns << " S:" << S << " V:" << V << std::endl;
       if(p == -1)
         {
           //p = 24*k*r_v/((6+3*sqrt(3)+2*sqrt(6))*D_B); //averaged hcp surface
@@ -1347,7 +1347,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
     {
       double nv(A->getComp()->vacantSpecies->compVoxelSize());
       double nl(B->compVoxelSize());
-      std::cout << "31 1st nl:" << nl << " " << getIDString() << std::endl;
+      cout << "31 1st nl:" << nl << " " << getIDString() << std::endl;
       /*
       if(B->getComp()->interfaceID != theSpecies.size())
         {
@@ -1356,7 +1356,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
         */
       double L(B->getComp()->specLength);
       double V(A->getComp()->actualVolume);
-      std::cout << "1: nv:" << nv << " nl:" << nl << " L:" << L << " V:" <<
+      cout << "1: nv:" << nv << " nl:" << nl << " L:" << L << " V:" <<
         V << std::endl;
       if(p == -1)
         {
@@ -1365,7 +1365,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
               p = k/D_A;
               //p = k*L/(D_A*nl);
               Species* interface(theSpecies[B->getComp()->interfaceID]);
-              std::cout << "process:" << getIDString() << " " << getIDString(interface) << " interface size:" << interface->size() << std::endl;
+              cout << "process:" << getIDString() << " " << getIDString(interface) << " interface size:" << interface->size() << std::endl;
               for(unsigned i(0); i != interface->size(); ++i)
                 {
                   Voxel* mol(interface->getMolecule(i));
@@ -1375,7 +1375,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
                       double val(interface->getInterfaceConst(mol, j));
                       if(val*p > 1)
                         {
-                          std::cout << i << " " << j << " " << val*p << std::endl;
+                          cout << i << " " << j << " " << val*p << std::endl;
                         }
                     }
                 }
@@ -1401,7 +1401,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
     {
       double nv(B->getComp()->vacantSpecies->compVoxelSize());
       double nl(A->compVoxelSize());
-      std::cout << "13 2nd nl:" << nl << " " << getIDString() << std::endl;
+      cout << "13 2nd nl:" << nl << " " << getIDString() << std::endl;
       /*
       if(A->getComp()->interfaceID != theSpecies.size())
         {
@@ -1410,7 +1410,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
         */
       double L(A->getComp()->specLength);
       double V(B->getComp()->actualVolume);
-      std::cout << "1: nv:" << nv << " nl:" << nl << " L:" << L << " V:" << 
+      cout << "1: nv:" << nv << " nl:" << nl << " L:" << L << " V:" << 
         V << std::endl;
       if(p == -1)
         {
@@ -1418,7 +1418,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
             {
               p = k/D_B;
               //p = k*L/(D_B*nl);
-              std::cout << "process:" << getIDString() << std::endl;
+              cout << "process:" << getIDString() << std::endl;
               Species* interface(theSpecies[A->getComp()->interfaceID]);
               for(unsigned i(0); i != interface->size(); ++i)
                 {
@@ -1429,7 +1429,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
                       double val(interface->getInterfaceConst(mol, j));
                       if(val*p > 1)
                         {
-                          std::cout << i << " " << j << " " << val*p << std::endl;
+                          cout << i << " " << j << " " << val*p << std::endl;
                         }
                     }
                 }
@@ -1517,7 +1517,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
           if(B->getComp()->interfaceID != theSpecies.size())
             {
               p = k/D_A;
-              std::cout << "process:" << getIDString() << std::endl;
+              cout << "process:" << getIDString() << std::endl;
               Species* interface(theSpecies[B->getComp()->interfaceID]);
               for(unsigned i(0); i != interface->size(); ++i)
                 {
@@ -1528,7 +1528,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
                       double val(interface->getInterfaceConst(mol, j));
                       if(val*p > 1)
                         {
-                          std::cout << i << " " << j << " " << val*p << std::endl;
+                          cout << i << " " << j << " " << val*p << std::endl;
                         }
                     }
                 }
@@ -1569,7 +1569,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
           if(A->getComp()->interfaceID != theSpecies.size())
             {
               p = k/D_B;
-              std::cout << "process:" << getIDString() << std::endl;
+              cout << "process:" << getIDString() << std::endl;
               Species* interface(theSpecies[A->getComp()->interfaceID]);
               for(unsigned i(0); i != interface->size(); ++i)
                 {
@@ -1580,7 +1580,7 @@ void DiffusionInfluencedReactionProcess::calculateReactionProbability()
                       double val(interface->getInterfaceConst(mol, j));
                       if(val*p > 1)
                         {
-                          std::cout << i << " " << j << " " << val*p << std::endl;
+                          cout << i << " " << j << " " << val*p << std::endl;
                         }
                     }
                 }

@@ -103,7 +103,7 @@ void MicrotubuleProcess::initializeCompartment() {
   /*
   for(unsigned i(0); i != theSpecies.size()-1; ++i)
     {
-      std::cout << getIDString(theSpecies[i]) << std::endl;;
+      cout << getIDString(theSpecies[i]) << std::endl;;
     }
     */
 
@@ -222,10 +222,10 @@ void MicrotubuleProcess::removeAdjoinsFromNonBindingSide(Voxel& interface)
 void MicrotubuleProcess::setCompSubunitBindFractions()
 {
   /*
-  std::cout << "subBF size:" << subunitBindFractions.size() << std::endl;
+  cout << "subBF size:" << subunitBindFractions.size() << std::endl;
   for(unsigned i(0); i != subunitBindFractions.size(); ++i)
     {
-      std::cout << "i:" << i << " " << subunitBindFractions[i] << std::endl;
+      cout << "i:" << i << " " << subunitBindFractions[i] << std::endl;
     }
     */
   /*
@@ -238,9 +238,9 @@ void MicrotubuleProcess::setCompSubunitBindFractions()
       ave += subunitBinders[i].size(); 
       ave2 += double(subunitBinders[i].size())/subunitInterfaces[i].size();
       /*
-      std::cout << "i:" << i << " size:" << subunitBinders[i].size() << " size2:" << double(subunitBinders[i].size())/subunitInterfaces[i].size() << std::endl;
+      cout << "i:" << i << " size:" << subunitBinders[i].size() << " size2:" << double(subunitBinders[i].size())/subunitInterfaces[i].size() << std::endl;
     }
-  std::cout << "ave:" << ave/cnt << " ave2:" << ave2/cnt << " mean:" << (ave+ave2)/(2*cnt) << std::endl;
+  cout << "ave:" << ave/cnt << " ave2:" << ave2/cnt << " mean:" << (ave+ave2)/(2*cnt) << std::endl;
       */
 }
 

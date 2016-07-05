@@ -1227,7 +1227,7 @@ void CompartmentProcess::connectSubunitInterfaceAdjoins()
              interfaceSubs[intGlobalIndex-intStartIndex].size()-1] != 
              subunit.coord)
             {
-              std::cout << "wrong index in interfaceSubs" << std::endl;
+              cout << "wrong index in interfaceSubs" << std::endl;
             }
           for(unsigned k(0); k != interface.diffuseSize; ++k)
             {
@@ -1297,7 +1297,7 @@ void CompartmentProcess::setSubunitBindFractions()
   double bf(0);
   double min(libecs::INF);
   double max(0);
-  std::cout << "subBF size:" << subunitBindFractions.size() << std::endl;
+  cout << "subBF size:" << subunitBindFractions.size() << std::endl;
   for(unsigned i(0); i != subunitBindFractions.size(); ++i)
     {
       double sbf(subunitBindFractions[i]);
@@ -1312,7 +1312,7 @@ void CompartmentProcess::setSubunitBindFractions()
       bf += sbf;
       ++cnt;
     }
-  std::cout << "average bf:" << bf/cnt << " max:" << max << " min:" << min << std::endl;
+  cout << "average bf:" << bf/cnt << " max:" << max << " min:" << min << std::endl;
 }
 
 void CompartmentProcess::setCompSubunitBindFractions()
@@ -1379,9 +1379,9 @@ void CompartmentProcess::setInterfaceConsts()
         */
       theInterfaceSpecies->pushInterfaceConsts(interfaceConsts);
     }
-  std::cout << "     " << getIDString() << ": bind fraction max:" << max <<
+  cout << "     " << getIDString() << ": bind fraction max:" << max <<
     " min:" << min << " mean:" << mean/cnt << std::endl;
-  std::cout << "     " << getIDString() << ": interface const max:" << c/max <<
+  cout << "     " << getIDString() << ": interface const max:" << c/max <<
     " min:" << c/min << " mean:" << c/(mean/cnt) << std::endl;
   /*
   for(unsigned i(0); i != subunitInterfaces.size();  ++i)
@@ -1404,7 +1404,7 @@ void CompartmentProcess::addAdjoin(Voxel& aVoxel, unsigned coord)
         {
           if(theSpecies[getID(aVoxel)] == theInterfaceSpecies)
             {
-              std::cout << "---------------duplicates" << std::endl;
+              cout << "---------------duplicates" << std::endl;
             }
           delete[] temp;
           return;

@@ -749,7 +749,7 @@ void FilamentProcess::extendInterfacesOverFilamentSurface(const bool direction)
           if(getFilamentAdjoin(&interface, direction, j, 1, aSurfaceDisp,
                                0.2, adjPoint, adjDist, adjDisp, &adjoin))
             { 
-              //std::cout << "adjDist:" << adjDist << " adjDisp:" << adjDisp
+              //cout << "adjDist:" << adjDist << " adjDisp:" << adjDisp
               //<< std::endl;
               if(getMinDistanceFromLineEnd(adjPoint) >= -4*nMaxRadius)
                 {
@@ -763,7 +763,7 @@ void FilamentProcess::extendInterfacesOverFilamentSurface(const bool direction)
                          aSurfaceDisp, adjDisp, subPoint, subDist, subDisp,
                          &sub))
                         {
-                          //std::cout << "subDist:" << subDist << " subDisp:"
+                          //cout << "subDist:" << subDist << " subDisp:"
                           //<< subDisp << std::endl;
                           if(getMinDistanceFromLineEnd(subPoint) >= 
                              -4*nMaxRadius)
@@ -779,7 +779,7 @@ void FilamentProcess::extendInterfacesOverFilamentSurface(const bool direction)
                                      aSurfaceDisp, subDisp, subSubPoint,
                                      subSubDist, subSubDisp, &subSub))
                                     {
-                                      //std::cout << "subsDist:" << subSubDist
+                                      //cout << "subsDist:" << subSubDist
                                       //<< " subsDisp:" << subSubDisp <<
                                       //std::endl;
                                       if(!isAdjoin(subSub, adjoin) &&
@@ -794,7 +794,7 @@ void FilamentProcess::extendInterfacesOverFilamentSurface(const bool direction)
                                             {
                                               thirdDist = 
                                                 subSubDist+subDist+adjDist;
-                                              //std::cout << "thirdDist:" <<
+                                              //cout << "thirdDist:" <<
                                               //thirdDist << std::endl;
                                               thirdAdj = adjoin;
                                               thirdSub = sub;
@@ -829,11 +829,11 @@ void FilamentProcess::extendInterfacesOverFilamentSurface(const bool direction)
           /*
           Point subSubPoint(theSpatiocyteStepper->coord2point(
           thirdSubSub->coord));
-          std::cout << "-dist1:" << getMinDistanceFromLineEnd(adjPoint) <<
+          cout << "-dist1:" << getMinDistanceFromLineEnd(adjPoint) <<
           " id:" << getID(thirdAdj) << " null:" << theNullID << std::endl;
-          std::cout << "dist1:" << getMinDistanceFromLineEnd(subPoint) << 
+          cout << "dist1:" << getMinDistanceFromLineEnd(subPoint) << 
           " id:" << getID(thirdSub) << std::endl;
-          std::cout << "dist1:" << getMinDistanceFromLineEnd(subSubPoint) <<
+          cout << "dist1:" << getMinDistanceFromLineEnd(subSubPoint) <<
           std::endl;
           */
           //if(theSpecies[getID(thirdAdj)]->getIsCompVacant())
@@ -857,9 +857,9 @@ void FilamentProcess::extendInterfacesOverFilamentSurface(const bool direction)
           Point adjPoint(theSpatiocyteStepper->coord2point(secondAdj->coord));
           Point subPoint(theSpatiocyteStepper->coord2point(secondSub->coord));
           /*
-          std::cout << "dist2:" << getMinDistanceFromLineEnd(adjPoint) <<
+          cout << "dist2:" << getMinDistanceFromLineEnd(adjPoint) <<
           " id:" << getID(secondAdj) << " null:" << theNullID << std::endl;
-          std::cout << "dist2:" << getMinDistanceFromLineEnd(subPoint) <<
+          cout << "dist2:" << getMinDistanceFromLineEnd(subPoint) <<
           " id:" << getID(secondSub) << " null:" << theNullID << std::endl;
           */
           //if(theSpecies[getID(secondAdj)]->getIsCompVacant())
@@ -881,7 +881,7 @@ void FilamentProcess::extendInterfacesOverFilamentSurface(const bool direction)
         {
           Point adjPoint(theSpatiocyteStepper->coord2point(firstAdj->coord));
           /*
-          std::cout << "dist3:" << getMinDistanceFromLineEnd(adjPoint) << 
+          cout << "dist3:" << getMinDistanceFromLineEnd(adjPoint) << 
           " id:" << getID(firstAdj) << " null:" << theNullID << std::endl;
           */
           //if(theSpecies[getID(firstAdj)]->getIsCompVacant())
@@ -906,10 +906,10 @@ void FilamentProcess::setCompSubunitBindFractions()
       ave += subunitBinders[i].size(); 
       ave2 += double(subunitBinders[i].size())/subunitInterfaces[i].size();
       /*
-      std::cout << "i:" << i << " size:" << subunitBinders[i].size() << " size2:" << double(subunitBinders[i].size())/subunitInterfaces[i].size() << std::endl;
+      cout << "i:" << i << " size:" << subunitBinders[i].size() << " size2:" << double(subunitBinders[i].size())/subunitInterfaces[i].size() << std::endl;
       */
     }
-  std::cout << "ave:" << ave/cnt << " ave2:" << ave2/cnt << " mean:" << (ave+ave2)/(2*cnt) << std::endl;
+  cout << "ave:" << ave/cnt << " ave2:" << ave2/cnt << " mean:" << (ave+ave2)/(2*cnt) << std::endl;
 }
 
 
