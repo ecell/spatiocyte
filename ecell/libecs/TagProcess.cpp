@@ -141,7 +141,7 @@ void TagProcess::initializeFourth()
       unsigned anAvailableSize(0);
       for(unsigned j(0); j != aSpecies->size(); ++j)
         {
-          if(aSpecies->getTag(j).speciesID == theNullID)
+          if(aSpecies->getTag(j)[0].speciesID == theNullID)
             {
               ++anAvailableSize;
               if(anAvailableSize >= theTaggedSizes[i])
@@ -167,13 +167,13 @@ void TagProcess::initializeFourth()
       for(unsigned j(0); j != theTaggedSizes[i]; ++j)
         {
           unsigned anIndex(aSpecies->getRandomIndex());
-          while(aSpecies->getTag(anIndex).speciesID != theNullID)
+          while(aSpecies->getTag(anIndex)[0].speciesID != theNullID)
             {
               anIndex = aSpecies->getRandomIndex();
             }
-          Tag &aTag(aSpecies->getTag(anIndex));
-          aTag.speciesID = theTagSpecies->getID();
-          aTag.molID = molID;
+          std::vector<Tag> &aTag(aSpecies->getTag(anIndex));
+          aTag[0].speciesID = theTagSpecies->getID();
+          aTag[0].molID = molID;
           molID++;
         }
     }

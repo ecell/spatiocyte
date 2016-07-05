@@ -121,6 +121,7 @@ public:
     theID(anID),
     theInitCoordSize(anInitCoordSize),
     theMoleculeSize(0),
+    theOligomerSize(1), //size of subunits inside a single voxel
     theRotateSize(1),
     theSpeciesCollisionCnt(0),
     D(0),
@@ -161,11 +162,13 @@ public:
         {
           setVacantSpecies(theComp->vacantSpecies);
         }
+      Tag aNullTag;
       theVacantIdx = theStride*theVacantID;
-      theNullTag.speciesID = theNullID;
-      theNullTag.rotIndex = 0;
-      theNullTag.multiIdx = 0;
-      theNullTag.boundCnt = 0;
+      aNullTag.speciesID = theNullID;
+      aNullTag.rotIndex = 0;
+      aNullTag.multiIdx = 0;
+      aNullTag.boundCnt = 0;
+      theNullTag.push_back(aNullTag); //theOligomerSize = 1
       cout.setLevel(theStepper->getDebugLevel());
     }
   void setDiffusionInfluencedReaction(DiffusionInfluencedReactionProcess*
@@ -453,9 +456,9 @@ public:
         {
           aCurrentPoint = theStepper->getPeriodicPoint(getCoord(index),
                                                        theDimension,
-                                                   &theTags[index].origin);
+                                                   &theTags[index][0].origin);
         }
-      const double nDisplacement(distance(theTags[index].origin.point,
+      const double nDisplacement(distance(theTags[index][0].origin.point,
                                           aCurrentPoint)*
                                  theStepper->getVoxelRadius()*2);
       return nDisplacement*nDisplacement;
@@ -478,7 +481,7 @@ public:
   //Only works for 2D periodic diffusion now:
   Point getPeriodicPoint(const unsigned index)
     {
-      Origin& anOrigin(theTags[index].origin);
+      Origin& anOrigin(theTags[index][0].origin);
       Point aPoint(getPoint(index));
       disp_(aPoint, theWidthVector, 
             anOrigin.row*lipRows*nDiffuseRadius*sqrt(3));
@@ -1193,7 +1196,7 @@ public:
               if(!isIntersectMultiscale(source->coord, target->coord) &&
                  isMultiscaleWalkPropensity(source->coord, target->coord))
                 {
-                  removeMultiscaleMolecule(source, theTags[i].rotIndex);
+                  removeMultiscaleMolecule(source, theTags[i][0].rotIndex);
                   addMultiscaleMolecule(target, i);
                   source->idx = target->idx;
                   target->idx = i+theStride*theID;
@@ -1214,7 +1217,7 @@ public:
             {
               if(!isIntersectMultiscale(source->coord, target->coord))
                 {
-                  removeMultiscaleMolecule(source, theTags[i].rotIndex);
+                  removeMultiscaleMolecule(source, theTags[i][0].rotIndex);
                   addMultiscaleMolecule(target, i);
                   source->idx = target->idx;
                   target->idx = i+theStride*theID;
@@ -1396,7 +1399,7 @@ public:
           const unsigned row((source->coord-lipStartCoord)/lipCols);
           int coordA(source->coord-lipStartCoord+
                      theAdjoinOffsets[row%2][tarIndex]);
-          Origin anOrigin(theTags[i].origin);
+          Origin anOrigin(theTags[i][0].origin);
           if(!isInLatticeOrigins(coordA, theRowOffsets[tarIndex]+row,
                                  anOrigin))
             {
@@ -1471,7 +1474,7 @@ public:
           const unsigned row((source->coord-lipStartCoord)/lipCols);
           int coordA(source->coord-lipStartCoord+
                      theAdjoinOffsets[row%2][tarIndex]);
-          Origin anOrigin(theTags[i].origin);
+          Origin anOrigin(theTags[i][0].origin);
           if(!isInLatticeOrigins(coordA, theRowOffsets[tarIndex]+row,
                                  anOrigin))
             {
@@ -1485,7 +1488,7 @@ public:
                   source->idx = target->idx;
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
-                  theTags[i].origin = anOrigin;
+                  theTags[i][0].origin = anOrigin;
                 }
             }
           else
@@ -1567,10 +1570,10 @@ public:
             {
               if(theWalkProbability == 1 || theRng.Fixed() < theWalkProbability)
                 {
-                  source->idx = theTags[i].multiIdx;
-                  if(theTags[i].multiIdx != target->idx)
+                  source->idx = theTags[i][0].multiIdx;
+                  if(theTags[i][0].multiIdx != target->idx)
                     {
-                      theTags[i].multiIdx = target->idx;
+                      theTags[i][0].multiIdx = target->idx;
                     }
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
@@ -1613,20 +1616,21 @@ public:
           const unsigned coordA(source->coord-vacStartCoord);
           const int rowA(coordA/lipCols);
           if(!isIntersectMultiscaleRegular(i, coordA, rowA,
-                         theRotOffsets[rowA%2][theTags[i].rotIndex][tarIndex]))
+                         theRotOffsets[rowA%2][theTags[i][0].rotIndex][
+                         tarIndex]))
             { 
               unsigned srcIndex(0);
-              unsigned srcRotIndex(theTags[i].rotIndex+1);
+              unsigned srcRotIndex(theTags[i][0].rotIndex+1);
               if(!tarIndex)
                 {
                   srcIndex = 1;
-                  if(!theTags[i].rotIndex)
+                  if(!theTags[i][0].rotIndex)
                     {
                       srcRotIndex = theRotateSize-1;
                     }
                   else
                     {
-                      srcRotIndex = theTags[i].rotIndex-1; 
+                      srcRotIndex = theTags[i][0].rotIndex-1; 
                     }
                 }
               else if(srcRotIndex == theRotateSize)
@@ -1634,9 +1638,9 @@ public:
                   srcRotIndex = 0;
                 }
               moveMultiscaleMoleculeRegular(coordA, rowA, 
-                    theRotOffsets[rowA%2][theTags[i].rotIndex][tarIndex],
+                    theRotOffsets[rowA%2][theTags[i][0].rotIndex][tarIndex],
                     theRotOffsets[rowA%2][srcRotIndex][srcIndex], i);
-              theTags[i].rotIndex = srcRotIndex;
+              theTags[i][0].rotIndex = srcRotIndex;
             }
         }
     }
@@ -1650,20 +1654,20 @@ public:
           const unsigned coordA(source->coord-vacStartCoord);
           const int rowA(coordA/lipCols); 
           if(!isIntersectMultiscaleRegular(i, coordA, rowA,
-                 theRotOffsets[rowA%2][theTags[i].rotIndex][tarIndex]))
+                 theRotOffsets[rowA%2][theTags[i][0].rotIndex][tarIndex]))
             {
               unsigned srcIndex(0);
-              unsigned srcRotIndex(theTags[i].rotIndex+1);
+              unsigned srcRotIndex(theTags[i][0].rotIndex+1);
               if(!tarIndex)
                 {
                   srcIndex = 1;
-                  if(!theTags[i].rotIndex)
+                  if(!theTags[i][0].rotIndex)
                     {
                       srcRotIndex = theRotateSize-1;
                     }
                   else
                     {
-                      srcRotIndex = theTags[i].rotIndex-1; 
+                      srcRotIndex = theTags[i][0].rotIndex-1; 
                     }
                 }
               else if(srcRotIndex == theRotateSize)
@@ -1671,13 +1675,13 @@ public:
                   srcRotIndex = 0;
                 }
               if(isMultiscaleWalkPropensityRegular(coordA, rowA,
-                     theRotOffsets[rowA%2][theTags[i].rotIndex][tarIndex],
+                     theRotOffsets[rowA%2][theTags[i][0].rotIndex][tarIndex],
                      theRotOffsets[rowA%2][srcRotIndex][srcIndex]))
                 {
                   moveMultiscaleMoleculeRegular(coordA, rowA, 
-                        theRotOffsets[rowA%2][theTags[i].rotIndex][tarIndex],
+                        theRotOffsets[rowA%2][theTags[i][0].rotIndex][tarIndex],
                         theRotOffsets[rowA%2][srcRotIndex][srcIndex], i);
-                  theTags[i].rotIndex = srcRotIndex;
+                  theTags[i][0].rotIndex = srcRotIndex;
                 }
             }
         }
@@ -1700,8 +1704,8 @@ public:
           if(getID(target) == theVacantID)
             {
               if(isMoveMultiscaleWalkPropensityRegular(i, srcCoord, row,
-                     theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
-                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex], i))
+                     theTarOffsets[row%2][theTags[i][0].rotIndex][tarIndex],
+                     theSrcOffsets[row%2][theTags[i][0].rotIndex][tarIndex], i))
                 {
                   source->idx = target->idx;
                   target->idx = i+theStride*theID;
@@ -1720,7 +1724,7 @@ public:
           const unsigned tarIndex(theRng.Integer(theDiffuseSize)); 
           const unsigned row(srcCoord/lipCols);
           int tarCoord(srcCoord+theAdjoinOffsets[row%2][tarIndex]);
-          Origin anOrigin(theTags[i].origin);
+          Origin anOrigin(theTags[i][0].origin);
           if(!isInLatticeOrigins(tarCoord, theRowOffsets[tarIndex]+row,
                                  anOrigin))
             {
@@ -1730,13 +1734,13 @@ public:
           if(getID(target) == theVacantID)
             {
               if(isMoveMultiscaleWalkPropensityRegular(i, srcCoord, row,
-                     theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
-                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex], i))
+                     theTarOffsets[row%2][theTags[i][0].rotIndex][tarIndex],
+                     theSrcOffsets[row%2][theTags[i][0].rotIndex][tarIndex], i))
                 {
                   source->idx = target->idx;
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
-                  theTags[i].origin = anOrigin;
+                  theTags[i][0].origin = anOrigin;
                 }
             }
         }
@@ -1757,11 +1761,11 @@ public:
             }
           Voxel* target(&theLattice[tarCoord+vacStartCoord]);
           if(!isIntersectMultiscaleRegular(i, srcCoord, row,
-                   theTarOffsets[row%2][theTags[i].rotIndex][tarIndex]))
+                   theTarOffsets[row%2][theTags[i][0].rotIndex][tarIndex]))
             {
               moveMultiscaleMoleculeRegular(srcCoord, row, 
-                 theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
-                 theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex], i);
+                 theTarOffsets[row%2][theTags[i][0].rotIndex][tarIndex],
+                 theSrcOffsets[row%2][theTags[i][0].rotIndex][tarIndex], i);
               source->idx = target->idx;
               target->idx = i+theStride*theID;
               theMolecules[i] = target;
@@ -1778,7 +1782,7 @@ public:
           const unsigned tarIndex(theRng.Integer(theDiffuseSize)); 
           const unsigned row(srcCoord/lipCols);
           int tarCoord(srcCoord+theAdjoinOffsets[row%2][tarIndex]);
-          Origin anOrigin(theTags[i].origin);
+          Origin anOrigin(theTags[i][0].origin);
           if(!isInLatticeOrigins(tarCoord, theRowOffsets[tarIndex]+row,
                                  anOrigin))
             {
@@ -1788,15 +1792,15 @@ public:
           if(getID(target) == theVacantID)
             {
               if(!isIntersectMultiscaleRegular(i, srcCoord, row,
-                   theTarOffsets[row%2][theTags[i].rotIndex][tarIndex]))
+                   theTarOffsets[row%2][theTags[i][0].rotIndex][tarIndex]))
                 {
                   moveMultiscaleMoleculeRegular(srcCoord, row, 
-                     theTarOffsets[row%2][theTags[i].rotIndex][tarIndex],
-                     theSrcOffsets[row%2][theTags[i].rotIndex][tarIndex], i);
+                     theTarOffsets[row%2][theTags[i][0].rotIndex][tarIndex],
+                     theSrcOffsets[row%2][theTags[i][0].rotIndex][tarIndex], i);
                   source->idx = target->idx;
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
-                  theTags[i].origin = anOrigin;
+                  theTags[i][0].origin = anOrigin;
                 }
             }
         }
@@ -1876,6 +1880,14 @@ public:
       theMolecules.resize(theMoleculeSize);
       theVariable->setValue(theMoleculeSize);
     }
+  void setOligomerSize(const unsigned size)
+    {
+      theOligomerSize = size;
+      for(unsigned i(1); i < size; ++i)
+        {
+          theNullTag.push_back(theNullTag[0]);
+        }
+    }
   void updateSpecies()
     {
       if(isCompVacant && (isDiffusiveVacant || isReactiveVacant))
@@ -1914,6 +1926,10 @@ public:
       theMoleculeSize = size;
       theMolecules.resize(size);
       theTags.resize(size);
+      for(unsigned i(0); i != size; ++i)
+        {
+          theTags[i].resize(theOligomerSize);
+        }
       updateTagMolecules();
     }
   void updateTagMolecules()
@@ -1923,11 +1939,14 @@ public:
           Species* aSpecies(theTaggedSpeciesList[i]);
           for(unsigned j(0); j != aSpecies->size(); ++j)
             {
-              Tag& aTag(aSpecies->getTag(j));
-              if(aTag.speciesID == theID)
+              std::vector<Tag>& aTag(aSpecies->getTag(j));
+              for(unsigned k(0); k != aTag.size(); ++k)
                 {
-                  theMolecules[aTag.molID] = aSpecies->getMolecule(j);
-                  theTags[aTag.molID] = aTag;
+                  if(aTag[k].speciesID == theID)
+                    {
+                      theMolecules[aTag[k].molID] = aSpecies->getMolecule(j);
+                      theTags[aTag[k].molID][0] = aTag[k];
+                    }
                 }
             }
         }
@@ -2031,7 +2050,7 @@ public:
         }
       theVariable->setValue(theMoleculeSize);
     }
-  Tag& getTag(const unsigned anIndex)
+  std::vector<Tag>& getTag(const unsigned anIndex)
     {
       if(isVacant)
         {
@@ -2039,7 +2058,7 @@ public:
         }
       return theTags[anIndex];
     }
-  Tag& getTag(Voxel* aVoxel)
+  std::vector<Tag>& getTag(Voxel* aVoxel)
     {
       return getTag(getIndex(aVoxel));
     }
@@ -2070,7 +2089,7 @@ public:
       addMoleculeDirect(aVoxel);
       if(isDeoligomerize)
         {
-          theTags[theMoleculeSize-1].boundCnt = boundCnt;
+          theTags[theMoleculeSize-1][0].boundCnt = boundCnt;
           theBoundCnts[boundCnt]++;
         }
     }
@@ -2079,20 +2098,20 @@ public:
     {
       //use direct since we don't want to count bounds:
       addMoleculeDirect(aVoxel);
-      theTags[theMoleculeSize-1].multiIdx = multiIdx;
+      theTags[theMoleculeSize-1][0].multiIdx = multiIdx;
       if(isDeoligomerize)
         {
-          theTags[theMoleculeSize-1].boundCnt = boundCnt;
+          theTags[theMoleculeSize-1][0].boundCnt = boundCnt;
           theBoundCnts[boundCnt]++;
         }
     }
   void addMoleculeInMulti(Voxel* aVoxel, const unsigned multiIdx)
     {
       addMoleculeTagless(aVoxel);
-      theTags[theMoleculeSize-1].multiIdx = multiIdx;
+      theTags[theMoleculeSize-1][0].multiIdx = multiIdx;
     }
-  void softReplaceMolecule(const unsigned index, Voxel* aVoxel, const Tag& aTag,
-                           Species* aSpecies)
+  void softReplaceMolecule(const unsigned index, Voxel* aVoxel,
+                           const std::vector<Tag>& aTag, Species* aSpecies)
     {
       theMolecules[index] = aVoxel;
       theTags[index] = aTag;
@@ -2145,7 +2164,7 @@ public:
             ]->interruptedAddMolecule(this, theMoleculeSize-1);
         }
     }
-  void addMolecule(Voxel* aVoxel, Tag& aTag)
+  void addMolecule(Voxel* aVoxel, std::vector<Tag>& aTag)
     {
       if(!isVacant)
         {
@@ -2165,7 +2184,7 @@ public:
       //Is GFP tagged:
       isTagged = true;
     }
-  void addMoleculeTagged(Voxel* aVoxel, Tag& aTag)
+  void addMoleculeTagged(Voxel* aVoxel, std::vector<Tag>& aTag)
     {
       addMoleculeTagless(aVoxel);
       //Is GFP tagged:
@@ -2173,7 +2192,7 @@ public:
         {
           //If it is theNullTag, the molecule of this species is being tagged
           //for the first time:
-          if(aTag.speciesID == theNullID)
+          if(aTag[0].speciesID == theNullID)
             {
               resetTagOrigin(theMoleculeSize-1);
             }
@@ -2181,9 +2200,12 @@ public:
           //the molecule of this species:
           else
             {
-              theTags[theMoleculeSize-1].origin = aTag.origin;
-              theTags[theMoleculeSize-1].speciesID = aTag.speciesID;
-              theTags[theMoleculeSize-1].molID = aTag.molID;
+              for(unsigned i(0); i != aTag.size(); i++)
+                {
+                  theTags[theMoleculeSize-1][i].origin = aTag[i].origin;
+                  theTags[theMoleculeSize-1][i].speciesID = aTag[i].speciesID;
+                  theTags[theMoleculeSize-1][i].molID = aTag[i].molID;
+                }
             }
         }
     }
@@ -2218,7 +2240,7 @@ public:
                       if(!theSpecies[tarID]->getIsMultiscale())
                         {
                           idx = theSpecies[tarID
-                            ]->getTag(idx%theStride).multiIdx;
+                            ]->getTag(idx%theStride)[0].multiIdx;
                         }
                       unsigned aMoleculeSize(theMoleculeSize);
                       react(target, target, srcIndex, idx%theStride,
@@ -2283,7 +2305,7 @@ public:
                       if(!theSpecies[tarID]->getIsMultiscale())
                         {
                           idx = theSpecies[tarID
-                            ]->getTag(idx%theStride).multiIdx;
+                            ]->getTag(idx%theStride)[0].multiIdx;
                         }
                       unsigned aMoleculeSize(theMoleculeSize);
                       react(target, target, srcIndex, idx%theStride,
@@ -2609,7 +2631,7 @@ public:
                     }
                   else
                     {
-                      theSpecies[anID]->getTag(&theLattice[coord]).multiIdx = 
+                      theSpecies[anID]->getTag(&theLattice[coord])[0].multiIdx =
                         aVoxel->idx;
                     }
                 }
@@ -2757,7 +2779,7 @@ public:
                   Species* aSpecies(theSpecies[idx/theStride]);
                   if((aSpecies->getIsMultiscale() && idx != ignoreIdx) ||
                      (aSpecies->getIsOnMultiscale() && 
-                      aSpecies->getTag(idx%theStride).multiIdx != ignoreIdx))
+                      aSpecies->getTag(idx%theStride)[0].multiIdx != ignoreIdx))
                     {
                       return true;
                     }
@@ -2789,8 +2811,9 @@ public:
                   if((aSpecies->getIsMultiscale() && idx != ignoreIdx &&
                       idx != ignoreIdx2) ||
                      (aSpecies->getIsOnMultiscale() && 
-                      aSpecies->getTag(idx%theStride).multiIdx != ignoreIdx &&
-                      aSpecies->getTag(idx%theStride).multiIdx != ignoreIdx2))
+                      aSpecies->getTag(idx%theStride)[0].multiIdx != ignoreIdx 
+                      && aSpecies->getTag(idx%theStride)[0].multiIdx !=
+                      ignoreIdx2))
                     {
                       return true;
                     }
@@ -3023,27 +3046,27 @@ public:
           if(isMultiscale)
             {
               removeMultiscaleMolecule(theMolecules[anIndex],
-                                       theTags[anIndex].rotIndex);
+                                       theTags[anIndex][0].rotIndex);
             }
           removeMoleculeDirect(anIndex);
         }
     }
   void addBound(const unsigned index)
     {
-      theBoundCnts[theTags[index].boundCnt++]--;
-      theBoundCnts[theTags[index].boundCnt]++;
+      theBoundCnts[theTags[index][0].boundCnt++]--;
+      theBoundCnts[theTags[index][0].boundCnt]++;
     }
   void removeBound(const unsigned index)
     {
-      Tag& aTag(theTags[index]);
-      theBoundCnts[aTag.boundCnt--]--;
-      if(!aTag.boundCnt)
+      std::vector<Tag>& aTag(theTags[index]);
+      theBoundCnts[aTag[0].boundCnt--]--;
+      if(!aTag[0].boundCnt)
         {
           Voxel* aVoxel(theMolecules[index]);
           if(isOnMultiscale)
             {
               theDeoligomerizedProduct->addMoleculeInMulti(aVoxel,
-                                                           aTag.multiIdx);
+                                                           aTag[0].multiIdx);
             }
           else
             {
@@ -3053,12 +3076,12 @@ public:
         }
       else
         {
-          theBoundCnts[aTag.boundCnt]++;
+          theBoundCnts[aTag[0].boundCnt]++;
         }
     }
   void addBounds(Voxel* aVoxel)
     {
-      unsigned& cnt(theTags[getIndex(aVoxel)].boundCnt);
+      unsigned& cnt(theTags[getIndex(aVoxel)][0].boundCnt);
       cnt = 0;
       for(unsigned i(0); i != aVoxel->diffuseSize; ++i)
         {
@@ -3075,7 +3098,7 @@ public:
   void removeBounds(const unsigned anIndex)
     {
       Voxel* aVoxel(theMolecules[anIndex]);
-      theBoundCnts[theTags[anIndex].boundCnt]--;
+      theBoundCnts[theTags[anIndex][0].boundCnt]--;
       removeMoleculeDirect(anIndex);
       removeAdjoinBounds(aVoxel);
     }
@@ -3103,7 +3126,7 @@ public:
     {
       if(isDeoligomerize)
         {
-          theBoundCnts[theTags[anIndex].boundCnt]--;
+          theBoundCnts[theTags[anIndex][0].boundCnt]--;
         }
       --theMoleculeSize;
       if(theMoleculeSize > anIndex)
@@ -3130,7 +3153,7 @@ public:
           if(isMultiscale)
             {
               updateBoundMultiIdx(theMolecules[anIndex],
-                                  theTags[anIndex].rotIndex);
+                                  theTags[anIndex][0].rotIndex);
             }
         }
       theVariable->setValue(theMoleculeSize);
@@ -3187,11 +3210,14 @@ public:
     }
   void resetTagOrigin(const unsigned index)
     {
-      Origin& anOrigin(theTags[index].origin);
-      anOrigin.point = getPoint(index);
-      anOrigin.row = 0;
-      anOrigin.layer = 0;
-      anOrigin.col = 0;
+      for(unsigned i(0); i != theTags[index].size(); ++i)
+        {
+          Origin& anOrigin(theTags[index][i].origin);
+          anOrigin.point = getPoint(index);
+          anOrigin.row = 0;
+          anOrigin.layer = 0;
+          anOrigin.col = 0;
+        }
     }
   void setInitCoordSize(const unsigned& val)
     {
@@ -3217,16 +3243,23 @@ public:
     {
       for(unsigned i(0); i < theMoleculeSize; ++i)
         {
-          Origin anOrigin(theTags[i].origin);
-          unsigned periodicCoord(theStepper->getPeriodicCoord(
-                                                getCoord(i),
-                                                theDimension, &anOrigin));
+          std::vector<Tag>& aTag(theTags[i]);
+          unsigned periodicCoord(0);
+          for(unsigned j(0); j != aTag.size(); ++j)
+            {
+              Origin anOrigin(aTag[j].origin);
+              periodicCoord = theStepper->getPeriodicCoord(getCoord(i),
+                                                     theDimension, &anOrigin);
+              if(getID(theLattice[periodicCoord]) == theVacantID)
+                {
+                  aTag[j].origin = anOrigin;
+                }
+            }
           if(getID(theLattice[periodicCoord]) == theVacantID)
             {
               theMolecules[i]->idx = theVacantID*theStride;
               theMolecules[i] = &theLattice[periodicCoord];
               theMolecules[i]->idx = i+theID*theStride;
-              theTags[i].origin = anOrigin;
             }
         }
     }
@@ -3395,14 +3428,14 @@ public:
       const unsigned start(theRng.Integer(theMoleculeSize));
       for(unsigned i(start); i != theMoleculeSize; ++i)
         {
-          if(theTags[i].boundCnt == boundCnt)
+          if(theTags[i][0].boundCnt == boundCnt)
             {
               return i;
             }
         }
       for(unsigned i(0); i != start; ++i)
         {
-          if(theTags[i].boundCnt == boundCnt)
+          if(theTags[i][0].boundCnt == boundCnt)
             {
               return i;
             }
@@ -4259,7 +4292,7 @@ public:
             {
               const int rowA(coordA/lipCols);
               const std::vector<int>& anOffsetsA(theOffsets[rowA%2][
-                                                 theTags[index].rotIndex]);
+                                                 theTags[index][0].rotIndex]);
               unsigned size(0);
               for(unsigned i(0); i != anOffsetsA.size(); ++i)
                 {
@@ -4310,7 +4343,7 @@ public:
                 {
                   const int rowA(coordA/lipCols);
                   const std::vector<int>& anOffsetsA(theOffsets[
-                                               rowA%2][theTags[i].rotIndex]);
+                                               rowA%2][theTags[i][0].rotIndex]);
                   for(unsigned j(0); j != anOffsetsA.size(); ++j)
                     {
                       const int offsetRow((anOffsetsA[j]+theRegLatticeCoord)/
@@ -4503,6 +4536,7 @@ private:
   unsigned theDimension;
   unsigned theInitCoordSize;
   unsigned theMoleculeSize;
+  unsigned theOligomerSize;
   unsigned theNullCoord;
   unsigned theNullID;
   unsigned theRegLatticeCoord;
@@ -4535,7 +4569,7 @@ private:
   MoleculePopulateProcess* thePopulateProcess;
   SpatiocyteStepper* theStepper;
   Variable* theVariable;
-  Tag theNullTag;
+  std::vector<Tag> theNullTag;
   SpatiocyteDebug cout;
   std::vector<int> theRowOffsets;
   std::vector<std::vector<int> > theAdjoinOffsets;
@@ -4554,7 +4588,7 @@ private:
   std::vector<unsigned> theMultiscaleUnbindIDs;
   std::vector<unsigned> thePopulatableCoords;
   std::vector<unsigned> theMultiscaleStructureCoords;
-  std::vector<Tag> theTags;
+  std::vector<std::vector<Tag> > theTags;
   std::vector<double> theBendAngles;
   std::vector<double> theReactionProbabilities;
   std::vector<Voxel*> theMolecules;

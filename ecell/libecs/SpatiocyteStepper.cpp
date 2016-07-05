@@ -839,15 +839,15 @@ void SpatiocyteStepper::checkSpecies()
                 }
               if(aSpecies->getIsOnMultiscale())
                 {
-                  if(!aSpecies->getTag(j).multiIdx)
+                  if(!aSpecies->getTag(j)[0].multiIdx)
                     {
                       cout << aSpecies->getIDString() << " size:" << 
                         aSpecies->size() << " vacidx wrong:" << j << std::endl;
                     }
                 }
-              if(aSpecies->getTag(j).boundCnt)
+              if(aSpecies->getTag(j)[0].boundCnt)
                 {
-                  boundCnts[aSpecies->getTag(j).boundCnt]++;
+                  boundCnts[aSpecies->getTag(j)[0].boundCnt]++;
                   unsigned cnt(0);
                   Voxel* aVoxel(aSpecies->getMolecule(j));
                   for(unsigned k(0); k != aVoxel->diffuseSize; ++k)
@@ -859,11 +859,11 @@ void SpatiocyteStepper::checkSpecies()
                           cnt++;
                         }
                     }
-                  if(cnt != aSpecies->getTag(j).boundCnt)
+                  if(cnt != aSpecies->getTag(j)[0].boundCnt)
                     {
                       cout << aSpecies->getIDString() << " j:" << j <<
                         "error in deoligomerize cnt:" << cnt <<
-                        " expected:" << aSpecies->getTag(j).boundCnt <<
+                        " expected:" << aSpecies->getTag(j)[0].boundCnt <<
                         std::endl;
                     }
                 }

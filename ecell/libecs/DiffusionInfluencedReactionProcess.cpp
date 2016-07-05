@@ -561,13 +561,13 @@ bool DiffusionInfluencedReactionProcess::swapAB(Voxel* molA,
                                                 const unsigned indexB)
 {
   interruptProcessesPre();
-  Tag tagB(A->getTag(indexA));
-  Tag tagA(B->getTag(indexB));
-  unsigned oriA(tagA.boundCnt);
-  unsigned oriB(tagB.boundCnt);
-  unsigned boundCnt(tagA.boundCnt);
-  tagA.boundCnt = tagB.boundCnt;
-  tagB.boundCnt = boundCnt;
+  std::vector<Tag> tagB(A->getTag(indexA));
+  std::vector<Tag> tagA(B->getTag(indexB));
+  unsigned oriA(tagA[0].boundCnt);
+  unsigned oriB(tagB[0].boundCnt);
+  unsigned boundCnt(tagA[0].boundCnt);
+  tagA[0].boundCnt = tagB[0].boundCnt;
+  tagB[0].boundCnt = boundCnt;
   A->softReplaceMolecule(indexA, molB, tagA, B);
   B->softReplaceMolecule(indexB, molA, tagB, A);
   return true;
@@ -582,9 +582,9 @@ bool DiffusionInfluencedReactionProcess::moveAtoD_reactBtoC(Voxel* molA,
                                                           const unsigned indexB)
 {
   interruptProcessesPre();
-  Tag tagD(A->getTag(indexA));
-  tagD.boundCnt = B->getTag(indexB).boundCnt;
-  Tag tagC(A->getTag(indexA));
+  std::vector<Tag> tagD(A->getTag(indexA));
+  tagD[0].boundCnt = B->getTag(indexB)[0].boundCnt;
+  std::vector<Tag> tagC(A->getTag(indexA));
   D->softReplaceMolecule(indexA, molB, tagD, B);
   C->addMolecule(molA, tagC);
   B->softRemoveMolecule(indexB);
@@ -599,9 +599,9 @@ bool DiffusionInfluencedReactionProcess::reactAtoD_moveBtoC(Voxel* molA,
                                                           const unsigned indexB)
 {
   interruptProcessesPre();
-  Tag tagC(B->getTag(indexB));
-  tagC.boundCnt = A->getTag(indexA).boundCnt;
-  Tag tagD(B->getTag(indexB));
+  std::vector<Tag> tagC(B->getTag(indexB));
+  tagC[0].boundCnt = A->getTag(indexA)[0].boundCnt;
+  std::vector<Tag> tagD(B->getTag(indexB));
   C->softReplaceMolecule(indexB, molA, tagC, A);
   D->addMolecule(molB, tagD);
   A->softRemoveMolecule(indexA);

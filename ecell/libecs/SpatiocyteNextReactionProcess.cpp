@@ -624,12 +624,12 @@ bool SpatiocyteNextReactionProcess::reactMultiAC()
   interruptProcessesPre();
   if(A->getIsOnMultiscale() && C->getIsOnMultiscale())
     {
-      C->addMoleculeInMulti(moleculeC, A->getTag(indexA).multiIdx);
+      C->addMoleculeInMulti(moleculeC, A->getTag(indexA)[0].multiIdx);
       A->softRemoveMolecule(indexA);
     }
   else
     {
-      Tag tagA(A->getTag(indexA));
+      std::vector<Tag> tagA(A->getTag(indexA));
       A->removeMolecule(indexA);
       C->addMolecule(moleculeC, tagA);
     }
@@ -648,7 +648,7 @@ void SpatiocyteNextReactionProcess::reactABC()
   if(A != C)
     {
       unsigned indexA(A->getIndex(moleculeA));
-      Tag tagA(A->getTag(indexA));
+      std::vector<Tag> tagA(A->getTag(indexA));
       A->removeMolecule(indexA);
       C->addMolecule(moleculeA, tagA);
     }
@@ -667,14 +667,14 @@ void SpatiocyteNextReactionProcess::reactABCD()
   if(A != C)
     {
       unsigned indexA(A->getIndex(moleculeA));
-      Tag tagA(A->getTag(indexA));
+      std::vector<Tag> tagA(A->getTag(indexA));
       A->removeMolecule(indexA);
       C->addMolecule(moleculeA, tagA);
     }
   if(B != D)
     { 
       unsigned indexB(B->getIndex(moleculeB));
-      Tag tagB(B->getTag(indexB));
+      std::vector<Tag> tagB(B->getTag(indexB));
       B->removeMolecule(indexB);
       D->addMolecule(moleculeB, tagB);
     }
@@ -764,7 +764,7 @@ bool SpatiocyteNextReactionProcess::reactACDF(Species* a, Species* c,
         }
     }
   interruptProcessesPre();
-  Tag tagA(a->getTag(indexA));
+  std::vector<Tag> tagA(a->getTag(indexA));
   a->removeMolecule(indexA);
   c->addMolecule(moleculeC, tagA);
   d->addMolecule(moleculeD);
@@ -820,7 +820,7 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
         }
     }
   interruptProcessesPre();
-  Tag tagA(a->getTag(indexA));
+  std::vector<Tag> tagA(a->getTag(indexA));
   a->removeMolecule(indexA);
   c->addMolecule(moleculeC, tagA);
   d->addMolecule(moleculeD);
@@ -854,12 +854,12 @@ bool SpatiocyteNextReactionProcess::reactDeoligomerize(Species* a, Species* c)
   interruptProcessesPre();
   if(a->getIsOnMultiscale() && c->getIsOnMultiscale())
     {
-      c->addMoleculeInMulti(moleculeC, a->getTag(indexA).multiIdx);
+      c->addMoleculeInMulti(moleculeC, a->getTag(indexA)[0].multiIdx);
       a->softRemoveMolecule(indexA);
     }
   else
     {
-      Tag tagA(a->getTag(indexA));
+      std::vector<Tag> tagA(a->getTag(indexA));
       a->removeMolecule(indexA);
       c->addMolecule(moleculeC, tagA);
     }
@@ -900,12 +900,12 @@ bool SpatiocyteNextReactionProcess::reactAC(Species* a, Species* c)
   interruptProcessesPre();
   if(a->getIsOnMultiscale() && c->getIsOnMultiscale())
     {
-      c->addMoleculeInMulti(moleculeC, a->getTag(indexA).multiIdx);
+      c->addMoleculeInMulti(moleculeC, a->getTag(indexA)[0].multiIdx);
       a->softRemoveMolecule(indexA);
     }
   else
     {
-      Tag tagA(a->getTag(indexA));
+      std::vector<Tag> tagA(a->getTag(indexA));
       a->removeMolecule(indexA);
       c->addMolecule(moleculeC, tagA);
     }
@@ -949,7 +949,7 @@ bool SpatiocyteNextReactionProcess::reactACbind(Species* a, Species* c)
       return false;
     }
   interruptProcessesPre();
-  Tag tagA(a->getTag(indexA));
+  std::vector<Tag> tagA(a->getTag(indexA));
   a->removeMolecule(indexA);
   c->addMolecule(moleculeC, tagA);
   return true;
@@ -985,7 +985,7 @@ bool SpatiocyteNextReactionProcess::reactACDorFbind(Species* a, Species* c,
           moleculeB = moleculeF;
         }
       interruptProcessesPre();
-      Tag tagA(a->getTag(indexA));
+      std::vector<Tag> tagA(a->getTag(indexA));
       a->removeMolecule(indexA);
       c->addMolecule(moleculeC);
       h->softRemoveMolecule(moleculeF);
@@ -998,7 +998,7 @@ bool SpatiocyteNextReactionProcess::reactACDorFbind(Species* a, Species* c,
       moleculeB = moleculeD;
     }
   interruptProcessesPre();
-  Tag tagA(a->getTag(indexA));
+  std::vector<Tag> tagA(a->getTag(indexA));
   a->removeMolecule(indexA);
   c->addMolecule(moleculeC);
   e->softRemoveMolecule(moleculeD);
@@ -1029,7 +1029,7 @@ bool SpatiocyteNextReactionProcess::reactACDbind(Species* a, Species* c,
           return false;
         }
       interruptProcessesPre();
-      Tag tagA(a->getTag(indexA));
+      std::vector<Tag> tagA(a->getTag(indexA));
       //molA <- D
       if(a->isTrailSpecies(d))
         {
@@ -1046,7 +1046,7 @@ bool SpatiocyteNextReactionProcess::reactACDbind(Species* a, Species* c,
       return true;
     }
   interruptProcessesPre();
-  Tag tagA(a->getTag(indexA));
+  std::vector<Tag> tagA(a->getTag(indexA));
   a->removeMolecule(indexA);
   if(a->isTrailSpecies(d))
     {

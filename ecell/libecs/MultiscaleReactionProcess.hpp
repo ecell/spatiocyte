@@ -57,13 +57,13 @@ public:
   virtual void bind(Voxel* aVoxel, const unsigned multiIdx)
     {
       const unsigned index(aVoxel->idx%theStride);
-      M->addMoleculeInMulti(aVoxel, multiIdx, N->getTag(index).boundCnt);
+      M->addMoleculeInMulti(aVoxel, multiIdx, N->getTag(index)[0].boundCnt);
       N->removeMoleculeBoundDirect(index);
     }
   virtual void unbind(Voxel* aVoxel)
     {
       const unsigned index(aVoxel->idx%theStride);
-      N->addMoleculeExMulti(aVoxel, M->getTag(index).boundCnt);
+      N->addMoleculeExMulti(aVoxel, M->getTag(index)[0].boundCnt);
       M->removeMoleculeBoundDirect(index);
     }
   virtual bool react(Voxel* molA, Voxel* molB, const unsigned indexA,

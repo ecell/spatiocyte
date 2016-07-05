@@ -346,7 +346,7 @@ void LifetimeLogProcess::interruptedRemoveMolecule(Species* aSpecies,
                                                    const unsigned anIndex)
 {
   std::cout << "life remove:" << aSpecies->getIDString() << std::endl;
-  logTag(aSpecies, aSpecies->getTag(anIndex), anIndex);
+  logTag(aSpecies, aSpecies->getTag(anIndex)[0], anIndex);
   std::cout << "life remove done" << std::endl;
 }
 
@@ -363,7 +363,7 @@ void LifetimeLogProcess::initTrackedMolecule(Species* aSpecies,
 {
   std::cout << "resetTagOrigin" << std::endl;
   aSpecies->resetTagOrigin(anIndex);
-  Tag& aTag(aSpecies->getTag(anIndex));
+  Tag& aTag(aSpecies->getTag(anIndex)[0]);
   addTagTime(aTag);
   ++konCnt;
 }
@@ -392,7 +392,7 @@ double LifetimeLogProcess::getAverageDiffusion()
               time += now-theTagTimes[aSpecies->getTag(j).molID];
               */
               activeSquaredDisplacement += aSpecies->getSquaredDisplacement(j);
-              activeTotalTime += now-theTagTimes[aSpecies->getTag(j).molID];
+              activeTotalTime += now-theTagTimes[aSpecies->getTag(j)[0].molID];
             } 
           /*
           std::cout << now << " species:" << aSpecies->getIDString() << 

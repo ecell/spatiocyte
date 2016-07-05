@@ -175,7 +175,7 @@ unsigned MultiscaleReactionProcess::getIdx(Species* aSpecies,
 {
   if(aSpecies->getIsOnMultiscale())
     {
-      return aSpecies->getTag(index).multiIdx;
+      return aSpecies->getTag(index)[0].multiIdx;
     }
   return mol->idx;
 }
@@ -195,7 +195,7 @@ bool MultiscaleReactionProcess::reactAllMuAtoMuC(Voxel* molA,
      (SearchVacant && searchMultiPopulateCoord(coordA, idxA, idxB)))
     {
       interruptProcessesPre();
-      Tag aTag(A->getTag(indexA));
+      std::vector<Tag> aTag(A->getTag(indexA));
       A->softRemoveMolecule(indexA);
       removeMolecule(B, moleculeB, indexB);
       C->addMolecule(&(*theLattice)[coordA+A->getVacStartCoord()], aTag);
@@ -452,7 +452,7 @@ bool MultiscaleReactionProcess::reactBtoC_Multi(Voxel* molA,
   B->softRemoveMolecule(indexB);
   if(A->getIsOnMultiscale())
     {
-      molA->idx = A->getTag(indexA).multiIdx;
+      molA->idx = A->getTag(indexA)[0].multiIdx;
     }
   A->softRemoveMolecule(indexA);
   return true;
@@ -469,7 +469,7 @@ bool MultiscaleReactionProcess::reactAtoC_Multi(Voxel* molA,
   A->softRemoveMolecule(indexA);
   if(B->getIsOnMultiscale())
     {
-      molB->idx = B->getTag(indexB).multiIdx;
+      molB->idx = B->getTag(indexB)[0].multiIdx;
     }
   B->softRemoveMolecule(indexB);
   return true;
