@@ -43,15 +43,28 @@ public:
   LIBECS_DM_OBJECT(TagProcess, Process)
     {
       INHERIT_PROPERTIES(Process);
+      PROPERTYSLOT_SET_GET(Polymorph, OligomerSizes);
     }
   TagProcess() {}
   virtual ~TagProcess() {}
+  SIMPLE_GET_METHOD(Polymorph, OligomerSizes);
+  void setOligomerSizes(const Polymorph& aValue)
+    {
+      OligomerSizes = aValue;
+      PolymorphVector aValueVector(aValue.as<PolymorphVector>());
+      for(unsigned i(0); i != aValueVector.size(); ++i)
+        {
+          theOligomerSizes.push_back(aValueVector[i].as<double>());
+        }
+    }
   virtual void initialize();
   virtual void initializeSecond();
   virtual void initializeFourth();
 protected:
   Species* theTagSpecies;
+  Polymorph OligomerSizes;
   std::vector<unsigned> theTaggedSizes;
+  std::vector<double> theOligomerSizes;
   std::vector<Species*> theTaggedSpeciesList;
 };
 

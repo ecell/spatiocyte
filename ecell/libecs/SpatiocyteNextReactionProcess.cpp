@@ -820,10 +820,18 @@ bool SpatiocyteNextReactionProcess::reactACD(Species* a, Species* c, Species* d)
         }
     }
   interruptProcessesPre();
-  std::vector<Tag> tagA(a->getTag(indexA));
+  std::vector<Tag> tagC(a->getTag(indexA));
+  std::vector<Tag> tagD(tagC);
   a->removeMolecule(indexA);
-  c->addMolecule(moleculeC, tagA);
-  d->addMolecule(moleculeD);
+  if(A->getOligomerSize() > c->getOligomerSize() &&
+     A->getOligomerSize() > d->getOligomerSize())
+    {
+      tagC.pop_back();
+      tagD[0] = tagD[1];
+      tagD.pop_back();
+    }
+  c->addMolecule(moleculeC, tagC);
+  d->addMolecule(moleculeD, tagD);
   return true;
 }
 

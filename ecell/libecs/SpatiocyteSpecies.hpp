@@ -168,7 +168,11 @@ public:
       aNullTag.rotIndex = 0;
       aNullTag.multiIdx = 0;
       aNullTag.boundCnt = 0;
-      theNullTag.push_back(aNullTag); //theOligomerSize = 1
+      //Default theOligomerSize = 1
+      for(unsigned i(0); i != theOligomerSize; ++i)
+        {
+          theNullTag.push_back(aNullTag);
+        }
       cout.setLevel(theStepper->getDebugLevel());
     }
   void setDiffusionInfluencedReaction(DiffusionInfluencedReactionProcess*
@@ -1883,10 +1887,10 @@ public:
   void setOligomerSize(const unsigned size)
     {
       theOligomerSize = size;
-      for(unsigned i(1); i < size; ++i)
-        {
-          theNullTag.push_back(theNullTag[0]);
-        }
+    }
+  const unsigned getOligomerSize()
+    {
+      return theOligomerSize;
     }
   void updateSpecies()
     {
@@ -1945,7 +1949,8 @@ public:
                   if(aTag[k].speciesID == theID)
                     {
                       theMolecules[aTag[k].molID] = aSpecies->getMolecule(j);
-                      theTags[aTag[k].molID][0] = aTag[k];
+                      //Tag molecule OligomerSize is always 1:
+                      theTags[aTag[k].molID][0] = aTag[k]; 
                     }
                 }
             }
@@ -2190,17 +2195,17 @@ public:
       //Is GFP tagged:
       if(isTagged)
         {
-          //If it is theNullTag, the molecule of this species is being tagged
-          //for the first time:
-          if(aTag[0].speciesID == theNullID)
+          for(unsigned i(0); i != aTag.size(); i++)
             {
-              resetTagOrigin(theMoleculeSize-1);
-            }
-          //Previous tag exists in another species and is being transferred to
-          //the molecule of this species:
-          else
-            {
-              for(unsigned i(0); i != aTag.size(); i++)
+              //If it is theNullTag, the molecule of this species is being
+              //tagged for the first time:
+              if(aTag[i].speciesID == theNullID)
+                {
+                  resetMonomerTagOrigin(theMoleculeSize-1, i);
+                }
+              //Previous tag exists in another species and is being
+              //transferred to the molecule of this species:
+              else
                 {
                   theTags[theMoleculeSize-1][i].origin = aTag[i].origin;
                   theTags[theMoleculeSize-1][i].speciesID = aTag[i].speciesID;
@@ -3212,12 +3217,16 @@ public:
     {
       for(unsigned i(0); i != theTags[index].size(); ++i)
         {
-          Origin& anOrigin(theTags[index][i].origin);
-          anOrigin.point = getPoint(index);
-          anOrigin.row = 0;
-          anOrigin.layer = 0;
-          anOrigin.col = 0;
+          resetMonomerTagOrigin(index, i);
         }
+    }
+  void resetMonomerTagOrigin(const unsigned index, const unsigned monomerIndex)
+    {
+      Origin& anOrigin(theTags[index][monomerIndex].origin);
+      anOrigin.point = getPoint(index);
+      anOrigin.row = 0;
+      anOrigin.layer = 0;
+      anOrigin.col = 0;
     }
   void setInitCoordSize(const unsigned& val)
     {

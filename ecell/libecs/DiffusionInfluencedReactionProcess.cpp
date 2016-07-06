@@ -728,7 +728,17 @@ bool DiffusionInfluencedReactionProcess::reactAtoC(Voxel* molA, Voxel* molB,
                                                    const unsigned indexB)
 {
   interruptProcessesPre();
-  C->addMolecule(molA, A->getTag(indexA));
+  std::vector<Tag> tagA(A->getTag(indexA));
+  if(C->getOligomerSize() > A->getOligomerSize())
+    {
+      std::vector<Tag>& tagB(B->getTag(indexB));
+      for(unsigned i(0); i != tagB.size(); ++i &&
+          tagA.size() < C->getOligomerSize())
+        {
+          tagA.push_back(tagB[i]);
+        }
+    }
+  C->addMolecule(molA, tagA);
   A->softRemoveMolecule(indexA);
   removeMolecule(B, molB, indexB);
   return true;
@@ -740,7 +750,17 @@ bool DiffusionInfluencedReactionProcess::reactBtoC(Voxel* molA, Voxel* molB,
                                                    const unsigned indexB)
 {
   interruptProcessesPre();
-  C->addMolecule(molB);
+  std::vector<Tag> tagB(B->getTag(indexB));
+  if(C->getOligomerSize() > B->getOligomerSize())
+    {
+      std::vector<Tag>& tagA(A->getTag(indexA));
+      for(unsigned i(0); i != tagA.size(); ++i &&
+          tagB.size() < C->getOligomerSize())
+        {
+          tagB.push_back(tagA[i]);
+        }
+    }
+  C->addMolecule(molB, tagB);
   B->softRemoveMolecule(indexB);
   removeMolecule(A, molA, indexA);
   return true;

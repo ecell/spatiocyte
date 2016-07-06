@@ -118,6 +118,30 @@ void TagProcess::initialize()
           theTaggedSpeciesList.push_back(aSpecies);
         }
     }
+  unsigned cnt(0);
+  for(VariableReferenceVector::const_iterator
+      i(theSortedVariableReferences.begin());
+      i != theSortedVariableReferences.end(); ++i)
+    {
+      int aCoefficient((*i).getCoefficient());
+      if(aCoefficient >= 0)
+        {
+          Species* aSpecies(theSpatiocyteStepper->variable2species(
+                                                         (*i).getVariable()));
+          if(aSpecies == NULL)
+            {
+              THROW_EXCEPTION(ValueError, String(
+                              getPropertyInterface().getClassName()) +
+                              "[" + getFullID().asString() + "]: The species " +
+                              getIDString((*i).getVariable()) + " is a HD " +
+                              "species which is not allowed in TagProcess.");
+            }
+          else
+            {
+              aSpecies->setOligomerSize(theOligomerSizes[cnt++]);
+            }
+        }
+    }
 }
 
 void TagProcess::initializeSecond()
@@ -171,10 +195,13 @@ void TagProcess::initializeFourth()
             {
               anIndex = aSpecies->getRandomIndex();
             }
-          std::vector<Tag> &aTag(aSpecies->getTag(anIndex));
-          aTag[0].speciesID = theTagSpecies->getID();
-          aTag[0].molID = molID;
-          molID++;
+          std::vector<Tag>& aTag(aSpecies->getTag(anIndex));
+          for(unsigned k(0); k != aTag.size(); ++k)
+            {
+              aTag[k].speciesID = theTagSpecies->getID();
+              aTag[k].molID = molID;
+              molID++;
+            }
         }
     }
   theTagSpecies->allocateTags(molID);
