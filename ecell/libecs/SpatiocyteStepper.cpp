@@ -138,6 +138,8 @@ void SpatiocyteStepper::initialize()
   cout << "23. printing final process parameters..." << std::endl <<
     std::endl;
   printProcessParameters();
+  cout << "24. printing species IDs..." << std::endl << std::endl;
+  printSpeciesIDs();
   cout << "24. simulation is started..." << std::endl;
 }
 
@@ -658,6 +660,23 @@ void SpatiocyteStepper::printProcessParameters()
   for(unsigned i(0); i != theSpatiocyteProcesses.size(); ++i)
     {      
       theSpatiocyteProcesses[i]->printParameters();
+    }
+  cout << std::endl;
+}
+
+void SpatiocyteStepper::printSpeciesIDs()
+{
+  for(unsigned i(0); i != theSpecies.size(); ++i)
+    {      
+      if(i == theNullID)
+        {
+          cout << "id:" << i << " theNullID" << std::endl;
+        }
+      else
+        {
+          cout << "id:" << i << " " << theSpecies[i]->getIDString() <<
+            std::endl;
+        }
     }
   cout << std::endl;
 }

@@ -147,6 +147,7 @@ private:
   void setIntersectingParent();
   void setIntersectingPeers();
   void printProcessParameters();
+  void printSpeciesIDs();
   void checkSurfaceComp();
   void shuffleAdjoiningCoords();
   void setLatticeProperties();

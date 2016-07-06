@@ -45,8 +45,14 @@ public:
   LIBECS_DM_OBJECT(CoordinateLogProcess, Process)
     {
       INHERIT_PROPERTIES(IteratingLogProcess);
+      PROPERTYSLOT_SET_GET(Integer, MoleculeID);
+      PROPERTYSLOT_SET_GET(Integer, SpeciesID);
     }
+  SIMPLE_SET_GET_METHOD(Integer, MoleculeID);
+  SIMPLE_SET_GET_METHOD(Integer, SpeciesID);
   CoordinateLogProcess():
+    MoleculeID(0),
+    SpeciesID(0),
     theMoleculeSize(0)
   {
     FileName = "CoordinateLog.csv";
@@ -54,7 +60,7 @@ public:
   virtual ~CoordinateLogProcess() {}
   virtual void initializeLastOnce()
     {
-      for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
+      for(unsigned i(0); i != theProcessSpecies.size(); ++i)
         {
           theMoleculeSize += theProcessSpecies[i]->size();
         }
@@ -79,7 +85,7 @@ public:
     }
   void logSpecies()
     {
-      for(unsigned int i(0); i != theProcessSpecies.size(); ++i)
+      for(unsigned i(0); i != theProcessSpecies.size(); ++i)
         {
           theLogFile << getStepper()->getCurrentTime();
           logMolecules(i);
@@ -90,16 +96,27 @@ protected:
   void logMolecules(int anIndex)
     {
       Species* aSpecies(theProcessSpecies[anIndex]);
-      for(unsigned int i(0); i != aSpecies->size(); ++i)
+      for(unsigned i(0); i != aSpecies->size(); ++i)
         {
+          if(SpeciesID)
+            {
+              //For GFP tagged molecule, we get its actual species:
+              theLogFile << "," << aSpecies->getID(aSpecies->getMolecule(i));
+            }
+          if(MoleculeID)
+            {
+              theLogFile << "," << i;
+            }
           Point aPoint(aSpecies->getPoint(i));
           theLogFile << "," << aPoint.x << "," << aPoint.y << "," <<
             aPoint.z;
         }
     }
 private:
+  unsigned MoleculeID;
+  unsigned SpeciesID;
+  unsigned theStartCoord;
   double theMoleculeSize;
-  unsigned int theStartCoord;
 };
 
 }
