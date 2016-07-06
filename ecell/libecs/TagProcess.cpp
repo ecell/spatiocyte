@@ -136,7 +136,7 @@ void TagProcess::initialize()
                               getIDString((*i).getVariable()) + " is a HD " +
                               "species which is not allowed in TagProcess.");
             }
-          else
+          else if(theOligomerSizes.size())
             {
               aSpecies->setOligomerSize(theOligomerSizes[cnt++]);
             }
