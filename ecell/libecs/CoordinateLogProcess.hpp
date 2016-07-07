@@ -96,6 +96,8 @@ protected:
   void logMolecules(int anIndex)
     {
       Species* aSpecies(theProcessSpecies[anIndex]);
+      //For GFP species, whose molecules are not always up to date:
+      aSpecies->updateMolecules();
       for(unsigned i(0); i != aSpecies->size(); ++i)
         {
           if(SpeciesID)
