@@ -30,6 +30,7 @@ tagger = theSimulator.createEntity('TagProcess', 'Process:/:tagger')
 tagger.VariableReferenceList = [['_', 'Variable:/Surface:GFP', '-1' ]]
 tagger.VariableReferenceList = [['_', 'Variable:/Surface:A', '10' ]]
 tagger.VariableReferenceList = [['_', 'Variable:/Surface:As']]
+#Set Surface:A as a monomer (1) and Surface:As as a dimer (2):
 tagger.OligomerSizes = [1,2]
 
 coord = theSimulator.createEntity('CoordinateLogProcess', 'Process:/:coord')
