@@ -1790,7 +1790,7 @@ void GLScene::play()
   timeout_add();
 }
 
-ControlBox::ControlBox(GLScene *anArea, AreaTable *aTable) :
+ControlBox::ControlBox(GLScene *anArea, Gtk::Table* aTable) :
   m_area(anArea),
   m_table(10, 10),
   m_areaTable(aTable),
@@ -2308,31 +2308,11 @@ void ControlBox::zRotateChanged()
 
 void ControlBox::resizeScreen(unsigned aWidth, unsigned aHeight)
 {
-  std::cout <<  "resizeScreen" << std::endl;
-  //if(theHeightAdj.get_upper() < aHeight || theWidthAdj.get_upper() < aWidth)
-    {
-      std::stringstream w, h;
-      w << aWidth;
-      h << aHeight;
-      m_width.set_text(w.str().c_str());
-      m_height.set_text(h.str().c_str());
-      //screenChanged();
-      //theCheck3DMolecule.set_active();
-    }
-  /*
-  unsigned oldHeight(theHeightAdj.get_value());
-  unsigned oldWidth(theWidthAdj.get_value());
-  if(theHeightAdj.get_upper() < aHeight)
-    {
-      theHeightAdj.set_upper(aHeight);
-    }
-  //theHeightAdj.set_value(aHeight);
-  if(theWidthAdj.get_upper() < aWidth)
-    {
-      theWidthAdj.set_upper(aWidth);
-    }
-  //theWidthAdj.set_value(aWidth);
-  //*/
+  std::stringstream w, h;
+  w << aWidth;
+  h << aHeight;
+  m_width.set_text(w.str().c_str());
+  m_height.set_text(h.str().c_str());
 }
 
 void
@@ -2388,17 +2368,11 @@ ControlBox::~ControlBox()
 }
 
 
-
-AreaTable::AreaTable(int n_rows, int n_cols, bool homogeneous, GLScene& m_area):
-  m_area_(m_area) {
-  Table(n_rows, n_cols, homogeneous);
-}
-
 Rulers::Rulers(const Glib::RefPtr<const Gdk::GL::Config>& config,
                const char* aFileName) :
   m_area(config, aFileName),
   m_hbox(),
-  m_table(1, 1, false, m_area),
+  m_table(1, 1, false),
   m_control(&m_area, &m_table),
   isRecord(false)
 {
@@ -2413,143 +2387,12 @@ Rulers::Rulers(const Glib::RefPtr<const Gdk::GL::Config>& config,
   //m_area.set_size_request(XSIZE, YSIZE); 
   m_table.attach(m_area, 1,2,1,2,
 		 Gtk::EXPAND | Gtk::FILL , Gtk::EXPAND | Gtk::FILL, 0, 0);
-  //signal_expose_event().connect (sigc::mem_fun (*this, &Rulers::on_expose));
-  /*
-
-      if (event)
-    {
-        // clip to the area indicated by the expose event so that we only
-        // redraw the portion of the window that needs to be redrawn
-        cr->rectangle(event->area.x, event->area.y,
-                event->area.width, event->area.height);
-        cr->clip();
-    }
-    */
-  
-  /*
-  m_area.set_events(Gdk::POINTER_MOTION_MASK | Gdk::BUTTON_PRESS_MASK );
-
-  //Connect a signal handler for the DrawingArea's
-  //"motion_notify_event" signal, to detect cursor movement:
-  m_area.signal_motion_notify_event().connect( 
-         sigc::mem_fun(*this, &Rulers::on_area_motion_notify_event) );
-
-  // The horizontal ruler goes on top:
-  m_hrule.set_metric(Gtk::PIXELS);
-  m_hrule.set_range(0, XSIZE, 10, XSIZE );
-  //C example uses 7, 13, 0, 20 - don't know why.
-
-  m_table.attach(m_hrule, 1,2,0,1,
-		 Gtk::EXPAND | Gtk::SHRINK | Gtk::FILL, Gtk::FILL,
-		 0, 0);
-
-  // Vertical ruler:
-  m_vrule.set_metric(Gtk::PIXELS);
-  m_vrule.set_range(0, YSIZE, 10, YSIZE );
-
-  m_table.attach(m_vrule, 0, 1, 1, 2,
-		 Gtk::FILL, Gtk::EXPAND | Gtk::SHRINK | Gtk::FILL, 0, 0 );
-     */
-
   show_all_children();
 }
 
-bool Rulers::on_window_state_event(GdkEventWindowState* event) {
-  std::cout << "windo state changed" << std::endl;
-  return Gtk::Window::on_window_state_event(event);
-}
-
-void Rulers::on_show() {
-  std::cout << "on_show" << std::endl;
-  Gtk::Window::on_show();
-}
-
-void Rulers::on_realize() {
-  std::cout << "on_realize" << std::endl;
-  Gtk::Window::on_realize();
-}
-
-void ControlBox::on_size_allocate(Gtk::Allocation& allocation) {
-  unsigned width(allocation.get_width());
-  unsigned height(allocation.get_height());
-  std::cout << "control on_size_allocate:" <<
-    " width:" << width << "height:" << height << std::endl;
-  //resizeScreen(width, height);
-  Gtk::ScrolledWindow::on_size_allocate(allocation);
-  //screenChanged();
-}
-
-void AreaTable::on_size_allocate(Gtk::Allocation& allocation) {
-  unsigned width(allocation.get_width());
-  unsigned height(allocation.get_height());
-  std::cout << "table on_size_allocate:" <<
-    " width:" << width << "height:" << height << std::endl;
-  //resizeScreen(width, height);
-  //m_area_.set_size_request(width, height);
-  Gtk::Table::on_size_allocate(allocation);
-  //screenChanged();
-}
-
 void GLScene::on_size_allocate(Gtk::Allocation& allocation) {
-  unsigned width(allocation.get_width());
-  unsigned height(allocation.get_height());
-  std::cout << "scene on_size_allocate:" <<
-    " width:" << width << "height:" << height << std::endl;
-  //resizeScreen(width, height);
-  m_control->resizeScreen(width, height);
+  m_control->resizeScreen(allocation.get_width(), allocation.get_height());
   Gtk::GL::DrawingArea::on_size_allocate(allocation);
-}
-
-void Rulers::on_size_allocate(Gtk::Allocation& allocation) {
-  unsigned width(allocation.get_width());
-  unsigned height(allocation.get_height());
-  std::cout << "ruler on_size_allocate:" <<
-    " width:" << width << "height:" << height << std::endl;
-  Gtk::Window::on_size_allocate(allocation);
-}
-
-bool Rulers::on_configure_event(GdkEventConfigure* event) {
-  //std::cout << "on_configure_event" << std::endl;
-  Gtk::Window::on_configure_event(event);
-}
-bool Rulers::on_expose(GdkEventExpose* event)
-{
-  unsigned width(m_table.get_allocation().get_width());
-  unsigned height(m_table.get_allocation().get_height());
-  //m_control.resizeScreen(width, height);
-  /*
-  //m_area.set_size_request(0,0);
-  unsigned width(m_table.get_allocation().get_width());
-  unsigned height(m_table.get_allocation().get_height());
-  if(width != m_area.get_allocation().get_width())
-    {
-      m_control.resizeScreen(width, height);
-    }
-    */
-  return false;
-}
-
-/*
-bool Rulers::on_configure_event(GdkEventConfigure* event)
-{
-  std::cout << "configureii" << std::endl;
-  return true;
-}
-*/
-
-
-bool Rulers::on_area_motion_notify_event(GdkEventMotion* event)
-{
-  //The cursor was moved in the m_area widget.
-  //Show the position in the rulers:
-
-  if(event)
-  {
-    m_hrule.property_position().set_value(event->x);
-    m_vrule.property_position().set_value(event->y);
-  }
-
-  return false;  //false = signal not fully handled, pass it on..
 }
 
 bool Rulers::on_key_press_event(GdkEventKey* event)

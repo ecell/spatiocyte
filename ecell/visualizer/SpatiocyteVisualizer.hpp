@@ -58,21 +58,10 @@ struct Point
 
 class GLScene;
 
-class AreaTable : public Gtk::Table
-{
-public:
-  AreaTable(int n_rows, int n_cols, bool homogeneous, GLScene& m_area);
-protected:
-  virtual void on_size_allocate (Gtk::Allocation& allocation);
-private:
-  GLScene& m_area_;
-};
-
-
 class ControlBox : public Gtk::ScrolledWindow
 {
 public:
-  ControlBox(GLScene*, AreaTable*);
+  ControlBox(GLScene*, Gtk::Table*);
   virtual ~ControlBox();
   void resizeScreen(unsigned, unsigned);
   void setStep(char* buffer);
@@ -81,7 +70,6 @@ public:
   void setYangle(double);
   void setZangle(double);
 protected:
-  virtual void on_size_allocate (Gtk::Allocation& allocation);
   bool isChanging;
   bool on_background_clicked(GdkEventButton*);
   bool on_checkbutton_clicked(GdkEventButton*, unsigned int);
@@ -111,7 +99,7 @@ protected:
   Gtk::CheckButton** theButtonList;
   Gtk::Label** theLabelList;
   Gtk::Table m_table;
-  AreaTable* m_areaTable;
+  Gtk::Table* m_areaTable;
 private:
   Gdk::Color theBgColor;
   Glib::RefPtr<Gtk::SizeGroup> m_sizeGroup;
@@ -398,22 +386,15 @@ public:
 protected:
   //signal handlers:
   //Gtk::DrawingArea m_area;
+  virtual bool on_key_press_event(GdkEventKey* event);
   GLScene m_area;
   Gtk::HPaned m_hbox;
   Gtk::HRuler m_hrule;
-  AreaTable m_table;
+  Gtk::Table m_table;
   Gtk::VRuler m_vrule;
   ControlBox m_control;
   bool isRecord;
   static const int XSIZE = 250, YSIZE = 250;
-  virtual bool on_area_motion_notify_event(GdkEventMotion* event); //override
-  virtual bool on_expose(GdkEventExpose* event);
-  virtual bool on_key_press_event(GdkEventKey* event);
-  virtual bool on_window_state_event(GdkEventWindowState*);
-  virtual void on_show();
-  virtual void on_realize();
-  virtual void on_size_allocate (Gtk::Allocation& allocation);
-  virtual bool on_configure_event(GdkEventConfigure*);
 };
 
 #endif /* __SpatiocyteVisualizer_hpp */
