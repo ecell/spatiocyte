@@ -58,10 +58,21 @@ struct Point
 
 class GLScene;
 
+class AreaTable : public Gtk::Table
+{
+public:
+  AreaTable(int n_rows, int n_cols, bool homogeneous, GLScene& m_area);
+protected:
+  virtual void on_size_allocate (Gtk::Allocation& allocation);
+private:
+  GLScene& m_area_;
+};
+
+
 class ControlBox : public Gtk::ScrolledWindow
 {
 public:
-  ControlBox(GLScene*, Gtk::Table*);
+  ControlBox(GLScene*, AreaTable*);
   virtual ~ControlBox();
   void resizeScreen(unsigned, unsigned);
   void setStep(char* buffer);
@@ -70,6 +81,7 @@ public:
   void setYangle(double);
   void setZangle(double);
 protected:
+  virtual void on_size_allocate (Gtk::Allocation& allocation);
   bool isChanging;
   bool on_background_clicked(GdkEventButton*);
   bool on_checkbutton_clicked(GdkEventButton*, unsigned int);
@@ -83,7 +95,6 @@ protected:
   void on_resetTime_clicked();
   void on_showSurface_toggled();
   void on_showTime_toggled();
-  void screenChanged();
   void update_background_color(Gtk::ColorSelection*);
   void update_species_color(unsigned int, Gtk::ColorSelection*);
   void xLowBoundChanged();
@@ -100,13 +111,11 @@ protected:
   Gtk::CheckButton** theButtonList;
   Gtk::Label** theLabelList;
   Gtk::Table m_table;
-  Gtk::Table* m_areaTable;
+  AreaTable* m_areaTable;
 private:
   Gdk::Color theBgColor;
   Glib::RefPtr<Gtk::SizeGroup> m_sizeGroup;
   Gtk::Adjustment theDepthAdj;
-  Gtk::Adjustment theHeightAdj;
-  Gtk::Adjustment theWidthAdj;
   Gtk::Adjustment theXAdj;
   Gtk::Adjustment theXLowBoundAdj;
   Gtk::Adjustment theXUpBoundAdj;
@@ -127,6 +136,8 @@ private:
   Gtk::CheckButton theCheckShowTime;
   Gtk::Entry m_steps;
   Gtk::Entry m_time;
+  Gtk::Entry m_width;
+  Gtk::Entry m_height;
   Gtk::Frame theFrameBoundAdj;
   Gtk::Frame theFrameLatticeAdj;
   Gtk::Frame theFrameRotAdj;
@@ -150,8 +161,6 @@ private:
   Gtk::HBox theZLowBoundBox;
   Gtk::HBox theZUpBoundBox;
   Gtk::HScale theDepthScale;
-  Gtk::HScale theHeightScale;
-  Gtk::HScale theWidthScale;
   Gtk::HScale theXLowBoundScale;
   Gtk::HScale theXScale;
   Gtk::HScale theXUpBoundScale;
@@ -177,8 +186,6 @@ private:
   Gtk::Label theZLowBoundLabel;
   Gtk::Label theZUpBoundLabel;
   Gtk::SpinButton theDepthSpin;
-  Gtk::SpinButton theHeightSpin;
-  Gtk::SpinButton theWidthSpin;
   Gtk::SpinButton theXLowBoundSpin;
   Gtk::SpinButton theXSpin;
   Gtk::SpinButton theXUpBoundSpin;
@@ -260,6 +267,7 @@ protected:
   virtual bool on_unmap_event(GdkEventAny* event);
   virtual bool on_visibility_notify_event(GdkEventVisibility* event);
   virtual void on_realize();
+  virtual void on_size_allocate (Gtk::Allocation& allocation);
   void (GLScene::*thePlot3DFunction)();
   void (GLScene::*thePlotFunction)();
   void drawBox(GLfloat xlo, GLfloat xhi, GLfloat ylo, GLfloat yhi, GLfloat zlo,
@@ -393,7 +401,7 @@ protected:
   GLScene m_area;
   Gtk::HPaned m_hbox;
   Gtk::HRuler m_hrule;
-  Gtk::Table m_table;
+  AreaTable m_table;
   Gtk::VRuler m_vrule;
   ControlBox m_control;
   bool isRecord;
@@ -401,6 +409,11 @@ protected:
   virtual bool on_area_motion_notify_event(GdkEventMotion* event); //override
   virtual bool on_expose(GdkEventExpose* event);
   virtual bool on_key_press_event(GdkEventKey* event);
+  virtual bool on_window_state_event(GdkEventWindowState*);
+  virtual void on_show();
+  virtual void on_realize();
+  virtual void on_size_allocate (Gtk::Allocation& allocation);
+  virtual bool on_configure_event(GdkEventConfigure*);
 };
 
 #endif /* __SpatiocyteVisualizer_hpp */

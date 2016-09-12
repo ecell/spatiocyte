@@ -419,16 +419,20 @@ GLScene::~GLScene()
 
 void GLScene::setScreenWidth(unsigned int aWidth )
 {
+  /*
   theScreenWidth = aWidth;
   set_size_request(theScreenWidth, theScreenHeight);
   queue_draw();
+  */
 }
 
 void GLScene::setScreenHeight(unsigned int aHeight )
 {
+  /*
   theScreenHeight = aHeight;
   set_size_request(theScreenWidth, theScreenHeight);
   queue_draw();
+  */
 }
 
 void GLScene::setXUpBound(unsigned int aBound )
@@ -1786,13 +1790,11 @@ void GLScene::play()
   timeout_add();
 }
 
-ControlBox::ControlBox(GLScene *anArea, Gtk::Table *aTable) :
+ControlBox::ControlBox(GLScene *anArea, AreaTable *aTable) :
   m_area(anArea),
   m_table(10, 10),
   m_areaTable(aTable),
   theDepthAdj( 0, -200, 130, 5, 0, 0 ),
-  theHeightAdj( SCREEN_HEIGHT, 0, 1080, 1, 0, 0 ),
-  theWidthAdj( SCREEN_WIDTH, 0, 1920, 1, 0, 0 ),
   theXAdj( 0, -180, 180, 5, 20, 0 ),
   theXLowBoundAdj( 0, 0, 100, 1, 0, 0 ),
   theXUpBoundAdj( 100, 0, 0, 1, 0, 0 ),
@@ -1814,10 +1816,8 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table *aTable) :
   theFrameBoundAdj("Bounding"),
   theFrameLatticeAdj("Zoom"),
   theFrameRotAdj( "Rotation" ),
-  theFrameScreen("Screen"),
+  theFrameScreen("Display Area"),
   theDepthScale( theDepthAdj ),
-  theHeightScale( theHeightAdj ),
-  theWidthScale( theWidthAdj ),
   theXLowBoundScale( theXLowBoundAdj ),
   theXScale( theXAdj ),
   theXUpBoundScale( theXUpBoundAdj ),
@@ -1828,8 +1828,8 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table *aTable) :
   theZScale( theZAdj ),
   theZUpBoundScale( theZUpBoundAdj ),
   theDepthLabel( "Depth" ),
-  theHeightLabel( "H" ),
-  theWidthLabel( "W" ),
+  theHeightLabel( "Height:" ),
+  theWidthLabel( "Width:" ),
   theXLabel( "x" ),
   theXLowBoundLabel( "-x" ),
   theXUpBoundLabel( "+x" ),
@@ -1840,8 +1840,6 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table *aTable) :
   theZLowBoundLabel( "-z" ),
   theZUpBoundLabel( "+z" ),
   theDepthSpin( theDepthAdj, 0, 0  ),
-  theHeightSpin( theHeightAdj, 0, 0  ),
-  theWidthSpin( theWidthAdj, 0, 0  ),
   theXLowBoundSpin( theXLowBoundAdj, 0, 0  ),
   theXSpin( theXAdj, 0, 0  ),
   theXUpBoundSpin( theXUpBoundAdj, 0, 0  ),
@@ -1867,38 +1865,21 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table *aTable) :
   // Create a frame the will have the rotation adjusters
   // and the Fix and Reset buttons.
 
-  // screen resolution adjuster
+
+  // screen resolution display
   theBoxCtrl.pack_start( theFrameScreen, false, false, 1 );
   theBoxInScreen.set_border_width( 3 );
   theFrameScreen.add(theBoxInScreen);
-  theBoxInScreen.pack_start( theHeightBox, false, false, 1 ); 
   theBoxInScreen.pack_start( theWidthBox, false, false, 1 ); 
+  theBoxInScreen.pack_start( theHeightBox, false, false, 1 ); 
 
-  theHeightLabel.set_width_chars( 2 );
+  theHeightLabel.set_width_chars( 6 );
   theHeightBox.pack_start( theHeightLabel, false, false, 2 );
-  theHeightAdj.set_value( SCREEN_HEIGHT );
-  theHeightAdj.set_upper( 1080 );
-  theHeightAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
-                           &ControlBox::screenChanged ) );
-  theHeightScale.set_draw_value( false );
-  theHeightBox.pack_start( theHeightScale );
-  theHeightSpin.set_width_chars( 4 );
-  theHeightSpin.set_has_frame( false );
-  theHeightSpin.set_editable( true );
-  theHeightBox.pack_start( theHeightSpin, false, false, 2 );
+  theHeightBox.pack_start( m_height );
 
-  theWidthLabel.set_width_chars( 2 );
+  theWidthLabel.set_width_chars( 6 );
   theWidthBox.pack_start( theWidthLabel, false, false, 2 );
-  theWidthAdj.set_value( SCREEN_WIDTH );
-  theWidthAdj.set_upper( 1920 );
-  theWidthAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
-                           &ControlBox::screenChanged ) );
-  theWidthScale.set_draw_value( false );
-  theWidthBox.pack_start( theWidthScale );
-  theWidthSpin.set_width_chars( 4 );
-  theWidthSpin.set_has_frame( false );
-  theWidthSpin.set_editable( true );
-  theWidthBox.pack_start( theWidthSpin, false, false, 2 );
+  theWidthBox.pack_start( m_width );
 
   /*
   // Create a frame the will have the lattice depth adjuster
@@ -1943,8 +1924,8 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table *aTable) :
   theDepthSpin.set_has_frame( false );
   theDepthBox.pack_start( theDepthSpin, false, false, 2 );
 
-  // Create a frame the will have the lattice boundary adjusters
-  // and the Fix and Reset buttons.
+  // Create a frame the will have the lattice boundary adjusters,
+  // Fix and Reset buttons.
   theBoxCtrl.pack_start( theFrameBoundAdj, false, false, 1 );
   theBoxInBound.set_border_width( 3 );
   theFrameBoundAdj.add( theBoxInBound );
@@ -2327,14 +2308,16 @@ void ControlBox::zRotateChanged()
 
 void ControlBox::resizeScreen(unsigned aWidth, unsigned aHeight)
 {
-  if(theHeightAdj.get_upper() < aHeight || theWidthAdj.get_upper() < aWidth)
+  std::cout <<  "resizeScreen" << std::endl;
+  //if(theHeightAdj.get_upper() < aHeight || theWidthAdj.get_upper() < aWidth)
     {
-      theHeightAdj.set_upper(aHeight);
-      theHeightAdj.set_value(aHeight);
-      theWidthAdj.set_upper(aWidth);
-      theWidthAdj.set_value(aWidth);
-      screenChanged();
-      theCheck3DMolecule.set_active();
+      std::stringstream w, h;
+      w << aWidth;
+      h << aHeight;
+      m_width.set_text(w.str().c_str());
+      m_height.set_text(h.str().c_str());
+      //screenChanged();
+      //theCheck3DMolecule.set_active();
     }
   /*
   unsigned oldHeight(theHeightAdj.get_value());
@@ -2350,14 +2333,6 @@ void ControlBox::resizeScreen(unsigned aWidth, unsigned aHeight)
     }
   //theWidthAdj.set_value(aWidth);
   //*/
-}
-
-void ControlBox::screenChanged()
-{
-  m_areaTable->set_size_request((unsigned int)theWidthAdj.get_value(),
-                                (unsigned int)theHeightAdj.get_value());
-  m_area->setScreenHeight((unsigned int)theHeightAdj.get_value());
-  m_area->setScreenWidth((unsigned int)theWidthAdj.get_value());
 }
 
 void
@@ -2413,11 +2388,17 @@ ControlBox::~ControlBox()
 }
 
 
+
+AreaTable::AreaTable(int n_rows, int n_cols, bool homogeneous, GLScene& m_area):
+  m_area_(m_area) {
+  Table(n_rows, n_cols, homogeneous);
+}
+
 Rulers::Rulers(const Glib::RefPtr<const Gdk::GL::Config>& config,
                const char* aFileName) :
   m_area(config, aFileName),
   m_hbox(),
-  m_table(3, 2, false),
+  m_table(1, 1, false, m_area),
   m_control(&m_area, &m_table),
   isRecord(false)
 {
@@ -2430,9 +2411,9 @@ Rulers::Rulers(const Glib::RefPtr<const Gdk::GL::Config>& config,
   m_hbox.pack1(m_table, Gtk::PACK_EXPAND_WIDGET, 5);
   m_hbox.pack2(m_control, Gtk::PACK_SHRINK, 5);
   //m_area.set_size_request(XSIZE, YSIZE); 
-  m_table.attach(m_area, 1,2,1,2,  Gtk::FILL,
-                Gtk::FILL, 0, 0);
-  signal_expose_event().connect (sigc::mem_fun (*this, &Rulers::on_expose));
+  m_table.attach(m_area, 1,2,1,2,
+		 Gtk::EXPAND | Gtk::FILL , Gtk::EXPAND | Gtk::FILL, 0, 0);
+  //signal_expose_event().connect (sigc::mem_fun (*this, &Rulers::on_expose));
   /*
 
       if (event)
@@ -2472,11 +2453,70 @@ Rulers::Rulers(const Glib::RefPtr<const Gdk::GL::Config>& config,
 
   show_all_children();
 }
+
+bool Rulers::on_window_state_event(GdkEventWindowState* event) {
+  std::cout << "windo state changed" << std::endl;
+  return Gtk::Window::on_window_state_event(event);
+}
+
+void Rulers::on_show() {
+  std::cout << "on_show" << std::endl;
+  Gtk::Window::on_show();
+}
+
+void Rulers::on_realize() {
+  std::cout << "on_realize" << std::endl;
+  Gtk::Window::on_realize();
+}
+
+void ControlBox::on_size_allocate(Gtk::Allocation& allocation) {
+  unsigned width(allocation.get_width());
+  unsigned height(allocation.get_height());
+  std::cout << "control on_size_allocate:" <<
+    " width:" << width << "height:" << height << std::endl;
+  //resizeScreen(width, height);
+  Gtk::ScrolledWindow::on_size_allocate(allocation);
+  //screenChanged();
+}
+
+void AreaTable::on_size_allocate(Gtk::Allocation& allocation) {
+  unsigned width(allocation.get_width());
+  unsigned height(allocation.get_height());
+  std::cout << "table on_size_allocate:" <<
+    " width:" << width << "height:" << height << std::endl;
+  //resizeScreen(width, height);
+  //m_area_.set_size_request(width, height);
+  Gtk::Table::on_size_allocate(allocation);
+  //screenChanged();
+}
+
+void GLScene::on_size_allocate(Gtk::Allocation& allocation) {
+  unsigned width(allocation.get_width());
+  unsigned height(allocation.get_height());
+  std::cout << "scene on_size_allocate:" <<
+    " width:" << width << "height:" << height << std::endl;
+  //resizeScreen(width, height);
+  m_control->resizeScreen(width, height);
+  Gtk::GL::DrawingArea::on_size_allocate(allocation);
+}
+
+void Rulers::on_size_allocate(Gtk::Allocation& allocation) {
+  unsigned width(allocation.get_width());
+  unsigned height(allocation.get_height());
+  std::cout << "ruler on_size_allocate:" <<
+    " width:" << width << "height:" << height << std::endl;
+  Gtk::Window::on_size_allocate(allocation);
+}
+
+bool Rulers::on_configure_event(GdkEventConfigure* event) {
+  //std::cout << "on_configure_event" << std::endl;
+  Gtk::Window::on_configure_event(event);
+}
 bool Rulers::on_expose(GdkEventExpose* event)
 {
   unsigned width(m_table.get_allocation().get_width());
   unsigned height(m_table.get_allocation().get_height());
-  m_control.resizeScreen(width, height);
+  //m_control.resizeScreen(width, height);
   /*
   //m_area.set_size_request(0,0);
   unsigned width(m_table.get_allocation().get_width());
