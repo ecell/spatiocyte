@@ -124,6 +124,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
 : Gtk::GL::DrawingArea(config),
   theRotateAngle(5.0),
   isInvertBound(false),
+  isShownSurface(false),
   m_Run(false),
   m_RunReverse(false),
   show3DMolecule(false),
@@ -415,24 +416,6 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
 
 GLScene::~GLScene()
 {
-}
-
-void GLScene::setScreenWidth(unsigned int aWidth )
-{
-  /*
-  theScreenWidth = aWidth;
-  set_size_request(theScreenWidth, theScreenHeight);
-  queue_draw();
-  */
-}
-
-void GLScene::setScreenHeight(unsigned int aHeight )
-{
-  /*
-  theScreenHeight = aHeight;
-  set_size_request(theScreenWidth, theScreenHeight);
-  queue_draw();
-  */
 }
 
 void GLScene::setXUpBound(unsigned int aBound )
@@ -742,10 +725,15 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
       glDisable(GL_LIGHTING);
       (this->*thePlotFunction)();
     }
-  if(showSurface)
-    {
-      //rotateMidAxisAbs(90, 0, 1, 0);
+  if(showSurface && !isShownSurface) {
+    rotateMidAxisAbs(90, 0, 1, 0);
+    isShownSurface = true;
     }
+  else if(!showSurface && isShownSurface) {
+    rotateMidAxisAbs(0, 0, 1, 0);
+    isShownSurface = false;
+  }
+
   if(showTime)
     {
       drawTime();
@@ -1690,6 +1678,7 @@ void GLScene::resetView()
   m_control->setXangle(xAngle);
   m_control->setYangle(yAngle);
   m_control->setZangle(zAngle);
+  isShownSurface = false;
 }
 
 void GLScene::resetBound()
@@ -1809,14 +1798,14 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table* aTable) :
   theResetDepthButton( "Reset" ),
   theResetRotButton( "Reset" ),
   theCheck3DMolecule( "Show 3D Molecules" ),
-  theCheckFix( "Fix rotation" ),
+  //theCheckFix( "Fix rotation" ),
   theCheckInvertBound( "Invert Bounding" ),
   theCheckShowSurface( "Show Surface" ),
   theCheckShowTime( "Show Time" ),
   theFrameBoundAdj("Bounding"),
   theFrameLatticeAdj("Zoom"),
   theFrameRotAdj( "Rotation" ),
-  theFrameScreen("Display Area"),
+  theFrameScreen("Resolution"),
   theDepthScale( theDepthAdj ),
   theXLowBoundScale( theXLowBoundAdj ),
   theXScale( theXAdj ),
@@ -1852,7 +1841,7 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table* aTable) :
   theButtonRecord( "Record Frames" )
 {
   set_border_width(2);
-  set_size_request(470, SCREEN_HEIGHT);
+  set_size_request(475, SCREEN_HEIGHT);
   set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
   add(m_rightBox);
   m_table.set_row_spacings(1);
@@ -1864,6 +1853,46 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table* aTable) :
   m_rightBox.pack_start(theBoxCtrl, Gtk::PACK_SHRINK); 
   // Create a frame the will have the rotation adjusters
   // and the Fix and Reset buttons.
+
+
+  /*
+  // Create a frame the will have the lattice depth adjuster
+  // and background color selector
+  theBoxCtrl.pack_start( theFrameLatticeAdj, false, false, 1 );
+  theBoxInLattice.set_border_width( 3 );
+  theFrameLatticeAdj.add( theBoxInLattice );
+  theDepthBox.set_homogeneous( false );
+  theBoxInLattice.pack_start( theDepthBox, false, false, 1 );
+  */
+  theBoxInLattice.pack_start( the3DMoleculeBox, false, false, 1 );
+  //theResetDepthButton.connect( 'clicked', resetDepth );
+  the3DMoleculeBox.pack_start( theResetDepthButton ); 
+
+
+  theCheck3DMolecule.signal_toggled().connect( sigc::mem_fun(*this,
+                            &ControlBox::on_3DMolecule_toggled) );
+  //theCheck3DMolecule.set_active();
+  theCheck3DMolecule.set_active(false);
+  theBoxCtrl.pack_start( theCheck3DMolecule, false, false, 2 );
+
+
+  theCheckShowTime.signal_toggled().connect( sigc::mem_fun(*this,
+                            &ControlBox::on_showTime_toggled) );
+  theCheckShowTime.set_active();
+  theBoxCtrl.pack_start( theCheckShowTime, false, false, 2 );
+
+  theCheckShowSurface.signal_toggled().connect( sigc::mem_fun(*this,
+                            &ControlBox::on_showSurface_toggled) );
+  //theCheckShowSurface.set_active();
+  theCheckShowSurface.set_active(false);
+  theBoxCtrl.pack_start( theCheckShowSurface, false, false, 2 );
+
+  theButtonResetTime.signal_clicked().connect( sigc::mem_fun(*this,
+                            &ControlBox::on_resetTime_clicked) );
+  theBoxCtrl.pack_start( theButtonResetTime, false, false, 2 );
+  theButtonRecord.signal_toggled().connect( sigc::mem_fun(*this,
+                            &ControlBox::on_record_toggled) );
+  theBoxCtrl.pack_start( theButtonRecord, false, false, 2 );
 
 
   // screen resolution display
@@ -1881,40 +1910,7 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table* aTable) :
   theWidthBox.pack_start( theWidthLabel, false, false, 2 );
   theWidthBox.pack_start( m_width );
 
-  /*
-  // Create a frame the will have the lattice depth adjuster
-  // and background color selector
-  theBoxCtrl.pack_start( theFrameLatticeAdj, false, false, 1 );
-  theBoxInLattice.set_border_width( 3 );
-  theFrameLatticeAdj.add( theBoxInLattice );
-  theDepthBox.set_homogeneous( false );
-  theBoxInLattice.pack_start( theDepthBox, false, false, 1 );
-  */
-  theBoxInLattice.pack_start( the3DMoleculeBox, false, false, 1 );
-  //theResetDepthButton.connect( 'clicked', resetDepth );
-  the3DMoleculeBox.pack_start( theResetDepthButton ); 
 
-  theCheckShowSurface.signal_toggled().connect( sigc::mem_fun(*this,
-                            &ControlBox::on_showSurface_toggled) );
-  //theCheckShowSurface.set_active();
-  theCheckShowSurface.set_active(false);
-  theBoxCtrl.pack_start( theCheckShowSurface, false, false, 2 );
-
-  theCheckShowTime.signal_toggled().connect( sigc::mem_fun(*this,
-                            &ControlBox::on_showTime_toggled) );
-  theCheckShowTime.set_active();
-  theBoxCtrl.pack_start( theCheckShowTime, false, false, 2 );
-  theCheck3DMolecule.signal_toggled().connect( sigc::mem_fun(*this,
-                            &ControlBox::on_3DMolecule_toggled) );
-  //theCheck3DMolecule.set_active();
-  theCheck3DMolecule.set_active(false);
-  theBoxCtrl.pack_start( theCheck3DMolecule, false, false, 2 );
-  theButtonResetTime.signal_clicked().connect( sigc::mem_fun(*this,
-                            &ControlBox::on_resetTime_clicked) );
-  theBoxCtrl.pack_start( theButtonResetTime, false, false, 2 );
-  theButtonRecord.signal_toggled().connect( sigc::mem_fun(*this,
-                            &ControlBox::on_record_toggled) );
-  theBoxCtrl.pack_start( theButtonRecord, false, false, 2 );
   theDepthLabel.set_width_chars( 1 );
   theDepthBox.pack_start( theDepthLabel, false, false, 2 );
   //theDepthAdj.connect( 'value_changed', depthChanged );
@@ -2032,7 +2028,7 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table* aTable) :
   theBoxInFrame.pack_start( theZBox, false, false, 1 );
   theBoxInFrame.pack_start( theBoxRotFixReset, false, false, 1 );
   //theCheckFix.connect( 'toggled', fixRotToggled );
-  theBoxRotFixReset.pack_start( theCheckFix );
+  //theBoxRotFixReset.pack_start( theCheckFix );
   theResetRotButton.signal_clicked().connect( sigc::mem_fun(*this,
                             &ControlBox::onResetRotation) );
   theBoxRotFixReset.pack_start( theResetRotButton );
@@ -2378,13 +2374,12 @@ Rulers::Rulers(const Glib::RefPtr<const Gdk::GL::Config>& config,
 {
   m_area.setControlBox(&m_control);
   set_title("Spatiocyte Visualizer");
-  set_reallocate_redraws(true);
+  //set_reallocate_redraws(true);
   set_border_width(10);
 
   add(m_hbox);
   m_hbox.pack1(m_table, Gtk::PACK_EXPAND_WIDGET, 5);
   m_hbox.pack2(m_control, Gtk::PACK_SHRINK, 5);
-  //m_area.set_size_request(XSIZE, YSIZE); 
   m_table.attach(m_area, 1,2,1,2,
 		 Gtk::EXPAND | Gtk::FILL , Gtk::EXPAND | Gtk::FILL, 0, 0);
   show_all_children();

@@ -118,7 +118,7 @@ private:
   Gtk::Button theResetDepthButton;
   Gtk::Button theResetRotButton;
   Gtk::CheckButton theCheck3DMolecule;
-  Gtk::CheckButton theCheckFix;
+  //Gtk::CheckButton theCheckFix;
   Gtk::CheckButton theCheckInvertBound;
   Gtk::CheckButton theCheckShowSurface;
   Gtk::CheckButton theCheckShowTime;
@@ -227,8 +227,6 @@ public:
   void setControlBox(ControlBox* aControl);
   void setRecord(bool isRecord);
   void setReverse(bool isReverse);
-  void setScreenHeight( unsigned int );
-  void setScreenWidth( unsigned int );
   void setShowSurface(bool);
   void setShowTime(bool);
   void setSpeciesColor(unsigned int id, Color);
@@ -307,6 +305,7 @@ protected:
   Point** thePoints;
   bool *theSpeciesVisibility;
   bool isChanged;
+  bool isShownSurface;
   bool isInvertBound;
   bool m_Run;
   bool m_RunReverse;
