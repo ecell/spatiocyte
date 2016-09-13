@@ -125,8 +125,8 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   theRotateAngle(5.0),
   isInvertBound(false),
   isShownSurface(false),
-  m_Run(false),
-  m_RunReverse(false),
+  is_playing_(false),
+  is_playing_reverse_(false),
   show3DMolecule(false),
   showSurface(false),
   showTime(true),
@@ -539,12 +539,12 @@ bool GLScene::getSpeciesVisibility(unsigned int id)
 
 void GLScene::setControlBox(ControlBox* aControl)
 {
-  m_control = aControl;
+  m_control_ = aControl;
 }
 
 void GLScene::setReverse(bool isReverse)
 {
-  m_RunReverse = isReverse;
+  is_playing_reverse_ = isReverse;
 }
 
 Color GLScene::getSpeciesColor(unsigned int id)
@@ -1566,7 +1566,7 @@ void GLScene::zoomOut()
 
 bool GLScene::on_timeout()
 {
-  if(m_RunReverse)
+  if(is_playing_reverse_)
     {
       if(m_stepCnt > 1)
         {
@@ -1589,9 +1589,9 @@ bool GLScene::on_timeout()
     }
   char buffer[50];
   sprintf(buffer, "%d", m_stepCnt-1);
-  m_control->setStep(buffer);
+  m_control_->setStep(buffer);
   sprintf(buffer, "%f", theCurrentTime);
-  m_control->setTime(buffer);
+  m_control_->setTime(buffer);
   invalidate();
   if(startRecord)
     {
@@ -1605,9 +1605,9 @@ bool GLScene::on_timeout()
 
 void GLScene::step()
 {
-  if(m_Run)
+  if(is_playing_)
     {
-      m_Run = false;
+      is_playing_ = false;
       timeout_remove();
     }
   on_timeout();
@@ -1628,7 +1628,7 @@ void GLScene::timeout_remove()
 
 bool GLScene::on_map_event(GdkEventAny* event)
 {
-  if (m_Run)
+  if (is_playing_)
     timeout_add();
 
   return true;
@@ -1643,7 +1643,7 @@ bool GLScene::on_unmap_event(GdkEventAny* event)
 
 bool GLScene::on_visibility_notify_event(GdkEventVisibility* event)
 {
-  if (m_Run)
+  if (is_playing_)
     {
       if (event->state == GDK_VISIBILITY_FULLY_OBSCURED)
         timeout_remove();
@@ -1675,9 +1675,9 @@ void GLScene::resetView()
   xAngle = 0;
   yAngle = 0;
   zAngle = 0;
-  m_control->setXangle(xAngle);
-  m_control->setYangle(yAngle);
-  m_control->setZangle(zAngle);
+  m_control_->setXangle(xAngle);
+  m_control_->setYangle(yAngle);
+  m_control_->setZangle(zAngle);
   isShownSurface = false;
 }
 
@@ -1701,19 +1701,19 @@ void GLScene::rotateMidAxis(int aMult, int x, int y, int z)
     {
       xAngle += aMult*theRotateAngle;
       normalizeAngle(xAngle);
-      m_control->setXangle(xAngle);
+      m_control_->setXangle(xAngle);
     }
   if(y)
     {
       yAngle += aMult*theRotateAngle;
       normalizeAngle(yAngle);
-      m_control->setYangle(yAngle);
+      m_control_->setYangle(yAngle);
     }
   if(z)
     {
       zAngle += aMult*theRotateAngle;
       normalizeAngle(zAngle);
-      m_control->setZangle(zAngle);
+      m_control_->setZangle(zAngle);
     }
 }
 
@@ -1728,19 +1728,19 @@ void GLScene::rotateMidAxisAbs(double angle, int x, int y, int z)
     {
       glRotatef(angle-xAngle,x,y,z);
       xAngle = angle;
-      m_control->setXangle(xAngle);
+      m_control_->setXangle(xAngle);
     }
   if(y)
     {
       glRotatef(angle-yAngle,x,y,z);
       yAngle = angle;
-      m_control->setYangle(yAngle);
+      m_control_->setYangle(yAngle);
     }
   if(z)
     {
       glRotatef(angle-zAngle,x,y,z);
       zAngle = angle;
-      m_control->setZangle(zAngle);
+      m_control_->setZangle(zAngle);
     }
   glTranslatef(-Xtrans,-Ytrans,+(Near+ViewSize/2.0));
   glMultMatrixf(m);
@@ -1759,10 +1759,14 @@ void GLScene::normalizeAngle(double &angle)
     }
 }
 
+bool GLScene::get_is_playing() {
+  return is_playing_;
+}
+
 void GLScene::pause()
 {
-  m_Run = !m_Run;
-  if(m_Run)
+  is_playing_ = !is_playing_;
+  if(is_playing_)
     {
       timeout_add();
     }
@@ -1775,14 +1779,14 @@ void GLScene::pause()
 
 void GLScene::play()
 {
-  m_Run = true;
+  is_playing_ = true;
   timeout_add();
 }
 
-ControlBox::ControlBox(GLScene *anArea, Gtk::Table* aTable) :
-  m_area(anArea),
+ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
+  m_area_(anArea),
   m_table(10, 10),
-  m_areaTable(aTable),
+  m_area_table_(aTable),
   theDepthAdj( 0, -200, 130, 5, 0, 0 ),
   theXAdj( 0, -180, 180, 5, 20, 0 ),
   theXLowBoundAdj( 0, 0, 100, 1, 0, 0 ),
@@ -1840,6 +1844,14 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table* aTable) :
   theZUpBoundSpin( theZUpBoundAdj, 0, 0  ),
   theButtonRecord( "Record Frames" )
 {
+  play_button_.show();
+  play_button_.set_stock_id(Gtk::Stock::MEDIA_PLAY);
+  play_button_.signal_clicked().connect( sigc::mem_fun(*this,
+                            &ControlBox::play_or_pause) );
+  m_area_table_.attach(play_button_, 0, 1, 1, 2, Gtk::SHRINK | Gtk::FILL,
+                       Gtk::SHRINK | Gtk::FILL, 0, 0);
+
+
   set_border_width(2);
   set_size_request(475, SCREEN_HEIGHT);
   set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
@@ -1939,9 +1951,9 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table* aTable) :
                             &ControlBox::onResetBound) );
   theBoxBoundFixReset.pack_start( theResetBoundButton );
 
-  unsigned int aLayerSize( m_area->getLayerSize() );
-  unsigned int aColSize( m_area->getColSize() );
-  unsigned int aRowSize( m_area->getRowSize() );
+  unsigned int aLayerSize( m_area_.getLayerSize() );
+  unsigned int aColSize( m_area_.getColSize() );
+  unsigned int aRowSize( m_area_.getRowSize() );
 
   // x up bound
   theXUpBoundLabel.set_width_chars( 2 );
@@ -2093,7 +2105,7 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table* aTable) :
   m_sizeGroup->add_widget(m_timeLabel);
   m_timeBox.pack_start(m_timeLabel, Gtk::PACK_SHRINK);
   m_timeBox.pack_start(m_time, Gtk::PACK_SHRINK);
-  theSpeciesSize = m_area->getSpeciesSize();
+  theSpeciesSize = m_area_.getSpeciesSize();
   theButtonList = new Gtk::CheckButton*[theSpeciesSize]; 
   theLabelList = new Gtk::Label*[theSpeciesSize]; 
   for(unsigned int i(0); i!=theSpeciesSize; ++i)
@@ -2103,8 +2115,8 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table* aTable) :
       Gtk::HBox* aHBox = Gtk::manage(new Gtk::HBox);
       Gtk::EventBox* m_EventBox=Gtk::manage(new Gtk::EventBox);
       m_EventBox->set_events(Gdk::BUTTON_RELEASE_MASK);
-      theLabelList[i]->set_text(m_area->getSpeciesName(i));
-      Color clr(m_area->getSpeciesColor(i));
+      theLabelList[i]->set_text(m_area_.getSpeciesName(i));
+      Color clr(m_area_.getSpeciesColor(i));
       Gdk::Color aColor;
       aColor.set_rgb(int(clr.r*65535), int(clr.g*65535), int(clr.b*65535));
       theLabelList[i]->modify_fg(Gtk::STATE_NORMAL, aColor);
@@ -2117,7 +2129,7 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table* aTable) :
               sigc::mem_fun(*this, &ControlBox::on_checkbutton_clicked), i ) );
       m_EventBox->add(*theLabelList[i]);
       m_EventBox->set_tooltip_text("Right click to change species color");
-      theButtonList[i]->set_active(m_area->getSpeciesVisibility(i));
+      theButtonList[i]->set_active(m_area_.getSpeciesVisibility(i));
       aHBox->pack_start(*theButtonList[i], false, false, 2);
       aHBox->pack_start(*m_EventBox, false, false, 2);
       m_table.attach(*aHBox, 0, 1, i+3, i+4, Gtk::FILL,
@@ -2126,10 +2138,30 @@ ControlBox::ControlBox(GLScene *anArea, Gtk::Table* aTable) :
   std::cout << "theSpeciesSize:" << theSpeciesSize << std::endl;
 }
 
+void ControlBox::play_or_pause() {
+  if(m_area_.get_is_playing()) {
+    pause();
+  }
+  else {
+    play();
+  }
+}
+
+void ControlBox::play() {
+  m_area_.play();
+  play_button_.set_stock_id(Gtk::Stock::MEDIA_PAUSE);
+}
+
+void ControlBox::pause() {
+  m_area_.pause();
+  play_button_.set_stock_id(Gtk::Stock::MEDIA_PLAY);
+}
+
+
 void
 ControlBox::on_checkbutton_toggled(unsigned int id)
 {
-  m_area->setSpeciesVisibility(id, theButtonList[id]->get_active());
+  m_area_.setSpeciesVisibility(id, theButtonList[id]->get_active());
 }
 
 bool ControlBox::on_background_clicked(GdkEventButton* event)
@@ -2147,7 +2179,7 @@ bool ControlBox::on_background_clicked(GdkEventButton* event)
           clr.r = theBgColor.get_red()/65535.0;
           clr.g = theBgColor.get_green()/65535.0;
           clr.b = theBgColor.get_blue()/65535.0;
-          m_area->setBackgroundColor(clr);
+          m_area_.setBackgroundColor(clr);
           m_bgColor.modify_fg(Gtk::STATE_NORMAL, theBgColor);
           m_bgColor.modify_fg(Gtk::STATE_ACTIVE, theBgColor);
           m_bgColor.modify_fg(Gtk::STATE_PRELIGHT, theBgColor);
@@ -2167,7 +2199,7 @@ bool ControlBox::on_checkbutton_clicked(GdkEventButton* event, unsigned int id)
 {
   if(event->type == GDK_BUTTON_RELEASE && event->button == 3)
     {
-      Color clr(m_area->getSpeciesColor(id));
+      Color clr(m_area_.getSpeciesColor(id));
       Gdk::Color aColor;
       aColor.set_rgb(int(clr.r*65535), int(clr.g*65535), int(clr.b*65535));
       Gtk::ColorSelectionDialog dlg("Select a color"); 
@@ -2177,7 +2209,7 @@ bool ControlBox::on_checkbutton_clicked(GdkEventButton* event, unsigned int id)
         sigc::mem_fun(*this, &ControlBox::update_species_color), id, colorSel));
       if(dlg.run() == Gtk::RESPONSE_CANCEL)
         {
-          m_area->setSpeciesColor(id, clr);
+          m_area_.setSpeciesColor(id, clr);
           theLabelList[id]->modify_fg(Gtk::STATE_NORMAL, aColor);
           theLabelList[id]->modify_fg(Gtk::STATE_ACTIVE, aColor);
           theLabelList[id]->modify_fg(Gtk::STATE_PRELIGHT, aColor);
@@ -2211,7 +2243,7 @@ void ControlBox::update_species_color(unsigned int id,
   clr.r = aColor.get_red()/65535.0;
   clr.g = aColor.get_green()/65535.0;
   clr.b = aColor.get_blue()/65535.0;
-  m_area->setSpeciesColor(id, clr);
+  m_area_.setSpeciesColor(id, clr);
   theLabelList[id]->modify_fg(Gtk::STATE_NORMAL, aColor);
   theLabelList[id]->modify_fg(Gtk::STATE_ACTIVE, aColor);
   theLabelList[id]->modify_fg(Gtk::STATE_PRELIGHT, aColor);
@@ -2225,7 +2257,7 @@ void ControlBox::update_background_color(Gtk::ColorSelection* colorSel)
   clr.r = aColor.get_red()/65535.0;
   clr.g = aColor.get_green()/65535.0;
   clr.b = aColor.get_blue()/65535.0;
-  m_area->setBackgroundColor(clr);
+  m_area_.setBackgroundColor(clr);
   m_bgColor.modify_fg(Gtk::STATE_NORMAL, aColor);
   m_bgColor.modify_fg(Gtk::STATE_ACTIVE, aColor);
   m_bgColor.modify_fg(Gtk::STATE_PRELIGHT, aColor);
@@ -2234,42 +2266,42 @@ void ControlBox::update_background_color(Gtk::ColorSelection* colorSel)
 
 void ControlBox::on_3DMolecule_toggled()
 {
-  m_area->set3DMolecule(theCheck3DMolecule.get_active());
+  m_area_.set3DMolecule(theCheck3DMolecule.get_active());
 }
 
 void ControlBox::on_InvertBound_toggled()
 {
-  m_area->setInvertBound(theCheckInvertBound.get_active());
+  m_area_.setInvertBound(theCheckInvertBound.get_active());
 }
 
 void ControlBox::on_showTime_toggled()
 {
-  m_area->setShowTime(theCheckShowTime.get_active());
+  m_area_.setShowTime(theCheckShowTime.get_active());
 }
 
 void ControlBox::on_showSurface_toggled()
 {
-  m_area->setShowSurface(theCheckShowSurface.get_active());
+  m_area_.setShowSurface(theCheckShowSurface.get_active());
 }
 
 void ControlBox::on_resetTime_clicked()
 {
-  m_area->resetTime();
+  m_area_.resetTime();
 }
 
 void ControlBox::onResetRotation()
 {
-  m_area->resetView();
+  m_area_.resetView();
 }
 
 void ControlBox::onResetBound()
 {
-  m_area->resetBound();
+  m_area_.resetBound();
 }
 
 void ControlBox::on_record_toggled()
 {
-  m_area->setRecord(theButtonRecord.get_active());
+  m_area_.setRecord(theButtonRecord.get_active());
 }
 
 void ControlBox::setXangle(double angle)
@@ -2289,17 +2321,17 @@ void ControlBox::setZangle(double angle)
 
 void ControlBox::xRotateChanged()
 {
-  m_area->rotateMidAxisAbs(theXAdj.get_value(), 1, 0, 0);
+  m_area_.rotateMidAxisAbs(theXAdj.get_value(), 1, 0, 0);
 }
 
 void ControlBox::yRotateChanged()
 {
-  m_area->rotateMidAxisAbs(theYAdj.get_value(), 0, 1, 0);
+  m_area_.rotateMidAxisAbs(theYAdj.get_value(), 0, 1, 0);
 }
 
 void ControlBox::zRotateChanged()
 {
-  m_area->rotateMidAxisAbs(theZAdj.get_value(), 0, 0, 1);
+  m_area_.rotateMidAxisAbs(theZAdj.get_value(), 0, 0, 1);
 }
 
 void ControlBox::resizeScreen(unsigned aWidth, unsigned aHeight)
@@ -2314,37 +2346,37 @@ void ControlBox::resizeScreen(unsigned aWidth, unsigned aHeight)
 void
 ControlBox::xUpBoundChanged()
 {
-  m_area->setXUpBound((unsigned int)theXUpBoundAdj.get_value());
+  m_area_.setXUpBound((unsigned int)theXUpBoundAdj.get_value());
 }
 
 void
 ControlBox::xLowBoundChanged()
 {
-  m_area->setXLowBound((unsigned int)theXLowBoundAdj.get_value());
+  m_area_.setXLowBound((unsigned int)theXLowBoundAdj.get_value());
 }
 
 void
 ControlBox::yUpBoundChanged()
 {
-  m_area->setYUpBound((unsigned int)theYUpBoundAdj.get_value());
+  m_area_.setYUpBound((unsigned int)theYUpBoundAdj.get_value());
 }
 
 void
 ControlBox::yLowBoundChanged()
 {
-  m_area->setYLowBound((unsigned int)theYLowBoundAdj.get_value());
+  m_area_.setYLowBound((unsigned int)theYLowBoundAdj.get_value());
 }
 
 void
 ControlBox::zUpBoundChanged()
 {
-  m_area->setZUpBound((unsigned int)theZUpBoundAdj.get_value());
+  m_area_.setZUpBound((unsigned int)theZUpBoundAdj.get_value());
 }
 
 void
 ControlBox::zLowBoundChanged()
 {
-  m_area->setZLowBound((unsigned int)theZLowBoundAdj.get_value());
+  m_area_.setZLowBound((unsigned int)theZLowBoundAdj.get_value());
 }
 
 void
@@ -2366,27 +2398,27 @@ ControlBox::~ControlBox()
 
 Rulers::Rulers(const Glib::RefPtr<const Gdk::GL::Config>& config,
                const char* aFileName) :
-  m_area(config, aFileName),
+  m_area_(config, aFileName),
   m_hbox(),
-  m_table(1, 1, false),
-  m_control(&m_area, &m_table),
+  m_table(2, 1, false),
+  m_control_(m_area_, m_table),
   isRecord(false)
 {
-  m_area.setControlBox(&m_control);
+  m_area_.setControlBox(&m_control_);
   set_title("Spatiocyte Visualizer");
   //set_reallocate_redraws(true);
   set_border_width(10);
 
   add(m_hbox);
   m_hbox.pack1(m_table, Gtk::PACK_EXPAND_WIDGET, 5);
-  m_hbox.pack2(m_control, Gtk::PACK_SHRINK, 5);
-  m_table.attach(m_area, 1,2,1,2,
+  m_hbox.pack2(m_control_, Gtk::PACK_SHRINK, 5);
+  m_table.attach(m_area_, 0,1,0,1,
 		 Gtk::EXPAND | Gtk::FILL , Gtk::EXPAND | Gtk::FILL, 0, 0);
   show_all_children();
 }
 
 void GLScene::on_size_allocate(Gtk::Allocation& allocation) {
-  m_control->resizeScreen(allocation.get_width(), allocation.get_height());
+  m_control_->resizeScreen(allocation.get_width(), allocation.get_height());
   Gtk::GL::DrawingArea::on_size_allocate(allocation);
 }
 
@@ -2395,175 +2427,175 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
   switch (event->keyval)
     {
     case GDK_x:
-      m_area.rotate(1,1,0,0);
+      m_area_.rotate(1,1,0,0);
       break;
     case GDK_X:
-      m_area.rotate(-1,1,0,0);
+      m_area_.rotate(-1,1,0,0);
       break;
     case GDK_y:
-      m_area.rotate(1,0,1,0);
+      m_area_.rotate(1,0,1,0);
       break;
     case GDK_Y:
-      m_area.rotate(-1,0,1,0);
+      m_area_.rotate(-1,0,1,0);
       break;
     case GDK_Home:
-      m_area.resetView();
+      m_area_.resetView();
       break;
     case GDK_Pause:
-      m_area.pause();
+      m_control_.pause();
       break;
     case GDK_p:
-      m_area.pause();
+      m_control_.pause();
       break;
     case GDK_P:
-      m_area.pause();
+      m_control_.pause();
       break;
     case GDK_Return:
       if(event->state&Gdk::SHIFT_MASK)
         {
-          m_area.setReverse(true);
-          m_area.step();
+          m_area_.setReverse(true);
+          m_area_.step();
         }
       else
         {
-          m_area.setReverse(false);
-          m_area.step();
+          m_area_.setReverse(false);
+          m_area_.step();
         }
       break;
     case GDK_space:
-      m_area.pause();
+      m_control_.play_or_pause();
       break;
     case GDK_F:
-      m_area.translate(0,0,-1);
+      m_area_.translate(0,0,-1);
       break;
     case GDK_f:
-      m_area.zoomIn();
+      m_area_.zoomIn();
       break;
     case GDK_B:
-      m_area.translate(0,0,1);
+      m_area_.translate(0,0,1);
       break;
     case GDK_b:
-      m_area.zoomOut();
+      m_area_.zoomOut();
       break;
     case GDK_Page_Up:
       if(event->state&Gdk::SHIFT_MASK)
         {
-          m_area.translate(0,0,-1);
+          m_area_.translate(0,0,-1);
         }
       else
         {
-          m_area.zoomIn();
+          m_area_.zoomIn();
         }
       break;
     case GDK_Page_Down:
       if(event->state&Gdk::SHIFT_MASK)
         {
-          m_area.translate(0,0,1);
+          m_area_.translate(0,0,1);
         }
       else
         {
-          m_area.zoomOut();
+          m_area_.zoomOut();
         }
       break;
     case GDK_0:
       if(event->state&Gdk::CONTROL_MASK)
         {
-          m_area.resetView();
+          m_area_.resetView();
         }
       break;
     case GDK_equal:
       if(event->state&Gdk::CONTROL_MASK)
         {
-          m_area.zoomIn();
+          m_area_.zoomIn();
         }
       break;
     case GDK_plus:
       if(event->state&Gdk::CONTROL_MASK)
         {
-          m_area.zoomIn();
+          m_area_.zoomIn();
         }
       break;
     case GDK_minus:
       if(event->state&Gdk::CONTROL_MASK)
         {
-          m_area.zoomOut();
+          m_area_.zoomOut();
         }
       break;
     case GDK_Down:
       if(event->state&Gdk::SHIFT_MASK)
         {
-          m_area.translate(0,-1,0);
+          m_area_.translate(0,-1,0);
         }
       else if (event->state&Gdk::CONTROL_MASK)
         {
-          m_area.rotateMidAxis(1,1,0,0);
+          m_area_.rotateMidAxis(1,1,0,0);
         }
       else
         {
-          m_area.setReverse(true);
-          m_area.step();
+          m_area_.setReverse(true);
+          m_area_.step();
         }
       break;
     case GDK_Up:
       if(event->state&Gdk::SHIFT_MASK)
         {
-          m_area.translate(0,1,0);
+          m_area_.translate(0,1,0);
         }
       else if (event->state&Gdk::CONTROL_MASK)
         {
-          m_area.rotateMidAxis(-1,1,0,0);
+          m_area_.rotateMidAxis(-1,1,0,0);
         }
       else
         {
-          m_area.setReverse(false);
-          m_area.step();
+          m_area_.setReverse(false);
+          m_area_.step();
         }
       break;
     case GDK_Right:
       if(event->state&Gdk::SHIFT_MASK)
         {
-          m_area.translate(1,0,0);
+          m_area_.translate(1,0,0);
         }
       else if (event->state&Gdk::CONTROL_MASK)
         {
-          m_area.rotateMidAxis(1,0,1,0);
+          m_area_.rotateMidAxis(1,0,1,0);
         }
       else
         {
-          m_area.setReverse(false);
-          m_area.play();
+          m_area_.setReverse(false);
+          m_control_.play();
         }
       break;
     case GDK_Left:
       if(event->state&Gdk::SHIFT_MASK)
         {
-          m_area.translate(-1,0,0);
+          m_area_.translate(-1,0,0);
         }
       else if (event->state&Gdk::CONTROL_MASK)
         {
-          m_area.rotateMidAxis(-1,0,1,0);
+          m_area_.rotateMidAxis(-1,0,1,0);
         }
       else
         {
-          m_area.setReverse(true);
-          m_area.play();
+          m_area_.setReverse(true);
+          m_control_.play();
         }
       break;
     case GDK_z:
-      m_area.rotateMidAxis(-1,0,0,1);
+      m_area_.rotateMidAxis(-1,0,0,1);
       break;
     case GDK_Z:
-      m_area.rotateMidAxis(1,0,0,1);
+      m_area_.rotateMidAxis(1,0,0,1);
       break;
     case GDK_l:
-      m_area.rotate(1,0,0,1);
+      m_area_.rotate(1,0,0,1);
       break;
     case GDK_r:
-      m_area.rotate(-1,0,0,1);
+      m_area_.rotate(-1,0,0,1);
       break;
     case GDK_s:
       std::cout << "saving frame" << std::endl;
-      m_area.writePng();
+      m_area_.writePng();
       break;
     case GDK_S:
       if(!isRecord)
@@ -2576,7 +2608,7 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
           isRecord = false;
           std::cout << "Stopped saving frames" << std::endl; 
         }
-      m_area.setRecord(isRecord);
+      m_area_.setRecord(isRecord);
       break;
     default:
       return true;

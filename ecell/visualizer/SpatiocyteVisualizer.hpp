@@ -61,7 +61,7 @@ class GLScene;
 class ControlBox : public Gtk::ScrolledWindow
 {
 public:
-  ControlBox(GLScene*, Gtk::Table*);
+  ControlBox(GLScene&, Gtk::Table&);
   virtual ~ControlBox();
   void resizeScreen(unsigned, unsigned);
   void setStep(char* buffer);
@@ -69,6 +69,9 @@ public:
   void setXangle(double);
   void setYangle(double);
   void setZangle(double);
+  void play();
+  void pause();
+  void play_or_pause();
 protected:
   bool isChanging;
   bool on_background_clicked(GdkEventButton*);
@@ -95,11 +98,11 @@ protected:
   void zRotateChanged();
   void zUpBoundChanged();
 protected:
-  GLScene* m_area;
+  GLScene& m_area_;
   Gtk::CheckButton** theButtonList;
   Gtk::Label** theLabelList;
   Gtk::Table m_table;
-  Gtk::Table* m_areaTable;
+  Gtk::Table& m_area_table_;
 private:
   Gdk::Color theBgColor;
   Glib::RefPtr<Gtk::SizeGroup> m_sizeGroup;
@@ -192,6 +195,7 @@ private:
   Gtk::VBox theBoxInFrame;
   Gtk::VBox theBoxInLattice;
   Gtk::VBox theBoxInScreen;
+  Gtk::ToolButton play_button_;
 };
 
 class GLScene : public Gtk::GL::DrawingArea
@@ -242,6 +246,7 @@ public:
   void update() { get_window()->process_updates(false); }
   void zoomIn();
   void zoomOut();
+  bool get_is_playing();
 protected:
   bool (GLScene::*theLoadCoordsFunction)(std::streampos&);
   bool loadCoords(std::streampos&);
@@ -276,7 +281,7 @@ protected:
   void timeout_remove();
 protected:
   Color* theSpeciesColor;
-  ControlBox* m_control;
+  ControlBox* m_control_;
   GLfloat Aspect;
   GLfloat FieldOfView;
   GLfloat Near;
@@ -307,8 +312,8 @@ protected:
   bool isChanged;
   bool isShownSurface;
   bool isInvertBound;
-  bool m_Run;
-  bool m_RunReverse;
+  bool is_playing_;
+  bool is_playing_reverse_;
   bool show3DMolecule;
   bool showSurface;
   bool showTime;
@@ -386,12 +391,12 @@ protected:
   //signal handlers:
   //Gtk::DrawingArea m_area;
   virtual bool on_key_press_event(GdkEventKey* event);
-  GLScene m_area;
+  GLScene m_area_;
   Gtk::HPaned m_hbox;
   Gtk::HRuler m_hrule;
   Gtk::Table m_table;
   Gtk::VRuler m_vrule;
-  ControlBox m_control;
+  ControlBox m_control_;
   bool isRecord;
   static const int XSIZE = 250, YSIZE = 250;
 };
