@@ -64,8 +64,8 @@ public:
   ControlBox(GLScene&, Gtk::Table&);
   virtual ~ControlBox();
   void resizeScreen(unsigned, unsigned);
-  void setStep(char* buffer);
-  void setTime(char* buffer);
+  void set_frame_cnt(int);
+  void setTime(double);
   void setXangle(double);
   void setYangle(double);
   void setZangle(double);
@@ -97,6 +97,8 @@ protected:
   void zLowBoundChanged();
   void zRotateChanged();
   void zUpBoundChanged();
+  void progress_changed();
+  void progress_adjust();
 protected:
   GLScene& m_area_;
   Gtk::CheckButton** theButtonList;
@@ -121,11 +123,10 @@ private:
   Gtk::Button theResetDepthButton;
   Gtk::Button theResetRotButton;
   Gtk::CheckButton theCheck3DMolecule;
-  //Gtk::CheckButton theCheckFix;
   Gtk::CheckButton theCheckInvertBound;
   Gtk::CheckButton theCheckShowSurface;
   Gtk::CheckButton theCheckShowTime;
-  Gtk::Entry m_steps;
+  Gtk::Entry frame_cnt_;
   Gtk::Entry m_time;
   Gtk::Entry m_width;
   Gtk::Entry m_height;
@@ -196,6 +197,10 @@ private:
   Gtk::VBox theBoxInLattice;
   Gtk::VBox theBoxInScreen;
   Gtk::ToolButton play_button_;
+  Gtk::HBox progress_box_;
+  Gtk::Adjustment progress_adj_;
+  Gtk::SpinButton progress_spin_;
+  Gtk::HScale progress_bar_;
 };
 
 class GLScene : public Gtk::GL::DrawingArea
@@ -230,7 +235,7 @@ public:
   void setBackgroundColor(Color);
   void setControlBox(ControlBox* aControl);
   void setRecord(bool isRecord);
-  void setReverse(bool isReverse);
+  void set_is_forward(bool is_forward);
   void setShowSurface(bool);
   void setShowTime(bool);
   void setSpeciesColor(unsigned int id, Color);
@@ -246,8 +251,12 @@ public:
   void update() { get_window()->process_updates(false); }
   void zoomIn();
   void zoomOut();
+  void set_frame_cnt(int);
+  unsigned get_frame_size();
   bool get_is_playing();
 protected:
+  void init_frames();
+  void inc_dec_frame_cnt();
   bool (GLScene::*theLoadCoordsFunction)(std::streampos&);
   bool loadCoords(std::streampos&);
   bool loadMeanCoords(std::streampos&);
@@ -313,7 +322,7 @@ protected:
   bool isShownSurface;
   bool isInvertBound;
   bool is_playing_;
-  bool is_playing_reverse_;
+  bool is_forward_;
   bool show3DMolecule;
   bool showSurface;
   bool showTime;
@@ -332,7 +341,7 @@ protected:
   double zAngle;
   int m_FontHeight;
   int m_FontWidth;
-  int m_stepCnt;
+  int frame_cnt_;
   int theGLIndex;
   sigc::connection m_ConnectionTimeout;
   std::ifstream theFile;
@@ -342,7 +351,7 @@ protected:
   std::size_t pixel_extent_width;
   std::size_t tex_height;
   std::size_t tex_width;
-  std::vector<std::streampos> theStreamPosList;
+  std::vector<std::streampos> frames_;
   std::vector<unsigned int> thePolySpeciesList;
   unsigned int theColSize;
   unsigned int theCutCol;

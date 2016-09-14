@@ -60,7 +60,7 @@
 #define PI 3.1415926535897932384626433832795028841971693993751
 #define MAX_COLORS 20
 #define PNG_NUM_MAX 9999999
-const unsigned int GLScene::TIMEOUT_INTERVAL = 10;
+const unsigned int GLScene::TIMEOUT_INTERVAL = 20;
 const unsigned int SCREEN_WIDTH = 460;
 const unsigned int SCREEN_HEIGHT = 360;
 
@@ -126,7 +126,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   isInvertBound(false),
   isShownSurface(false),
   is_playing_(false),
-  is_playing_reverse_(false),
+  is_forward_(true),
   show3DMolecule(false),
   showSurface(false),
   showTime(true),
@@ -135,7 +135,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   xAngle(0),
   yAngle(0),
   zAngle(0),
-  m_stepCnt(-1),
+  frame_cnt_(0),
   font_size(24),
   theMeanPointSize(0),
   thePngNumber(1),
@@ -358,8 +358,6 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   std::cout << "row:" << theRowSize << " col:" << theColSize  <<
     " layer:" << theLayerSize << " marker:" <<
     theLogMarker << std::endl << std::flush;
-  std::streampos aStreamPos;
-  loadCoords(aStreamPos);
   theOriRow = 0;
   theOriLayer = 0;
   theRadius = 0.5;
@@ -396,6 +394,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
         }
       break;
     }
+  init_frames();
   ViewSize = 1.05*sqrt((theRealColSize)*(theRealColSize)+
                        (theRealLayerSize)*(theRealLayerSize)+
                        (theRealRowSize)*(theRealRowSize));
@@ -412,6 +411,26 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   Aspect=1.0;
   set_size_request(theScreenWidth, theScreenHeight);
   std::cout << "done" << std::endl;
+}
+
+unsigned GLScene::get_frame_size() {
+  return frames_.size();
+}
+
+void GLScene::init_frames() {
+  std::streampos aStreamPos;
+  frames_.push_back(theFile.tellg());
+  loadCoords(aStreamPos);
+  int curr_frame(frame_cnt_);
+  theFile.seekg(frames_[++frame_cnt_]);
+  std::streampos aCurrStreamPos;
+  while((this->*theLoadCoordsFunction)(aCurrStreamPos)) { 
+    ++frame_cnt_;
+  }
+  theFile.clear();
+  frame_cnt_ = curr_frame;
+  theFile.seekg(frames_[1]);
+  loadCoords(aStreamPos);
 }
 
 GLScene::~GLScene()
@@ -542,9 +561,9 @@ void GLScene::setControlBox(ControlBox* aControl)
   m_control_ = aControl;
 }
 
-void GLScene::setReverse(bool isReverse)
+void GLScene::set_is_forward(bool is_forward)
 {
-  is_playing_reverse_ = isReverse;
+  is_forward_ = is_forward;
 }
 
 Color GLScene::getSpeciesColor(unsigned int id)
@@ -648,6 +667,7 @@ void GLScene::on_realize()
   glEndList();
   */
   glwindow->gl_end();
+  step();
 }
 
 
@@ -948,9 +968,9 @@ bool GLScene::on_configure_event(GdkEventConfigure* event)
   return true;
 }
 
-bool GLScene::loadCoords(std::streampos& aStreamPos)
+bool GLScene::loadCoords(std::streampos& begin_pos)
 {
-  aStreamPos = theFile.tellg();
+  begin_pos = theFile.tellg();
   if(theFile.read((char*) (&theCurrentTime), sizeof(theCurrentTime)).fail())
     {
       return false;
@@ -1041,10 +1061,9 @@ bool GLScene::loadCoords(std::streampos& aStreamPos)
           return false;
         }
     }
-  ++m_stepCnt;
-  if(unsigned(m_stepCnt) > theStreamPosList.size())
+  if(frame_cnt_ == int(frames_.size())-1)
     {
-      theStreamPosList.push_back(aStreamPos);
+      frames_.push_back(theFile.tellg());
     }
   return true;
 }
@@ -1092,10 +1111,9 @@ bool GLScene::loadMeanCoords(std::streampos& aStreamPos)
           return false;
         }
     }
-  ++m_stepCnt;
-  if(unsigned(m_stepCnt) > theStreamPosList.size())
+  if(frame_cnt_ == int(frames_.size())-1)
     {
-      theStreamPosList.push_back(aStreamPos);
+      frames_.push_back(theFile.tellg());
     }
   return true;
 }
@@ -1564,34 +1582,25 @@ void GLScene::zoomOut()
   invalidate();
 }
 
+void GLScene::set_frame_cnt(int frame_cnt) {
+  if(frame_cnt != frame_cnt_) {
+    frame_cnt_ = frame_cnt;
+    on_timeout();
+  }
+}
+
 bool GLScene::on_timeout()
 {
-  if(is_playing_reverse_)
-    {
-      if(m_stepCnt > 1)
-        {
-          m_stepCnt -= 2;
-        }
-      else
-        {
-          m_stepCnt = 0;
-        }
-      if(theStreamPosList.size())
-        {
-          theFile.seekg(theStreamPosList[m_stepCnt]);
-        }
-    }
+  inc_dec_frame_cnt();
+  theFile.seekg(frames_[frame_cnt_]);
   std::streampos aCurrStreamPos;
-  if(!(this->*theLoadCoordsFunction)(aCurrStreamPos))
-    {
-      theFile.clear();
-      theFile.seekg(aCurrStreamPos);
-    }
-  char buffer[50];
-  sprintf(buffer, "%d", m_stepCnt-1);
-  m_control_->setStep(buffer);
-  sprintf(buffer, "%f", theCurrentTime);
-  m_control_->setTime(buffer);
+  if(!(this->*theLoadCoordsFunction)(aCurrStreamPos)) { 
+    theFile.clear();
+    theFile.seekg(aCurrStreamPos);
+    frame_cnt_ = std::max(frame_cnt_-1, 1);
+  }
+  m_control_->set_frame_cnt(frame_cnt_);
+  m_control_->setTime(theCurrentTime);
   invalidate();
   if(startRecord)
     {
@@ -1603,13 +1612,21 @@ bool GLScene::on_timeout()
   return true;
 }
 
+void GLScene::inc_dec_frame_cnt() {
+  if(is_forward_) {
+    frame_cnt_ = std::min(frame_cnt_+1, int(frames_.size()));
+  }
+  else {
+    frame_cnt_ = std::max(frame_cnt_-1, 1);
+  }
+}
+
 void GLScene::step()
 {
-  if(is_playing_)
-    {
-      is_playing_ = false;
-      timeout_remove();
-    }
+  if(is_playing_) {
+    is_playing_ = false;
+    timeout_remove();
+  }
   on_timeout();
 }
 
@@ -1628,29 +1645,28 @@ void GLScene::timeout_remove()
 
 bool GLScene::on_map_event(GdkEventAny* event)
 {
-  if (is_playing_)
+  if(is_playing_) {
     timeout_add();
-
+  }
   return true;
 }
 
 bool GLScene::on_unmap_event(GdkEventAny* event)
 {
   timeout_remove();
-
   return true;
 }
 
 bool GLScene::on_visibility_notify_event(GdkEventVisibility* event)
 {
-  if (is_playing_)
-    {
-      if (event->state == GDK_VISIBILITY_FULLY_OBSCURED)
-        timeout_remove();
-      else
-        timeout_add();
+  if(is_playing_) {
+    if (event->state == GDK_VISIBILITY_FULLY_OBSCURED) {
+      timeout_remove();
     }
-
+    else {
+      timeout_add();
+    }
+  }
   return true;
 }
 
@@ -1766,15 +1782,13 @@ bool GLScene::get_is_playing() {
 void GLScene::pause()
 {
   is_playing_ = !is_playing_;
-  if(is_playing_)
-    {
-      timeout_add();
-    }
-  else
-    {
-      timeout_remove();
-      invalidate();
-    }
+  if(is_playing_) {
+    timeout_add();
+  }
+  else {
+    timeout_remove();
+    invalidate();
+  }
 }
 
 void GLScene::play()
@@ -1842,14 +1856,25 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   theZLowBoundSpin( theZLowBoundAdj, 0, 0  ),
   theZSpin( theZAdj, 0, 0  ),
   theZUpBoundSpin( theZUpBoundAdj, 0, 0  ),
-  theButtonRecord( "Record Frames" )
+  theButtonRecord( "Record Frames" ),
+  progress_adj_(0, 1, std::max(1, int(m_area_.get_frame_size()-2)), 1, 0, 0),
+  progress_spin_( progress_adj_, 0, 0  ),
+  progress_bar_(progress_adj_)
 {
-  play_button_.show();
+  m_area_table_.attach(progress_box_, 0, 1, 1, 2, Gtk::SHRINK | Gtk::FILL,
+                       Gtk::SHRINK | Gtk::FILL, 0, 0);
+  progress_box_.pack_start(play_button_, false, false, 2);
   play_button_.set_stock_id(Gtk::Stock::MEDIA_PLAY);
   play_button_.signal_clicked().connect( sigc::mem_fun(*this,
                             &ControlBox::play_or_pause) );
-  m_area_table_.attach(play_button_, 0, 1, 1, 2, Gtk::SHRINK | Gtk::FILL,
-                       Gtk::SHRINK | Gtk::FILL, 0, 0);
+
+  progress_bar_.set_draw_value(false);
+  progress_box_.pack_start(progress_bar_);
+  progress_spin_.set_width_chars(4);
+  progress_spin_.set_has_frame(false);
+  progress_box_.pack_start(progress_spin_, false, false, 2);
+  progress_adj_.signal_value_changed().connect( sigc::mem_fun(*this, 
+                           &ControlBox::progress_changed ) );
 
 
   set_border_width(2);
@@ -2086,7 +2111,7 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   m_sizeGroup = Gtk::SizeGroup::create(Gtk::SIZE_GROUP_HORIZONTAL);
   m_sizeGroup->add_widget(m_stepLabel);
   m_stepBox.pack_start(m_stepLabel, Gtk::PACK_SHRINK);
-  m_stepBox.pack_start(m_steps, Gtk::PACK_SHRINK);
+  m_stepBox.pack_start(frame_cnt_, Gtk::PACK_SHRINK);
   m_table.attach(m_timeBox, 0, 1, 1, 2, Gtk::FILL,
                  Gtk::SHRINK | Gtk::FILL, 0, 0 );
 
@@ -2343,6 +2368,11 @@ void ControlBox::resizeScreen(unsigned aWidth, unsigned aHeight)
   m_height.set_text(h.str().c_str());
 }
 
+void ControlBox::progress_changed()
+{
+  m_area_.set_frame_cnt(progress_adj_.get_value());
+}
+
 void
 ControlBox::xUpBoundChanged()
 {
@@ -2380,15 +2410,25 @@ ControlBox::zLowBoundChanged()
 }
 
 void
-ControlBox::setStep(char* buffer)
+ControlBox::set_frame_cnt(int frame_cnt)
 {
-  m_steps.set_text(buffer);
+  if(frame_cnt > progress_adj_.get_upper()) {
+    progress_adj_.set_upper(frame_cnt);
+  }
+  if(frame_cnt != progress_adj_.get_value()) { 
+    progress_adj_.set_value(frame_cnt);
+  }
+  std::stringstream s;
+  s << frame_cnt;
+  frame_cnt_.set_text(s.str().c_str());
 }
 
 void
-ControlBox::setTime(char* buffer)
+ControlBox::setTime(double time)
 {
-  m_time.set_text(buffer);
+  std::stringstream s;
+  s << time;
+  m_time.set_text(s.str().c_str());
 }
 
 ControlBox::~ControlBox()
@@ -2400,7 +2440,7 @@ Rulers::Rulers(const Glib::RefPtr<const Gdk::GL::Config>& config,
                const char* aFileName) :
   m_area_(config, aFileName),
   m_hbox(),
-  m_table(2, 1, false),
+  m_table(3, 1, false),
   m_control_(m_area_, m_table),
   isRecord(false)
 {
@@ -2453,12 +2493,12 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
     case GDK_Return:
       if(event->state&Gdk::SHIFT_MASK)
         {
-          m_area_.setReverse(true);
+          m_area_.set_is_forward(false);
           m_area_.step();
         }
       else
         {
-          m_area_.setReverse(false);
+          m_area_.set_is_forward(true);
           m_area_.step();
         }
       break;
@@ -2532,7 +2572,7 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
         }
       else
         {
-          m_area_.setReverse(true);
+          m_area_.set_is_forward(false);
           m_area_.step();
         }
       break;
@@ -2547,7 +2587,7 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
         }
       else
         {
-          m_area_.setReverse(false);
+          m_area_.set_is_forward(true);
           m_area_.step();
         }
       break;
@@ -2562,7 +2602,7 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
         }
       else
         {
-          m_area_.setReverse(false);
+          m_area_.set_is_forward(true);
           m_control_.play();
         }
       break;
@@ -2577,7 +2617,7 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
         }
       else
         {
-          m_area_.setReverse(true);
+          m_area_.set_is_forward(false);
           m_control_.play();
         }
       break;
