@@ -423,14 +423,13 @@ void GLScene::init_frames() {
   loadCoords(aStreamPos);
   int curr_frame(frame_cnt_);
   theFile.seekg(frames_[++frame_cnt_]);
-  std::streampos aCurrStreamPos;
-  while((this->*theLoadCoordsFunction)(aCurrStreamPos)) { 
+  while((this->*theLoadCoordsFunction)(aStreamPos)) { 
     ++frame_cnt_;
   }
   theFile.clear();
   frame_cnt_ = curr_frame;
   theFile.seekg(frames_[1]);
-  loadCoords(aStreamPos);
+  (this->*theLoadCoordsFunction)(aStreamPos);
 }
 
 GLScene::~GLScene()
@@ -1068,9 +1067,9 @@ bool GLScene::loadCoords(std::streampos& begin_pos)
   return true;
 }
 
-bool GLScene::loadMeanCoords(std::streampos& aStreamPos)
+bool GLScene::loadMeanCoords(std::streampos& begin_pos)
 {
-  aStreamPos = theFile.tellg();
+  begin_pos = theFile.tellg();
   if(theFile.read((char*) (&theCurrentTime), sizeof(theCurrentTime)).fail())
     {
       return false;
