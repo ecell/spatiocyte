@@ -135,7 +135,6 @@ private:
   Gtk::Frame theFrameRotAdj;
   Gtk::Frame theFrameScreen;
   Gtk::HBox m_rightBox;
-  Gtk::HBox m_stepBox;
   Gtk::HBox m_timeBox;
   Gtk::HBox the3DMoleculeBox;
   Gtk::HBox theBoxBoundFixReset;
@@ -163,7 +162,7 @@ private:
   Gtk::HScale theZScale;
   Gtk::HScale theZUpBoundScale;
   Gtk::Label m_bgColor;
-  Gtk::Label m_stepLabel;
+  Gtk::Label frame_cnt_label_;
   Gtk::Label m_timeLabel;
   Gtk::Label theDepthLabel;
   Gtk::Label theHeightLabel;
@@ -254,7 +253,10 @@ public:
   void set_frame_cnt(int);
   unsigned get_frame_size();
   bool get_is_playing();
-protected:
+protected: 
+  void set_position(double x, double y, double& px, double& py, double& pz); 
+  bool get_is_event_masked(GdkEventType* event, int mask);
+  bool get_is_button(GdkEventType* event, int button, int mask);
   void init_frames();
   void inc_dec_frame_cnt();
   bool (GLScene::*theLoadCoordsFunction)(std::streampos&);
@@ -267,7 +269,12 @@ protected:
   virtual bool on_unmap_event(GdkEventAny* event);
   virtual bool on_visibility_notify_event(GdkEventVisibility* event);
   virtual void on_realize();
-  virtual void on_size_allocate (Gtk::Allocation& allocation);
+  virtual void on_size_allocate(Gtk::Allocation& allocation);
+  virtual bool on_button_press_event(GdkEventButton* button_event);
+  virtual bool on_button_release_event(GdkEventButton* release_event);
+  virtual bool on_scroll_event(GdkEventScroll* scroll_event);
+  virtual bool on_motion_notify_event(GdkEventMotion* motion_event);
+  virtual bool on_key_press_event(GdkEventKey* key_event);
   void (GLScene::*thePlot3DFunction)();
   void (GLScene::*thePlotFunction)();
   void drawBox(GLfloat xlo, GLfloat xhi, GLfloat ylo, GLfloat yhi, GLfloat zlo,
@@ -327,6 +334,9 @@ protected:
   bool showSurface;
   bool showTime;
   bool startRecord;
+  bool is_mouse_rotate_;
+  bool is_mouse_zoom_;
+  bool is_mouse_pan_;
   char** theSpeciesNameList;
   double *theRadii;
   double theCurrentTime;
@@ -339,6 +349,13 @@ protected:
   double xAngle;
   double yAngle;
   double zAngle;
+  double mouse_drag_pos_x_;
+  double mouse_drag_pos_y_;
+  double mouse_drag_pos_z_;
+  double mouse_x_;
+  double mouse_y_;
+  double z_near_;
+  double z_far_;
   int m_FontHeight;
   int m_FontWidth;
   int frame_cnt_;

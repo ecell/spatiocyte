@@ -140,9 +140,31 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   theMeanPointSize(0),
   thePngNumber(1),
   theScreenHeight(SCREEN_HEIGHT),
-  theScreenWidth(SCREEN_WIDTH)
+  theScreenWidth(SCREEN_WIDTH),
+  is_mouse_rotate_(false),
+  is_mouse_zoom_(false),
+  is_mouse_pan_(false),
+  mouse_drag_pos_x_(0),
+  mouse_drag_pos_y_(0),
+  mouse_drag_pos_z_(0),
+  mouse_x_(0),
+  mouse_y_(0),
+  z_near_(-10),
+  z_far_(10)
 {
-  add_events(Gdk::VISIBILITY_NOTIFY_MASK); 
+  add_events(Gdk::VISIBILITY_NOTIFY_MASK | Gdk::BUTTON_PRESS_MASK |
+             Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK | 
+             Gdk::POINTER_MOTION_HINT_MASK | Gdk::KEY_PRESS_MASK);
+    /*
+             GDK_EXPOSURE_MASK|
+    GDK_POINTER_MOTION_MASK|GDK_BUTTON_MOTION_MASK|
+    GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK|
+    GDK_KEY_PRESS_MASK|GDK_KEY_RELEASE_MASK|
+    GDK_ENTER_NOTIFY_MASK|GDK_LEAVE_NOTIFY_MASK|
+    GDK_FOCUS_CHANGE_MASK|GDK_STRUCTURE_MASK);
+    */
+
+
   std::ostringstream aFileName;
   aFileName << aBaseName << std::ends;
   theFile.open( aFileName.str().c_str(), std::ios::binary );
@@ -432,6 +454,80 @@ void GLScene::init_frames() {
   (this->*theLoadCoordsFunction)(aStreamPos);
 }
 
+bool GLScene::on_button_press_event(GdkEventButton* event) {
+  //return on_button_release_event(event);
+  return true;
+}
+
+bool GLScene::get_is_event_masked(GdkEventType* event, int mask) {
+  //return (event->state & mask) == mask;
+  return true;
+} 
+
+bool GLScene::get_is_button(GdkEventType* event, int button, int mask) {
+  /*
+  if(event->button == button) {
+    return (event->type == GDK_BUTTON_PRESS);
+  }
+  return get_is_event_masked(event, mask); 
+  */
+  return true;
+}
+
+void GLScene::set_position(double x, double y, double& px, double& py,
+                           double& pz) {
+  /*
+  GLint viewport[4];
+  glGetIntegerv(GL_VIEWPORT, viewport);
+  px = float(x-viewport[0])/float(viewport[2]);
+  py = float(y-viewport[1])/float(viewport[3]);      
+  px = _left + px*(_right-_left);
+  py = _top  + py*(_bottom-_top);
+  pz = Near;
+  */
+}
+
+bool GLScene::on_button_release_event(GdkEventButton* event) {
+  /*
+  bool left(get_is_button(event, 1, GDK_BUTTON1_MASK));
+  bool middle(get_is_button(event, 2, GDK_BUTTON2_MASK));
+  bool right(get_is_button(event, 3, GDK_BUTTON3_MASK));
+  is_mouse_rotate_ = left and not (middle or right);
+  is_mouse_zoom_ = middle or (left and right);
+  is_mouse_pan_ = right and get_is_event_masked(event, GDK_CONTROL_MASK);
+  double x(event.x);
+  mouse_x = x;
+  double y(event.y);
+  mouse_y = y;
+  set_position(x, y, mouse_drag_pos_x_, mouse_drag_pos_y_, mouse_drag_pos_z_);
+  queue_draw();
+  */
+  return true;
+}
+
+bool GLScene::on_scroll_event(GdkEventScroll* scroll_event) {
+  double s(0); 
+  if(scroll_event->direction == GDK_SCROLL_UP) {
+    s = 4.0;
+  }
+  else {
+    s = -4.0;
+  }
+  s = exp(s*0.01); 
+  glTranslatef(ViewMidx, ViewMidy, ViewMidz);
+  glScalef(s,s,s);
+  glTranslatef(-ViewMidx, -ViewMidy, -ViewMidz);
+  queue_draw();
+}
+
+bool GLScene::on_motion_notify_event(GdkEventMotion* motion_event) {
+
+}
+
+bool GLScene::on_key_press_event(GdkEventKey* key_event) {
+
+}
+
 GLScene::~GLScene()
 {
 }
@@ -624,7 +720,31 @@ void GLScene::on_realize()
     }
   else
     {
+      GLfloat LightAmbient[]= {0.,0.,0.,1.}; 
+      GLfloat LightDiffuse[]= {1.,1.,1.,1.};
+      GLfloat LightSpecular[]= {0.7,0.7,0.7,1.};
+      GLfloat LightPosition[]= {1.,1.,1.,0.};
+      GLfloat MaterialAmbient[]= {.7,.7,.7,1.}; 
+      GLfloat MaterialDiffuse[]= {.8,.8,.8,1.};
+      GLfloat MaterialSpecular[]= {1.,1.,1.,1.};
+      GLfloat Shininess(100.0);
       //for 3D molecules:
+      glLightfv(GL_LIGHT0,GL_AMBIENT, LightAmbient);
+      glLightfv(GL_LIGHT0,GL_DIFFUSE, LightDiffuse);
+      glLightfv(GL_LIGHT0,GL_SPECULAR, LightSpecular);
+      glLightfv(GL_LIGHT0,GL_POSITION, LightPosition);
+      glMaterialfv(GL_FRONT,GL_AMBIENT, MaterialAmbient);
+      glMaterialfv(GL_FRONT,GL_DIFFUSE, MaterialDiffuse);
+      glMaterialfv(GL_FRONT,GL_SPECULAR, MaterialSpecular);
+      glMaterialf(GL_FRONT,GL_SHININESS, Shininess);
+      glEnable(GL_LIGHTING);
+      glEnable(GL_LIGHT0);
+      glDepthFunc(GL_LESS);
+      glEnable(GL_DEPTH_TEST);
+      glEnable(GL_NORMALIZE);
+      glEnable(GL_COLOR_MATERIAL);
+
+      /*
       glEnable(GL_LIGHTING);
       GLfloat LightAmbient[]= { 0.8, 0.8, 0.8, 1 }; 
       GLfloat LightDiffuse[]= { 1, 1, 1, 1 };
@@ -964,6 +1084,20 @@ bool GLScene::on_configure_event(GdkEventConfigure* event)
   glTranslatef(0,0,nearold-Near);
   glMultMatrixf(m);
   glwindow->gl_end();
+
+  /*
+  GLfloat width(get_width());
+  GLfloat height(get_height());
+  glViewport(0, 0, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
+  top_ = 1.0;
+  bottom_ = -1.0;
+  left_   = -float(width)/float(height);
+  right_  = -left_;
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(left_, right_, bottom_, top_, z_near_, z_far_);
+  glwindow->gl_end();
+  */
   return true;
 }
 
@@ -1583,7 +1717,13 @@ void GLScene::zoomOut()
 
 void GLScene::set_frame_cnt(int frame_cnt) {
   if(frame_cnt != frame_cnt_) {
-    frame_cnt_ = frame_cnt;
+    step();
+    if(is_forward_) {
+      frame_cnt_ = std::max(frame_cnt-1, 0);
+    }
+    else {
+      frame_cnt_ = std::min(frame_cnt+1, int(frames_.size())+1);
+    }
     on_timeout();
   }
 }
@@ -1871,6 +2011,8 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   progress_box_.pack_start(progress_bar_);
   progress_spin_.set_width_chars(4);
   progress_spin_.set_has_frame(false);
+  frame_cnt_label_.set_text("Frame:");
+  progress_box_.pack_start(frame_cnt_label_, false, false, 2);
   progress_box_.pack_start(progress_spin_, false, false, 2);
   progress_adj_.signal_value_changed().connect( sigc::mem_fun(*this, 
                            &ControlBox::progress_changed ) );
@@ -1882,8 +2024,6 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   add(m_rightBox);
   m_table.set_row_spacings(1);
   m_table.set_col_spacings(2);
-  m_table.attach(m_stepBox, 0, 1, 0, 1, Gtk::FILL,
-                 Gtk::SHRINK | Gtk::FILL, 0, 0 );
   m_rightBox.pack_start(m_table, Gtk::PACK_SHRINK);
   //Create a table on the right that holds the control.
   m_rightBox.pack_start(theBoxCtrl, Gtk::PACK_SHRINK); 
@@ -2106,12 +2246,8 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
                            &ControlBox::zRotateChanged ) );
 
   // Time and step counts
-  m_stepLabel.set_text("Step:");
   m_sizeGroup = Gtk::SizeGroup::create(Gtk::SIZE_GROUP_HORIZONTAL);
-  m_sizeGroup->add_widget(m_stepLabel);
-  m_stepBox.pack_start(m_stepLabel, Gtk::PACK_SHRINK);
-  m_stepBox.pack_start(frame_cnt_, Gtk::PACK_SHRINK);
-  m_table.attach(m_timeBox, 0, 1, 1, 2, Gtk::FILL,
+  m_table.attach(m_timeBox, 0, 1, 0, 1, Gtk::FILL,
                  Gtk::SHRINK | Gtk::FILL, 0, 0 );
 
   m_bgColor.set_text("Background Color");
@@ -2121,7 +2257,7 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
     sigc::mem_fun(*this, &ControlBox::on_background_clicked));
   eventBox->add(m_bgColor);
   eventBox->set_tooltip_text("Click to change background color");
-  m_table.attach(*eventBox, 0, 1, 2, 3, Gtk::FILL,
+  m_table.attach(*eventBox, 0, 1, 1, 2, Gtk::FILL,
                  Gtk::SHRINK | Gtk::FILL, 0, 0 );
   theBgColor.set_rgb(0, 0, 0);
 
@@ -2156,7 +2292,7 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
       theButtonList[i]->set_active(m_area_.getSpeciesVisibility(i));
       aHBox->pack_start(*theButtonList[i], false, false, 2);
       aHBox->pack_start(*m_EventBox, false, false, 2);
-      m_table.attach(*aHBox, 0, 1, i+3, i+4, Gtk::FILL,
+      m_table.attach(*aHBox, 0, 1, i+2, i+3, Gtk::FILL,
                      Gtk::SHRINK | Gtk::FILL, 0, 0 );
     }
   std::cout << "theSpeciesSize:" << theSpeciesSize << std::endl;
@@ -2417,9 +2553,6 @@ ControlBox::set_frame_cnt(int frame_cnt)
   if(frame_cnt != progress_adj_.get_value()) { 
     progress_adj_.set_value(frame_cnt);
   }
-  std::stringstream s;
-  s << frame_cnt;
-  frame_cnt_.set_text(s.str().c_str());
 }
 
 void
