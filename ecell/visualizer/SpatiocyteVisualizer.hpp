@@ -71,6 +71,7 @@ public:
   void setZangle(double);
   void play();
   void pause();
+  void step();
   void play_or_pause();
 protected:
   bool isChanging;
@@ -252,6 +253,7 @@ public:
   void zoomOut();
   void set_frame_cnt(int);
   unsigned get_frame_size();
+  int get_frame_cnt();
   bool get_is_playing();
 protected: 
   void set_position(double x, double y, double& px, double& py, double& pz); 

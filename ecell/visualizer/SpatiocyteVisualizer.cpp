@@ -1715,17 +1715,22 @@ void GLScene::zoomOut()
   invalidate();
 }
 
+int GLScene::get_frame_cnt() {
+  return frame_cnt_;
+}
+
 void GLScene::set_frame_cnt(int frame_cnt) {
-  if(frame_cnt != frame_cnt_) {
-    step();
-    if(is_forward_) {
-      frame_cnt_ = std::max(frame_cnt-1, 0);
-    }
-    else {
-      frame_cnt_ = std::min(frame_cnt+1, int(frames_.size())+1);
-    }
-    on_timeout();
+  if(is_playing_) {
+    is_playing_ = false;
+    timeout_remove();
   }
+  if(is_forward_) {
+    frame_cnt_ = std::max(frame_cnt-1, 0);
+  }
+  else {
+    frame_cnt_ = std::min(frame_cnt+1, int(frames_.size())+1);
+  }
+  on_timeout();
 }
 
 bool GLScene::on_timeout()
@@ -2503,9 +2508,18 @@ void ControlBox::resizeScreen(unsigned aWidth, unsigned aHeight)
   m_height.set_text(h.str().c_str());
 }
 
+void ControlBox::step()
+{
+  play_button_.set_stock_id(Gtk::Stock::MEDIA_PLAY);
+  m_area_.step();
+}
+
 void ControlBox::progress_changed()
 {
-  m_area_.set_frame_cnt(progress_adj_.get_value());
+  if(m_area_.get_frame_cnt() != progress_adj_.get_value()) {
+    play_button_.set_stock_id(Gtk::Stock::MEDIA_PLAY);
+    m_area_.set_frame_cnt(progress_adj_.get_value());
+  }
 }
 
 void
@@ -2626,12 +2640,12 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
       if(event->state&Gdk::SHIFT_MASK)
         {
           m_area_.set_is_forward(false);
-          m_area_.step();
+          m_control_.step();
         }
       else
         {
           m_area_.set_is_forward(true);
-          m_area_.step();
+          m_control_.step();
         }
       break;
     case GDK_space:
@@ -2705,7 +2719,7 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
       else
         {
           m_area_.set_is_forward(false);
-          m_area_.step();
+          m_control_.step();
         }
       break;
     case GDK_Up:
@@ -2720,7 +2734,7 @@ bool Rulers::on_key_press_event(GdkEventKey* event)
       else
         {
           m_area_.set_is_forward(true);
-          m_area_.step();
+          m_control_.step();
         }
       break;
     case GDK_Right:
