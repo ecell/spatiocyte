@@ -7,9 +7,9 @@ Play backward: Left arrow
 Step forward: Up arrow or Enter
 Step backward: Down arrow or Shift+Enter
 Pause/Play: Space
-Zoom in:	f or Ctrl++ or Ctrl+= or PageUp
-Zoom ou:	b or Ctrl+- or PageDown
-Reset view:	Ctrl+0 or Home
+Zoom in: f or Ctrl++ or Ctrl+= or PageUp
+Zoom ou: b or Ctrl+- or PageDown
+Reset view: Ctrl+0 or Home
 Rotate along x-axis clockwise: Ctrl+Up Arrow
 Rotate along x-axis counter-clockwise: Ctrl+Down Arrow
 Rotate along y-axis clockwise: Ctrl+Right Arrow
