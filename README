@@ -1,1 +1,26 @@
 This is the Spatiocyte lattice-based particle simulator package. You can find the installation instructions in INSTALL
+
+Spatiocyte Visualizer keyboard shortcuts
+========================================
+Play forward: Right arrow
+Play backward: Left arrow
+Step forward: Up arrow or Enter
+Step backward: Down arrow or Shift+Enter
+Pause/Play: Space
+Zoom in:	f or Ctrl++ or Ctrl+= or PageUp
+Zoom ou:	b or Ctrl+- or PageDown
+Reset view:	Ctrl+0 or Home
+Rotate along x-axis clockwise: Ctrl+Up Arrow
+Rotate along x-axis counter-clockwise: Ctrl+Down Arrow
+Rotate along y-axis clockwise: Ctrl+Right Arrow
+Rotate along y-axis counter-clockwise: Ctrl+Left Arrow
+Rotate along z-axis clockwise: z
+Rotate along z-axis counter-clockwise: Z
+Translate up: Shift+Up Arrow
+Translate down: Shift+Down Arrow
+Translate right: Shift+Right Arrow
+Translate left: Shift+Left Arrow
+Translate front: F
+Translate back: B
+Save current frame as a PNG image: s
+Start/Stop recording PNG frames: S
