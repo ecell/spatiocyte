@@ -138,6 +138,7 @@ public:
   void addInterruptedProcess(SpatiocyteProcess*);
   static Variable* getVariable(System*, String const&);
   SpatiocyteProcess* getCurrentProcess();
+  Comp* getRootComp();
 private:
   void addSurfaceAdjoins(const unsigned, const Comp*);
   void interruptProcesses(const double);
@@ -199,7 +200,8 @@ private:
   void concatenateCols(Voxel&, unsigned, unsigned, unsigned, unsigned);
   void replaceVoxel(unsigned, unsigned);
   void replaceUniVoxel(unsigned, unsigned);
-  void setMinMaxSurfaceDimensions(unsigned, Comp*);
+  void setMinMaxDimensions(unsigned, Comp*);
+  void setMinMaxDimensionsSurfaceSub(Comp*);
   bool isInsideCoord(unsigned, Comp*, double);
   bool isSurfaceVoxel(Voxel&, unsigned, Comp*);
   bool isLineVoxel(Voxel&, unsigned, Comp*);

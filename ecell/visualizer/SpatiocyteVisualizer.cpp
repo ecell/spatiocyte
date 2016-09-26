@@ -174,9 +174,8 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   theFile.read((char*) (&theRowSize), sizeof(theRowSize));
   theFile.read((char*) (&theLayerSize), sizeof(theLayerSize));
   theFile.read((char*) (&theColSize), sizeof(theColSize));
-  theFile.read((char*) (&theRealRowSize), sizeof(theRealRowSize));
-  theFile.read((char*) (&theRealLayerSize), sizeof(theRealLayerSize));
-  theFile.read((char*) (&theRealColSize), sizeof(theRealColSize));
+  theFile.read((char*) (&min_point_), sizeof(min_point_));
+  theFile.read((char*) (&max_point_), sizeof(max_point_));
   theFile.read((char*) (&theLatticeSpSize), sizeof(theLatticeSpSize));
   theFile.read((char*) (&thePolymerSize), sizeof(thePolymerSize));
   theFile.read((char*) (&theReservedSize), sizeof(theReservedSize));
@@ -417,16 +416,19 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
       break;
     }
   init_frames();
-  ViewSize = 1.05*sqrt((theRealColSize)*(theRealColSize)+
-                       (theRealLayerSize)*(theRealLayerSize)+
-                       (theRealRowSize)*(theRealRowSize));
+  dimensions_.x = max_point_.x - min_point_.x;
+  dimensions_.y = max_point_.y - min_point_.y;
+  dimensions_.z = max_point_.z - min_point_.z;
+  mid_point_.x = dimensions_.x/2 + min_point_.x;
+  mid_point_.y = dimensions_.y/2 + min_point_.y;
+  mid_point_.z = dimensions_.z/2 + min_point_.z;
+  ViewSize = 1.05*sqrt(dimensions_.x*dimensions_.x+
+                       dimensions_.y*dimensions_.y+
+                       dimensions_.z*dimensions_.z);
   if(ViewSize==0)
     { 
       ViewSize=1.0;
     }
-  ViewMidx=(theRealColSize)/2.0;
-  ViewMidy=(theRealLayerSize)/2.0; 
-  ViewMidz=(theRealRowSize)/2.0;
   FieldOfView=45;
   Xtrans=Ytrans=0;
   Near=-ViewSize/2.0;
@@ -455,23 +457,18 @@ void GLScene::init_frames() {
 }
 
 bool GLScene::on_button_press_event(GdkEventButton* event) {
-  //return on_button_release_event(event);
-  return true;
+  return on_button_release_event(event);
 }
 
-bool GLScene::get_is_event_masked(GdkEventType* event, int mask) {
-  //return (event->state & mask) == mask;
-  return true;
+bool GLScene::get_is_event_masked(GdkEventButton* event, int mask) {
+  return (event->state & mask) == mask;
 } 
 
-bool GLScene::get_is_button(GdkEventType* event, int button, int mask) {
-  /*
+bool GLScene::get_is_button(GdkEventButton* event, int button, int mask) {
   if(event->button == button) {
     return (event->type == GDK_BUTTON_PRESS);
   }
   return get_is_event_masked(event, mask); 
-  */
-  return true;
 }
 
 void GLScene::set_position(double x, double y, double& px, double& py,
@@ -488,20 +485,20 @@ void GLScene::set_position(double x, double y, double& px, double& py,
 }
 
 bool GLScene::on_button_release_event(GdkEventButton* event) {
-  /*
   bool left(get_is_button(event, 1, GDK_BUTTON1_MASK));
   bool middle(get_is_button(event, 2, GDK_BUTTON2_MASK));
   bool right(get_is_button(event, 3, GDK_BUTTON3_MASK));
+  std::cout << "left:" << left << " middle:" << middle << " right:" << right << std::endl;
   is_mouse_rotate_ = left and not (middle or right);
   is_mouse_zoom_ = middle or (left and right);
   is_mouse_pan_ = right and get_is_event_masked(event, GDK_CONTROL_MASK);
-  double x(event.x);
-  mouse_x = x;
-  double y(event.y);
-  mouse_y = y;
+  std::cout << "rot:" << is_mouse_rotate_ << " zoom:" << is_mouse_zoom_ << " pan:" << is_mouse_pan_ << std::endl;
+  double x(event->x);
+  mouse_x_ = x;
+  double y(event->y);
+  mouse_y_ = y;
   set_position(x, y, mouse_drag_pos_x_, mouse_drag_pos_y_, mouse_drag_pos_z_);
   queue_draw();
-  */
   return true;
 }
 
@@ -514,9 +511,9 @@ bool GLScene::on_scroll_event(GdkEventScroll* scroll_event) {
     s = -4.0;
   }
   s = exp(s*0.01); 
-  glTranslatef(ViewMidx, ViewMidy, ViewMidz);
+  glTranslatef(mid_point_.x, mid_point_.y, mid_point_.z);
   glScalef(s,s,s);
-  glTranslatef(-ViewMidx, -ViewMidy, -ViewMidz);
+  glTranslatef(-mid_point_.x, -mid_point_.y, -mid_point_.z);
   queue_draw();
 }
 
@@ -710,7 +707,7 @@ void GLScene::on_realize()
   glColorMaterial( GL_FRONT_AND_BACK, GL_DIFFUSE );
   glEnable(GL_COLOR_MATERIAL);
   glMatrixMode(GL_MODELVIEW);
-  glTranslatef(-ViewMidx,-ViewMidy,-ViewMidz); 
+  glTranslatef(-mid_point_.x,-mid_point_.y,-mid_point_.z); 
   if(theMeanCount)
     {
       //for GFP visualization:
@@ -761,7 +758,7 @@ void GLScene::on_realize()
     }
   GLUquadricObj* qobj = gluNewQuadric();
   gluQuadricDrawStyle(qobj, GLU_FILL);
-  theGLIndex = glGenLists(theTotalSpeciesSize);
+  theGLIndex = glGenLists(theTotalSpeciesSize+1);
   for(unsigned int i(theGLIndex); i != theTotalSpeciesSize+theGLIndex; ++i)
     {
       glNewList(i, GL_COMPILE);
@@ -772,7 +769,6 @@ void GLScene::on_realize()
       else
         {
           gluSphere(qobj, theRadii[i-theGLIndex], 10, 10);
-          //gluSphere(qobj, theRadii[i-theGLIndex], 10, 10);
         }
       glEndList();
     }
@@ -781,8 +777,8 @@ void GLScene::on_realize()
   pango_ft2_font_map_set_resolution (PANGO_FT2_FONT_MAP(fontmap), 72, 72);
   ft2_context = Glib::wrap(pango_font_map_create_context(fontmap));
   /*
-  glNewList(BOX, GL_COMPILE);
-  //drawBox(0,theRealColSize,0,theRealLayerSize,0,theRealRowSize);
+  glNewList(theTotalSpeciesSize+theGLIndex, GL_COMPILE);
+  drawBox(0,theRealColSize,0,theRealLayerSize,0,theRealRowSize);
   glEndList();
   */
   glwindow->gl_end();
@@ -1054,9 +1050,12 @@ void GLScene::drawBox(GLfloat xlo, GLfloat xhi, GLfloat ylo, GLfloat yhi,
   glEnd();
 
   glBegin(GL_LINES);
-  glVertex3f(xlo,ylo,zhi);glVertex3f(xhi,ylo,zhi);
-  glVertex3f(xlo,yhi,zhi);glVertex3f(xhi,yhi,zhi);
-  glVertex3f(xlo,yhi,zlo);glVertex3f(xhi,yhi,zlo);
+  glVertex3f(xlo,ylo,zhi);
+  glVertex3f(xhi,ylo,zhi);
+  glVertex3f(xlo,yhi,zhi);
+  glVertex3f(xhi,yhi,zhi);
+  glVertex3f(xlo,yhi,zlo);
+  glVertex3f(xhi,yhi,zlo);
   glEnd();
 }
 
@@ -1067,11 +1066,14 @@ bool GLScene::on_configure_event(GdkEventConfigure* event)
     {
       return false;
     }
+  /*
   GLfloat w = get_width();
   GLfloat h = get_height();
   GLfloat nearold = Near;
   GLfloat m[16];
   Aspect = w/h;
+  left_ = Aspect;
+  right_ = -left;
   glViewport(0, 0, static_cast<GLsizei>(w), static_cast<GLsizei>(h));
   if(w>=h) Near=ViewSize/2.0/tan(FieldOfView*PI/180.0/2.0);
   else Near=ViewSize/2.0/tan(FieldOfView*Aspect*PI/180.0/2.0);
@@ -1084,20 +1086,27 @@ bool GLScene::on_configure_event(GdkEventConfigure* event)
   glTranslatef(0,0,nearold-Near);
   glMultMatrixf(m);
   glwindow->gl_end();
+  */
 
-  /*
   GLfloat width(get_width());
   GLfloat height(get_height());
   glViewport(0, 0, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
-  top_ = 1.0;
-  bottom_ = -1.0;
-  left_   = -float(width)/float(height);
-  right_  = -left_;
+  double zoom_out(1.2);
+  double ratio(width/height);
+  if(width >= height) {
+    top_ = mid_point_.y*zoom_out;
+    right_ = mid_point_.x*zoom_out*width/height;
+  }
+  else {
+    top_ = mid_point_.y*zoom_out*height/width;
+    right_ = mid_point_.x*zoom_out;
+  }
+  bottom_ = -top_;
+  left_ = -right_;
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glOrtho(left_, right_, bottom_, top_, z_near_, z_far_);
+  glOrtho(left_, right_, bottom_, top_, -40, 40);
   glwindow->gl_end();
-  */
   return true;
 }
 
@@ -1365,9 +1374,9 @@ void GLScene::plotMean3DCubicMolecules()
                 (theCoords[j][k]%(theRowSize*theLayerSize))/theRowSize;
               row =
                 (theCoords[j][k]%(theRowSize*theLayerSize))%theRowSize;
-              y = layer*2*theRadius + theRadius;
-              z = row*2*theRadius + theRadius;
-              x = col*2*theRadius + theRadius; 
+              y = layer*2*theRadius;
+              z = row*2*theRadius;
+              x = col*2*theRadius; 
               bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
                            y <= theYUpBound[j] && y >= theYLowBound[j] &&
                            z <= theZUpBound[j] && z >= theZLowBound[j]);
@@ -1400,12 +1409,15 @@ void GLScene::plot3DHCPMolecules()
                 (theCoords[j][k]%(theRowSize*theLayerSize))/theRowSize;
               row =
                 (theCoords[j][k]%(theRowSize*theLayerSize))%theRowSize;
-              y = (col%2)*theHCPl + theHCPy*layer + theRadius;
-              z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
-              x = col*theHCPx + theRadius;
-              bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
-                           y <= theYUpBound[j] && y >= theYLowBound[j] &&
-                           z <= theZUpBound[j] && z >= theZLowBound[j]);
+              y = (col%2)*theHCPl + theHCPy*layer;
+              z = row*2*theRadius + ((layer+col)%2)*theRadius;
+              x = col*theHCPx;
+              bool isBound(col <= theXUpBound[j] &&
+                           col >= theXLowBound[j] &&
+                           layer <= theYUpBound[j] &&
+                           layer >= theYLowBound[j] &&
+                           row <= theZUpBound[j] &&
+                           row >= theZLowBound[j]);
               if((isInvertBound && isBound) || (!isInvertBound && !isBound))
                 {
                   glPushMatrix();
@@ -1425,9 +1437,9 @@ void GLScene::plot3DHCPMolecules()
           glColor3f(clr.r, clr.g, clr.b); 
           for( unsigned int k(0); k!=theOffLatticeMoleculeSize[j]; ++k )
             {
-              x = (thePoints[j][k].x)+theRadius;
-              y = (thePoints[j][k].y)+theRadius;
-              z = (thePoints[j][k].z)+theRadius;
+              x = (thePoints[j][k].x);
+              y = (thePoints[j][k].y);
+              z = (thePoints[j][k].z);
               bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
                            y <= theYUpBound[j] && y >= theYLowBound[j] &&
                            z <= theZUpBound[j] && z >= theZLowBound[j]);
@@ -1441,6 +1453,12 @@ void GLScene::plot3DHCPMolecules()
             }
         }
     }
+  /*
+  glPushMatrix();
+  glTranslatef(0,0,0);
+  glCallList(theTotalSpeciesSize+theGLIndex);
+  glPopMatrix();
+  */
 }
 
 void GLScene::plot3DCubicMolecules()
@@ -1460,9 +1478,9 @@ void GLScene::plot3DCubicMolecules()
                 (theCoords[j][k]%(theRowSize*theLayerSize))/theRowSize;
               row =
                 (theCoords[j][k]%(theRowSize*theLayerSize))%theRowSize;
-              y = layer*2*theRadius + theRadius;
-              z = row*2*theRadius + theRadius;
-              x = col*2*theRadius + theRadius; 
+              y = layer*2*theRadius;
+              z = row*2*theRadius;
+              x = col*2*theRadius; 
               if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
                   y <= theYUpBound[j] && y >= theYLowBound[j] &&
                   z <= theZUpBound[j] && z >= theZLowBound[j]))
@@ -1484,9 +1502,9 @@ void GLScene::plot3DCubicMolecules()
           glColor3f(clr.r, clr.g, clr.b); 
           for( unsigned int k(0); k!=theOffLatticeMoleculeSize[j]; ++k )
             {
-              x = (thePoints[j][k].x)+theRadius;
-              y = (thePoints[j][k].y)+theRadius;
-              z = (thePoints[j][k].z)+theRadius;
+              x = (thePoints[j][k].x);
+              y = (thePoints[j][k].y);
+              z = (thePoints[j][k].z);
               if(!( x <= theXUpBound[m] && x >= theXLowBound[m] &&
                   y <= theYUpBound[m] && y >= theYLowBound[m] &&
                   z <= theZUpBound[m] && z >= theZLowBound[m]))
@@ -1519,9 +1537,9 @@ void GLScene::plotHCPPoints()
                 (theCoords[j][k]%(theRowSize*theLayerSize))/theRowSize;
               row =
                 (theCoords[j][k]%(theRowSize*theLayerSize))%theRowSize;
-              y = (col%2)*theHCPl + theHCPy*layer + theRadius;
-              z = row*2*theRadius + ((layer+col)%2)*theRadius + theRadius;
-              x = col*theHCPx + theRadius;
+              y = (col%2)*theHCPl + theHCPy*layer;
+              z = row*2*theRadius + ((layer+col)%2)*theRadius;
+              x = col*theHCPx;
               bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
                            y <= theYUpBound[j] && y >= theYLowBound[j] &&
                            z <= theZUpBound[j] && z >= theZLowBound[j]);
@@ -1541,9 +1559,9 @@ void GLScene::plotHCPPoints()
           glColor3f(clr.r, clr.g, clr.b); 
           for( unsigned int k(0); k!=theOffLatticeMoleculeSize[j]; ++k )
             {
-              x = (thePoints[j][k].x)+theRadius;
-              y = (thePoints[j][k].y)+theRadius;
-              z = (thePoints[j][k].z)+theRadius;
+              x = (thePoints[j][k].x);
+              y = (thePoints[j][k].y);
+              z = (thePoints[j][k].z);
               bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
                            y <= theYUpBound[j] && y >= theYLowBound[j] &&
                            z <= theZUpBound[j] && z >= theZLowBound[j]);
@@ -1575,9 +1593,9 @@ void GLScene::plotCubicPoints()
                 (theCoords[j][k]%(theRowSize*theLayerSize))/theRowSize;
               row =
                 (theCoords[j][k]%(theRowSize*theLayerSize))%theRowSize;
-              y = layer*2*theRadius + theRadius;
-              z = row*2*theRadius + theRadius;
-              x = col*2*theRadius + theRadius; 
+              y = layer*2*theRadius;
+              z = row*2*theRadius;
+              x = col*2*theRadius; 
               if(!( x <= theXUpBound[j] && x >= theXLowBound[j] &&
                   y <= theYUpBound[j] && y >= theYLowBound[j] &&
                   z <= theZUpBound[j] && z >= theZLowBound[j]))
@@ -1596,9 +1614,9 @@ void GLScene::plotCubicPoints()
           glColor3f(clr.r, clr.g, clr.b); 
           for( unsigned int k(0); k!=theOffLatticeMoleculeSize[j]; ++k )
             {
-              x = (thePoints[j][k].x)+theRadius;
-              y = (thePoints[j][k].y)+theRadius;
-              z = (thePoints[j][k].z)+theRadius;
+              x = (thePoints[j][k].x);
+              y = (thePoints[j][k].y);
+              z = (thePoints[j][k].z);
               if(!( x <= theXUpBound[m] && x >= theXLowBound[m] &&
                   y <= theYUpBound[m] && y >= theYLowBound[m] &&
                   z <= theZUpBound[m] && z >= theZLowBound[m]))
@@ -1829,7 +1847,7 @@ void GLScene::resetView()
   gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  glTranslatef(-ViewMidx,-ViewMidy,-ViewMidz);
+  glTranslatef(-mid_point_.x,-mid_point_.y,-mid_point_.z);
   glTranslatef(0,0,-ViewSize/2.0-Near);
   invalidate();
   xAngle = 0;
@@ -2120,9 +2138,9 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
                             &ControlBox::onResetBound) );
   theBoxBoundFixReset.pack_start( theResetBoundButton );
 
-  unsigned int aLayerSize( m_area_.getLayerSize() );
-  unsigned int aColSize( m_area_.getColSize() );
-  unsigned int aRowSize( m_area_.getRowSize() );
+  unsigned int aLayerSize(m_area_.getLayerSize());
+  unsigned int aColSize(m_area_.getColSize());
+  unsigned int aRowSize(m_area_.getRowSize());
 
   // x up bound
   theXUpBoundLabel.set_width_chars( 2 );

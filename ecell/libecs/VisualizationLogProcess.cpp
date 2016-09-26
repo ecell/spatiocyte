@@ -48,13 +48,9 @@ void VisualizationLogProcess::initializeLog()
   theLogFile.write((char*)(&aLayerSize), sizeof(aLayerSize));
   unsigned int aColSize(theSpatiocyteStepper->getColSize());
   theLogFile.write((char*)(&aColSize), sizeof(aColSize));
-  Point aCenterPoint(theSpatiocyteStepper->getCenterPoint());
-  double aRealRowSize(aCenterPoint.z*2);
-  theLogFile.write((char*)(&aRealRowSize), sizeof(aRealRowSize));
-  double aRealLayerSize(aCenterPoint.y*2);
-  theLogFile.write((char*)(&aRealLayerSize), sizeof(aRealLayerSize));
-  double aRealColSize(aCenterPoint.x*2);
-  theLogFile.write((char*)(&aRealColSize), sizeof(aRealColSize));
+  Comp* comp(theSpatiocyteStepper->getRootComp());
+  theLogFile.write((char*)(&comp->minPoint), sizeof(comp->minPoint));
+  theLogFile.write((char*)(&comp->maxPoint), sizeof(comp->maxPoint));
   unsigned int aLatticeSpSize(theLatticeSpecies.size());
   theLogFile.write((char*)(&aLatticeSpSize), sizeof(aLatticeSpSize));
   unsigned int aPolymerSize(thePolymerSpecies.size());

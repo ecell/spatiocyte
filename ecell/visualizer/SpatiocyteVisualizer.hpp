@@ -257,8 +257,8 @@ public:
   bool get_is_playing();
 protected: 
   void set_position(double x, double y, double& px, double& py, double& pz); 
-  bool get_is_event_masked(GdkEventType* event, int mask);
-  bool get_is_button(GdkEventType* event, int button, int mask);
+  bool get_is_event_masked(GdkEventButton* event, int mask);
+  bool get_is_button(GdkEventButton* event, int button, int mask);
   void init_frames();
   void inc_dec_frame_cnt();
   bool (GLScene::*theLoadCoordsFunction)(std::streampos&);
@@ -303,9 +303,6 @@ protected:
   GLfloat Aspect;
   GLfloat FieldOfView;
   GLfloat Near;
-  GLfloat ViewMidx;
-  GLfloat ViewMidy;
-  GLfloat ViewMidz;
   GLfloat ViewSize;
   GLfloat X;
   GLfloat Xtrans;
@@ -343,9 +340,6 @@ protected:
   double *theRadii;
   double theCurrentTime;
   double theRadius;
-  double theRealColSize;
-  double theRealLayerSize;
-  double theRealRowSize;
   double theResetTime;
   double theVoxelRadius;
   double xAngle;
@@ -358,6 +352,10 @@ protected:
   double mouse_y_;
   double z_near_;
   double z_far_;
+  double top_;
+  double bottom_;
+  double left_;
+  double right_;
   int m_FontHeight;
   int m_FontWidth;
   int frame_cnt_;
@@ -408,6 +406,10 @@ protected:
   unsigned int* theZUpBound;
   unsigned int** theCoords;
   unsigned int** theFrequency;
+  Point min_point_;
+  Point max_point_;
+  Point mid_point_;
+  Point dimensions_;
 };
 
 class Rulers : public Gtk::Window

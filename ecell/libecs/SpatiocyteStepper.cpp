@@ -972,6 +972,12 @@ Comp* SpatiocyteStepper::registerComp(System* aSystem,
   aComp->minCoord.row = UINT_MAX;
   aComp->minCoord.col = UINT_MAX;
   aComp->minCoord.layer = UINT_MAX;
+  aComp->minPoint.x = libecs::INF;
+  aComp->minPoint.y = libecs::INF;
+  aComp->minPoint.z = libecs::INF;
+  aComp->maxPoint.x = -libecs::INF;
+  aComp->maxPoint.y = -libecs::INF;
+  aComp->maxPoint.z = -libecs::INF;
   aComp->maxCoord.row = 0;
   aComp->maxCoord.col = 0;
   aComp->maxCoord.layer = 0;
@@ -1166,20 +1172,17 @@ void SpatiocyteStepper::setCuboidCompsCenterPoint()
   for(unsigned i(0); i != theComps.size(); ++i)
     {
       Comp* aComp(theComps[i]); 
+      setMinMaxDimensionsSurfaceSub(aComp);
       if(aComp->geometry != CUBOID || aComp->rotateX != 0 || 
          aComp->rotateY != 0 || aComp->rotateZ != 0)
         {
           continue;
         }
-      const unsigned minCoord(global2coord(aComp->minCoord.row,
-                                           aComp->minCoord.layer,
-                                           aComp->minCoord.col));
-      const unsigned maxCoord(global2coord(aComp->maxCoord.row,
-                                           aComp->maxCoord.layer,
-                                           aComp->maxCoord.col));
-      Point maxPoint(coord2point(maxCoord));
-      Point minPoint(coord2point(minCoord)); 
-      aComp->centerPoint = add(minPoint, subDivide(maxPoint, minPoint));
+      aComp->centerPoint = add(aComp->minPoint, 
+                               subDivide(aComp->maxPoint, aComp->minPoint));
+      if(aComp->system->getSuperSystem()->isRootSystem()) {
+        theCenterPoint = aComp->centerPoint;
+      }
     }
 }
 
@@ -1239,6 +1242,10 @@ void SpatiocyteStepper::registerCompSpecies(Comp* aComp)
                           + "specifies the vacant species, "
                           + "not defined." );
   }
+}
+
+Comp* SpatiocyteStepper::getRootComp() {
+  return theComps[0];
 }
 
 void SpatiocyteStepper::setLatticeProperties()
@@ -2104,12 +2111,6 @@ unsigned SpatiocyteStepper::global2coord(unsigned aGlobalRow,
                                              unsigned aGlobalLayer,
                                              unsigned aGlobalCol)
 {
-  /*std::cout<<"inrow "<<aGlobalRow<<std::endl;
-  std::cout<<"inlayer "<<aGlobalLayer<<std::endl;
-  std::cout<<"incol "<<aGlobalCol<<std::endl;
-  std::cout<<"theRowsize "<<theRowSize<<std::endl;
-  std::cout<<"theLayersize "<<theLayerSize<<std::endl;
-  std::cout<<"returnvalue "<<aGlobalRow+theRowSize*aGlobalLayer+theRowSize*theLayerSize*aGlobalCol<<std::endl;*/
   return aGlobalRow+theRowSize*aGlobalLayer+theRowSize*theLayerSize*aGlobalCol;
 }
 
@@ -2121,7 +2122,6 @@ void SpatiocyteStepper::point2global(Point aPoint,
   double row(0);
   double layer(0);
   double col(0);
-      //std::cout<<"inSS1"<<std::endl;
   switch(LatticeType)
     {
     case HCP_LATTICE: 
@@ -2137,9 +2137,6 @@ void SpatiocyteStepper::point2global(Point aPoint,
       row = rint(aPoint.z/(2*nVoxelRadius));
       break;
     }
-  //std::cout<<"inrow "<<aGlobalRow<<std::endl;
-  //std::cout<<"inlayer "<<aGlobalLayer<<std::endl;
- // std::cout<<"incol "<<aGlobalCol<<std::endl;
   if(row < 0)
     {
       row = 0;
@@ -2152,13 +2149,9 @@ void SpatiocyteStepper::point2global(Point aPoint,
     {
       col = 0;
     }
-  //std::cout<<"row "<<row<<std::endl;
-  //std::cout<<"layer "<<layer<<std::endl;
-  //std::cout<<"col "<<col<<std::endl;
   aGlobalRow = (unsigned)row;
   aGlobalLayer = (unsigned)layer;
   aGlobalCol = (unsigned)col;
-  //std::cout<<"inSS3"<<std::endl;
   if(aGlobalCol >= theColSize)
     {
       aGlobalCol = theColSize-1;
@@ -2171,7 +2164,6 @@ void SpatiocyteStepper::point2global(Point aPoint,
     {
       aGlobalLayer = theLayerSize-1;
     }
-  //std::cout<<"inSS4"<<std::endl;
 }
 
 void SpatiocyteStepper::coord2global(unsigned aCoord,
@@ -2624,7 +2616,6 @@ void SpatiocyteStepper::setSurfaceVoxelProperties(Comp* aComp)
         }
       Species* aVacantSpecies(aComp->vacantSpecies);
       const unsigned surfaceID(aVacantSpecies->getID());
-      //std::cout << "before:" << aVacantSpecies->size() << std::endl;
       for(unsigned i(0); i != aVacantSpecies->size(); )
         {
           const unsigned aCoord(aVacantSpecies->getCoord(i));
@@ -2634,19 +2625,6 @@ void SpatiocyteStepper::setSurfaceVoxelProperties(Comp* aComp)
               ++i;
             }
         }
-      /*
-      std::cout << "after:" << aVacantSpecies->size() << std::endl;
-      for(unsigned i(0); i != aVacantSpecies->size(); )
-        {
-          const unsigned aCoord(aVacantSpecies->getCoord(i));
-          if(setSurfaceDiffuseSize(aCoord, surfaceID, intID, extID,
-                                   aSuperComp->system->isRootSystem(), i))
-            {
-              ++i;
-            }
-        }
-      std::cout << "final:" << aVacantSpecies->size() << std::endl;
-      */
       if(RemoveSurfaceBias)
         {
           for(unsigned i(0); i != aVacantSpecies->size(); ++i)
@@ -2988,7 +2966,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
                   if(isEnclosedSurfaceVoxel(aVoxel, aCoord, aComp))
                     {
                       aComp->surfaceSub->vacantSpecies->addCompVoxel(aCoord);
-                      setMinMaxSurfaceDimensions(aCoord, aComp);
+                      setMinMaxDimensions(aCoord, aComp);
                       return true;
                     }
                 }
@@ -3006,7 +2984,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
                  isEnclosedRootSurfaceVoxel(aVoxel, aCoord, aComp, aRootComp))
                 {
                   aComp->surfaceSub->vacantSpecies->addCompVoxel(aCoord);
-                  setMinMaxSurfaceDimensions(aCoord, aComp);
+                  setMinMaxDimensions(aCoord, aComp);
                   return true;
                 }
             }
@@ -3017,7 +2995,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
                  isParentSurfaceVoxel(aVoxel, aCoord, aParentComp))
                 {
                   aComp->surfaceSub->vacantSpecies->addCompVoxel(aCoord);
-                  setMinMaxSurfaceDimensions(aCoord, aComp);
+                  setMinMaxDimensions(aCoord, aComp);
                   return true;
                 }
             }
@@ -3025,12 +3003,12 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
             {
               if(compartmentalizeVoxel(aCoord, aComp->immediateSubs[i]))
                 {
-                  setMinMaxSurfaceDimensions(aCoord, aComp);
+                  //setMinMaxDimensions(aCoord, aComp);
                   return true;
                 }
             }
           aComp->vacantSpecies->addCompVoxel(aCoord);
-          setMinMaxSurfaceDimensions(aCoord, aComp);
+          setMinMaxDimensions(aCoord, aComp);
           return true;
         }
       if(aComp->surfaceSub)
@@ -3039,7 +3017,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
              isSurfaceVoxel(aVoxel, aCoord, aComp))
             {
               aComp->surfaceSub->vacantSpecies->addCompVoxel(aCoord);
-              setMinMaxSurfaceDimensions(aCoord, aComp);
+              setMinMaxDimensions(aCoord, aComp);
               return true;
             }
         }
@@ -3052,7 +3030,7 @@ bool SpatiocyteStepper::compartmentalizeVoxel(unsigned aCoord, Comp* aComp)
          isRootSurfaceVoxel(aVoxel, aCoord, aRootComp))
         {
           aComp->vacantSpecies->addCompVoxel(aCoord);
-          setMinMaxSurfaceDimensions(aCoord, aRootComp);
+          setMinMaxDimensions(aCoord, aRootComp);
           return true;
         }
     }
@@ -3283,69 +3261,17 @@ unsigned SpatiocyteStepper::getStartCoord()
   return 0;
 }
 
+void SpatiocyteStepper::setMinMaxDimensionsSurfaceSub(Comp* aComp) {
+  if(aComp->surfaceSub) {
+    aComp->surfaceSub->maxCoord = aComp->maxCoord;
+    aComp->surfaceSub->minCoord = aComp->minCoord;
+    aComp->surfaceSub->maxPoint = aComp->maxPoint;
+    aComp->surfaceSub->minPoint = aComp->minPoint;
+  }
+}
 
-void SpatiocyteStepper::setMinMaxSurfaceDimensions(unsigned aCoord, 
-                                                   Comp* aComp)
-{
-  //maxCoord, minCoord, maxPoint and minPoint are only valid for unrotated
-  //cuboid compartments
-  if(aComp->geometry != CUBOID || aComp->rotateX != 0 || aComp->rotateY != 0 || 
-     aComp->rotateZ != 0)
-    {
-      return;
-    }
-  unsigned aRow;
-  unsigned aLayer;
-  unsigned aCol;
-  coord2global(aCoord, aRow, aLayer, aCol);
-  if(aRow < aComp->minCoord.row)
-    {
-      aComp->minCoord.row = aRow;
-      if(aComp->surfaceSub)
-        {
-          aComp->surfaceSub->minCoord.row = aRow;
-        }
-    }
-  else if(aRow > aComp->maxCoord.row)
-    {
-      aComp->maxCoord.row = aRow;
-      if(aComp->surfaceSub)
-        {
-          aComp->surfaceSub->maxCoord.row = aRow;
-        }
-    }
-  if(aCol < aComp->minCoord.col)
-    {
-      aComp->minCoord.col = aCol;
-      if(aComp->surfaceSub)
-        {
-          aComp->surfaceSub->minCoord.col = aCol;
-        }
-    }
-  else if(aCol > aComp->maxCoord.col)
-    {
-      aComp->maxCoord.col = aCol;
-      if(aComp->surfaceSub)
-        {
-          aComp->surfaceSub->maxCoord.col = aCol;
-        }
-    }
-  if(aLayer < aComp->minCoord.layer)
-    {
-      aComp->minCoord.layer = aLayer;
-      if(aComp->surfaceSub)
-        {
-          aComp->surfaceSub->minCoord.layer = aLayer;
-        }
-    }
-  else if(aLayer > aComp->maxCoord.layer)
-    {
-      aComp->maxCoord.layer = aLayer;
-      if(aComp->surfaceSub)
-        {
-          aComp->surfaceSub->maxCoord.layer = aLayer;
-        }
-    }
+
+void SpatiocyteStepper::setMinMaxDimensions(unsigned aCoord, Comp* aComp) {
   Point aPoint(coord2point(aCoord));
   if(aPoint.x < aComp->minPoint.x)
     {
@@ -3370,6 +3296,40 @@ void SpatiocyteStepper::setMinMaxSurfaceDimensions(unsigned aCoord,
   else if(aPoint.z > aComp->maxPoint.z)
     {
       aComp->maxPoint.z = aPoint.z;
+    }
+  //maxCoord, minCoord are only valid for unrotated cuboid compartments
+  if(aComp->geometry != CUBOID || aComp->rotateX != 0 || aComp->rotateY != 0 || 
+     aComp->rotateZ != 0)
+    {
+      return;
+    }
+  unsigned aRow;
+  unsigned aLayer;
+  unsigned aCol;
+  coord2global(aCoord, aRow, aLayer, aCol);
+  if(aRow < aComp->minCoord.row)
+    {
+      aComp->minCoord.row = aRow;
+    }
+  else if(aRow > aComp->maxCoord.row)
+    {
+      aComp->maxCoord.row = aRow;
+    }
+  if(aCol < aComp->minCoord.col)
+    {
+      aComp->minCoord.col = aCol;
+    }
+  else if(aCol > aComp->maxCoord.col)
+    {
+      aComp->maxCoord.col = aCol;
+    }
+  if(aLayer < aComp->minCoord.layer)
+    {
+      aComp->minCoord.layer = aLayer;
+    }
+  else if(aLayer > aComp->maxCoord.layer)
+    {
+      aComp->maxCoord.layer = aLayer;
     }
 }
 
