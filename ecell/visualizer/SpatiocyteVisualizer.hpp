@@ -119,7 +119,7 @@ private:
   Gtk::Adjustment theZAdj;
   Gtk::Adjustment theZLowBoundAdj;
   Gtk::Adjustment theZUpBoundAdj;
-  Gtk::Button theButtonResetTime;
+  Gtk::Button theResetTimeButton;
   Gtk::Button theResetBoundButton;
   Gtk::Button theResetDepthButton;
   Gtk::Button theResetRotButton;
@@ -190,7 +190,7 @@ private:
   Gtk::ToggleButton m_3d;
   Gtk::ToggleButton m_showSurface;
   Gtk::ToggleButton m_showTime;
-  Gtk::ToggleButton theButtonRecord;
+  Gtk::ToggleButton theRecordButton;
   Gtk::VBox theBoxCtrl;
   Gtk::VBox theBoxInBound;
   Gtk::VBox theBoxInFrame;

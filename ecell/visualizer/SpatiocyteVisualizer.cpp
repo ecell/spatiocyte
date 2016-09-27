@@ -148,9 +148,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   mouse_drag_pos_y_(0),
   mouse_drag_pos_z_(0),
   mouse_x_(0),
-  mouse_y_(0),
-  z_near_(-10),
-  z_far_(10)
+  mouse_y_(0)
 {
   add_events(Gdk::VISIBILITY_NOTIFY_MASK | Gdk::BUTTON_PRESS_MASK |
              Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK | 
@@ -705,7 +703,8 @@ bool GLScene::on_motion_notify_event(GdkEventMotion* event) {
     double az(0);
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
-    double angle(sqrt(ax*ax+ay*ay+az*az)/float(viewport[2]+1)*180.0);
+    double len(sqrt(ax*ax+ay*ay+az*az));
+    double angle(len/float(viewport[2]+1)*180.0);
     GLdouble m[16];
     GLdouble inv[16];
     glGetDoublev(GL_MODELVIEW_MATRIX, m);
@@ -713,23 +712,22 @@ bool GLScene::on_motion_notify_event(GdkEventMotion* event) {
     double bx(inv[0]*ax + inv[4]*ay + inv[8]*az);
     double by(inv[1]*ax + inv[5]*ay + inv[9]*az);
     double bz(inv[2]*ax + inv[6]*ay + inv[10]*az);
-    /*
-    xAngle += bx*angle/(bx+by+bz);
+
+    xAngle += bx*angle/len;
     normalizeAngle(xAngle);
-    yAngle += by*angle/(bx+by+bz);
+    yAngle += by*angle/len;
     normalizeAngle(yAngle);
-    zAngle += bz*angle/(bx+by+bz);
+    zAngle += bz*angle/len;
     normalizeAngle(zAngle);
-    */
+
     glTranslatef(mid_point_.x, mid_point_.y, mid_point_.z);
     glRotatef(angle,bx,by,bz);
     glTranslatef(-mid_point_.x, -mid_point_.y, -mid_point_.z);
-    /*
+
     m_control_->setXangle(xAngle);
     m_control_->setYangle(yAngle);
     m_control_->setZangle(zAngle);
     isShownSurface = false;
-    */
     changed = true;
   }
   else if(is_mouse_pan_) {
@@ -2142,7 +2140,16 @@ bool GLScene::on_visibility_notify_event(GdkEventVisibility* event)
 
 void GLScene::resetBound()
 {
-
+  for(unsigned int i(0); i!=theTotalSpeciesSize; ++i )
+    {
+      theXUpBound[i] = 0;
+      theXLowBound[i] = 0;
+      theYUpBound[i] = theLayerSize;
+      theYLowBound[i] = 0;
+      theZUpBound[i] = theRowSize;
+      theZLowBound[i] = 0;
+    }
+  queue_draw();
 }
 
 void GLScene::rotateMidAxis(int aMult, int x, int y, int z)
@@ -2178,6 +2185,15 @@ void GLScene::rotateMidAxis(int aMult, int x, int y, int z)
 
 void GLScene::rotateMidAxisAbs(double angle, int x, int y, int z)
 {
+  if(x && angle == xAngle) {
+    return;
+  }
+  if(y && angle == yAngle) {
+    return;
+  }
+  if(z && angle == zAngle) {
+    return;
+  }
   GLfloat m[16];
   glMatrixMode(GL_MODELVIEW);
   glGetFloatv(GL_MODELVIEW_MATRIX,m);
@@ -2254,10 +2270,10 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   theZAdj( 0, -180, 180, 5, 20, 0 ),
   theZLowBoundAdj( 0, 0, 100, 1, 0, 0 ),
   theZUpBoundAdj( 100, 0, 100, 1, 0, 0 ),
-  theButtonResetTime( "Reset Time" ),
+  theResetTimeButton( "Reset Time" ),
   theResetBoundButton( "Reset" ),
   theResetDepthButton( "Reset" ),
-  theResetRotButton( "Reset" ),
+  theResetRotButton( "Reset View" ),
   theCheck3DMolecule( "Show 3D Molecules" ),
   //theCheckFix( "Fix rotation" ),
   theCheckInvertBound( "Invert Bounding" ),
@@ -2299,7 +2315,7 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   theZLowBoundSpin( theZLowBoundAdj, 0, 0  ),
   theZSpin( theZAdj, 0, 0  ),
   theZUpBoundSpin( theZUpBoundAdj, 0, 0  ),
-  theButtonRecord( "Record Frames" ),
+  theRecordButton( "Record Frames" ),
   progress_adj_(0, 1, std::max(1, int(m_area_.get_frame_size()-2)), 1, 0, 0),
   progress_spin_( progress_adj_, 0, 0  ),
   progress_bar_(progress_adj_)
@@ -2367,12 +2383,18 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   theCheckShowSurface.set_active(false);
   theBoxCtrl.pack_start( theCheckShowSurface, false, false, 2 );
 
-  theButtonResetTime.signal_clicked().connect( sigc::mem_fun(*this,
+  theResetRotButton.signal_clicked().connect( sigc::mem_fun(*this,
+                            &ControlBox::onResetRotation) );
+  theBoxCtrl.pack_start( theResetRotButton, false, false, 2 );
+
+  theResetTimeButton.signal_clicked().connect( sigc::mem_fun(*this,
                             &ControlBox::on_resetTime_clicked) );
-  theBoxCtrl.pack_start( theButtonResetTime, false, false, 2 );
-  theButtonRecord.signal_toggled().connect( sigc::mem_fun(*this,
+  theBoxCtrl.pack_start( theResetTimeButton, false, false, 2 );
+
+  theRecordButton.signal_toggled().connect( sigc::mem_fun(*this,
                             &ControlBox::on_record_toggled) );
-  theBoxCtrl.pack_start( theButtonRecord, false, false, 2 );
+  theBoxCtrl.pack_start( theRecordButton, false, false, 2 );
+
 
 
   // screen resolution display
@@ -2509,9 +2531,6 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   theBoxInFrame.pack_start( theBoxRotFixReset, false, false, 1 );
   //theCheckFix.connect( 'toggled', fixRotToggled );
   //theBoxRotFixReset.pack_start( theCheckFix );
-  theResetRotButton.signal_clicked().connect( sigc::mem_fun(*this,
-                            &ControlBox::onResetRotation) );
-  theBoxRotFixReset.pack_start( theResetRotButton );
 
   // X
   theXLabel.set_width_chars( 1 );
@@ -2760,12 +2779,19 @@ void ControlBox::onResetRotation()
 
 void ControlBox::onResetBound()
 {
+  unsigned int aLayerSize(m_area_.getLayerSize());
+  unsigned int aColSize(m_area_.getColSize());
+  unsigned int aRowSize(m_area_.getRowSize());
+  theXUpBoundAdj.set_value( 0 );
+  theYUpBoundAdj.set_value( aLayerSize );
+  theZUpBoundAdj.set_value( aRowSize );
+  theCheckInvertBound.set_active(false);
   m_area_.resetBound();
 }
 
 void ControlBox::on_record_toggled()
 {
-  m_area_.setRecord(theButtonRecord.get_active());
+  m_area_.setRecord(theRecordButton.get_active());
 }
 
 void ControlBox::setXangle(double angle)
