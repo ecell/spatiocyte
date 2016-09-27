@@ -297,6 +297,7 @@ protected:
   void setTranslucentColor(unsigned int i, GLfloat j);
   void timeout_add();
   void timeout_remove();
+  void configure();
 protected:
   Color* theSpeciesColor;
   ControlBox* m_control_;

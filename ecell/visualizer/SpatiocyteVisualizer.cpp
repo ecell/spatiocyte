@@ -432,6 +432,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   FieldOfView=45;
   Xtrans=Ytrans=0;
   Near=-ViewSize/2.0;
+  //Near=-ViewSize;
   Aspect=1.0;
   set_size_request(theScreenWidth, theScreenHeight);
   std::cout << "done" << std::endl;
@@ -473,26 +474,293 @@ bool GLScene::get_is_button(GdkEventButton* event, int button, int mask) {
 
 void GLScene::set_position(double x, double y, double& px, double& py,
                            double& pz) {
-  /*
   GLint viewport[4];
   glGetIntegerv(GL_VIEWPORT, viewport);
   px = float(x-viewport[0])/float(viewport[2]);
   py = float(y-viewport[1])/float(viewport[3]);      
-  px = _left + px*(_right-_left);
-  py = _top  + py*(_bottom-_top);
-  pz = Near;
-  */
+  px = left_ + px*(right_-left_);
+  py = top_  + py*(bottom_-top_);
+  pz = -40;
 }
+
+/*
+bool GLScene::on_motion_notify_event(GdkEventMotion* event) {
+  if(event && event->window) {
+    const Glib::RefPtr<Gdk::Window> refWindow =
+        Glib::wrap(event->window, true); // true == take_copy
+    if(refWindow) {
+      int x(0);
+      int y(0);
+      Gdk::ModifierType state(Gdk::ModifierType(0));
+      const Glib::RefPtr<const Gdk::Device> device =
+        Glib::wrap(event->device, true); // true == take_copy
+
+      if(event->is_hint) {
+        //refWindow->get_device_position(device, x, y, state);
+        refWindow->get_pointer(x, y, state);
+      }
+      else {
+        x = event->x;
+        y = event->y;
+        //state = event->state;
+      }
+      double dx(x-mouse_x_);
+      double dy(y-mouse_y_);
+      if(dx == 0 && dy == 0) {
+        return true;
+      }
+      mouse_x_ = x;
+      mouse_y_ = y;
+      bool changed(false);
+      if(is_mouse_zoom_) {
+        double s(exp(float(dy)*0.01));
+        glTranslatef(mid_point_.x, mid_point_.y, mid_point_.z);
+        glScalef(s,s,s);
+        glTranslatef(-mid_point_.x, -mid_point_.y, -mid_point_.z);
+        changed = true;
+      }
+      else if(is_mouse_rotate_) {
+        double ax(dx);
+        double ay(dy);
+        double az(0);
+        GLint viewport[4];
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        double angle(sqrt(ax*ax+ay*ay+az*az)/float(viewport[2]+1)*180.0);
+        double m[16];
+        glGetDoublev(GL_MODELVIEW_MATRIX, m);
+        double bx(m[0]*ax + m[3]*ay + m[6]*az);
+        double by(m[1]*ax + m[4]*ay + m[7]*az);
+        double bz(m[2]*ax + m[5]*ay + m[8]*az);
+        glTranslatef(mid_point_.x, mid_point_.y, mid_point_.z);
+        glRotatef(angle,bx,by,bz);
+        glTranslatef(-mid_point_.x, -mid_point_.y, -mid_point_.z);
+        changed = true;
+      }
+      else if(is_mouse_pan_) {
+        double px, py, pz;
+        set_position(x, y, px, py, pz);
+        double m[16];
+        glGetDoublev(GL_MODELVIEW_MATRIX, m);
+        glLoadIdentity();
+        glTranslatef(px-mouse_drag_pos_x_,py-mouse_drag_pos_y_,
+                     pz-mouse_drag_pos_z_);
+        glMultMatrixd(m);
+        mouse_drag_pos_x_ = px;
+        mouse_drag_pos_y_ = py;
+        mouse_drag_pos_z_ = pz;
+        changed = true;
+      }
+      if(changed) {
+        queue_draw();
+      }
+    }
+  }
+  return true;
+}
+*/
+
+
+static void
+invertMatrix(const GLdouble *m, GLdouble *out )
+{
+
+/* NB. OpenGL Matrices are COLUMN major. */
+#define MAT(m,r,c) (m)[(c)*4+(r)]
+
+/* Here's some shorthand converting standard (row,column) to index. */
+#define m11 MAT(m,0,0)
+#define m12 MAT(m,0,1)
+#define m13 MAT(m,0,2)
+#define m14 MAT(m,0,3)
+#define m21 MAT(m,1,0)
+#define m22 MAT(m,1,1)
+#define m23 MAT(m,1,2)
+#define m24 MAT(m,1,3)
+#define m31 MAT(m,2,0)
+#define m32 MAT(m,2,1)
+#define m33 MAT(m,2,2)
+#define m34 MAT(m,2,3)
+#define m41 MAT(m,3,0)
+#define m42 MAT(m,3,1)
+#define m43 MAT(m,3,2)
+#define m44 MAT(m,3,3)
+
+   GLdouble det;
+   GLdouble d12, d13, d23, d24, d34, d41;
+   GLdouble tmp[16]; /* Allow out == in. */
+
+   /* Inverse = adjoint / det. (See linear algebra texts.)*/
+
+   /* pre-compute 2x2 dets for last two rows when computing */
+   /* cofactors of first two rows. */
+   d12 = (m31*m42-m41*m32);
+   d13 = (m31*m43-m41*m33);
+   d23 = (m32*m43-m42*m33);
+   d24 = (m32*m44-m42*m34);
+   d34 = (m33*m44-m43*m34);
+   d41 = (m34*m41-m44*m31);
+
+   tmp[0] =  (m22 * d34 - m23 * d24 + m24 * d23);
+   tmp[1] = -(m21 * d34 + m23 * d41 + m24 * d13);
+   tmp[2] =  (m21 * d24 + m22 * d41 + m24 * d12);
+   tmp[3] = -(m21 * d23 - m22 * d13 + m23 * d12);
+
+   /* Compute determinant as early as possible using these cofactors. */
+   det = m11 * tmp[0] + m12 * tmp[1] + m13 * tmp[2] + m14 * tmp[3];
+
+   /* Run singularity test. */
+   if (det == 0.0) {
+     std::cout << "det 0" << std::endl;
+      /* printf("invert_matrix: Warning: Singular matrix.\n"); */
+/*    memcpy(out,_identity,16*sizeof(double)); */
+   }
+   else {
+      GLdouble invDet = 1.0 / det;
+      /* Compute rest of inverse. */
+      tmp[0] *= invDet;
+      tmp[1] *= invDet;
+      tmp[2] *= invDet;
+      tmp[3] *= invDet;
+
+      tmp[4] = -(m12 * d34 - m13 * d24 + m14 * d23) * invDet;
+      tmp[5] =  (m11 * d34 + m13 * d41 + m14 * d13) * invDet;
+      tmp[6] = -(m11 * d24 + m12 * d41 + m14 * d12) * invDet;
+      tmp[7] =  (m11 * d23 - m12 * d13 + m13 * d12) * invDet;
+
+      /* Pre-compute 2x2 dets for first two rows when computing */
+      /* cofactors of last two rows. */
+      d12 = m11*m22-m21*m12;
+      d13 = m11*m23-m21*m13;
+      d23 = m12*m23-m22*m13;
+      d24 = m12*m24-m22*m14;
+      d34 = m13*m24-m23*m14;
+      d41 = m14*m21-m24*m11;
+
+      tmp[8] =  (m42 * d34 - m43 * d24 + m44 * d23) * invDet;
+      tmp[9] = -(m41 * d34 + m43 * d41 + m44 * d13) * invDet;
+      tmp[10] =  (m41 * d24 + m42 * d41 + m44 * d12) * invDet;
+      tmp[11] = -(m41 * d23 - m42 * d13 + m43 * d12) * invDet;
+      tmp[12] = -(m32 * d34 - m33 * d24 + m34 * d23) * invDet;
+      tmp[13] =  (m31 * d34 + m33 * d41 + m34 * d13) * invDet;
+      tmp[14] = -(m31 * d24 + m32 * d41 + m34 * d12) * invDet;
+      tmp[15] =  (m31 * d23 - m32 * d13 + m33 * d12) * invDet;
+
+      memcpy(out, tmp, 16*sizeof(GLdouble));
+   }
+
+#undef m11
+#undef m12
+#undef m13
+#undef m14
+#undef m21
+#undef m22
+#undef m23
+#undef m24
+#undef m31
+#undef m32
+#undef m33
+#undef m34
+#undef m41
+#undef m42
+#undef m43
+#undef m44
+#undef MAT
+}
+
+bool GLScene::on_motion_notify_event(GdkEventMotion* event) {
+  double x(0);
+  double y(0);
+  /*
+  Gdk::ModifierType state(Gdk::ModifierType(0));
+  if(event->is_hint) {
+    event->window->get_pointer(x, y, state);
+    //event->window->get_device_position(event->device, x, y, state);
+  }
+  else {
+    x = event->x;
+    y = event->y;
+    state = event->state;
+  }
+  */
+  x = event->x;
+  y = event->y;
+  double dx(x-mouse_x_);
+  double dy(y-mouse_y_);
+  if(dx == 0 && dy == 0) {
+    return true;
+  }
+  mouse_x_ = x;
+  mouse_y_ = y;
+  bool changed(false);
+  if(is_mouse_zoom_) {
+    double s(exp(float(dy)*0.01));
+    glTranslatef(mid_point_.x, mid_point_.y, mid_point_.z);
+    glScalef(s,s,s);
+    glTranslatef(-mid_point_.x, -mid_point_.y, -mid_point_.z);
+    changed = true;
+  }
+  else if(is_mouse_rotate_) {
+    double ax(dy);
+    double ay(dx);
+    double az(0);
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    double angle(sqrt(ax*ax+ay*ay+az*az)/float(viewport[2]+1)*180.0);
+    GLdouble m[16];
+    GLdouble inv[16];
+    glGetDoublev(GL_MODELVIEW_MATRIX, m);
+    invertMatrix(m, inv);
+    double bx(inv[0]*ax + inv[4]*ay + inv[8]*az);
+    double by(inv[1]*ax + inv[5]*ay + inv[9]*az);
+    double bz(inv[2]*ax + inv[6]*ay + inv[10]*az);
+    /*
+    xAngle += bx*angle/(bx+by+bz);
+    normalizeAngle(xAngle);
+    yAngle += by*angle/(bx+by+bz);
+    normalizeAngle(yAngle);
+    zAngle += bz*angle/(bx+by+bz);
+    normalizeAngle(zAngle);
+    */
+    glTranslatef(mid_point_.x, mid_point_.y, mid_point_.z);
+    glRotatef(angle,bx,by,bz);
+    glTranslatef(-mid_point_.x, -mid_point_.y, -mid_point_.z);
+    /*
+    m_control_->setXangle(xAngle);
+    m_control_->setYangle(yAngle);
+    m_control_->setZangle(zAngle);
+    isShownSurface = false;
+    */
+    changed = true;
+  }
+  else if(is_mouse_pan_) {
+    double px, py, pz;
+    set_position(x, y, px, py, pz);
+    double m[16];
+    glMatrixMode(GL_MODELVIEW);
+    glGetDoublev(GL_MODELVIEW_MATRIX, m);
+    glLoadIdentity();
+    glTranslatef(px-mouse_drag_pos_x_,py-mouse_drag_pos_y_,
+                 pz-mouse_drag_pos_z_);
+    glMultMatrixd(m);
+    mouse_drag_pos_x_ = px;
+    mouse_drag_pos_y_ = py;
+    mouse_drag_pos_z_ = pz;
+    changed = true;
+  }
+  if(changed) {
+    queue_draw();
+  }
+  return true;
+}
+
 
 bool GLScene::on_button_release_event(GdkEventButton* event) {
   bool left(get_is_button(event, 1, GDK_BUTTON1_MASK));
   bool middle(get_is_button(event, 2, GDK_BUTTON2_MASK));
   bool right(get_is_button(event, 3, GDK_BUTTON3_MASK));
-  std::cout << "left:" << left << " middle:" << middle << " right:" << right << std::endl;
   is_mouse_rotate_ = left and not (middle or right);
   is_mouse_zoom_ = middle or (left and right);
   is_mouse_pan_ = right and get_is_event_masked(event, GDK_CONTROL_MASK);
-  std::cout << "rot:" << is_mouse_rotate_ << " zoom:" << is_mouse_zoom_ << " pan:" << is_mouse_pan_ << std::endl;
   double x(event->x);
   mouse_x_ = x;
   double y(event->y);
@@ -515,10 +783,6 @@ bool GLScene::on_scroll_event(GdkEventScroll* scroll_event) {
   glScalef(s,s,s);
   glTranslatef(-mid_point_.x, -mid_point_.y, -mid_point_.z);
   queue_draw();
-}
-
-bool GLScene::on_motion_notify_event(GdkEventMotion* motion_event) {
-
 }
 
 bool GLScene::on_key_press_event(GdkEventKey* key_event) {
@@ -1059,35 +1323,45 @@ void GLScene::drawBox(GLfloat xlo, GLfloat xhi, GLfloat ylo, GLfloat yhi,
   glEnd();
 }
 
-bool GLScene::on_configure_event(GdkEventConfigure* event)
-{
-  Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-  if (!glwindow->gl_begin(get_gl_context()))
-    {
-      return false;
-    }
-  /*
+/*
+void GLScene::reset() {
   GLfloat w = get_width();
   GLfloat h = get_height();
-  GLfloat nearold = Near;
-  GLfloat m[16];
   Aspect = w/h;
-  left_ = Aspect;
-  right_ = -left;
   glViewport(0, 0, static_cast<GLsizei>(w), static_cast<GLsizei>(h));
+  FieldOfView=45;
+  Xtrans=Ytrans=0;
   if(w>=h) Near=ViewSize/2.0/tan(FieldOfView*PI/180.0/2.0);
   else Near=ViewSize/2.0/tan(FieldOfView*Aspect*PI/180.0/2.0);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near); 
+  gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near);
   glMatrixMode(GL_MODELVIEW);
-  glGetFloatv(GL_MODELVIEW_MATRIX,m);
   glLoadIdentity();
-  glTranslatef(0,0,nearold-Near);
-  glMultMatrixf(m);
-  glwindow->gl_end();
-  */
+  glTranslatef(-mid_point_.x,-mid_point_.y,-mid_point_.z);
+  glTranslatef(0,0,-ViewSize/2.0-Near);
+}
+*/
 
+void GLScene::resetView()
+{
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glTranslatef(-mid_point_.x,-mid_point_.y,-mid_point_.z);
+
+  configure();
+
+  xAngle = 0;
+  yAngle = 0;
+  zAngle = 0;
+  m_control_->setXangle(xAngle);
+  m_control_->setYangle(yAngle);
+  m_control_->setZangle(zAngle);
+  isShownSurface = false;
+  invalidate();
+}
+
+void GLScene::configure() {
   GLfloat width(get_width());
   GLfloat height(get_height());
   glViewport(0, 0, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
@@ -1106,8 +1380,42 @@ bool GLScene::on_configure_event(GdkEventConfigure* event)
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glOrtho(left_, right_, bottom_, top_, -40, 40);
+  glMatrixMode(GL_MODELVIEW);
+}
+
+/*
+void GLScene::configure() {
+  GLfloat w = get_width();
+  GLfloat h = get_height();
+  GLfloat nearold = Near;
+  GLfloat m[16];
+  Aspect = w/h;
+  glViewport(0, 0, static_cast<GLsizei>(w), static_cast<GLsizei>(h));
+  if(w>=h) Near=ViewSize/2.0/tan(FieldOfView*PI/180.0/2.0);
+  else Near=ViewSize/2.0/tan(FieldOfView*Aspect*PI/180.0/2.0);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near); 
+  glMatrixMode(GL_MODELVIEW);
+  glGetFloatv(GL_MODELVIEW_MATRIX,m);
+  glLoadIdentity();
+  glTranslatef(0,0,nearold-Near);
+  glMultMatrixf(m);
+}
+*/
+
+
+bool GLScene::on_configure_event(GdkEventConfigure* event)
+{
+  Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+  if (!glwindow->gl_begin(get_gl_context()))
+    {
+      return false;
+    }
+  configure();
+
   glwindow->gl_end();
-  return true;
+  return false;
 }
 
 bool GLScene::loadCoords(std::streampos& begin_pos)
@@ -1830,33 +2138,6 @@ bool GLScene::on_visibility_notify_event(GdkEventVisibility* event)
     }
   }
   return true;
-}
-
-void GLScene::resetView()
-{
-  GLfloat w = get_width();
-  GLfloat h = get_height();
-  Aspect = w/h;
-  glViewport(0, 0, static_cast<GLsizei>(w), static_cast<GLsizei>(h));
-  FieldOfView=45;
-  Xtrans=Ytrans=0;
-  if(w>=h) Near=ViewSize/2.0/tan(FieldOfView*PI/180.0/2.0);
-  else Near=ViewSize/2.0/tan(FieldOfView*Aspect*PI/180.0/2.0);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glTranslatef(-mid_point_.x,-mid_point_.y,-mid_point_.z);
-  glTranslatef(0,0,-ViewSize/2.0-Near);
-  invalidate();
-  xAngle = 0;
-  yAngle = 0;
-  zAngle = 0;
-  m_control_->setXangle(xAngle);
-  m_control_->setYangle(yAngle);
-  m_control_->setZangle(zAngle);
-  isShownSurface = false;
 }
 
 void GLScene::resetBound()
