@@ -148,7 +148,8 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   mouse_drag_pos_y_(0),
   mouse_drag_pos_z_(0),
   mouse_x_(0),
-  mouse_y_(0)
+  mouse_y_(0),
+  init_zoom_(1.8)
 {
   add_events(Gdk::VISIBILITY_NOTIFY_MASK | Gdk::BUTTON_PRESS_MASK |
              Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK | 
@@ -478,7 +479,7 @@ void GLScene::set_position(double x, double y, double& px, double& py,
   py = float(y-viewport[1])/float(viewport[3]);      
   px = left_ + px*(right_-left_);
   py = top_  + py*(bottom_-top_);
-  pz = -40;
+  pz = Near;
 }
 
 /*
@@ -691,10 +692,14 @@ bool GLScene::on_motion_notify_event(GdkEventMotion* event) {
   mouse_y_ = y;
   bool changed(false);
   if(is_mouse_zoom_) {
-    double s(exp(float(dy)*0.01));
-    glTranslatef(mid_point_.x, mid_point_.y, mid_point_.z);
-    glScalef(s,s,s);
-    glTranslatef(-mid_point_.x, -mid_point_.y, -mid_point_.z);
+    FieldOfView *= pow(1.05, dy/4.0);
+    if(FieldOfView > 180) {
+      FieldOfView = 180;
+    }
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near);
+    glMatrixMode(GL_MODELVIEW);
     changed = true;
   }
   else if(is_mouse_rotate_) {
@@ -771,16 +776,11 @@ bool GLScene::on_button_release_event(GdkEventButton* event) {
 bool GLScene::on_scroll_event(GdkEventScroll* scroll_event) {
   double s(0); 
   if(scroll_event->direction == GDK_SCROLL_UP) {
-    s = 4.0;
+    zoomIn();
   }
   else {
-    s = -4.0;
+    zoomOut();
   }
-  s = exp(s*0.01); 
-  glTranslatef(mid_point_.x, mid_point_.y, mid_point_.z);
-  glScalef(s,s,s);
-  glTranslatef(-mid_point_.x, -mid_point_.y, -mid_point_.z);
-  queue_draw();
 }
 
 bool GLScene::on_key_press_event(GdkEventKey* key_event) {
@@ -1123,10 +1123,12 @@ bool GLScene::on_expose_event(GdkEventExpose* event)
       (this->*thePlotFunction)();
     }
   if(showSurface && !isShownSurface) {
+    resetView();
     rotateMidAxisAbs(90, 0, 1, 0);
     isShownSurface = true;
     }
   else if(!showSurface && isShownSurface) {
+    resetView();
     rotateMidAxisAbs(0, 0, 1, 0);
     isShownSurface = false;
   }
@@ -1343,12 +1345,22 @@ void GLScene::reset() {
 
 void GLScene::resetView()
 {
+  GLfloat w = get_width();
+  GLfloat h = get_height();
+  Aspect = w/h;
+  glViewport(0, 0, static_cast<GLsizei>(w), static_cast<GLsizei>(h));
+  FieldOfView=45;
+  Xtrans=Ytrans=0;
+  if(w>=h) Near=ViewSize/2.0/tan(FieldOfView*PI/180.0/2.0);
+  else Near=ViewSize/2.0/tan(FieldOfView*Aspect*PI/180.0/2.0);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  //FieldOfView /= init_zoom_;
+  gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  glTranslatef(-mid_point_.x,-mid_point_.y,-mid_point_.z);
-
-  configure();
-
+  glTranslatef(-mid_point_.x, -mid_point_.y, -mid_point_.z-ViewSize/2.0-Near);
+  invalidate();
   xAngle = 0;
   yAngle = 0;
   zAngle = 0;
@@ -1356,9 +1368,24 @@ void GLScene::resetView()
   m_control_->setYangle(yAngle);
   m_control_->setZangle(zAngle);
   isShownSurface = false;
-  invalidate();
+  double tangent(tan(FieldOfView*PI/180.0/2));
+  double height(2*ViewSize*tangent);
+  double width(height*Aspect);
+  left_ = -width/2;
+  right_ = width/2;
+  bottom_ = -height/2;
+  top_ = height/2;
+  /*
+  top_ = h/2;
+  bottom_ = -top_;
+  left_ = -w/2;
+  right_ = -left_;
+  */
+  std::cout << "viewsize:" << ViewSize << " near:" << Near << " tangent:" << tangent << " w:" << width << " h:" << height << std::endl;
+  std::cout << "l:" << left_ << " r:" << right_ << " b:" << bottom_ << " t:" << top_ << std::endl;
 }
 
+/*
 void GLScene::configure() {
   GLfloat width(get_width());
   GLfloat height(get_height());
@@ -1380,8 +1407,8 @@ void GLScene::configure() {
   glOrtho(left_, right_, bottom_, top_, -40, 40);
   glMatrixMode(GL_MODELVIEW);
 }
+*/
 
-/*
 void GLScene::configure() {
   GLfloat w = get_width();
   GLfloat h = get_height();
@@ -1393,14 +1420,29 @@ void GLScene::configure() {
   else Near=ViewSize/2.0/tan(FieldOfView*Aspect*PI/180.0/2.0);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
+  //FieldOfView /= init_zoom_;
   gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near); 
   glMatrixMode(GL_MODELVIEW);
   glGetFloatv(GL_MODELVIEW_MATRIX,m);
   glLoadIdentity();
   glTranslatef(0,0,nearold-Near);
   glMultMatrixf(m);
+  double tangent(tan(FieldOfView*PI/180.0/2));
+  double height(2*ViewSize*tangent);
+  double width(height*Aspect);
+  left_ = -width/2;
+  right_ = width/2;
+  bottom_ = -height/2;
+  top_ = height/2;
+  /*
+  top_ = h/2;
+  bottom_ = -top_;
+  left_ = -w/2;
+  right_ = -left_;
+  */
+  std::cout << "viewsize:" << ViewSize << " near:" << Near << " tangent:" << tangent << " w:" << width << " h:" << height << std::endl;
+  std::cout << "l:" << left_ << " r:" << right_ << " b:" << bottom_ << " t:" << top_ << std::endl;
 }
-*/
 
 
 bool GLScene::on_configure_event(GdkEventConfigure* event)
@@ -2194,6 +2236,47 @@ void GLScene::rotateMidAxisAbs(double angle, int x, int y, int z)
   if(z && angle == zAngle) {
     return;
   }
+  double a(0);
+  if(x)
+    {
+      a = angle-xAngle;
+      xAngle = angle;
+    }
+  else if(y)
+    {
+      a = angle-yAngle;
+      yAngle = angle;
+    }
+  else if(z)
+    {
+      a = angle-zAngle;
+      zAngle = angle;
+    }
+  double ax(x);
+  double ay(y);
+  double az(z);
+  GLint viewport[4];
+  glGetIntegerv(GL_VIEWPORT, viewport);
+  GLdouble m[16];
+  GLdouble inv[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, m);
+  invertMatrix(m, inv);
+  double bx(inv[0]*ax + inv[4]*ay + inv[8]*az);
+  double by(inv[1]*ax + inv[5]*ay + inv[9]*az);
+  double bz(inv[2]*ax + inv[6]*ay + inv[10]*az);
+
+  glTranslatef(mid_point_.x, mid_point_.y, mid_point_.z);
+  glRotatef(a,bx,by,bz);
+  glTranslatef(-mid_point_.x, -mid_point_.y, -mid_point_.z);
+
+  m_control_->setXangle(xAngle);
+  m_control_->setYangle(yAngle);
+  m_control_->setZangle(zAngle);
+  isShownSurface = false;
+  queue_draw();
+
+
+  /*
   GLfloat m[16];
   glMatrixMode(GL_MODELVIEW);
   glGetFloatv(GL_MODELVIEW_MATRIX,m);
@@ -2220,6 +2303,7 @@ void GLScene::rotateMidAxisAbs(double angle, int x, int y, int z)
   glTranslatef(-Xtrans,-Ytrans,+(Near+ViewSize/2.0));
   glMultMatrixf(m);
   invalidate();
+  */
 }
 
 void GLScene::normalizeAngle(double &angle)
@@ -2261,13 +2345,13 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   m_table(10, 10),
   m_area_table_(aTable),
   theDepthAdj( 0, -200, 130, 5, 0, 0 ),
-  theXAdj( 0, -180, 180, 5, 20, 0 ),
+  theXAdj( 0, -180, 180, 1, 20, 0 ),
   theXLowBoundAdj( 0, 0, 100, 1, 0, 0 ),
   theXUpBoundAdj( 100, 0, 0, 1, 0, 0 ),
-  theYAdj( 0, -180, 180, 5, 20, 0 ),
+  theYAdj( 0, -180, 180, 1, 20, 0 ),
   theYLowBoundAdj( 0, 0, 100, 1, 0, 0 ),
   theYUpBoundAdj( 100, 0, 100, 1, 0, 0 ),
-  theZAdj( 0, -180, 180, 5, 20, 0 ),
+  theZAdj( 0, -180, 180, 1, 20, 0 ),
   theZLowBoundAdj( 0, 0, 100, 1, 0, 0 ),
   theZUpBoundAdj( 100, 0, 100, 1, 0, 0 ),
   theResetTimeButton( "Reset Time" ),
@@ -2377,11 +2461,13 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   theCheckShowTime.set_active();
   theBoxCtrl.pack_start( theCheckShowTime, false, false, 2 );
 
+  /*
   theCheckShowSurface.signal_toggled().connect( sigc::mem_fun(*this,
                             &ControlBox::on_showSurface_toggled) );
   //theCheckShowSurface.set_active();
   theCheckShowSurface.set_active(false);
   theBoxCtrl.pack_start( theCheckShowSurface, false, false, 2 );
+  */
 
   theResetRotButton.signal_clicked().connect( sigc::mem_fun(*this,
                             &ControlBox::onResetRotation) );

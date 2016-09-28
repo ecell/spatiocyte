@@ -357,6 +357,7 @@ protected:
   double bottom_;
   double left_;
   double right_;
+  double init_zoom_;
   int m_FontHeight;
   int m_FontWidth;
   int frame_cnt_;
