@@ -337,6 +337,7 @@ protected:
   bool is_mouse_rotate_;
   bool is_mouse_zoom_;
   bool is_mouse_pan_;
+  bool is_mouse_rotated_;
   char** theSpeciesNameList;
   double *theRadii;
   double theCurrentTime;

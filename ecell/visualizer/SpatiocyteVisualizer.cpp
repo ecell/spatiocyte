@@ -144,6 +144,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   is_mouse_rotate_(false),
   is_mouse_zoom_(false),
   is_mouse_pan_(false),
+  is_mouse_rotated_(false),
   mouse_drag_pos_x_(0),
   mouse_drag_pos_y_(0),
   mouse_drag_pos_z_(0),
@@ -728,6 +729,7 @@ bool GLScene::on_motion_notify_event(GdkEventMotion* event) {
     glTranslatef(mid_point_.x, mid_point_.y, mid_point_.z);
     glRotatef(angle,bx,by,bz);
     glTranslatef(-mid_point_.x, -mid_point_.y, -mid_point_.z);
+    is_mouse_rotated_ = true;
 
     m_control_->setXangle(xAngle);
     m_control_->setYangle(yAngle);
@@ -751,7 +753,7 @@ bool GLScene::on_motion_notify_event(GdkEventMotion* event) {
     changed = true;
   }
   if(changed) {
-    queue_draw();
+    invalidate();
   }
   return true;
 }
@@ -763,7 +765,7 @@ bool GLScene::on_button_release_event(GdkEventButton* event) {
   bool right(get_is_button(event, 3, GDK_BUTTON3_MASK));
   is_mouse_rotate_ = left and not (middle or right);
   is_mouse_zoom_ = middle or (left and right);
-  is_mouse_pan_ = right and get_is_event_masked(event, GDK_CONTROL_MASK);
+  is_mouse_pan_ = right;// and get_is_event_masked(event, GDK_CONTROL_MASK);
   double x(event->x);
   mouse_x_ = x;
   double y(event->y);
@@ -1356,7 +1358,18 @@ void GLScene::resetView()
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   //FieldOfView /= init_zoom_;
-  gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near);
+  const GLdouble pi = 3.1415926535897932384626433832795;
+  GLdouble width, height; 
+  //fH = tan( (fovY / 2) / 180 * pi ) * zNear;
+  height = tan( FieldOfView / 360 * pi ) * Near;
+  width = height * Aspect;
+  //gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near); 
+  left_ = -width;
+  right_ = width;
+  bottom_ = -height;
+  top_ = height;
+  glFrustum(-width, width, -height, height, Near, ViewSize+Near); 
+  //gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   glTranslatef(-mid_point_.x, -mid_point_.y, -mid_point_.z-ViewSize/2.0-Near);
@@ -1368,22 +1381,28 @@ void GLScene::resetView()
   m_control_->setYangle(yAngle);
   m_control_->setZangle(zAngle);
   isShownSurface = false;
-  double tangent(tan(FieldOfView*PI/180.0/2));
-  double height(2*ViewSize*tangent);
-  double width(height*Aspect);
-  left_ = -width/2;
-  right_ = width/2;
-  bottom_ = -height/2;
-  top_ = height/2;
   /*
   top_ = h/2;
   bottom_ = -top_;
   left_ = -w/2;
   right_ = -left_;
   */
-  std::cout << "viewsize:" << ViewSize << " near:" << Near << " tangent:" << tangent << " w:" << width << " h:" << height << std::endl;
+  std::cout << "viewsize:" << ViewSize << " near:" << Near << " w:" << width << " h:" << height << std::endl;
   std::cout << "l:" << left_ << " r:" << right_ << " b:" << bottom_ << " t:" << top_ << std::endl;
 }
+/*
+void perspectiveGL( GLdouble fovY, GLdouble aspect, GLdouble zNear, GLdouble zFar )
+{
+    const GLdouble pi = 3.1415926535897932384626433832795;
+    GLdouble fW, fH;
+
+    //fH = tan( (fovY / 2) / 180 * pi ) * zNear;
+    fH = tan( fovY / 360 * pi ) * zNear;
+    fW = fH * aspect;
+
+    glFrustum( -fW, fW, -fH, fH, zNear, zFar );
+}
+*/
 
 /*
 void GLScene::configure() {
@@ -1420,27 +1439,29 @@ void GLScene::configure() {
   else Near=ViewSize/2.0/tan(FieldOfView*Aspect*PI/180.0/2.0);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  //FieldOfView /= init_zoom_;
-  gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near); 
+  const GLdouble pi = 3.1415926535897932384626433832795;
+  GLdouble width, height; 
+  //fH = tan( (fovY / 2) / 180 * pi ) * zNear;
+  height = tan( FieldOfView / 360 * pi ) * Near;
+  width = height * Aspect;
+  //gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near); 
+  left_ = -width;
+  right_ = width;
+  bottom_ = -height;
+  top_ = height;
+  glFrustum(-width, width, -height, height, Near, ViewSize+Near); 
   glMatrixMode(GL_MODELVIEW);
   glGetFloatv(GL_MODELVIEW_MATRIX,m);
   glLoadIdentity();
   glTranslatef(0,0,nearold-Near);
   glMultMatrixf(m);
-  double tangent(tan(FieldOfView*PI/180.0/2));
-  double height(2*ViewSize*tangent);
-  double width(height*Aspect);
-  left_ = -width/2;
-  right_ = width/2;
-  bottom_ = -height/2;
-  top_ = height/2;
   /*
   top_ = h/2;
   bottom_ = -top_;
   left_ = -w/2;
   right_ = -left_;
   */
-  std::cout << "viewsize:" << ViewSize << " near:" << Near << " tangent:" << tangent << " w:" << width << " h:" << height << std::endl;
+  std::cout << "viewsize:" << ViewSize << " near:" << Near << " w:" << width << " h:" << height << std::endl;
   std::cout << "l:" << left_ << " r:" << right_ << " b:" << bottom_ << " t:" << top_ << std::endl;
 }
 
@@ -2227,6 +2248,11 @@ void GLScene::rotateMidAxis(int aMult, int x, int y, int z)
 
 void GLScene::rotateMidAxisAbs(double angle, int x, int y, int z)
 {
+  if(is_mouse_rotated_) {
+    is_mouse_rotated_ = false;
+    return;
+  }
+
   if(x && angle == xAngle) {
     return;
   }
@@ -2273,7 +2299,7 @@ void GLScene::rotateMidAxisAbs(double angle, int x, int y, int z)
   m_control_->setYangle(yAngle);
   m_control_->setZangle(zAngle);
   isShownSurface = false;
-  queue_draw();
+  invalidate();
 
 
   /*
