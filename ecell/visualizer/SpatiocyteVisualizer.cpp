@@ -2374,8 +2374,8 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   // x up bound
   theXUpBoundLabel.set_width_chars( 2 );
   theXUpBoundBox.pack_start( theXUpBoundLabel, false, false, 2 );
-  theXUpBoundAdj.set_value(0);
   theXUpBoundAdj.set_upper( aColSize );
+  theXUpBoundAdj.set_value(0);
   theXUpBoundAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
                            &ControlBox::xUpBoundChanged ) );
   theXUpBoundScale.set_draw_value( false );
@@ -2387,8 +2387,8 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   // x low bound
   theXLowBoundLabel.set_width_chars( 2 );
   theXLowBoundBox.pack_start( theXLowBoundLabel, false, false, 2 );
-  theXLowBoundAdj.set_value(0);
   theXLowBoundAdj.set_upper( aColSize );
+  theXLowBoundAdj.set_value(0);
   theXLowBoundAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
                            &ControlBox::xLowBoundChanged ) );
   theXLowBoundScale.set_draw_value( false );
