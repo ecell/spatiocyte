@@ -256,6 +256,7 @@ public:
   int get_frame_cnt();
   bool get_is_playing();
 protected: 
+  void project();
   void set_position(double x, double y, double& px, double& py, double& pz); 
   bool get_is_event_masked(GdkEventButton* event, int mask);
   bool get_is_button(GdkEventButton* event, int button, int mask);
@@ -358,7 +359,7 @@ protected:
   double bottom_;
   double left_;
   double right_;
-  double init_zoom_;
+  const double init_zoom_;
   int m_FontHeight;
   int m_FontWidth;
   int frame_cnt_;

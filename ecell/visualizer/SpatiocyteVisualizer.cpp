@@ -150,21 +150,11 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   mouse_drag_pos_z_(0),
   mouse_x_(0),
   mouse_y_(0),
-  init_zoom_(1.8)
+  init_zoom_(2.5)
 {
   add_events(Gdk::VISIBILITY_NOTIFY_MASK | Gdk::BUTTON_PRESS_MASK |
              Gdk::BUTTON_RELEASE_MASK | Gdk::POINTER_MOTION_MASK | 
              Gdk::POINTER_MOTION_HINT_MASK | Gdk::KEY_PRESS_MASK);
-    /*
-             GDK_EXPOSURE_MASK|
-    GDK_POINTER_MOTION_MASK|GDK_BUTTON_MOTION_MASK|
-    GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK|
-    GDK_KEY_PRESS_MASK|GDK_KEY_RELEASE_MASK|
-    GDK_ENTER_NOTIFY_MASK|GDK_LEAVE_NOTIFY_MASK|
-    GDK_FOCUS_CHANGE_MASK|GDK_STRUCTURE_MASK);
-    */
-
-
   std::ostringstream aFileName;
   aFileName << aBaseName << std::ends;
   theFile.open( aFileName.str().c_str(), std::ios::binary );
@@ -483,82 +473,6 @@ void GLScene::set_position(double x, double y, double& px, double& py,
   pz = Near;
 }
 
-/*
-bool GLScene::on_motion_notify_event(GdkEventMotion* event) {
-  if(event && event->window) {
-    const Glib::RefPtr<Gdk::Window> refWindow =
-        Glib::wrap(event->window, true); // true == take_copy
-    if(refWindow) {
-      int x(0);
-      int y(0);
-      Gdk::ModifierType state(Gdk::ModifierType(0));
-      const Glib::RefPtr<const Gdk::Device> device =
-        Glib::wrap(event->device, true); // true == take_copy
-
-      if(event->is_hint) {
-        //refWindow->get_device_position(device, x, y, state);
-        refWindow->get_pointer(x, y, state);
-      }
-      else {
-        x = event->x;
-        y = event->y;
-        //state = event->state;
-      }
-      double dx(x-mouse_x_);
-      double dy(y-mouse_y_);
-      if(dx == 0 && dy == 0) {
-        return true;
-      }
-      mouse_x_ = x;
-      mouse_y_ = y;
-      bool changed(false);
-      if(is_mouse_zoom_) {
-        double s(exp(float(dy)*0.01));
-        glTranslatef(mid_point_.x, mid_point_.y, mid_point_.z);
-        glScalef(s,s,s);
-        glTranslatef(-mid_point_.x, -mid_point_.y, -mid_point_.z);
-        changed = true;
-      }
-      else if(is_mouse_rotate_) {
-        double ax(dx);
-        double ay(dy);
-        double az(0);
-        GLint viewport[4];
-        glGetIntegerv(GL_VIEWPORT, viewport);
-        double angle(sqrt(ax*ax+ay*ay+az*az)/float(viewport[2]+1)*180.0);
-        double m[16];
-        glGetDoublev(GL_MODELVIEW_MATRIX, m);
-        double bx(m[0]*ax + m[3]*ay + m[6]*az);
-        double by(m[1]*ax + m[4]*ay + m[7]*az);
-        double bz(m[2]*ax + m[5]*ay + m[8]*az);
-        glTranslatef(mid_point_.x, mid_point_.y, mid_point_.z);
-        glRotatef(angle,bx,by,bz);
-        glTranslatef(-mid_point_.x, -mid_point_.y, -mid_point_.z);
-        changed = true;
-      }
-      else if(is_mouse_pan_) {
-        double px, py, pz;
-        set_position(x, y, px, py, pz);
-        double m[16];
-        glGetDoublev(GL_MODELVIEW_MATRIX, m);
-        glLoadIdentity();
-        glTranslatef(px-mouse_drag_pos_x_,py-mouse_drag_pos_y_,
-                     pz-mouse_drag_pos_z_);
-        glMultMatrixd(m);
-        mouse_drag_pos_x_ = px;
-        mouse_drag_pos_y_ = py;
-        mouse_drag_pos_z_ = pz;
-        changed = true;
-      }
-      if(changed) {
-        queue_draw();
-      }
-    }
-  }
-  return true;
-}
-*/
-
 
 static void
 invertMatrix(const GLdouble *m, GLdouble *out )
@@ -667,23 +581,22 @@ invertMatrix(const GLdouble *m, GLdouble *out )
 #undef MAT
 }
 
+void GLScene::project() {
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  top_ = tan(FieldOfView/360*PI)*Near;
+  right_ = top_*Aspect;
+  left_ = -right_;
+  bottom_ = -top_;
+  //glFrustum(left_, right_, bottom_, top_, Near, ViewSize+Near); 
+  //gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near);
+  glOrtho(left_, right_, bottom_, top_, Near, ViewSize+Near);
+  glMatrixMode(GL_MODELVIEW);
+}
+
 bool GLScene::on_motion_notify_event(GdkEventMotion* event) {
-  double x(0);
-  double y(0);
-  /*
-  Gdk::ModifierType state(Gdk::ModifierType(0));
-  if(event->is_hint) {
-    event->window->get_pointer(x, y, state);
-    //event->window->get_device_position(event->device, x, y, state);
-  }
-  else {
-    x = event->x;
-    y = event->y;
-    state = event->state;
-  }
-  */
-  x = event->x;
-  y = event->y;
+  double x(event->x);
+  double y(event->y);
   double dx(x-mouse_x_);
   double dy(y-mouse_y_);
   if(dx == 0 && dy == 0) {
@@ -697,10 +610,7 @@ bool GLScene::on_motion_notify_event(GdkEventMotion* event) {
     if(FieldOfView > 180) {
       FieldOfView = 180;
     }
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near);
-    glMatrixMode(GL_MODELVIEW);
+    project();
     changed = true;
   }
   else if(is_mouse_rotate_) {
@@ -1325,52 +1235,22 @@ void GLScene::drawBox(GLfloat xlo, GLfloat xhi, GLfloat ylo, GLfloat yhi,
   glEnd();
 }
 
-/*
-void GLScene::reset() {
-  GLfloat w = get_width();
-  GLfloat h = get_height();
-  Aspect = w/h;
-  glViewport(0, 0, static_cast<GLsizei>(w), static_cast<GLsizei>(h));
-  FieldOfView=45;
-  Xtrans=Ytrans=0;
-  if(w>=h) Near=ViewSize/2.0/tan(FieldOfView*PI/180.0/2.0);
-  else Near=ViewSize/2.0/tan(FieldOfView*Aspect*PI/180.0/2.0);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glTranslatef(-mid_point_.x,-mid_point_.y,-mid_point_.z);
-  glTranslatef(0,0,-ViewSize/2.0-Near);
-}
-*/
-
 void GLScene::resetView()
 {
-  GLfloat w = get_width();
-  GLfloat h = get_height();
-  Aspect = w/h;
-  glViewport(0, 0, static_cast<GLsizei>(w), static_cast<GLsizei>(h));
+  GLfloat width(get_width());
+  GLfloat height(get_height());
+  Aspect = width/height;
+  glViewport(0, 0, width, height);
   FieldOfView=45;
-  Xtrans=Ytrans=0;
-  if(w>=h) Near=ViewSize/2.0/tan(FieldOfView*PI/180.0/2.0);
-  else Near=ViewSize/2.0/tan(FieldOfView*Aspect*PI/180.0/2.0);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  //FieldOfView /= init_zoom_;
-  const GLdouble pi = 3.1415926535897932384626433832795;
-  GLdouble width, height; 
-  //fH = tan( (fovY / 2) / 180 * pi ) * zNear;
-  height = tan( FieldOfView / 360 * pi ) * Near;
-  width = height * Aspect;
-  //gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near); 
-  left_ = -width;
-  right_ = width;
-  bottom_ = -height;
-  top_ = height;
-  glFrustum(-width, width, -height, height, Near, ViewSize+Near); 
-  //gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near);
-  glMatrixMode(GL_MODELVIEW);
+  Xtrans = 0;
+  Ytrans = 0;
+  if(width >= height) {
+    Near = ViewSize/init_zoom_/tan(FieldOfView*PI/180.0/2.0);
+  }
+  else {
+    Near = ViewSize/init_zoom_/tan(FieldOfView*Aspect*PI/180.0/2.0);
+  }
+  project();
   glLoadIdentity();
   glTranslatef(-mid_point_.x, -mid_point_.y, -mid_point_.z-ViewSize/2.0-Near);
   invalidate();
@@ -1381,88 +1261,28 @@ void GLScene::resetView()
   m_control_->setYangle(yAngle);
   m_control_->setZangle(zAngle);
   isShownSurface = false;
-  /*
-  top_ = h/2;
-  bottom_ = -top_;
-  left_ = -w/2;
-  right_ = -left_;
-  */
-  std::cout << "viewsize:" << ViewSize << " near:" << Near << " w:" << width << " h:" << height << std::endl;
-  std::cout << "l:" << left_ << " r:" << right_ << " b:" << bottom_ << " t:" << top_ << std::endl;
 }
-/*
-void perspectiveGL( GLdouble fovY, GLdouble aspect, GLdouble zNear, GLdouble zFar )
-{
-    const GLdouble pi = 3.1415926535897932384626433832795;
-    GLdouble fW, fH;
 
-    //fH = tan( (fovY / 2) / 180 * pi ) * zNear;
-    fH = tan( fovY / 360 * pi ) * zNear;
-    fW = fH * aspect;
 
-    glFrustum( -fW, fW, -fH, fH, zNear, zFar );
-}
-*/
-
-/*
 void GLScene::configure() {
+
   GLfloat width(get_width());
   GLfloat height(get_height());
-  glViewport(0, 0, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
-  double zoom_out(1.2);
-  double ratio(width/height);
+  GLfloat nearold(Near);
+  GLfloat m[16];
+  Aspect = width/height;
+  glViewport(0, 0, width, height);
   if(width >= height) {
-    top_ = mid_point_.y*zoom_out;
-    right_ = mid_point_.x*zoom_out*width/height;
+    Near = ViewSize/init_zoom_/tan(FieldOfView*PI/180.0/2.0);
   }
   else {
-    top_ = mid_point_.y*zoom_out*height/width;
-    right_ = mid_point_.x*zoom_out;
+    Near = ViewSize/init_zoom_/tan(FieldOfView*Aspect*PI/180.0/2.0);
   }
-  bottom_ = -top_;
-  left_ = -right_;
-  glMatrixMode(GL_PROJECTION);
+  project();
+  glGetFloatv(GL_MODELVIEW_MATRIX, m);
   glLoadIdentity();
-  glOrtho(left_, right_, bottom_, top_, -40, 40);
-  glMatrixMode(GL_MODELVIEW);
-}
-*/
-
-void GLScene::configure() {
-  GLfloat w = get_width();
-  GLfloat h = get_height();
-  GLfloat nearold = Near;
-  GLfloat m[16];
-  Aspect = w/h;
-  glViewport(0, 0, static_cast<GLsizei>(w), static_cast<GLsizei>(h));
-  if(w>=h) Near=ViewSize/2.0/tan(FieldOfView*PI/180.0/2.0);
-  else Near=ViewSize/2.0/tan(FieldOfView*Aspect*PI/180.0/2.0);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  const GLdouble pi = 3.1415926535897932384626433832795;
-  GLdouble width, height; 
-  //fH = tan( (fovY / 2) / 180 * pi ) * zNear;
-  height = tan( FieldOfView / 360 * pi ) * Near;
-  width = height * Aspect;
-  //gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near); 
-  left_ = -width;
-  right_ = width;
-  bottom_ = -height;
-  top_ = height;
-  glFrustum(-width, width, -height, height, Near, ViewSize+Near); 
-  glMatrixMode(GL_MODELVIEW);
-  glGetFloatv(GL_MODELVIEW_MATRIX,m);
-  glLoadIdentity();
-  glTranslatef(0,0,nearold-Near);
+  glTranslatef(0, 0, nearold-Near);
   glMultMatrixf(m);
-  /*
-  top_ = h/2;
-  bottom_ = -top_;
-  left_ = -w/2;
-  right_ = -left_;
-  */
-  std::cout << "viewsize:" << ViewSize << " near:" << Near << " w:" << width << " h:" << height << std::endl;
-  std::cout << "l:" << left_ << " r:" << right_ << " b:" << bottom_ << " t:" << top_ << std::endl;
 }
 
 
@@ -2081,10 +1901,7 @@ void GLScene::translate(int x, int y, int z)
 void GLScene::zoomIn()
 { 
   FieldOfView/=1.05;
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near);
-  glMatrixMode(GL_MODELVIEW);
+  project();
   invalidate();
 }
 
@@ -2095,10 +1912,7 @@ void GLScene::zoomOut()
     {
       FieldOfView=180;
     }
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(FieldOfView,Aspect,Near,ViewSize+Near);
-  glMatrixMode(GL_MODELVIEW);
+  project();
   invalidate();
 }
 
