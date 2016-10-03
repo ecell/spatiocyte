@@ -2374,7 +2374,7 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   // x up bound
   theXUpBoundLabel.set_width_chars( 2 );
   theXUpBoundBox.pack_start( theXUpBoundLabel, false, false, 2 );
-  theXUpBoundAdj.set_value( aColSize );
+  theXUpBoundAdj.set_value(0);
   theXUpBoundAdj.set_upper( aColSize );
   theXUpBoundAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
                            &ControlBox::xUpBoundChanged ) );
@@ -2387,6 +2387,7 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   // x low bound
   theXLowBoundLabel.set_width_chars( 2 );
   theXLowBoundBox.pack_start( theXLowBoundLabel, false, false, 2 );
+  theXLowBoundAdj.set_value(0);
   theXLowBoundAdj.set_upper( aColSize );
   theXLowBoundAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
                            &ControlBox::xLowBoundChanged ) );
@@ -2399,8 +2400,8 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   // y up bound
   theYUpBoundLabel.set_width_chars( 2 );
   theYUpBoundBox.pack_start( theYUpBoundLabel, false, false, 2 );
-  theYUpBoundAdj.set_value( aLayerSize );
   theYUpBoundAdj.set_upper( aLayerSize );
+  theYUpBoundAdj.set_value( aLayerSize );
   theYUpBoundAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
                            &ControlBox::yUpBoundChanged ) );
   theYUpBoundScale.set_draw_value( false );
@@ -2413,6 +2414,7 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   theYLowBoundLabel.set_width_chars( 2 );
   theYLowBoundBox.pack_start( theYLowBoundLabel, false, false, 2 );
   theYLowBoundAdj.set_upper( aLayerSize );
+  theYLowBoundAdj.set_value(0);
   theYLowBoundAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
                            &ControlBox::yLowBoundChanged ) );
   theYLowBoundScale.set_draw_value( false );
@@ -2424,8 +2426,8 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   // z up bound
   theZUpBoundLabel.set_width_chars( 2 );
   theZUpBoundBox.pack_start( theZUpBoundLabel, false, false, 2 );
-  theZUpBoundAdj.set_value( aRowSize );
   theZUpBoundAdj.set_upper( aRowSize );
+  theZUpBoundAdj.set_value( aRowSize );
   theZUpBoundAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
                            &ControlBox::zUpBoundChanged ) );
   theZUpBoundScale.set_draw_value( false );
@@ -2438,6 +2440,7 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   theZLowBoundLabel.set_width_chars( 2 );
   theZLowBoundBox.pack_start( theZLowBoundLabel, false, false, 2 );
   theZLowBoundAdj.set_upper( aRowSize );
+  theZLowBoundAdj.set_value(0);
   theZLowBoundAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
                            &ControlBox::zLowBoundChanged ) );
   theZLowBoundScale.set_draw_value( false );
@@ -2708,9 +2711,12 @@ void ControlBox::onResetBound()
   unsigned int aLayerSize(m_area_.getLayerSize());
   unsigned int aColSize(m_area_.getColSize());
   unsigned int aRowSize(m_area_.getRowSize());
-  theXUpBoundAdj.set_value( 0 );
-  theYUpBoundAdj.set_value( aLayerSize );
-  theZUpBoundAdj.set_value( aRowSize );
+  theXUpBoundAdj.set_value(0);
+  theYUpBoundAdj.set_value(aLayerSize);
+  theZUpBoundAdj.set_value(aRowSize);
+  theXLowBoundAdj.set_value(0);
+  theYLowBoundAdj.set_value(0);
+  theZLowBoundAdj.set_value(0);
   theCheckInvertBound.set_active(false);
   m_area_.resetBound();
 }
