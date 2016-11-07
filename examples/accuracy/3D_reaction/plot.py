@@ -1,25 +1,6 @@
 import numpy as np
 import pylab as P
-from scipy.special import erfc,erf
 import math
-
-def g(t):
-  n = 10000.0
-  A = 100e-6*100e-6
-  V = 100e-6*100e-6*100e-6
-  k = 5e-6
-  D = 1e-6
-  h = k/D
-  return n*A/(h*V)*(np.exp(h*h*D*t)*erfc(h*np.sqrt(D*t))-1.0+2/np.pi*h*np.sqrt(D*t))
-
-def g2(t):
-  n = 10000.0
-  A = 100e-6*100e-6
-  V = 100e-6*100e-6*100e-6
-  k = 5e-6
-  D = 1e-6
-  h = k/D
-  return n*A/(h*V)*(math.exp(h*h*D*t)*(1-erf(h*math.sqrt(D*t)))-1.0+2/math.pi*h*math.sqrt(D*t))
 
 labelFontSize = 20
 tickFontSize = 20
