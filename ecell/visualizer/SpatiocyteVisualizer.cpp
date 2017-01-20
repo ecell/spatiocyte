@@ -274,7 +274,7 @@ GLScene::GLScene(const Glib::RefPtr<const Gdk::GL::Config>& config,
   for(unsigned int j(0); j!=theTotalSpeciesSize; ++j)
     {
       theSpeciesVisibility[j] = true; 
-      theXUpBound[j] = 0;
+      theXUpBound[j] = theColSize;
       theXLowBound[j] = 0;
       theYUpBound[j] = theLayerSize;
       theYLowBound[j] = 0;
@@ -1472,7 +1472,7 @@ void GLScene::plotMeanHCPPoints()
               bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
                            y <= theYUpBound[j] && y >= theYLowBound[j] &&
                            z <= theZUpBound[j] && z >= theZLowBound[j]);
-              if((isInvertBound && isBound) || (!isInvertBound && !isBound))
+              if((isInvertBound && !isBound) || (!isInvertBound && isBound))
                 {
                   glVertex3f(x, y, z);
                 }
@@ -1505,7 +1505,7 @@ void GLScene::plotMean3DHCPMolecules()
               bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
                            y <= theYUpBound[j] && y >= theYLowBound[j] &&
                            z <= theZUpBound[j] && z >= theZLowBound[j]);
-              if((isInvertBound && isBound) || (!isInvertBound && !isBound))
+              if((isInvertBound && !isBound) || (!isInvertBound && isBound))
                 {
                   glPushMatrix();
                   glTranslatef(x,y,z);
@@ -1540,7 +1540,7 @@ void GLScene::plotMean3DCubicMolecules()
               bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
                            y <= theYUpBound[j] && y >= theYLowBound[j] &&
                            z <= theZUpBound[j] && z >= theZLowBound[j]);
-              if((isInvertBound && isBound) || (!isInvertBound && !isBound))
+              if((isInvertBound && !isBound) || (!isInvertBound && isBound))
                 {
                   glPushMatrix();
                   glTranslatef(x,y,z);
@@ -1569,7 +1569,7 @@ void GLScene::plotMean3DCubicMolecules()
               bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
                            y <= theYUpBound[j] && y >= theYLowBound[j] &&
                            z <= theZUpBound[j] && z >= theZLowBound[j]);
-              if((isInvertBound && isBound) || (!isInvertBound && !isBound))
+              if((isInvertBound && !isBound) || (!isInvertBound && isBound))
                 {
                   glPushMatrix();
                   glTranslatef(x,y,z);
@@ -1607,7 +1607,7 @@ void GLScene::plot3DHCPMolecules()
                            layer >= theYLowBound[j] &&
                            row <= theZUpBound[j] &&
                            row >= theZLowBound[j]);
-              if((isInvertBound && isBound) || (!isInvertBound && !isBound))
+              if((isInvertBound && !isBound) || (!isInvertBound && isBound))
                 {
                   glPushMatrix();
                   glTranslatef(x,y,z);
@@ -1632,7 +1632,7 @@ void GLScene::plot3DHCPMolecules()
               bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
                            y <= theYUpBound[j] && y >= theYLowBound[j] &&
                            z <= theZUpBound[j] && z >= theZLowBound[j]);
-              if((isInvertBound && isBound) || (!isInvertBound && !isBound))
+              if((isInvertBound && !isBound) || (!isInvertBound && isBound))
                 {
                   glPushMatrix();
                   glTranslatef(x,y,z);
@@ -1732,7 +1732,7 @@ void GLScene::plotHCPPoints()
               bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
                            y <= theYUpBound[j] && y >= theYLowBound[j] &&
                            z <= theZUpBound[j] && z >= theZLowBound[j]);
-              if((isInvertBound && isBound) || (!isInvertBound && !isBound))
+              if((isInvertBound && !isBound) || (!isInvertBound && isBound))
                 {
                   glVertex3f(x, y, z);
                 }
@@ -1754,7 +1754,7 @@ void GLScene::plotHCPPoints()
               bool isBound(x <= theXUpBound[j] && x >= theXLowBound[j] &&
                            y <= theYUpBound[j] && y >= theYLowBound[j] &&
                            z <= theZUpBound[j] && z >= theZLowBound[j]);
-              if((isInvertBound && isBound) || (!isInvertBound && !isBound))
+              if((isInvertBound && !isBound) || (!isInvertBound && isBound))
                 {
                   glVertex3f(x, y, z);
                 }
@@ -2019,7 +2019,7 @@ void GLScene::resetBound()
 {
   for(unsigned int i(0); i!=theTotalSpeciesSize; ++i )
     {
-      theXUpBound[i] = 0;
+      theXUpBound[i] = theColSize;
       theXLowBound[i] = 0;
       theYUpBound[i] = theLayerSize;
       theYLowBound[i] = 0;
@@ -2375,7 +2375,7 @@ ControlBox::ControlBox(GLScene& anArea, Gtk::Table& aTable) :
   theXUpBoundLabel.set_width_chars( 2 );
   theXUpBoundBox.pack_start( theXUpBoundLabel, false, false, 2 );
   theXUpBoundAdj.set_upper( aColSize );
-  theXUpBoundAdj.set_value(0);
+  theXUpBoundAdj.set_value( aColSize );
   theXUpBoundAdj.signal_value_changed().connect( sigc::mem_fun(*this, 
                            &ControlBox::xUpBoundChanged ) );
   theXUpBoundScale.set_draw_value( false );
@@ -2711,7 +2711,7 @@ void ControlBox::onResetBound()
   unsigned int aLayerSize(m_area_.getLayerSize());
   unsigned int aColSize(m_area_.getColSize());
   unsigned int aRowSize(m_area_.getRowSize());
-  theXUpBoundAdj.set_value(0);
+  theXUpBoundAdj.set_value(aColSize);
   theYUpBoundAdj.set_value(aLayerSize);
   theZUpBoundAdj.set_value(aRowSize);
   theXLowBoundAdj.set_value(0);
