@@ -197,15 +197,10 @@ bool SpatiocyteNextReactionProcess::react()
       //nonHD_A -> HD_C:
       else if(A && variableC && !D && !variableD)
         {
-          //std::cout << "first:" << getIDString() << " A:" << A->getIDString() << " vC:" << getIDString(variableC) << std::endl;
           moleculeA = A->getRandomMolecule();
-          //std::cout << "sn1" << std::endl;
           interruptProcessesPre();
-          //std::cout << "sn2" << std::endl;
           A->removeMolecule(moleculeA);
-          //std::cout << "sn3" << std::endl;
           variableC->addValue(coefficientC);
-          //std::cout << "sn4" << std::endl;
         }
       //nonHD_A -> nonHD_C + HD_D + HD_F:
       //nonHD_A -> HD_C + nonHD_D + HD_F:
@@ -298,21 +293,15 @@ bool SpatiocyteNextReactionProcess::react()
       //HD_A -> nonHD_C:
       else if(variableA && C && !D && !variableD)
         {
-          //std::cout << "second:" << getIDString() << " vA:" << getIDString(variableA) << " vC:" << getIDString(C) << std::endl;
           moleculeC = reactvAC(variableA, C);
-          //std::cout << "ssn1" << std::endl;
           if(moleculeC == NULL)
             {
-              //std::cout << "ssn2 failed" << std::endl;
               return false;
             }
           else
             {
-              //std::cout << "ssn3" << std::endl;
               variableA->addValue(coefficientA);
-              //std::cout << "ssn4" << std::endl;
               C->addMolecule(moleculeC);
-              //std::cout << "ssn5" << std::endl;
             }
         }
       //HD_A -> nonHD_C + nonHD_D:
@@ -477,6 +466,83 @@ bool SpatiocyteNextReactionProcess::react()
                 }
               variableA->addValue(coefficientA);
               variableB->addValue(coefficientB);
+              C->addMolecule(moleculeC);
+              D->addMolecule(moleculeD);
+            }
+        }
+      //Homodimerization 2HD -> product(s)
+      else if(variableA && !variableB && !A && !B)
+        {
+          //HD + HD -> HD: 
+          if(variableC && !variableD && !D)
+            {
+              variableA->addValue(coefficientA);
+              variableC->addValue(coefficientC);
+            }
+          //HD + HD -> nonHD: 
+          else if(C && !variableD && !D)
+            { 
+              moleculeC = reactvAvBC(C);
+              if(moleculeC == NULL)
+                {
+                  return false;
+                }
+              variableA->addValue(coefficientA);
+              C->addMolecule(moleculeC);
+            }
+          //HD + HD -> HD + HD: 
+          else if(variableC && variableD)
+            {
+              variableA->addValue(coefficientA);
+              variableC->addValue(coefficientC);
+              variableD->addValue(coefficientD);
+            }
+          //HD + HD -> HD + nonHD: 
+          //HD + HD -> nonHD + HD: 
+          else if((variableC && D) || (C && variableD))
+            {
+              Variable* HD_p(variableC);
+              int coefficient(coefficientC);
+              Species* nonHD_p(D);
+              if(variableD)
+                {
+                  HD_p = variableD;
+                  coefficient = coefficientD;
+                  nonHD_p = C;
+                }
+              moleculeP = reactvAvBC(nonHD_p);
+              if(moleculeP == NULL)
+                {
+                  return false;
+                }
+              variableA->addValue(coefficientA);
+              nonHD_p->addMolecule(moleculeP);
+              HD_p->addValue(coefficient);
+            }
+          //HD + HD -> nonHD + nonHD: 
+          else if(C && D)
+            {
+              moleculeC = reactvAvBC(C);
+              moleculeD = NULL;
+              if(moleculeC == NULL)
+                {
+                  moleculeD = reactvAvBC(D);
+                  if(moleculeD)
+                    {
+                      moleculeC = C->getRandomAdjoiningVoxel(moleculeD,
+                                                     moleculeD, SearchVacant);
+                    }
+                }
+              else
+                { 
+                  moleculeD = D->getRandomAdjoiningVoxel(moleculeC, moleculeC,
+                                                         SearchVacant);
+                }
+              if(moleculeC == NULL || moleculeD == NULL)
+                {
+                  return false;
+                }
+              variableA->addValue(coefficientA);
               C->addMolecule(moleculeC);
               D->addMolecule(moleculeD);
             }
@@ -1240,7 +1306,9 @@ double SpatiocyteNextReactionProcess::getPropensitySecondOrderHomo()
     }
     */
   double sizeA(substrateA->getValue());
-  if(sizeA < -coefficientA)
+  //Include coefficientB because A + A -> product, with coefficientA = -1
+  //and coefficientB = -1:
+  if(sizeA < -coefficientA-coefficientB)
     {
       sizeA = 1;
     }
@@ -2384,7 +2452,7 @@ void SpatiocyteNextReactionProcess::setPropensityMethod()
         }
       //Two unique substrate species:
       //A + B -> products:
-      else if(getZeroVariableReferenceOffset() >= 2)
+      else if(getZeroVariableReferenceOffset() >= 2 && variableA != variableB)
         {
           thePropensityMethod = &SpatiocyteNextReactionProcess::
             getPropensitySecondOrderHetero;
