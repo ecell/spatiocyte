@@ -376,7 +376,7 @@ def delete_home_scenes():
     names.append(bpy.data.scenes[i].name)
   bpy.ops.scene.new(type='EMPTY')
   for i in range(len(names)):
-    bpy.data.scenes.remove(bpy.data.scenes[names[i]])
+    bpy.data.scenes.remove(bpy.data.scenes[names[i]], do_unlink=True)
   #print(list(bpy.data.scenes))
   #print(list(bpy.data.worlds))
 
