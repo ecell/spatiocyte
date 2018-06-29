@@ -1,5 +1,5 @@
 #!/bin/sh -x
-sudo apt-get install git autoconf automake libtool g++ libhdf5-dev libgsl0-dev python-numpy python-ply python-gtk2 libboost-python-dev libgtkmm-2.4-dev libgtkglextmm-x11-1.2-dev libav-tools blender vlc python-numpy python-scipy python-matplotlib valgrind
+sudo apt-get install git autoconf automake libtool g++ libhdf5-dev libgsl-dev python-numpy python-ply python-gtk2 libboost-python-dev libgtkmm-2.4-dev libgtkglextmm-x11-1.2-dev ffmpeg blender vlc python-numpy python-scipy python-matplotlib 
 echo "export PATH=.:\$HOME/root/bin:\$PATH" >> ~/.bashrc
 echo "export LD_LIBRARY_PATH=\$HOME/root/lib:\$LD_LIBRARY_PATH:." >> ~/.bashrc
 echo "export PYTHONPATH=\$HOME/root/lib/python2.7/site-packages:\$PYTHONPATH" >> ~/.bashrc
@@ -15,3 +15,4 @@ cd spatiocyte
 make -j4
 make install
 echo "Close and reopen this terminal before proceeding"
+
