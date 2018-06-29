@@ -154,6 +154,7 @@ void IteratingLogProcess::fire()
       if((Survival || RebindTime) && !isSurviving)
         {
           theInterval = libecs::INF;
+          theTime = LogEnd;
         }
       ++logCnt;
       if(!(logCnt%exposureCnt))
