@@ -348,6 +348,9 @@ void IteratingLogProcess::logValues()
                   val += aSpecies->getCollisionCnt(j);
                 }
             }
+          if(Verbose) {
+            std::cout << "collisions:" << val/(theTime-LogStart) << std::endl;
+          }
           theLogValues[timePointCnt][i] += val/(theTime-LogStart);
         }
       //By default log the values:
