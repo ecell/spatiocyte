@@ -150,18 +150,6 @@ bool SpatiocyteNextReactionProcess::react()
         {
           return reactACDF(A, C, D, F);
         }
-      //nonHD_A -> nonHD_C + nonHD_D:
-      else if(A && C && D)
-        {
-          if(BindingSite == -1)
-            {
-              return reactACD(A, C, D);
-            }
-          else
-            {
-              return reactACDbind(A, C, D);
-            }
-        }
       //nonHD_A -> nonHD_C:
       else if(A && C && !D && !variableD)
         {
@@ -266,6 +254,18 @@ bool SpatiocyteNextReactionProcess::react()
           else
             {
               return false;
+            }
+        }
+      //nonHD_A -> nonHD_C + nonHD_D:
+      else if(A && C && D)
+        {
+          if(BindingSite == -1)
+            {
+              return reactACD(A, C, D);
+            }
+          else
+            {
+              return reactACDbind(A, C, D);
             }
         }
       //nonHD_A -> nonHD_C + HD_D:
