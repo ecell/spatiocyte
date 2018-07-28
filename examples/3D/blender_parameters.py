@@ -58,3 +58,32 @@ plane_material_name = 'White'
 time_material_name = 'White'
 filename = 'CoordinateLog.csv'
 species_material_names = ['DarkRed_glossy','DarkBlue_glossy','Green_glossy', 'BrightGreen_glossy','Magenta_glossy','DarkOrange_glossy','Cyan_glossy']
+
+#start_frame = 5
+#end_frame = 350
+#resolution_x = 1920
+#resolution_y = 1920
+#resolution_percentage = 100
+#render_samples = 1000
+#lamp_shadow_size = 0.1
+#lamp_strength = 3
+#plane_scale = 5
+#background_strength = 0.3
+#species_radius_delta = 0.01
+#visible_planes = [1, 1, 1, 0, 0, 0]
+#camera_rotation = (63.18*math.pi/180.0,0*math.pi/180.0,136.6*math.pi/180.0)
+#camera_location = (65.35, 69.33, 50.31)
+#time_location = (46.43, 15.87, 37.37)
+#lamp_location = (7.88, 37.38, 73.27)
+#lamp_rotation = (-7.82*math.pi/180.0,0.69*math.pi/180.0,92.31*math.pi/180.0)
+#plane_disp = [1.0, 1.25, 1.5]
+##plane_disp = [0.5, 0, 0.5]
+##set True if using GPU device to render
+#GPU_device = True
+##for GPU device, set tile_x = 512, tile_y = 512
+#tile_x = 256
+#tile_y = 256
+#plane_material_name = 'White'
+#time_material_name = 'Black'
+#filename = 'CoordinateLog.csv'
+#species_material_names = ['Yellow_glossy','LightBlue_glossy','DarkOrange_glossy','Cyan_glossy']
