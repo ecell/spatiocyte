@@ -613,22 +613,7 @@ String Stepper::asString() const
 
 SET_METHOD_DEF( Real, NextTime, Stepper )
 {
-    Real const aStepInterval( value - getCurrentTime() );
-
-    if ( aStepInterval < getMinStepInterval() )
-    {
-        theNextTime = value;
-        THROW_EXCEPTION_INSIDE( SimulationError,
-                String( "The step interval for [" )
-                + asString() + "] ("
-                + stringCast( aStepInterval )
-                + ") is behind the error-limit step interval ("
-                + stringCast( getMinStepInterval() ) + ")" );
-    }
-    else
-    {
-        theNextTime = value;
-    }
+  theNextTime = value;
 }
 
 GET_METHOD_DEF( Real, TimeScale, Stepper )

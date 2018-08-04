@@ -13,17 +13,17 @@ import random
 #D = diffusion coefficient
 
 def run_single(T, V, N, R, D):
-  print 'T (sim time) =', T, '; V (liter volume) = ', V, '; N (#molecules) =', N, '; R (voxel radius) =', R, '; D (diffusion coef) =', D
+  print('T (sim time) =', T, '; V (liter volume) = ', V, '; N (#molecules) =', N, '; R (voxel radius) =', R, '; D (diffusion coef) =', D)
   filename = ('%f' %random.random())
   # V is in m^3, get the cube length, L
   L = math.pow(V, 1.0 / 3.0)
   param = ("--parameters=\"{'T':%e, 'L':%e, 'N':%e, 'R':%e, 'D':%e, 'filename':'%s'}\"" %(T, L, N, R, D, filename))
   os.system("ecell3-session " + param + " diffusion.py")
-  f = open(filename, 'r')
-  timing = pickle.load(f)
-  f.close()
+  with open(filename, 'rb') as f:
+      timing = pickle.load(f)
+      f.close()
   os.remove(filename)
-  print 'total runtime:', timing, '\n'
+  print('total runtime:', timing, '\n')
   return timing
 
 if __name__ == '__main__':
