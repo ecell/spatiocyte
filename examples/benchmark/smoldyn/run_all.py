@@ -3,7 +3,7 @@ import sys
 import math
 import numpy as np
 
-def run_set(outfile, name, V_list, N_list, T_list, R, D, REPEAT):
+def run_set(outfile, name, V_list, N_list, T_list, R, D, M, REPEAT):
     import run_single
     outfile.write('%s = [\n' % name)
     for i in range(len(V_list)):
@@ -12,7 +12,7 @@ def run_set(outfile, name, V_list, N_list, T_list, R, D, REPEAT):
         run_times = []
         est_times = []
         for c in range(REPEAT):
-            run_time = run_single.run_single(T_list[i], V_list[i], N_list[i], R, D)
+            run_time = run_single.run_single(T_list[i], V_list[i], N_list[i], R, D, M)
             est_time = run_time * (T / T_list[i])
             run_times.append(run_time)
             est_times.append(est_time)
@@ -29,6 +29,7 @@ Nv = [100,300,1000,3000,10000,30000,100000,300000,1000000,3000000,10000000] #num
 Tx = np.array([max(1e-5, min(T, 20e0 / math.pow(N, 2.0 / 3.0))) for N in Nv]) #duration
 Tr = np.array([2.59, 1.82, 3.16, 7.21, 14.06, 18.23, 35.49, 164.09, 329.06, 541.01, 884.35])
 Tv = 240.0/Tr*Tx
+Mv = "diffusion.txt"
 REPEAT = 1
 
 if __name__ == '__main__':
@@ -36,4 +37,5 @@ if __name__ == '__main__':
     postfix = '_out'
     outfile = open(mode+postfix+'.py','w'); 
     dataname = mode+'_data'
-    run_set(outfile, dataname, Vv, Nv, Tv, Rv, Dv, REPEAT); outfile.write('\n\n')
+    run_set(outfile, dataname, Vv, Nv, Tv, Rv, Dv, Mv, REPEAT);
+    outfile.write('\n\n')

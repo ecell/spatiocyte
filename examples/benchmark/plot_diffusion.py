@@ -26,7 +26,7 @@ def plot_data(N, T, fmt):
     mean = T.mean(1)
     std_err = T.std()/math.sqrt(len(T))
     #errorbar(N, mean, yerr=std_err, fmt=fmt)
-    print N, mean
+    print(N, mean)
     loglog(N, mean, fmt)
 
 axes([.12,.14,.86,.83])
@@ -58,9 +58,17 @@ filename = path+'smoldyn/smoldyn_out.py'
 if (os.path.isfile(filename)):
   imp.load_source('smoldyn_out', filename)
   from smoldyn_out import *
-  plot(Nv, smoldyn_data,'go', fillstyle='none', label=r'Smoldyn ($V=3\ \mathrm{\mu m}^{3}$)')
+  plot(Nv, smoldyn_data,'gs', fillstyle='none', label=r'Smoldyn ($V=3\ \mathrm{\mu m}^{3}$)')
   loglog(X, 0.4*X, 'g--')
-  annotate(r'$T\propto N$', xy=(X[1], smoldyn_data[1][0]),  xycoords='data', xytext=(-25, -23), textcoords='offset points', color='g', size=14)
+  #annotate(r'$T\propto N$', xy=(X[1], smoldyn_data[1][0]),  xycoords='data', xytext=(-25, -23), textcoords='offset points', color='g', size=14)
+
+filename = path+'smoldyn/smoldyn_excluded_volume_out.py'
+if (os.path.isfile(filename)):
+  imp.load_source('smoldyn_excluded_volume_out', filename)
+  from smoldyn_excluded_volume_out import *
+  plot(Nv, smoldyn_excluded_volume_data,'go', fillstyle='none', label=r'Smoldyn excluded volume ($V=3\ \mathrm{\mu m}^{3}$)')
+  loglog(X, 0.4*X, 'g--')
+  #annotate(r'$T\propto N$', xy=(X[1], smoldyn_excluded_volume_data[1][0]),  xycoords='data', xytext=(-25, -23), textcoords='offset points', color='g', size=14)
 
 filename = path+'smoldyn/smoldyn_dillute_out.py'
 if (os.path.isfile(filename)):
@@ -74,7 +82,7 @@ if (os.path.isfile(filename)):
   from spatiocyte_out import *
   plot(Nv, spatiocyte_data,'rx', fillstyle='none', label=r'Spatiocyte ($V=3\ \mathrm{\mu m}^{3}$)')
   loglog(X, 0.8*X, 'r--')
-  annotate(r'$T\propto N$', xy=(X[5], spatiocyte_data[5][0]),  xycoords='data', xytext=(-15, 12), textcoords='offset points', color='r', size=14)
+  #annotate(r'$T\propto N$', xy=(X[5], spatiocyte_data[5][0]),  xycoords='data', xytext=(-15, 12), textcoords='offset points', color='r', size=14)
 
 filename = path+'spatiocyte/spatiocyte_dillute_out.py'
 if (os.path.isfile(filename)):

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import sys
-import numpy
 import math
+import numpy as np
 
-def run_set(outfile, name, V_list, N_list, T_list, R, D, REPEAT):
+def run_set(outfile, name, V_list, N_list, T_list, R, D, M, REPEAT):
     import run_single
     outfile.write('%s = [\n' % name)
     for i in range(len(V_list)):
@@ -12,7 +12,7 @@ def run_set(outfile, name, V_list, N_list, T_list, R, D, REPEAT):
         run_times = []
         est_times = []
         for c in range(REPEAT):
-            run_time = run_single.run_single(T_list[i], V_list[i], N_list[i], R, D)
+            run_time = run_single.run_single(T_list[i], V_list[i], N_list[i], R, D, M)
             est_time = run_time * (T / T_list[i])
             run_times.append(run_time)
             est_times.append(est_time)
@@ -24,15 +24,18 @@ def run_set(outfile, name, V_list, N_list, T_list, R, D, REPEAT):
 T = 10.
 Rv = 2.5e-9 #voxel radius
 Dv = 1e-12 #diffusion coefficient
-Vv = [3e-17, ] * 11 #simulation volume in m^3
+Vv = [3e-18, ] * 11 #simulation volume in m^3
 Nv = [100,300,1000,3000,10000,30000,100000,300000,1000000,3000000,10000000] #number of molecules
-#Tv = [max(1e-5, min(T, 20e0 / math.pow(N, 2.0 / 3.0))) for N in Nv] #duration
-Tv = [0.93,0.45,0.2,0.1,0.043,0.02,0.01,0.0045,0.002,0.001,0.00043]
+Tr = np.array([5.0, 9.4, 13.6, 14.3, 12.3, 16.0, 14.8, 13.3, 15.5, 22.3, 22.2])
+Tx = np.array([0.358, 0.245, 0.0633, 0.0133, 0.00306, 0.00114, 0.000261, 2.719e-5, 6.0779e-6, 1.777e-6, 4.8723e-7])
+Tv = 1000/Tr*Tx
+Mv = "diffusion_excluded_volume.txt"
 REPEAT = 1
 
 if __name__ == '__main__':
-    mode = "smoldyn_dillute"
+    mode = "smoldyn_excluded_volume"
     postfix = '_out'
     outfile = open(mode+postfix+'.py','w'); 
     dataname = mode+'_data'
-    run_set(outfile, dataname, Vv, Nv, Tv, Rv, Dv, REPEAT); outfile.write('\n\n')
+    run_set(outfile, dataname, Vv, Nv, Tv, Rv, Dv, Mv, REPEAT);
+    outfile.write('\n\n')
