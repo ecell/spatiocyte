@@ -36,6 +36,7 @@ pop.VariableReferenceList = [['_', 'Variable:.:A']]
 dif = theSimulator.createEntity('DiffusionProcess', 'Process:/:diff')
 dif.VariableReferenceList = [['_', 'Variable:.:A']]
 dif.D = D
+dif.WalkPoint = 1
 gc.disable
 run(stirTime)
 print "Now running",int(N),"molecules for",T,"s"

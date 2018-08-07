@@ -118,6 +118,7 @@ public:
     isTag(false),
     isTagged(false),
     isVacant(false),
+    isPoint(false),
     theID(anID),
     theInitCoordSize(anInitCoordSize),
     theMoleculeSize(0),
@@ -276,6 +277,10 @@ public:
     {
       isInterface = true;
     }
+  void setIsPoint()
+    {
+      isPoint = true;
+    }
   void setIsRegularLattice(unsigned aDiffuseSize)
     {
       isRegularLattice = true;
@@ -300,6 +305,10 @@ public:
   bool getIsTag()
     {
       return isTag;
+    }
+  bool getIsPoint()
+    {
+      return isPoint;
     }
   bool getIsPopulateSpecies()
     {
@@ -808,6 +817,28 @@ public:
   double getInterfaceConst(Voxel* aVoxel, unsigned index)
     {
       return theInterfaceConsts[getIndex(aVoxel)][index];
+    }
+  void walkPoint()
+    {
+      const unsigned beginMoleculeSize(theMoleculeSize);
+      unsigned size(theAdjoiningCoordSize);
+      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          if(!isFixedAdjoins)
+            {
+              size = source->diffuseSize;
+            }
+          Voxel* target(&theLattice[source->adjoiningCoords[
+                        theRng.Integer(size)]]);
+          if(getID(target) == theVacantID)
+            {
+              if(theWalkProbability == 1 || theRng.Fixed() < theWalkProbability)
+                {
+                  theMolecules[i] = target;
+                }
+            }
+        }
     }
   void walk()
     {
@@ -2134,7 +2165,9 @@ public:
     }
   void addMoleculeDirect(Voxel* aVoxel)
     {
-      aVoxel->idx = theMoleculeSize+theStride*theID;
+      if(!isPoint) {
+        aVoxel->idx = theMoleculeSize+theStride*theID;
+      }
       softAddMolecule(aVoxel);
     }
   void softAddMolecule(Voxel* aVoxel)
@@ -4536,6 +4569,7 @@ private:
   bool isTag;
   bool isTagged;
   bool isVacant;
+  bool isPoint;
   const unsigned short theID;
   int lipCols;
   int lipRows;

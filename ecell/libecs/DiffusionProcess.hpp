@@ -49,6 +49,7 @@ public:
       PROPERTYSLOT_SET_GET(Integer, Origins);
       PROPERTYSLOT_SET_GET(Integer, RegularLattice);
       PROPERTYSLOT_SET_GET(Integer, WalkReact);
+      PROPERTYSLOT_SET_GET(Integer, WalkPoint);
       PROPERTYSLOT_SET_GET(Real, D);
       PROPERTYSLOT_SET_GET(Real, Interval);
       PROPERTYSLOT_SET_GET(Real, P);
@@ -61,6 +62,7 @@ public:
     Origins(0),
     RegularLattice(0),
     WalkReact(0),
+    WalkPoint(0),
     D(0),
     Interval(0),
     P(1),
@@ -75,6 +77,7 @@ public:
   SIMPLE_SET_GET_METHOD(Integer, Origins);
   SIMPLE_SET_GET_METHOD(Integer, RegularLattice);
   SIMPLE_SET_GET_METHOD(Integer, WalkReact);
+  SIMPLE_SET_GET_METHOD(Integer, WalkPoint);
   SIMPLE_SET_GET_METHOD(Real, D);
   SIMPLE_SET_GET_METHOD(Real, Interval);
   SIMPLE_SET_GET_METHOD(Real, P);
@@ -179,6 +182,10 @@ public:
       if(MoleculeRadius)
         {
           theDiffusionSpecies->setMoleculeRadius(MoleculeRadius);
+        }
+      if(WalkPoint)
+        {
+          theDiffusionSpecies->setIsPoint();
         }
     }
   virtual void initializeFourth()
@@ -317,7 +324,11 @@ public:
                 }
               else 
                 {
-                  if(WalkReact)
+                  if(WalkPoint)
+                    {
+                      theWalkMethod = &DiffusionProcess::walkPoint;
+                    }
+                  else if(WalkReact)
                     {
                       theWalkMethod = &DiffusionProcess::walkReact;
                     }
@@ -387,6 +398,10 @@ public:
     {
       theDiffusionSpecies->walkReact();
     }
+  void walkPoint() const
+    {
+      theDiffusionSpecies->walkPoint();
+    }
   void walkReactRegular() const
     {
       theDiffusionSpecies->walkReactRegular();
@@ -438,6 +453,7 @@ protected:
   unsigned Origins;
   unsigned RegularLattice;
   unsigned WalkReact;
+  unsigned WalkPoint;
   double D;
   double Interval;
   double P;

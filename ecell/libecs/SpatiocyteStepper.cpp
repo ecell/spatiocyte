@@ -3522,8 +3522,12 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
         }
       else if((*i)->getIsPopulateSpecies())
         {
-          vacantPopulations[(*i)->getVacantSpecies()->getID()] += 
-            (*i)->getPopulateCoordSize();
+          //Don't consider available vacant voxels if it is point particle
+          //since multiple point particles can occupy a single vacant voxel
+          if(!(*i)->getIsPoint()) {
+            vacantPopulations[(*i)->getVacantSpecies()->getID()] += 
+              (*i)->getPopulateCoordSize();
+          }
           bool isPushed(false);
           std::vector<Species*> temp;
           std::vector<Species*>::const_iterator j(prioritySpecies.begin());
@@ -3564,8 +3568,13 @@ void SpatiocyteStepper::populateComp(Comp* aComp)
       //the vacant species according to priority:
       if(!prioritySpecies[i]->getIsPopulated())
         {
+
           unsigned aVacantID(prioritySpecies[i]->getVacantSpecies()->getID());
-          if(vacantPopulations[aVacantID])
+          if(prioritySpecies[i]->getIsPoint())
+            {
+              prioritySpecies[i]->populateCompUniformSparse();
+            }
+          else if(vacantPopulations[aVacantID])
             {
               unsigned available(theSpecies[aVacantID]->getPopulatableSize());
               if(vacantPopulations[aVacantID] > available)
