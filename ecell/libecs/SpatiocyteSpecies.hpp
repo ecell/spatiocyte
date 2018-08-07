@@ -92,7 +92,7 @@ class Species
 {
 public:
   Species(SpatiocyteStepper* aStepper, Variable* aVariable, int anID, 
-          int anInitCoordSize, RandomLib::Random& aRng,
+          int anInitCoordSize, RandomLib::Random& aRng, Ranvec1& aRngSimd,
           double voxelRadius, std::vector<Voxel>& aLattice,
           std::vector<Species*>& aSpeciesList):
     isCentered(false),
@@ -133,6 +133,7 @@ public:
     theVoxelRadius(voxelRadius),
     theWalkProbability(1),
     theRng(aRng),
+    theRngSimd(aRngSimd),
     theTrailSpecies(NULL),
     theDeoligomerizedProduct(NULL),
     thePopulateProcess(NULL),
@@ -143,720 +144,30 @@ public:
     theLattice(aLattice),
     theSpecies(aSpeciesList) {}
   ~Species() {}
-  void initialize(const int anAdjoiningCoordSize, const unsigned aNullCoord,
-                  const unsigned aNullID)
-    {
-      const unsigned speciesSize(theSpecies.size());
-      theAdjoiningCoordSize = anAdjoiningCoordSize;
-      theNullCoord = aNullCoord;
-      theNullID = aNullID;
-      theStride = UINT_MAX/speciesSize;
-      theReactionProbabilities.resize(speciesSize, 0);
-      theDiffusionInfluencedReactions.resize(speciesSize, NULL);
-      isFinalizeReactions.resize(speciesSize, false);
-      isMultiscaleBinderID.resize(speciesSize, false);
-      isMultiMultiReactantID.resize(speciesSize, false);
-      isMultiscaleBoundID.resize(speciesSize, false);
-      isProductPair.resize(speciesSize, false);
-      theMultiscaleUnbindIDs.resize(speciesSize);
-      if(theComp)
-        {
-          setVacantSpecies(theComp->vacantSpecies);
-        }
-      Tag aNullTag;
-      theVacantIdx = theStride*theVacantID;
-      aNullTag.speciesID = theNullID;
-      aNullTag.rotIndex = 0;
-      aNullTag.multiIdx = 0;
-      aNullTag.boundCnt = 0;
-      //Default theOligomerSize = 1
-      for(unsigned i(0); i != theOligomerSize; ++i)
-        {
-          theNullTag.push_back(aNullTag);
-        }
-      cout.setLevel(theStepper->getDebugLevel());
-    }
-  void setDiffusionInfluencedReaction(DiffusionInfluencedReactionProcess*
-                                      aReaction, int anID, double aProbability)
-    {
-      if(theDiffusionInfluencedReactions[anID] != NULL &&
-         aReaction->getIDString() != 
-         theDiffusionInfluencedReactions[anID]->getIDString())
-        {
-          THROW_EXCEPTION(ValueError, getIDString() +
-             ": has duplicate DiffusionInfluencedReactionProcesses (1):" +
-             aReaction->getIDString() + " (2):" +
-             theDiffusionInfluencedReactions[anID]->getIDString() +
-             ". Remove one of them before proceeding.");
-        }
-      theDiffusionInfluencedReactions[anID] = aReaction;
-      theReactionProbabilities[anID] = aProbability;
-    }
-  void setDiffusionInfluencedReactantPair(Species* aSpecies)
-    {
-      theDiffusionInfluencedReactantPairs.push_back(aSpecies);
-    }
-  void setPopulateProcess(MoleculePopulateProcess* aProcess, double aDist)
-    {
-      if(aDist)
-        {
-          isGaussianPopulation = true;
-        }
-      thePopulateProcess = aProcess;
-    }
-  void setProductPair(Species* aSpecies)
-    {
-      isProductPair[aSpecies->getID()] = true;
-    }
-  bool isTrailSpecies(Species* aSpecies)
-    {
-      return (theTrailSpecies == aSpecies);
-    }
-  bool getIsInterface()
-    {
-      return isInterface;
-    }
-  bool getIsDeoligomerize()
-    {
-      return isDeoligomerize;
-    }
-  bool getIsOnMultiscale()
-    {
-      return isOnMultiscale;
-    }
-  bool getIsGaussianPopulation()
-    {
-      return isGaussianPopulation;
-    }
-  int getPopulatePriority()
-    {
-      return thePopulateProcess->getPriority();
-    }
-  void populateCompGaussian()
-    {
-      if(thePopulateProcess)
-        {
-          thePopulateProcess->populateGaussian(this);
-        }
-      else if(theMoleculeSize)
-        {
-          cout << "Warning: Species " << getIDString() <<
-            " not populated." << std::endl;
-        }
-    }
-  void addTaggedSpecies(Species* aSpecies)
-    {
-      isTag = true;
-      //If one of the tagged species is off-lattice then
-      //make the tag species off-lattice. The getPoint method
-      //will convert the coord of lattice species to point
-      //when logging:
-      if(aSpecies->getIsOffLattice())
-        {
-          isOffLattice = true;
-        }
-      theTaggedSpeciesList.push_back(aSpecies);
-    }
-  void addTagSpecies(Species* aSpecies)
-    {
-      isTagged = true;
-      theTagSpeciesList.push_back(aSpecies);
-      aSpecies->addTaggedSpecies(this);
-    }
-  void setIsDeoligomerize(Species* aSpecies, const unsigned aSize)
-    {
-      isDeoligomerize = true;
-      theBoundCnts.resize(aSize+1);
-      theDeoligomerizedProduct = aSpecies;
-    }
-  void setIsPeriodic()
-    {
-      isPeriodic = true;
-    }
-  void setIsInterface()
-    {
-      isInterface = true;
-    }
-  void setIsPoint()
-    {
-      isPoint = true;
-    }
-  void setIsRegularLattice(unsigned aDiffuseSize)
-    {
-      isRegularLattice = true;
-      theDiffuseSize = aDiffuseSize;
-    }
-  void setWalkPropensity(const double aPropensity)
-    {
-      theWalkPropensity = aPropensity;
-      if(aPropensity > 0)
-        {
-          isDiffusing = true;
-        }
-    }
-  bool getIsRegularLattice()
-    {
-      return isRegularLattice;
-    }
-  bool getIsTagged()
-    {
-      return isTagged;
-    }
-  bool getIsTag()
-    {
-      return isTag;
-    }
-  bool getIsPoint()
-    {
-      return isPoint;
-    }
-  bool getIsPopulateSpecies()
-    {
-      return (thePopulateProcess != NULL);
-    }
-  void populateCompUniformDense(unsigned* voxelIDs, unsigned* aCount)
-    {
-      if(thePopulateProcess)
-        {
-          thePopulateProcess->populateUniformDense(this, voxelIDs, aCount);
-        }
-      else if(theMoleculeSize)
-        {
-          cout << "Species:" << theVariable->getFullID().asString() <<
-            " not populated." << std::endl;
-        }
-    }
-  void populateCompUniformSparse()
-    {
-      if(thePopulateProcess)
-        {
-          thePopulateProcess->populateUniformSparse(this);
-        }
-      else if(theMoleculeSize)
-        {
-          cout << "Species:" << theVariable->getFullID().asString() <<
-            " not populated." << std::endl;
-        }
-    }
-  void populateUniformOnDiffusiveVacant()
-    {
-      if(thePopulateProcess)
-        {
-          thePopulateProcess->populateUniformOnDiffusiveVacant(this);
-        }
-      else if(theMoleculeSize)
-        {
-          cout << "Species:" << theVariable->getFullID().asString() <<
-            " not populated." << std::endl;
-        }
-    }
-  void populateUniformOnMultiscale()
-    {
-      if(thePopulateProcess)
-        {
-          thePopulateProcess->populateUniformOnMultiscale(this);
-        }
-      else if(theMoleculeSize)
-        {
-          cout << "Species:" << theVariable->getFullID().asString() <<
-            " not populated." << std::endl;
-        }
-    }
-  Variable* getVariable() const
-    {
-      return theVariable;
-    }
-  std::vector<unsigned> getSourceCoords()
-    {
-      std::vector<unsigned> aCoords;
-      /*
-      for(unsigned i(0); i != theMoleculeSize; ++i)
-        {
-          std::vector<unsigned>& 
-            aSourceCoords(theMolecules[i]->subunit->sourceCoords);
-          for(unsigned j(0); j != aSourceCoords.size(); ++j)
-            {
-              if(aSourceCoords[j] != theNullCoord)
-                {
-                  aCoords.push_back(aSourceCoords[j]);
-                }
-            }
-        }
-        */
-      return aCoords;
-    }
-  std::vector<unsigned> getTargetCoords()
-    {
-      std::vector<unsigned> aCoords;
-      /*
-      for(unsigned i(0); i != theMoleculeSize; ++i)
-        {
-          std::vector<unsigned>& 
-            aTargetCoords(theMolecules[i]->subunit->targetCoords);
-          for(unsigned j(0); j != aTargetCoords.size(); ++j)
-            {
-              if(aTargetCoords[j] != theNullCoord)
-                {
-                  aCoords.push_back(aTargetCoords[j]);
-                }
-            }
-        }
-        */
-      return aCoords;
-    }
-  std::vector<unsigned> getSharedCoords()
-    {
-      std::vector<unsigned> aCoords;
-      /*
-      for(unsigned i(0); i != theMoleculeSize; ++i)
-        {
-          std::vector<unsigned>& 
-            aSharedLipids(theMolecules[i]->subunit->sharedLipids);
-          for(unsigned j(0); j != aSharedLipids.size(); ++j)
-            {
-              if(aSharedLipids[j] != theNullCoord)
-                {
-                  aCoords.push_back(aSharedLipids[j]);
-                }
-            }
-        }
-        */
-      return aCoords;
-    }
-  unsigned size() const
-    {
-      return theMoleculeSize;
-    }
-  Voxel* getMolecule(const unsigned anIndex)
-    {
-      return theMolecules[anIndex];
-    }
-  Point getPoint(const unsigned anIndex) const
-    {
-      if(isOffLattice)
-        {
-          if(theMolecules[anIndex]->point)
-            {
-              return *theMolecules[anIndex]->point;
-            }
-          return theStepper->coord2point(getCoord(anIndex));
-        }
-      return theStepper->coord2point(getCoord(anIndex));
-    }
-  Point coord2point(const unsigned aCoord) const
-    {
-      if(theLattice[aCoord].point)
-        {
-          return *theLattice[aCoord].point;
-        }
-      return theStepper->coord2point(aCoord);
-    }
-  unsigned short getID() const
-    {
-      return theID;
-    }
-  //Call updateMolecules() before calling this function if
-  //this species is a Tag (GFP) species, whose tag and molecules
-  //are always not up to date.
-  double getSquaredDisplacement(const unsigned index)
-    {
-      Point aCurrentPoint;
-      if(isOrigins)
-        {
-          aCurrentPoint = getPeriodicPoint(index);
-        }
-      else
-        {
-          aCurrentPoint = theStepper->getPeriodicPoint(getCoord(index),
-                                                       theDimension,
-                                                   &theTags[index][0].origin);
-        }
-      const double nDisplacement(distance(theTags[index][0].origin.point,
-                                          aCurrentPoint)*
-                                 theStepper->getVoxelRadius()*2);
-      return nDisplacement*nDisplacement;
-    }
-  double getMeanSquaredDisplacement()
-    {
-      //For GFP species, whose molecules are not always up to date:
-      updateMolecules();
-      if(!theMoleculeSize)
-        {
-          return 0;
-        }
-      double aTotalSquaredDisplacement(0);
-      for(unsigned i(0); i < theMoleculeSize; ++i)
-        {
-          aTotalSquaredDisplacement += getSquaredDisplacement(i);
-        }
-      return aTotalSquaredDisplacement/theMoleculeSize;
-    }
-  //Only works for 2D periodic diffusion now:
-  Point getPeriodicPoint(const unsigned index)
-    {
-      Origin& anOrigin(theTags[index][0].origin);
-      Point aPoint(getPoint(index));
-      disp_(aPoint, theWidthVector, 
-            anOrigin.row*lipRows*nDiffuseRadius*sqrt(3));
-      disp_(aPoint, theLengthVector, anOrigin.col*lipCols*nDiffuseRadius*2);
-      return aPoint;
-    }
-  void setIsSubunitInitialized()
-    {
-      isSubunitInitialized = true;
-    }
-  void setIsMultiscale()
-    {
-      isMultiscale = true;
-      isMultiscaleComp = true;
-    }
-  bool getIsMultiscale()
-    {
-      return isMultiscale;
-    }
-  bool getIsMultiscaleComp()
-    {
-      return isMultiscaleComp;
-    }
-  void setIsCompVacant()
-    {
-      isCompVacant = true;
-      isVacant = true;
-      setVacantSpecies(this);
-    }
-  void setIsInContact()
-    {
-      isInContact = true;
-    }
-  void setIsCentered()
-    {
-      isCentered = true;
-    }
-  void setIsPopulated()
-    {
-      theInitCoordSize = theMoleculeSize;
-      getVariable()->setValue(theMoleculeSize);
-    }
-  void shuffle()
-    {
-      std::random_shuffle(theMolecules.begin(), theMolecules.end());
-      for(unsigned i(0); i != theMoleculeSize; ++i)
-        {
-          theMolecules[i]->idx = i+theStride*theID;
-        }
-    }
-  void initCollisionCnt()
-    {
-      theSpeciesCollisionCnt = 0;
-      collisionCnts.resize(theMoleculeSize);
-      for(std::vector<unsigned>::iterator 
-          i(collisionCnts.begin()); i != collisionCnts.end(); ++i)
-        {
-          *i = 0;
-        }
-    }
-  void finalizeSpecies()
-    {
-      for(unsigned i(0); i != theDiffusionInfluencedReactions.size(); ++i)
-        {
-          if(theDiffusionInfluencedReactions[i] &&
-             theDiffusionInfluencedReactions[i]->getCollision())
-            {
-              initCollisionCnt();
-              //For non-diffusing target species that does not have
-              //DIRP list:
-              theSpecies[i]->initCollisionCnt();
-              break;
-            }
-        }
-      //need to shuffle molecules of the compVacant species if it has
-      //diffusing vacant species to avoid bias when random walking:
-      if(isCompVacant)
-        {
-          for(unsigned i(0); i != theComp->species.size(); ++i)
-            {
-              if(theComp->species[i]->getIsDiffusiveVacant())
-                {
-                  shuffle();
-                  break;
-                }
-            }
-          //Is GFP tagged:
-          if(isTagged)
-            {
-              for(unsigned i(0); i != theMoleculeSize; ++i)
-                {
-                  resetTagOrigin(i);
-                }
-            }
-        }
-      if(!isVacant && !getIsPopulated())
-        {
-          THROW_EXCEPTION(ValueError, getIDString() +
-             ": has a non-zero value, theMoleculeSize:" + 
-             int2str(theMoleculeSize) + ", variable value:" + 
-             int2str(getVariable()->getValue()) +
-             ", init size:" + int2str(theInitCoordSize) + 
-             ", but is not populated.");
-        }
-      /*
-      std::cout << getIDString() << std::endl;
-      std::cout << "\tDiffusionInfluenced:" << std::endl;
-      for(unsigned i(0); i != theDiffusionInfluencedReactions.size(); ++i)
-        {
-          if(theDiffusionInfluencedReactions[i])
-            {
-              std::cout << "\t\t" << theDiffusionInfluencedReactions[i
-                ]->getIDString() << std::endl;
-            }
-        }
-      std::cout << "\tAddMolecule:" << std::endl;
-      for(unsigned i(0); i != theInterruptedProcessesAddMolecule.size(); ++i)
-        {
-          std::cout << "\t\t" << theInterruptedProcessesAddMolecule[i
-            ]->getIDString() << std::endl;
-        }
-      std::cout << "\tRemoveMolecule:" << std::endl;
-      for(unsigned i(0); i != theInterruptedProcessesRemoveMolecule.size(); ++i)
-        {
-          std::cout << "\t\t" << theInterruptedProcessesRemoveMolecule[i
-            ]->getIDString() << std::endl;
-        }
-      std::cout << "\tEndDiffusion:" << std::endl;
-      for(unsigned i(0); i != theInterruptedProcessesEndDiffusion.size(); ++i)
-        {
-          std::cout << "\t\t" << theInterruptedProcessesEndDiffusion[i
-            ]->getIDString() << std::endl;
-        }
-        */
-    }
-  unsigned getCollisionCnt(unsigned anIndex)
-    {
-      return collisionCnts[anIndex];
-    }
-  unsigned getSpeciesCollisionCnt()
-    {
-      return theSpeciesCollisionCnt;
-    }
-  void setIsDiffusiveVacant()
-    {
-      isDiffusiveVacant = true;
-      isVacant = true;
-    }
-  void setIsReactiveVacant()
-    {
-      isReactiveVacant = true;
-      isVacant = true;
-    }
-  void setIsOffLattice()
-    {
-      isOffLattice = true;
-    }
-  void resetFixedAdjoins()
-    {
-      isFixedAdjoins = false;
-      for(unsigned i(0); i != theComp->species.size(); ++i)
-        {
-          theComp->species[i]->setIsFixedAdjoins(false);
-        }
-    }
-  void setIsFixedAdjoins(bool state)
-    {
-      isFixedAdjoins = state;
-    }
-  void setIsPolymer(std::vector<double> bendAngles, int aDirectionality)
-    {
-      theBendAngles.resize(0);
-      thePolymerDirectionality = aDirectionality;
-      isPolymer = true;
-      for(std::vector<double>::const_iterator i(bendAngles.begin()); 
-          i != bendAngles.end(); ++i)
-        {
-          theBendAngles.push_back(*i);
-          if(thePolymerDirectionality != 0)
-            {
-              theBendAngles.push_back(*i+M_PI);
-            }
-        }
-    }
-  void setDiffusionCoefficient(double aCoefficient)
-    {
-      D = aCoefficient;
-      if(D > 0)
-        {
-          isDiffusing = true;
-        }
-    }
-  double getDiffusionCoefficient() const
-    {
-      return D;
-    }
-  double getWalkProbability() const
-    {
-      return theWalkProbability;
-    }
-  bool getIsPolymer() const
-    {
-      return isPolymer;
-    }
-  bool getIsOffLattice()
-    {
-      return isOffLattice;
-    }
-  bool getIsSubunitInitialized() const
-    {
-      return isSubunitInitialized;
-    }
-  bool getIsDiffusing() const
-    {
-      return isDiffusing;
-    }
-  bool getIsCompVacant() const
-    {
-      return isCompVacant;
-    }
-  bool getIsVacant() const
-    {
-      return isVacant;
-    }
-  bool getIsDiffusiveVacant()
-    {
-      return isDiffusiveVacant;
-    }
-  bool getIsReactiveVacant()
-    {
-      return isReactiveVacant;
-    }
-  bool getIsInContact() const
-    {
-      return isInContact;
-    }
-  bool getIsCentered() const
-    {
-      return isCentered;
-    }
-  bool getIsPopulated() const
-    {
-      return theMoleculeSize == theInitCoordSize;
-    }
-  double getDiffusionInterval() const
-    {
-      return theDiffusionInterval;
-    }
-  unsigned getDimension()
-    {
-      return theDimension;
-    }
-  void setDimension(unsigned aDimension)
-    {
-      theDimension = aDimension;
-      if(theDimension == 3)
-        {
-          isFixedAdjoins = true;
-        }
-    }
-  void resetFinalizeReactions()
-    {
-      for(unsigned i(0); i != isFinalizeReactions.size(); ++i)
-        {
-          isFinalizeReactions[i] = false;
-        }
-    }
-  void finalizeReactions()
-    {
-      for(unsigned i(0); i != isFinalizeReactions.size(); ++i)
-        {
-          if(isFinalizeReactions[i])
-            {
-              theDiffusionInfluencedReactions[i]->finalizeReaction();
-            }
-        }
-      for(unsigned i(0); i != theInterruptedProcessesEndDiffusion.size(); ++i)
-        {
-          theInterruptedProcessesEndDiffusion[i]->interruptedEndDiffusion(this);
-        }
-    }
-  void addCollisionCnt()
-    {
-      ++theSpeciesCollisionCnt;
-    }
-  void addCollision(Voxel* aVoxel)
-    {
-      for(unsigned i(0); i < theMoleculeSize; ++i)
-        {
-          if(aVoxel == theMolecules[i])
-            {
-              ++collisionCnts[i];
-              return;
-            }
-        }
-      cout << "error in species add collision" << std::endl;
-    }
-  unsigned getID(const Voxel* aVoxel) const
-    {
-      return aVoxel->idx/theStride;
-    }
-  unsigned getID(const Voxel& aVoxel) const
-    {
-      return aVoxel.idx/theStride;
-    }
-  void pushInterfaceConsts(std::vector<double>& interfaceConsts)
-    {
-      theInterfaceConsts.push_back(interfaceConsts);
-    }
-  void setUnityInterfaceConsts()
-    {
-      for(unsigned i(0); i != theInterfaceConsts.size(); ++i)
-        {
-          for(unsigned j(0); j != theInterfaceConsts[i].size(); ++j)
-            {
-              theInterfaceConsts[i][j] = 1;
-            }
-        }
-    }
-  double getInterfaceConst(Voxel* aVoxel, unsigned index)
-    {
-      return theInterfaceConsts[getIndex(aVoxel)][index];
-    }
-  void walkPoint()
-    {
-      const unsigned beginMoleculeSize(theMoleculeSize);
-      unsigned size(theAdjoiningCoordSize);
-      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
-        {
-          Voxel* source(theMolecules[i]);
-          if(!isFixedAdjoins)
-            {
-              size = source->diffuseSize;
-            }
-          Voxel* target(&theLattice[source->adjoiningCoords[
-                        theRng.Integer(size)]]);
-          if(getID(target) == theVacantID)
-            {
-              if(theWalkProbability == 1 || theRng.Fixed() < theWalkProbability)
-                {
-                  theMolecules[i] = target;
-                }
-            }
-        }
-    }
   void walk()
     {
       double ic(1);
       const unsigned beginMoleculeSize(theMoleculeSize);
       unsigned size(theAdjoiningCoordSize);
+      Vec8i rands(theRngSimd.random8i(0,11));
+      unsigned rand(0);
+      unsigned ir(0);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
+          if(ir < 12) {
+            rand = rands[ir++];
+          }
+          else {
+            ir = 0;
+            rands = theRngSimd.random8i(0,11);
+            rand = rands[0];
+          }
           Voxel* source(theMolecules[i]);
-          if(!isFixedAdjoins)
-            {
-              size = source->diffuseSize;
-            }
-          Voxel* target(&theLattice[source->adjoiningCoords[
-                        theRng.Integer(size)]]);
+          Voxel* target(&theLattice[source->adjoiningCoords[rand]]);
           if(getID(target) == theVacantID)
             {
-              if(theWalkProbability == 1 || theRng.Fixed() < theWalkProbability)
+              if(theWalkProbability == 1 || theRngSimd.random1f() <
+                 theWalkProbability)
                 {
                   source->idx = target->idx;
                   target->idx = i+theStride*theID;
@@ -873,8 +184,8 @@ public:
                     {
                       continue;
                     }
-                  unsigned coord(theRng.Integer(target->adjoiningSize-
-                                                target->diffuseSize));
+                  unsigned coord(theRngSimd.random1i(0, target->adjoiningSize-
+                                                target->diffuseSize-1));
                   //For interfaceSpecies, theReactionProbabilities[tarID]
                   //contains the value k/DA, so 
                   //p = (k/DA)*ic
@@ -898,7 +209,7 @@ public:
                     }
                   //If it meets the reaction probability:
                   if(theReactionProbabilities[tarID] == 1 ||
-                     theRng.Fixed() < theReactionProbabilities[tarID]*ic)
+                     theRngSimd.random1f() < theReactionProbabilities[tarID]*ic)
                     { 
                       if(aReaction->getCollision() && 
                          aReaction->getCollision() != 3)
@@ -925,6 +236,28 @@ public:
                           --i;
                         }
                     }
+                }
+            }
+        }
+    }
+  void walkPoint()
+    {
+      const unsigned beginMoleculeSize(theMoleculeSize);
+      unsigned size(theAdjoiningCoordSize);
+      for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
+        {
+          Voxel* source(theMolecules[i]);
+          if(!isFixedAdjoins)
+            {
+              size = source->diffuseSize;
+            }
+          Voxel* target(&theLattice[source->adjoiningCoords[
+                        theRng.Integer(size)]]);
+          if(getID(target) == theVacantID)
+            {
+              if(theWalkProbability == 1 || theRng.Fixed() < theWalkProbability)
+                {
+                  theMolecules[i] = target;
                 }
             }
         }
@@ -1854,6 +1187,681 @@ public:
           aReaction->react(tar, src, tarIndex, srcIndex);
         }
       isFinalizeReactions[tarID] = true;
+    }
+  void initialize(const int anAdjoiningCoordSize, const unsigned aNullCoord,
+                  const unsigned aNullID)
+    {
+      const unsigned speciesSize(theSpecies.size());
+      theAdjoiningCoordSize = anAdjoiningCoordSize;
+      theNullCoord = aNullCoord;
+      theNullID = aNullID;
+      theStride = UINT_MAX/speciesSize;
+      theReactionProbabilities.resize(speciesSize, 0);
+      theDiffusionInfluencedReactions.resize(speciesSize, NULL);
+      isFinalizeReactions.resize(speciesSize, false);
+      isMultiscaleBinderID.resize(speciesSize, false);
+      isMultiMultiReactantID.resize(speciesSize, false);
+      isMultiscaleBoundID.resize(speciesSize, false);
+      isProductPair.resize(speciesSize, false);
+      theMultiscaleUnbindIDs.resize(speciesSize);
+      if(theComp)
+        {
+          setVacantSpecies(theComp->vacantSpecies);
+        }
+      Tag aNullTag;
+      theVacantIdx = theStride*theVacantID;
+      aNullTag.speciesID = theNullID;
+      aNullTag.rotIndex = 0;
+      aNullTag.multiIdx = 0;
+      aNullTag.boundCnt = 0;
+      //Default theOligomerSize = 1
+      for(unsigned i(0); i != theOligomerSize; ++i)
+        {
+          theNullTag.push_back(aNullTag);
+        }
+      cout.setLevel(theStepper->getDebugLevel());
+    }
+  void setDiffusionInfluencedReaction(DiffusionInfluencedReactionProcess*
+                                      aReaction, int anID, double aProbability)
+    {
+      if(theDiffusionInfluencedReactions[anID] != NULL &&
+         aReaction->getIDString() != 
+         theDiffusionInfluencedReactions[anID]->getIDString())
+        {
+          THROW_EXCEPTION(ValueError, getIDString() +
+             ": has duplicate DiffusionInfluencedReactionProcesses (1):" +
+             aReaction->getIDString() + " (2):" +
+             theDiffusionInfluencedReactions[anID]->getIDString() +
+             ". Remove one of them before proceeding.");
+        }
+      theDiffusionInfluencedReactions[anID] = aReaction;
+      theReactionProbabilities[anID] = aProbability;
+    }
+  void setDiffusionInfluencedReactantPair(Species* aSpecies)
+    {
+      theDiffusionInfluencedReactantPairs.push_back(aSpecies);
+    }
+  void setPopulateProcess(MoleculePopulateProcess* aProcess, double aDist)
+    {
+      if(aDist)
+        {
+          isGaussianPopulation = true;
+        }
+      thePopulateProcess = aProcess;
+    }
+  void setProductPair(Species* aSpecies)
+    {
+      isProductPair[aSpecies->getID()] = true;
+    }
+  bool isTrailSpecies(Species* aSpecies)
+    {
+      return (theTrailSpecies == aSpecies);
+    }
+  bool getIsInterface()
+    {
+      return isInterface;
+    }
+  bool getIsDeoligomerize()
+    {
+      return isDeoligomerize;
+    }
+  bool getIsOnMultiscale()
+    {
+      return isOnMultiscale;
+    }
+  bool getIsGaussianPopulation()
+    {
+      return isGaussianPopulation;
+    }
+  int getPopulatePriority()
+    {
+      return thePopulateProcess->getPriority();
+    }
+  void populateCompGaussian()
+    {
+      if(thePopulateProcess)
+        {
+          thePopulateProcess->populateGaussian(this);
+        }
+      else if(theMoleculeSize)
+        {
+          cout << "Warning: Species " << getIDString() <<
+            " not populated." << std::endl;
+        }
+    }
+  void addTaggedSpecies(Species* aSpecies)
+    {
+      isTag = true;
+      //If one of the tagged species is off-lattice then
+      //make the tag species off-lattice. The getPoint method
+      //will convert the coord of lattice species to point
+      //when logging:
+      if(aSpecies->getIsOffLattice())
+        {
+          isOffLattice = true;
+        }
+      theTaggedSpeciesList.push_back(aSpecies);
+    }
+  void addTagSpecies(Species* aSpecies)
+    {
+      isTagged = true;
+      theTagSpeciesList.push_back(aSpecies);
+      aSpecies->addTaggedSpecies(this);
+    }
+  void setIsDeoligomerize(Species* aSpecies, const unsigned aSize)
+    {
+      isDeoligomerize = true;
+      theBoundCnts.resize(aSize+1);
+      theDeoligomerizedProduct = aSpecies;
+    }
+  void setIsPeriodic()
+    {
+      isPeriodic = true;
+    }
+  void setIsInterface()
+    {
+      isInterface = true;
+    }
+  void setIsPoint()
+    {
+      isPoint = true;
+    }
+  void setIsRegularLattice(unsigned aDiffuseSize)
+    {
+      isRegularLattice = true;
+      theDiffuseSize = aDiffuseSize;
+    }
+  void setWalkPropensity(const double aPropensity)
+    {
+      theWalkPropensity = aPropensity;
+      if(aPropensity > 0)
+        {
+          isDiffusing = true;
+        }
+    }
+  bool getIsRegularLattice()
+    {
+      return isRegularLattice;
+    }
+  bool getIsTagged()
+    {
+      return isTagged;
+    }
+  bool getIsTag()
+    {
+      return isTag;
+    }
+  bool getIsPoint()
+    {
+      return isPoint;
+    }
+  bool getIsPopulateSpecies()
+    {
+      return (thePopulateProcess != NULL);
+    }
+  void populateCompUniformDense(unsigned* voxelIDs, unsigned* aCount)
+    {
+      if(thePopulateProcess)
+        {
+          thePopulateProcess->populateUniformDense(this, voxelIDs, aCount);
+        }
+      else if(theMoleculeSize)
+        {
+          cout << "Species:" << theVariable->getFullID().asString() <<
+            " not populated." << std::endl;
+        }
+    }
+  void populateCompUniformSparse()
+    {
+      if(thePopulateProcess)
+        {
+          thePopulateProcess->populateUniformSparse(this);
+        }
+      else if(theMoleculeSize)
+        {
+          cout << "Species:" << theVariable->getFullID().asString() <<
+            " not populated." << std::endl;
+        }
+    }
+  void populateUniformOnDiffusiveVacant()
+    {
+      if(thePopulateProcess)
+        {
+          thePopulateProcess->populateUniformOnDiffusiveVacant(this);
+        }
+      else if(theMoleculeSize)
+        {
+          cout << "Species:" << theVariable->getFullID().asString() <<
+            " not populated." << std::endl;
+        }
+    }
+  void populateUniformOnMultiscale()
+    {
+      if(thePopulateProcess)
+        {
+          thePopulateProcess->populateUniformOnMultiscale(this);
+        }
+      else if(theMoleculeSize)
+        {
+          cout << "Species:" << theVariable->getFullID().asString() <<
+            " not populated." << std::endl;
+        }
+    }
+  Variable* getVariable() const
+    {
+      return theVariable;
+    }
+  std::vector<unsigned> getSourceCoords()
+    {
+      std::vector<unsigned> aCoords;
+      /*
+      for(unsigned i(0); i != theMoleculeSize; ++i)
+        {
+          std::vector<unsigned>& 
+            aSourceCoords(theMolecules[i]->subunit->sourceCoords);
+          for(unsigned j(0); j != aSourceCoords.size(); ++j)
+            {
+              if(aSourceCoords[j] != theNullCoord)
+                {
+                  aCoords.push_back(aSourceCoords[j]);
+                }
+            }
+        }
+        */
+      return aCoords;
+    }
+  std::vector<unsigned> getTargetCoords()
+    {
+      std::vector<unsigned> aCoords;
+      /*
+      for(unsigned i(0); i != theMoleculeSize; ++i)
+        {
+          std::vector<unsigned>& 
+            aTargetCoords(theMolecules[i]->subunit->targetCoords);
+          for(unsigned j(0); j != aTargetCoords.size(); ++j)
+            {
+              if(aTargetCoords[j] != theNullCoord)
+                {
+                  aCoords.push_back(aTargetCoords[j]);
+                }
+            }
+        }
+        */
+      return aCoords;
+    }
+  std::vector<unsigned> getSharedCoords()
+    {
+      std::vector<unsigned> aCoords;
+      /*
+      for(unsigned i(0); i != theMoleculeSize; ++i)
+        {
+          std::vector<unsigned>& 
+            aSharedLipids(theMolecules[i]->subunit->sharedLipids);
+          for(unsigned j(0); j != aSharedLipids.size(); ++j)
+            {
+              if(aSharedLipids[j] != theNullCoord)
+                {
+                  aCoords.push_back(aSharedLipids[j]);
+                }
+            }
+        }
+        */
+      return aCoords;
+    }
+  unsigned size() const
+    {
+      return theMoleculeSize;
+    }
+  Voxel* getMolecule(const unsigned anIndex)
+    {
+      return theMolecules[anIndex];
+    }
+  Point getPoint(const unsigned anIndex) const
+    {
+      if(isOffLattice)
+        {
+          if(theMolecules[anIndex]->point)
+            {
+              return *theMolecules[anIndex]->point;
+            }
+          return theStepper->coord2point(getCoord(anIndex));
+        }
+      return theStepper->coord2point(getCoord(anIndex));
+    }
+  Point coord2point(const unsigned aCoord) const
+    {
+      if(theLattice[aCoord].point)
+        {
+          return *theLattice[aCoord].point;
+        }
+      return theStepper->coord2point(aCoord);
+    }
+  unsigned short getID() const
+    {
+      return theID;
+    }
+  //Call updateMolecules() before calling this function if
+  //this species is a Tag (GFP) species, whose tag and molecules
+  //are always not up to date.
+  double getSquaredDisplacement(const unsigned index)
+    {
+      Point aCurrentPoint;
+      if(isOrigins)
+        {
+          aCurrentPoint = getPeriodicPoint(index);
+        }
+      else
+        {
+          aCurrentPoint = theStepper->getPeriodicPoint(getCoord(index),
+                                                       theDimension,
+                                                   &theTags[index][0].origin);
+        }
+      const double nDisplacement(distance(theTags[index][0].origin.point,
+                                          aCurrentPoint)*
+                                 theStepper->getVoxelRadius()*2);
+      return nDisplacement*nDisplacement;
+    }
+  double getMeanSquaredDisplacement()
+    {
+      //For GFP species, whose molecules are not always up to date:
+      updateMolecules();
+      if(!theMoleculeSize)
+        {
+          return 0;
+        }
+      double aTotalSquaredDisplacement(0);
+      for(unsigned i(0); i < theMoleculeSize; ++i)
+        {
+          aTotalSquaredDisplacement += getSquaredDisplacement(i);
+        }
+      return aTotalSquaredDisplacement/theMoleculeSize;
+    }
+  //Only works for 2D periodic diffusion now:
+  Point getPeriodicPoint(const unsigned index)
+    {
+      Origin& anOrigin(theTags[index][0].origin);
+      Point aPoint(getPoint(index));
+      disp_(aPoint, theWidthVector, 
+            anOrigin.row*lipRows*nDiffuseRadius*sqrt(3));
+      disp_(aPoint, theLengthVector, anOrigin.col*lipCols*nDiffuseRadius*2);
+      return aPoint;
+    }
+  void setIsSubunitInitialized()
+    {
+      isSubunitInitialized = true;
+    }
+  void setIsMultiscale()
+    {
+      isMultiscale = true;
+      isMultiscaleComp = true;
+    }
+  bool getIsMultiscale()
+    {
+      return isMultiscale;
+    }
+  bool getIsMultiscaleComp()
+    {
+      return isMultiscaleComp;
+    }
+  void setIsCompVacant()
+    {
+      isCompVacant = true;
+      isVacant = true;
+      setVacantSpecies(this);
+    }
+  void setIsInContact()
+    {
+      isInContact = true;
+    }
+  void setIsCentered()
+    {
+      isCentered = true;
+    }
+  void setIsPopulated()
+    {
+      theInitCoordSize = theMoleculeSize;
+      getVariable()->setValue(theMoleculeSize);
+    }
+  void shuffle()
+    {
+      std::random_shuffle(theMolecules.begin(), theMolecules.end());
+      for(unsigned i(0); i != theMoleculeSize; ++i)
+        {
+          theMolecules[i]->idx = i+theStride*theID;
+        }
+    }
+  void initCollisionCnt()
+    {
+      theSpeciesCollisionCnt = 0;
+      collisionCnts.resize(theMoleculeSize);
+      for(std::vector<unsigned>::iterator 
+          i(collisionCnts.begin()); i != collisionCnts.end(); ++i)
+        {
+          *i = 0;
+        }
+    }
+  void finalizeSpecies()
+    {
+      for(unsigned i(0); i != theDiffusionInfluencedReactions.size(); ++i)
+        {
+          if(theDiffusionInfluencedReactions[i] &&
+             theDiffusionInfluencedReactions[i]->getCollision())
+            {
+              initCollisionCnt();
+              //For non-diffusing target species that does not have
+              //DIRP list:
+              theSpecies[i]->initCollisionCnt();
+              break;
+            }
+        }
+      //need to shuffle molecules of the compVacant species if it has
+      //diffusing vacant species to avoid bias when random walking:
+      if(isCompVacant)
+        {
+          for(unsigned i(0); i != theComp->species.size(); ++i)
+            {
+              if(theComp->species[i]->getIsDiffusiveVacant())
+                {
+                  shuffle();
+                  break;
+                }
+            }
+          //Is GFP tagged:
+          if(isTagged)
+            {
+              for(unsigned i(0); i != theMoleculeSize; ++i)
+                {
+                  resetTagOrigin(i);
+                }
+            }
+        }
+      if(!isVacant && !getIsPopulated())
+        {
+          THROW_EXCEPTION(ValueError, getIDString() +
+             ": has a non-zero value, theMoleculeSize:" + 
+             int2str(theMoleculeSize) + ", variable value:" + 
+             int2str(getVariable()->getValue()) +
+             ", init size:" + int2str(theInitCoordSize) + 
+             ", but is not populated.");
+        }
+      /*
+      std::cout << getIDString() << std::endl;
+      std::cout << "\tDiffusionInfluenced:" << std::endl;
+      for(unsigned i(0); i != theDiffusionInfluencedReactions.size(); ++i)
+        {
+          if(theDiffusionInfluencedReactions[i])
+            {
+              std::cout << "\t\t" << theDiffusionInfluencedReactions[i
+                ]->getIDString() << std::endl;
+            }
+        }
+      std::cout << "\tAddMolecule:" << std::endl;
+      for(unsigned i(0); i != theInterruptedProcessesAddMolecule.size(); ++i)
+        {
+          std::cout << "\t\t" << theInterruptedProcessesAddMolecule[i
+            ]->getIDString() << std::endl;
+        }
+      std::cout << "\tRemoveMolecule:" << std::endl;
+      for(unsigned i(0); i != theInterruptedProcessesRemoveMolecule.size(); ++i)
+        {
+          std::cout << "\t\t" << theInterruptedProcessesRemoveMolecule[i
+            ]->getIDString() << std::endl;
+        }
+      std::cout << "\tEndDiffusion:" << std::endl;
+      for(unsigned i(0); i != theInterruptedProcessesEndDiffusion.size(); ++i)
+        {
+          std::cout << "\t\t" << theInterruptedProcessesEndDiffusion[i
+            ]->getIDString() << std::endl;
+        }
+        */
+    }
+  unsigned getCollisionCnt(unsigned anIndex)
+    {
+      return collisionCnts[anIndex];
+    }
+  unsigned getSpeciesCollisionCnt()
+    {
+      return theSpeciesCollisionCnt;
+    }
+  void setIsDiffusiveVacant()
+    {
+      isDiffusiveVacant = true;
+      isVacant = true;
+    }
+  void setIsReactiveVacant()
+    {
+      isReactiveVacant = true;
+      isVacant = true;
+    }
+  void setIsOffLattice()
+    {
+      isOffLattice = true;
+    }
+  void resetFixedAdjoins()
+    {
+      isFixedAdjoins = false;
+      for(unsigned i(0); i != theComp->species.size(); ++i)
+        {
+          theComp->species[i]->setIsFixedAdjoins(false);
+        }
+    }
+  void setIsFixedAdjoins(bool state)
+    {
+      isFixedAdjoins = state;
+    }
+  void setIsPolymer(std::vector<double> bendAngles, int aDirectionality)
+    {
+      theBendAngles.resize(0);
+      thePolymerDirectionality = aDirectionality;
+      isPolymer = true;
+      for(std::vector<double>::const_iterator i(bendAngles.begin()); 
+          i != bendAngles.end(); ++i)
+        {
+          theBendAngles.push_back(*i);
+          if(thePolymerDirectionality != 0)
+            {
+              theBendAngles.push_back(*i+M_PI);
+            }
+        }
+    }
+  void setDiffusionCoefficient(double aCoefficient)
+    {
+      D = aCoefficient;
+      if(D > 0)
+        {
+          isDiffusing = true;
+        }
+    }
+  double getDiffusionCoefficient() const
+    {
+      return D;
+    }
+  double getWalkProbability() const
+    {
+      return theWalkProbability;
+    }
+  bool getIsPolymer() const
+    {
+      return isPolymer;
+    }
+  bool getIsOffLattice()
+    {
+      return isOffLattice;
+    }
+  bool getIsSubunitInitialized() const
+    {
+      return isSubunitInitialized;
+    }
+  bool getIsDiffusing() const
+    {
+      return isDiffusing;
+    }
+  bool getIsCompVacant() const
+    {
+      return isCompVacant;
+    }
+  bool getIsVacant() const
+    {
+      return isVacant;
+    }
+  bool getIsDiffusiveVacant()
+    {
+      return isDiffusiveVacant;
+    }
+  bool getIsReactiveVacant()
+    {
+      return isReactiveVacant;
+    }
+  bool getIsInContact() const
+    {
+      return isInContact;
+    }
+  bool getIsCentered() const
+    {
+      return isCentered;
+    }
+  bool getIsPopulated() const
+    {
+      return theMoleculeSize == theInitCoordSize;
+    }
+  double getDiffusionInterval() const
+    {
+      return theDiffusionInterval;
+    }
+  unsigned getDimension()
+    {
+      return theDimension;
+    }
+  void setDimension(unsigned aDimension)
+    {
+      theDimension = aDimension;
+      if(theDimension == 3)
+        {
+          isFixedAdjoins = true;
+        }
+    }
+  void resetFinalizeReactions()
+    {
+      for(unsigned i(0); i != isFinalizeReactions.size(); ++i)
+        {
+          isFinalizeReactions[i] = false;
+        }
+    }
+  void finalizeReactions()
+    {
+      for(unsigned i(0); i != isFinalizeReactions.size(); ++i)
+        {
+          if(isFinalizeReactions[i])
+            {
+              theDiffusionInfluencedReactions[i]->finalizeReaction();
+            }
+        }
+      for(unsigned i(0); i != theInterruptedProcessesEndDiffusion.size(); ++i)
+        {
+          theInterruptedProcessesEndDiffusion[i]->interruptedEndDiffusion(this);
+        }
+    }
+  void addCollisionCnt()
+    {
+      ++theSpeciesCollisionCnt;
+    }
+  void addCollision(Voxel* aVoxel)
+    {
+      for(unsigned i(0); i < theMoleculeSize; ++i)
+        {
+          if(aVoxel == theMolecules[i])
+            {
+              ++collisionCnts[i];
+              return;
+            }
+        }
+      cout << "error in species add collision" << std::endl;
+    }
+  unsigned getID(const Voxel* aVoxel) const
+    {
+      return aVoxel->idx/theStride;
+    }
+  unsigned getID(const Voxel& aVoxel) const
+    {
+      return aVoxel.idx/theStride;
+    }
+  void pushInterfaceConsts(std::vector<double>& interfaceConsts)
+    {
+      theInterfaceConsts.push_back(interfaceConsts);
+    }
+  void setUnityInterfaceConsts()
+    {
+      for(unsigned i(0); i != theInterfaceConsts.size(); ++i)
+        {
+          for(unsigned j(0); j != theInterfaceConsts[i].size(); ++j)
+            {
+              theInterfaceConsts[i][j] = 1;
+            }
+        }
+    }
+  double getInterfaceConst(Voxel* aVoxel, unsigned index)
+    {
+      return theInterfaceConsts[getIndex(aVoxel)][index];
     }
   void setComp(Comp* aComp)
     {
@@ -4604,6 +4612,7 @@ private:
   Point theLengthVector;
   Point theWidthVector;
   RandomLib::Random& theRng;
+  Ranvec1& theRngSimd;
   Species* theTrailSpecies;
   Species* theVacantSpecies;
   Species* theMultiscaleVacantSpecies;

@@ -219,6 +219,7 @@ void SpatiocyteStepper::reset(int seed)
 {
   gsl_rng_set(getRng(), seed); 
   theRan.Reseed();
+  theRanSimd.init(Seed*seed);
   setCurrentTime(0);
   resetVariables();
   initializeSecond();
@@ -251,7 +252,7 @@ Species* SpatiocyteStepper::addSpecies(Variable* aVariable)
   if(aSpeciesIter == theSpecies.end())
     {
       Species *aSpecies(new Species(this, aVariable, theSpecies.size(),
-                          (int)aVariable->getValue(), theRan, VoxelRadius,
+                          (int)aVariable->getValue(), theRan, theRanSimd, VoxelRadius,
                           theLattice, theSpecies));
       theSpecies.push_back(aSpecies);
       return aSpecies;
@@ -566,7 +567,8 @@ void SpatiocyteStepper::broadcastLatticeProperties()
         aProcess(dynamic_cast<SpatiocyteProcess*>(*i));
       theSpatiocyteProcesses.push_back(aProcess);
       aProcess->setLatticeProperties(&theLattice, theAdjoiningCoordSize,
-                                     theNullCoord, theNullID, &theRan);
+                                     theNullCoord, theNullID, &theRan,
+                                     &theRanSimd);
     }
 }
 
@@ -924,6 +926,7 @@ void SpatiocyteStepper::checkSpecies()
 void SpatiocyteStepper::registerComps()
 {
   theRan.Reseed();
+  theRanSimd.init(Seed);
   System* aRootSystem(getModel()->getRootSystem());
   std::vector<Comp*> allSubs;
   //The root Comp is theComps[0]
@@ -936,7 +939,8 @@ void SpatiocyteStepper::registerComps()
   //Create one last species to represent a NULL Comp. This is for
   //voxels that do not belong to any Comps:
   Species* aSpecies(new Species(this, NULL, theSpecies.size(), 0, theRan,
-                                VoxelRadius, theLattice, theSpecies));
+                                theRanSimd, VoxelRadius, theLattice,
+                                theSpecies));
   theSpecies.push_back(aSpecies);
   aSpecies->setComp(NULL);
   theNullID = aSpecies->getID(); 
