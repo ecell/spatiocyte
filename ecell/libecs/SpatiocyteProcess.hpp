@@ -213,10 +213,9 @@ public:
   virtual void setLatticeProperties(std::vector<Voxel>* aLattice,
                                     unsigned anAdjoiningCoordSize,
                                     unsigned aNullCoord, unsigned aNullID,
-                                    RandomLib::Random* aRng, Ranvec1* aRngSimd)
+                                    RandomLib::Random* aRng)
     {
       theRng = aRng;
-      theRngSimd = aRngSimd;
       theLattice = aLattice;
       theAdjoiningCoordSize = anAdjoiningCoordSize;
       theNullCoord = aNullCoord;
@@ -342,7 +341,6 @@ protected:
   VariableReferenceVector theZeroVariableReferences;
   VariableReferenceVector theSortedVariableReferences;
   RandomLib::Random* theRng;
-  Ranvec1* theRngSimd;
 };
 
 }

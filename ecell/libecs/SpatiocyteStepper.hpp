@@ -34,7 +34,6 @@
 
 #include <libecs/Stepper.hpp>
 #include <RandomLib/Random.hpp>
-#include <random_simd/ranvec1.h>
 #include <libecs/SpatiocyteCommon.hpp>
 #include <libecs/SpatiocyteDebug.hpp>
 
@@ -47,31 +46,27 @@ public:
   LIBECS_DM_OBJECT(SpatiocyteStepper, Stepper)
     {
       INHERIT_PROPERTIES(Stepper);
-      PROPERTYSLOT_SET_GET(Integer, Seed);
+      PROPERTYSLOT_SET_GET(Real, VoxelRadius);
       PROPERTYSLOT_SET_GET(Integer, LatticeType);
       PROPERTYSLOT_SET_GET(Integer, SearchVacant);
       PROPERTYSLOT_SET_GET(Integer, DebugLevel);
       PROPERTYSLOT_SET_GET(Integer, RemoveSurfaceBias);
-      PROPERTYSLOT_SET_GET(Real, VoxelRadius);
     }
-  SIMPLE_SET_GET_METHOD(Integer, Seed); 
+  SIMPLE_SET_GET_METHOD(Real, VoxelRadius); 
   SIMPLE_SET_GET_METHOD(Integer, LatticeType); 
   SIMPLE_SET_GET_METHOD(Integer, SearchVacant); 
   SIMPLE_SET_GET_METHOD(Integer, DebugLevel); 
   SIMPLE_SET_GET_METHOD(Integer, RemoveSurfaceBias); 
-  SIMPLE_SET_GET_METHOD(Real, VoxelRadius); 
   SpatiocyteStepper():
     isInitialized(false),
     isPeriodicEdge(false),
     SearchVacant(false),
     RemoveSurfaceBias(false),
-    Seed(1),
     DebugLevel(1),
     LatticeType(HCP_LATTICE),
     theMoleculeID(0),
     nVoxelRadius(0.5),
     VoxelRadius(10e-9),
-    theRanSimd(1),
     cout(std::cout) {}
   virtual ~SpatiocyteStepper() {}
   virtual void initialize();
@@ -230,7 +225,6 @@ private:
   bool SearchVacant;
   bool RemoveSurfaceBias;
   unsigned short theNullID;
-  unsigned Seed;
   unsigned DebugLevel;
   unsigned LatticeType; 
   unsigned theAdjoiningCoordSize;
@@ -258,7 +252,6 @@ private:
   std::vector<Voxel> theLattice;
   std::vector<Process*> theExternInterruptedProcesses;
   RandomLib::Random theRan;
-  Ranvec1 theRanSimd;
   std::vector<SpatiocyteProcess*> theInterruptedProcesses;
   std::vector<SpatiocyteProcess*> theSpatiocyteProcesses;
 };
@@ -266,4 +259,3 @@ private:
 }
 
 #endif /* __SpatiocyteStepper_hpp */
-
