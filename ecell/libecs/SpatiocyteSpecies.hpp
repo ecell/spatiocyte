@@ -146,96 +146,30 @@ public:
   ~Species() {}
   void walk()
     {
-      double ic(1);
       const unsigned beginMoleculeSize(theMoleculeSize);
       unsigned size(theAdjoiningCoordSize);
-      Vec8i rands(theRngSimd.random8i(0,11));
+      Vec16i rands(theRngSimd.random16i(0,11));
       unsigned rand(0);
       unsigned ir(0);
       for(unsigned i(0); i < beginMoleculeSize && i < theMoleculeSize; ++i)
         {
-          if(ir < 12) {
+          if(ir < 32) {
             rand = rands[ir++];
           }
           else {
             ir = 0;
-            rands = theRngSimd.random8i(0,11);
+            rands = theRngSimd.random16i(0,11);
             rand = rands[0];
           }
           Voxel* source(theMolecules[i]);
           Voxel* target(&theLattice[source->adjoiningCoords[rand]]);
           if(getID(target) == theVacantID)
             {
-              if(theWalkProbability == 1 || theRngSimd.random1f() <
-                 theWalkProbability)
+              if(theWalkProbability == 1)
                 {
                   source->idx = target->idx;
                   target->idx = i+theStride*theID;
                   theMolecules[i] = target;
-                }
-            }
-          else
-            {
-              if(theSpecies[getID(target)]->getIsInterface())
-                {
-                  //Some interface voxels do not have pointers to the
-                  //off lattice subunits, so their adjoiningSize == diffuseSize:
-                  if(target->adjoiningSize == target->diffuseSize)
-                    {
-                      continue;
-                    }
-                  unsigned coord(theRngSimd.random1i(0, target->adjoiningSize-
-                                                target->diffuseSize-1));
-                  //For interfaceSpecies, theReactionProbabilities[tarID]
-                  //contains the value k/DA, so 
-                  //p = (k/DA)*ic
-                  //  = (k/DA)*8*nv*rv*rv/(V*bf)
-                  ic = theSpecies[getID(target)]->getInterfaceConst(target,
-                                                                    coord);
-                  coord = target->adjoiningCoords[coord+target->diffuseSize];
-                  target = &theLattice[coord];
-                }
-              const unsigned tarID(getID(target));
-              DiffusionInfluencedReactionProcess* 
-                aReaction(theDiffusionInfluencedReactions[tarID]);
-              if(aReaction)
-                {
-                  if(aReaction->getCollision() == 3)
-                    { 
-                      ++theSpeciesCollisionCnt;
-                      Species* targetSpecies(theSpecies[tarID]);
-                      targetSpecies->addCollisionCnt();
-                      return;
-                    }
-                  //If it meets the reaction probability:
-                  if(theReactionProbabilities[tarID] == 1 ||
-                     theRngSimd.random1f() < theReactionProbabilities[tarID]*ic)
-                    { 
-                      if(aReaction->getCollision() && 
-                         aReaction->getCollision() != 3)
-                        { 
-                          ++collisionCnts[i];
-                          Species* targetSpecies(theSpecies[tarID]);
-                          targetSpecies->addCollision(target);
-                          if(aReaction->getCollision() != 2)
-                            {
-                              return;
-                            }
-                        }
-                      unsigned aMoleculeSize(theMoleculeSize);
-                      react(source, target, i, target->idx%theStride, tarID);
-                      //If the reaction is successful, the last molecule of this
-                      //species will replace the pointer of i, so we need to 
-                      //decrement i to perform the diffusion on it. However, if
-                      //theMoleculeSize didn't decrease, that means the
-                      //currently walked molecule was a product of this
-                      //reaction and so we don't need to walk it again by
-                      //decrementing i.
-                      if(theMoleculeSize < aMoleculeSize)
-                        {
-                          --i;
-                        }
-                    }
                 }
             }
         }
