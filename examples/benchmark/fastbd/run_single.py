@@ -18,7 +18,7 @@ def run_single(T, V, N, R, D):
   print("Now running",int(N),"molecules for",T,"s")
   print param
   start = time.time()
-  os.system("./fastbd " + param)
+  os.system("fastbd " + param)
   end = time.time()
   duration = end-start
   print(duration,"s")

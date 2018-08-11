@@ -7,7 +7,7 @@ def run_set(outfile, name, V_list, N_list, T_list, R, D, REPEAT):
     import run_single
     outfile.write('%s = [\n' % name)
     for i in range(len(V_list)):
-        if (i < 3):
+        if (i == i):
             outfile.write('# T=%g, N=%g, V=%g\n' % 
                           (T_list[i], N_list[i], V_list[i]))
             run_times = []
@@ -29,7 +29,7 @@ Vv = [3e-18, ] * 11 #simulation volume in m^3
 Nv = [100,300,1000,3000,10000,30000,100000,300000,1000000,3000000,10000000] #number of molecules
 Tr = np.array([1.7902, 0.29534, 0.03835, 0.0060192, 0.00078963, 0.000117759, 1.31899e-5, 1.39362e-6, 6.2317e-8, 4.302e-9, 3.114e-11])
 Tx = np.array([10.723, 11.468, 12.319, 15.796, 25.710, 51.602, 118.92, 226.685, 174.0679, 187.172, 271.53]) 
-Tv = 10.0/Tx*Tr
+Tv = 3000.0/Tx*Tr
 REPEAT = 1
 
 if __name__ == '__main__':
