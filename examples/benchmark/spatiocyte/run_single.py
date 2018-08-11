@@ -11,14 +11,15 @@ import random
 #N = number of molecules
 #R = voxel radius
 #D = diffusion coefficient
+#M = model file name
 
-def run_single(T, V, N, R, D):
-  print('T (sim time) =', T, '; V (liter volume) = ', V, '; N (#molecules) =', N, '; R (voxel radius) =', R, '; D (diffusion coef) =', D)
+def run_single(T, V, N, R, D, M):
+  print('T (sim time) =', T, '; V (liter volume) = ', V, '; N (#molecules) =', N, '; R (voxel radius) =', R, '; D (diffusion coef) =', D, '; M (model) =', M)
   filename = ('%f' %random.random())
   # V is in m^3, get the cube length, L
   L = math.pow(V, 1.0 / 3.0)
   param = ("--parameters=\"{'T':%e, 'L':%e, 'N':%e, 'R':%e, 'D':%e, 'filename':'%s'}\"" %(T, L, N, R, D, filename))
-  os.system("ecell3-session " + param + " diffusion.py")
+  os.system("ecell3-session " + param + " " + M)
   with open(filename, 'rb') as f:
       timing = pickle.load(f)
       f.close()
@@ -32,6 +33,7 @@ if __name__ == '__main__':
   N = 1e+3
   R = 2.5e-9
   D = 1e-12
+  M = "diffusion.py"
   #python run_single.py 1e-5 1e-15 1e+3 2.5e-9 1e-12
   if(len(sys.argv) == 6):
     T = float(sys.argv[1])
@@ -39,4 +41,5 @@ if __name__ == '__main__':
     N = float(sys.argv[3])
     R = float(sys.argv[4])
     D = float(sys.argv[5])
-  run_single(T, V, N, R, D)
+    M = str(sys.argv[5])
+  run_single(T, V, N, R, D, M)

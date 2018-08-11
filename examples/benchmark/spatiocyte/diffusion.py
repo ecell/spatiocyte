@@ -12,7 +12,7 @@ except NameError:
   D = 1e-12
   filename = 'tempfile.txt'
 
-stirTime = T*0.5
+stirTime = T*0.05
 
 print "parameters=\"{'T':%0.6e, 'L':%0.6e, 'N':%0.6e, 'R':%0.6e, 'D':%0.6e, 'filename':%s}\"" %(T, L, N, R, D, filename)
 sim = theSimulator.createStepper('SpatiocyteStepper', 'SS')
