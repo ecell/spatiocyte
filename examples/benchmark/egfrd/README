@@ -1,10 +1,6 @@
 Installing eGFRD
 ----------------
-$ git clone https://github.com/ecell/epdp.git
-$ cd epdp
-$ ./autogen.sh
-$ ./configure --prefix=$HOME/root
-$ make -j4
+$ pip install ecell
 
 Runtime for Michaelis-Menten reaction
 -------------------------------------
