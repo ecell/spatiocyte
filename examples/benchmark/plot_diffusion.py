@@ -63,6 +63,12 @@ if (os.path.isfile(filename)):
   loglog(X, 0.4*X, 'k--')
   #annotate(r'$T\propto N$', xy=(X[1], smoldyn_data[1][0]),  xycoords='data', xytext=(-25, -23), textcoords='offset points', color='g', size=14)
 
+filename = path+'smoldyn/smoldyn_excluded_volume_dillute_out.py'
+if (os.path.isfile(filename)):
+  imp.load_source('smoldyn_excluded_volume_dillute_out', filename)
+  from smoldyn_excluded_volume_dillute_out import *
+  plot(Nv, smoldyn_excluded_volume_dillute_data,'g*', fillstyle='none', markersize=markersize, label=r'Smoldyn excluded volume ($V=30\ \mathrm{\mu m}^{3}$)')
+
 filename = path+'smoldyn/smoldyn_excluded_volume_out.py'
 if (os.path.isfile(filename)):
   imp.load_source('smoldyn_excluded_volume_out', filename)

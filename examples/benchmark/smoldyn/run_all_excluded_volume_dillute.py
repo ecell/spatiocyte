@@ -29,12 +29,12 @@ Vv = [3e-17, ] * 11 #simulation volume in m^3
 Nv = [100,300,1000,3000,10000,30000,100000,300000,1000000,3000000,10000000] #number of molecules
 Tx = np.array([max(1e-5, min(T, 20e0 / math.pow(N, 2.0 / 3.0))) for N in Nv]) #duration
 Tr = np.array([0.77, 1.25, 1.87, 3.09, 10.00, 17.94, 33.91, 111.42, 230.33, 414.89, 733.01])
-Tv = 2000.0/Tr*Tx
-Mv = "diffusion.txt"
+Tv = 3000.0/Tr*Tx
+Mv = "diffusion_excluded_volume.txt"
 REPEAT = 1
 
 if __name__ == '__main__':
-    mode = "smoldyn_dillute"
+    mode = "smoldyn_excluded_volume_dillute"
     postfix = '_out'
     outfile = open(mode+postfix+'.py','w'); 
     dataname = mode+'_data'
