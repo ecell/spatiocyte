@@ -27,16 +27,16 @@ Rv = 2.5e-9 #voxel radius
 Dv = 1e-12 #diffusion coefficient
 Vv = [3e-18, ] * 11 #simulation volume in m^3
 Nv = [100,300,1000,3000,10000,30000,100000,300000,1000000,3000000,10000000] #number of molecules
-Tx = np.array([max(1e-5, min(T, 20e0 / math.pow(N, 2.0 / 3.0))) for N in Nv]) #duration
-Tr = np.array([0.77, 1.25, 1.87, 3.09, 10.00, 17.94, 33.91, 111.42, 230.33, 414.89, 733.01])
-Tv = 100.0/Tr*Tx
-Mv = "diffusion_excluded_volume.txt"
+#Tv = [max(1e-5, min(T, 1e0 / math.pow(N, 2.0 / 3.0))) for N in Nv] #duration
+Tx = np.array([12, 4, 1, 0.4, 0.15, 0.04, 0.01, 3e-3, 1e-3, 5e-4, 2e-4])
+Tr = np.array([52.76, 70.19, 74.72, 94.35, 120.90, 100.10, 93.07, 100.68, 115.98, 172.06, 230.26])
+Tv = 900.0/Tr*Tx
+Mv = "diffusion_point.py"
 REPEAT = 1
 
 if __name__ == '__main__':
-    mode = "smoldyn_excluded_volume"
+    mode = "spatiocyte_point"
     postfix = '_out'
     outfile = open(mode+postfix+'.py','w'); 
     dataname = mode+'_data'
-    run_set(outfile, dataname, Vv, Nv, Tv, Rv, Dv, Mv, REPEAT);
-    outfile.write('\n\n')
+    run_set(outfile, dataname, Vv, Nv, Tv, Rv, Dv, Mv, REPEAT); outfile.write('\n\n')
