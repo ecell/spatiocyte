@@ -25,10 +25,10 @@ T = 10.
 Rv = 2.5e-9 #voxel radius
 Dv = 1e-12 #diffusion coefficient
 Vv = [3e-18, ] * 11 #simulation volume in m^3
-Nv = [100,300,1000,3000,10000,30000,100000,300000,1000000,3000000,10000000] #number of molecules
+Nv = [3000000,10000000] #number of molecules
 #Tv = [max(1e-7, min(T, 1e-3 / math.pow(N, 2.0 / 3.0))) for N in Nv] #duration
 #Tv = [1e-3,1e-3,1e-3,1e-3,1e-3,1e-3,3e-7,2e-7,1e-7,1e-7,1e-7]
-Tv = [5,2.5,1,0.5,0.1,0.01,0.001,0.0002,0.00008,5e-6,4e-6]
+Tv = [3e-6,1.5e-6]
 REPEAT = 1
 
 if __name__ == '__main__':
