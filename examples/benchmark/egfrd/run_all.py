@@ -7,7 +7,7 @@ def run_set(outfile, name, V_list, N_list, T_list, R, D, REPEAT):
     import run_single
     outfile.write('%s = [\n' % name)
     for i in range(len(V_list)):
-        if (i == i):
+        if (i > 8):
             outfile.write('# T=%g, N=%g, V=%g\n' % 
                           (T_list[i], N_list[i], V_list[i]))
             run_times = []
@@ -27,9 +27,9 @@ Rv = 2.5e-9 #voxel radius
 Dv = 1e-12 #diffusion coefficient
 Vv = [3e-17, ] * 11 #simulation volume in m^3
 Nv = [100,300,1000,3000,10000,30000,100000,300000,1000000,3000000,10000000] #number of molecules
-Tr = np.array([333.33, 51.33, 6.831, 1.063, 0.134, 0.02049, 0.002361, 0.002361, 0.002361, 0.002361, 0.002361]) 
-Tx = np.array([18.62, 17.38, 17.81, 17.66, 16.97, 17.40, 17.90, 17.90, 17.90, 17.90, 17.90]) 
-Tv = 200.0/Tx*Tr
+Tr = np.array([3580.3, 590.6, 76.7, 12.03, 1.579, 0.2355, 0.02638, 0.002638, 0.00.0002638, 1.11732e-5, 1.11732e-5])
+Tx = np.array([2016.6, 2078.7, 2142.5, 2305.5, 2627.9, 3254.5, 5096.7, 7078.1, 15430.9, 11874.8, 159672.3])
+Tv = 10000./Tx*Tr
 REPEAT = 1
 
 if __name__ == '__main__':

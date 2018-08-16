@@ -14,7 +14,7 @@ def run_single(T, V, N, R, D):
   w.bind_to(m)
   w.add_molecules(Species('A'), N)
   sim = egfrd.EGFRDSimulator(w)
-  stirTime = T*0.0001
+  stirTime = T*0.00001
   t = 0.0
   gc.disable
   sim.run(stirTime)

@@ -5,6 +5,7 @@ import os
 import numpy
 import imp
 import scipy.io
+from scipy import constants
 from matplotlib.pylab import *
 #uncomment the following to create valid eps (scribus) and svg (inkscape):
 #rc('svg', embed_char_paths=True)
@@ -39,6 +40,16 @@ imp.load_source('run_all', filename)
 from run_all import Nv
 X = numpy.array(Nv)
 
+volume = 30e-18 #in m^3
+volume = volume*1e+3 #in liter
+conc = 0.1e-6 #in Molar
+nMolecules = constants.N_A*conc*volume
+axvline(x=nMolecules)
+
+conc = 10e-6 #in Molar
+nMolecules = constants.N_A*conc*volume
+axvline(x=nMolecules)
+
 filename = path+'egfrd/egfrd_dense_out.py'
 if (os.path.isfile(filename)):
   imp.load_source('egfrd_dense_out', filename)
@@ -51,9 +62,9 @@ filename = path+'egfrd/egfrd_out.py'
 if (os.path.isfile(filename)):
   imp.load_source('egfrd_out', filename)
   from egfrd_out import *
-  plot(Nv, egfrd_data,'bv', fillstyle='none', markersize=markersize, label=r'eGFRD ($V=3000\ \mathrm{\mu m}^{3}$)')
+  plot(Nv, egfrd_data,'bv', fillstyle='none', markersize=markersize, label=r'eGFRD ($V=30\ \mathrm{\mu m}^{3}$)')
   #loglog(X, 2.05e-4*X**(5.0/3.0), 'b--')
-  annotate(r'$T\propto N^{\mathsf{\frac{5}{3}}}$', xy=(X[3], egfrd_data[3][0]),  xycoords='data', xytext=(-15, -25), textcoords='offset points', color='b', size=14)
+  #annotate(r'$T\propto N^{\mathsf{\frac{5}{3}}}$', xy=(X[3], egfrd_data[3][0]),  xycoords='data', xytext=(-15, -25), textcoords='offset points', color='b', size=14)
 
 #filename = path+'smoldyn/smoldyn_out.py'
 #if (os.path.isfile(filename)):
