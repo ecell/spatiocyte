@@ -7,9 +7,9 @@ import scipy.constants
 from matplotlib.ticker import ScalarFormatter
 import matplotlib.ticker as ticker
 
-labelFontSize = 15
-legendFontSize = 14
-lineFontSize = 15
+labelFontSize = 12
+legendFontSize = 12
+lineFontSize = 12
 markersize=8
 matplotlib.rcParams.update({'font.size': labelFontSize})
 
@@ -39,19 +39,6 @@ if (os.path.isfile(filename)):
   lines += ax1.plot(Nv, spatiocyte_point_dilute_data,'rD', fillstyle='none', markersize=markersize, label=r'Spatiocyte ($V=30\ \mathrm{\mu m}^{3}$)')
   ax1.loglog(X, 0.28*X, 'r--', linewidth=0.5)
 
-filename = path+'fastbd/fastbd_out.py'
-if (os.path.isfile(filename)):
-  imp.load_source('fastbd_out', filename)
-  from fastbd_out import *
-  lines += ax1.plot(Nv, fastbd_data,'b1', fillstyle='none', markersize=markersize, label=r'Fast BD ($V=3\ \mathrm{\mu m}^{3}$)')
-
-filename = path+'fastbd/fastbd_dilute_out.py'
-if (os.path.isfile(filename)):
-  imp.load_source('fastbd_dilute_out', filename)
-  from fastbd_dilute_out import *
-  lines += ax1.plot(Nv, fastbd_dilute_data,'b^', fillstyle='none', markersize=markersize, label=r'Fast BD ($V=30\ \mathrm{\mu m}^{3}$)')
-  #ax1.loglog(X, 0.72*X, 'k--', linewidth=0.5)
-
 filename = path+'smoldyn/smoldyn_out.py'
 if (os.path.isfile(filename)):
   imp.load_source('smoldyn_out', filename)
@@ -63,6 +50,19 @@ if (os.path.isfile(filename)):
   imp.load_source('smoldyn_dilute_out', filename)
   from smoldyn_dilute_out import *
   lines += ax1.plot(Nv, smoldyn_dilute_data,'gs', fillstyle='none', markersize=markersize, label=r'Smoldyn ($V=30\ \mathrm{\mu m}^{3}$)')
+
+filename = path+'fastbd/fastbd_out.py'
+if (os.path.isfile(filename)):
+  imp.load_source('fastbd_out', filename)
+  from fastbd_out import *
+  lines += ax1.plot(Nv, fastbd_data,'b1', fillstyle='none', markersize=markersize, label=r'Fast BD ($V=3\ \mathrm{\mu m}^{3}$)')
+
+filename = path+'fastbd/fastbd_dilute_out.py'
+if (os.path.isfile(filename)):
+  imp.load_source('fastbd_dilute_out', filename)
+  from fastbd_dilute_out import *
+  lines += ax1.plot(Nv, fastbd_dilute_data,'bo', fillstyle='none', markersize=markersize, label=r'Fast BD ($V=30\ \mathrm{\mu m}^{3}$)')
+  #ax1.loglog(X, 0.72*X, 'k--', linewidth=0.5)
 
 
 ax2.axvline(10, color='purple', linewidth=0.5)
@@ -98,9 +98,9 @@ ax1.xaxis.grid()
 ax1.grid(color='k', linewidth=0.1)
 
 labels = [l.get_label() for l in lines]
-leg = ax2.legend(lines, labels, loc='upper left', labelspacing=0.3, handletextpad=0.2)
+leg = ax2.legend(lines, labels, loc='upper left', labelspacing=0.1, handletextpad=0.1)
 for t in leg.get_texts():
   t.set_fontsize(legendFontSize) 
-
-plt.savefig('diffusion.eps', format='eps', dpi=1000, bbox_inches='tight')
+plt.tight_layout()
+plt.savefig('diffusion_point.pdf', format='pdf', dpi=1000, bbox_inches='tight')
 plt.show()

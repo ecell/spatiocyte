@@ -7,9 +7,9 @@ import scipy.constants
 from matplotlib.ticker import ScalarFormatter
 import matplotlib.ticker as ticker
 
-labelFontSize = 15
-legendFontSize = 14
-lineFontSize = 15
+labelFontSize = 12
+legendFontSize = 12
+lineFontSize = 12
 markersize=8
 matplotlib.rcParams.update({'font.size': labelFontSize})
 
@@ -25,46 +25,45 @@ fig, ax1 = plt.subplots()
 ax2 = ax1.twiny()
 lines = []
 
-
-filename = path+'smoldyn/smoldyn_excluded_volume_dillute_out.py'
-if (os.path.isfile(filename)):
-  imp.load_source('smoldyn_excluded_volume_dillute_out', filename)
-  from smoldyn_excluded_volume_dillute_out import *
-  lines += ax1.plot(Nv, smoldyn_excluded_volume_dillute_data,'g*', fillstyle='none', markersize=markersize, label=r'Smoldyn excluded volume ($V=30\ \mathrm{\mu m}^{3}$)')
-
-filename = path+'smoldyn/smoldyn_excluded_volume_out.py'
-if (os.path.isfile(filename)):
-  imp.load_source('smoldyn_excluded_volume_out', filename)
-  from smoldyn_excluded_volume_out import *
-  lines += ax1.plot(Nv, smoldyn_excluded_volume_data,'go', fillstyle='none', markersize=markersize, label=r'Smoldyn excluded volume ($V=3\ \mathrm{\mu m}^{3}$)')
-  #ax1.loglog(X, 2.5*X, 'g--', linewidth=0.5)
-
 filename = path+'spatiocyte/spatiocyte_out.py'
 if (os.path.isfile(filename)):
   imp.load_source('spatiocyte_out', filename)
   from spatiocyte_out import *
-  lines += ax1.plot(Nv, spatiocyte_data,'rp', fillstyle='none', markersize=markersize, label=r'Spatiocyte ($V=3\ \mathrm{\mu m}^{3}$)')
+  lines += ax1.plot(Nv, spatiocyte_data,'r+', fillstyle='none', markersize=markersize, label=r'Spatiocyte ($V=3\ \mathrm{\mu m}^{3}$)')
   ax1.loglog(X, 0.7*X, 'r--', linewidth=0.5)
   #annotate(r'$T\propto N$', xy=(X[5], spatiocyte_data[5][0]),  xycoords='data', xytext=(-15, 12), textcoords='offset points', color='r', size=14)
 
-filename = path+'spatiocyte/spatiocyte_dillute_out.py'
+filename = path+'spatiocyte/spatiocyte_dilute_out.py'
 if (os.path.isfile(filename)):
-  imp.load_source('spatiocyte_dillute_out', filename)
-  from spatiocyte_dillute_out import *
-  lines += ax1.plot(Nv, spatiocyte_dillute_data,'rP', fillstyle='none', markersize=markersize, label=r'Spatiocyte ($V=30\ \mathrm{\mu m}^{3}$)')
+  imp.load_source('spatiocyte_dilute_out', filename)
+  from spatiocyte_dilute_out import *
+  lines += ax1.plot(Nv, spatiocyte_dilute_data,'rD', fillstyle='none', markersize=markersize, label=r'Spatiocyte ($V=30\ \mathrm{\mu m}^{3}$)')
+
+
+filename = path+'smoldyn/back_smoldyn_excluded_volume_out.py'
+if (os.path.isfile(filename)):
+  imp.load_source('smoldyn_excluded_volume_out', filename)
+  from smoldyn_excluded_volume_out import *
+  lines += ax1.plot(Nv, smoldyn_excluded_volume_data,'gx', fillstyle='none', markersize=markersize, label=r'Smoldyn ($V=3\ \mathrm{\mu m}^{3}$)')
+
+filename = path+'smoldyn/smoldyn_excluded_volume_dilute_out.py'
+if (os.path.isfile(filename)):
+  imp.load_source('smoldyn_excluded_volume_dilute_out', filename)
+  from smoldyn_excluded_volume_dilute_out import *
+  lines += ax1.plot(Nv, smoldyn_excluded_volume_dilute_data,'gs', fillstyle='none', markersize=markersize, label=r'Smoldyn ($V=30\ \mathrm{\mu m}^{3}$)')
 
 filename = path+'egfrd/egfrd_dense_out.py'
 if (os.path.isfile(filename)):
   imp.load_source('egfrd_dense_out', filename)
   from egfrd_dense_out import *
-  lines += ax1.plot(Nv, egfrd_dense_data,'b^', fillstyle='none', markersize=markersize, label=r'eGFRD ($V=3\ \mathrm{\mu m}^{3}$)')
+  lines += ax1.plot(Nv, egfrd_dense_data,'b1', fillstyle='none', markersize=markersize, label=r'eGFRD ($V=3\ \mathrm{\mu m}^{3}$)')
   #ax1.loglog(X, 2e-2*X**(5.0/3.0), 'b--', linewidth=0.5)
 
 filename = path+'egfrd/egfrd_out.py'
 if (os.path.isfile(filename)):
   imp.load_source('egfrd_out', filename)
   from egfrd_out import *
-  lines += ax1.plot(Nv, egfrd_data,'bv', fillstyle='none', markersize=markersize, label=r'eGFRD ($V=30\ \mathrm{\mu m}^{3}$)')
+  lines += ax1.plot(Nv, egfrd_data,'bo', fillstyle='none', markersize=markersize, label=r'eGFRD ($V=30\ \mathrm{\mu m}^{3}$)')
   #ax1.loglog(X, 4e-3*X**(5.0/3.0), 'b--', linewidth=0.5)
 
 
@@ -86,7 +85,6 @@ def log_format(y,pos):
   # Return the formatted tick label
   return formatstring.format(y)
 
-
 Y = np.array([60,3600,3600*24,3600*24*30, 3600*24*30*12])
 plt.yticks(Y, ['min', 'hour', 'day', 'mon', 'year'])
 
@@ -102,9 +100,9 @@ ax1.xaxis.grid()
 ax1.grid(color='k', linewidth=0.1)
 
 labels = [l.get_label() for l in lines]
-leg = ax2.legend(lines, labels, loc='upper left', labelspacing=0.3, handletextpad=0.2)
+leg = ax2.legend(lines, labels, loc='upper left', labelspacing=0.1, handletextpad=0.1)
 for t in leg.get_texts():
   t.set_fontsize(legendFontSize) 
-
-plt.savefig('diffusion.eps', format='eps', dpi=1000, bbox_inches='tight')
+plt.tight_layout()
+plt.savefig('diffusion.pdf', format='pdf', dpi=1000, bbox_inches='tight')
 plt.show()
