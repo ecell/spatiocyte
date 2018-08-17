@@ -31,7 +31,7 @@ Runtime for diffusion
 
 3. To run all instances of the diffusion benchmark model with low concentration
    diffusing molecules:
-   $ python run_all_dillute.py
+   $ python run_all_dilute.py
 
 3. To view the plot after running the models:
    $ python ../plot_diffusion.py

@@ -29,13 +29,13 @@ filename = path+'fastbd/fastbd_out.py'
 if (os.path.isfile(filename)):
   imp.load_source('fastbd_out', filename)
   from fastbd_out import *
-  lines += ax1.plot(Nv, fastbd_data,'kx', fillstyle='none', markersize=markersize, label=r'FastBD ($V=3\ \mathrm{\mu m}^{3}$)')
+  lines += ax1.plot(Nv, fastbd_data,'k1', fillstyle='none', markersize=markersize, label=r'FastBD ($V=3\ \mathrm{\mu m}^{3}$)')
 
-filename = path+'fastbd/fastbd_dillute_out.py'
+filename = path+'fastbd/fastbd_dilute_out.py'
 if (os.path.isfile(filename)):
-  imp.load_source('fastbd_dillute_out', filename)
-  from fastbd_dillute_out import *
-  lines += ax1.plot(Nv, fastbd_dillute_data,'k+', fillstyle='none', markersize=markersize, label=r'FastBD ($V=30\ \mathrm{\mu m}^{3}$)')
+  imp.load_source('fastbd_dilute_out', filename)
+  from fastbd_dilute_out import *
+  lines += ax1.plot(Nv, fastbd_dilute_data,'k^', fillstyle='none', markersize=markersize, label=r'FastBD ($V=30\ \mathrm{\mu m}^{3}$)')
   #ax1.loglog(X, 0.72*X, 'k--', linewidth=0.5)
 
 filename = path+'spatiocyte/spatiocyte_point_out.py'
@@ -45,11 +45,18 @@ if (os.path.isfile(filename)):
   lines += ax1.plot(Nv, spatiocyte_point_data,'rX', fillstyle='none', markersize=markersize, label=r'Spatiocyte ($V=3\ \mathrm{\mu m}^{3}$)')
   ax1.loglog(X, 0.28*X, 'r--', linewidth=0.5)
 
-#filename = path+'smoldyn/back_smoldyn_dillute_out.py'
-#if (os.path.isfile(filename)):
-#  imp.load_source('smoldyn_dillute_out', filename)
-#  from smoldyn_dillute_out import *
-#  ax1.plot(Nv, smoldyn_dillute_data,'gv', fillstyle='none', markersize=markersize, label=r'Smoldyn ($V=30\ \mathrm{\mu m}^{3}$)')
+filename = path+'spatiocyte/spatiocyte_point_dilute_out.py'
+if (os.path.isfile(filename)):
+  imp.load_source('spatiocyte_point_dilute_out', filename)
+  from spatiocyte_point_dilute_out import *
+  lines += ax1.plot(Nv, spatiocyte_point_dilute_data,'rx', fillstyle='none', markersize=markersize, label=r'Spatiocyte ($V=3\ \mathrm{\mu m}^{3}$)')
+  ax1.loglog(X, 0.28*X, 'r--', linewidth=0.5)
+
+filename = path+'smoldyn/smoldyn_dilute_out.py'
+if (os.path.isfile(filename)):
+  imp.load_source('smoldyn_dilute_out', filename)
+  from smoldyn_dilute_out import *
+  lines += ax1.plot(Nv, smoldyn_dilute_data,'g+', fillstyle='none', markersize=markersize, label=r'Smoldyn ($V=30\ \mathrm{\mu m}^{3}$)')
 
 filename = path+'smoldyn/smoldyn_out.py'
 if (os.path.isfile(filename)):

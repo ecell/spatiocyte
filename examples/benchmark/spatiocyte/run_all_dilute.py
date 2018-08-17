@@ -35,7 +35,7 @@ Mv = "diffusion.py"
 REPEAT = 1
 
 if __name__ == '__main__':
-    mode = "spatiocyte_dillute"
+    mode = "spatiocyte_dilute"
     postfix = '_out'
     outfile = open(mode+postfix+'.py','w'); 
     dataname = mode+'_data'

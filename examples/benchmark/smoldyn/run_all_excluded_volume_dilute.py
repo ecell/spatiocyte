@@ -34,7 +34,7 @@ Mv = "diffusion_excluded_volume.txt"
 REPEAT = 1
 
 if __name__ == '__main__':
-    mode = "smoldyn_excluded_volume_dillute"
+    mode = "smoldyn_excluded_volume_dilute"
     postfix = '_out'
     outfile = open(mode+postfix+'.py','w'); 
     dataname = mode+'_data'
