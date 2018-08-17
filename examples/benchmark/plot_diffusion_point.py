@@ -37,7 +37,7 @@ if (os.path.isfile(filename)):
   imp.load_source('spatiocyte_point_dilute_out', filename)
   from spatiocyte_point_dilute_out import *
   lines += ax1.plot(Nv, spatiocyte_point_dilute_data,'rD', fillstyle='none', markersize=markersize, label=r'Spatiocyte ($V=30\ \mathrm{\mu m}^{3}$)')
-  ax1.loglog(X, 0.28*X, 'r--', linewidth=0.5)
+  ax1.loglog(X, 0.30*X, 'r', linewidth=0.5)
 
 filename = path+'smoldyn/smoldyn_out.py'
 if (os.path.isfile(filename)):
@@ -65,8 +65,8 @@ if (os.path.isfile(filename)):
   #ax1.loglog(X, 0.72*X, 'k--', linewidth=0.5)
 
 
-ax2.axvline(10, color='purple', linewidth=0.5)
-ax2.axvline(0.1, color='purple', linewidth=0.5)
+ax2.axvline(10, color='brown', linestyle="--", linewidth=0.8)
+ax2.axvline(0.1, color='brown', linestyle="--", linewidth=0.8)
 
 def n_to_c(n):
   volume = 30e-18 #in m^3
@@ -95,7 +95,7 @@ ax2.xaxis.set_major_formatter(ticker.FuncFormatter(log_format))
 ax2.set_xlabel(r"Concentration at $V=30\ \mathrm{\mu m}^{3}$ ($\mu$M)")
 ax1.yaxis.grid()
 ax1.xaxis.grid()
-ax1.grid(color='k', linewidth=0.1)
+ax1.grid(color='lightgray', linewidth=0.1)
 
 labels = [l.get_label() for l in lines]
 leg = ax2.legend(lines, labels, loc='upper left', labelspacing=0.1, handletextpad=0.1)

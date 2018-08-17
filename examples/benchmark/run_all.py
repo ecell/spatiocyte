@@ -8,17 +8,17 @@ if __name__ == '__main__':
   #print("fastbd");
   #os.chdir("../fastbd")
   #os.system("python run_all.py")
-  #os.system("python run_all_dillute.py")
+  #os.system("python run_all_dilute.py")
   print("smoldyn");
-  os.chdir("../smoldyn")
-  os.system("python run_all.py")
-  os.system("python run_all_dillute.py")
+  os.chdir("smoldyn")
+  #os.system("python run_all.py")
+  #os.system("python run_all_dilute.py")
   os.system("python run_all_excluded_volume.py")
-  os.system("python run_all_excluded_volume_dillute.py")
+  os.system("python run_all_excluded_volume_dilute.py")
   print("spatiocyte");
   os.chdir("../spatiocyte")
   #os.system("python run_all.py")
-  #os.system("python run_all_dillute.py")
+  #os.system("python run_all_dilute.py")
   #os.system("python run_all_point.py")
-  os.system("python run_all_point_dillute.py")
+  #os.system("python run_all_point_dilute.py")
 

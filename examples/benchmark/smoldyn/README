@@ -1,7 +1,7 @@
 Installing Smoldyn
 -------------------
-$ tar xzvf smoldyn-2.32.tgz
-$ cd smoldyn-2.32
+$ tar xzvf smoldyn-2.55.tgz
+$ cd smoldyn-2.55
 $ cmake -DCMAKE_INSTALL_PREFIX:PATH=$HOME/root -DOPTION_USE_OPENGL=OFF -DOPTION_USE_LIBTIFF=OFF -DOPTION_USE_ZLIB=OFF
 $ make -j4
 $ make install
@@ -13,7 +13,7 @@ model provided in Supporting Information Text S1 of Andrews et al, PLoS Comp
 Biol 2010.
 
 1. To run the reaction with Smoldyn:
-   $ python reaction.py 
+   $ python reaction.py  
 
 2. To run the reaction using small step-interval with Smoldyn:
    $ python reaction_small_dt.py 

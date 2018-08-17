@@ -30,8 +30,8 @@ if (os.path.isfile(filename)):
   imp.load_source('spatiocyte_out', filename)
   from spatiocyte_out import *
   lines += ax1.plot(Nv, spatiocyte_data,'r+', fillstyle='none', markersize=markersize, label=r'Spatiocyte ($V=3\ \mathrm{\mu m}^{3}$)')
-  ax1.loglog(X, 0.7*X, 'r--', linewidth=0.5)
-  #annotate(r'$T\propto N$', xy=(X[5], spatiocyte_data[5][0]),  xycoords='data', xytext=(-15, 12), textcoords='offset points', color='r', size=14)
+  ax1.loglog(X, 0.7*X, 'r', linewidth=0.5)
+  ax1.annotate(r'$T\propto N$', xy=(X[9], spatiocyte_data[9][0]),  xycoords='data', xytext=(-13, -23), textcoords='offset points', color='r', size=14)
 
 filename = path+'spatiocyte/spatiocyte_dilute_out.py'
 if (os.path.isfile(filename)):
@@ -46,7 +46,7 @@ if (os.path.isfile(filename)):
   from smoldyn_excluded_volume_out import *
   lines += ax1.plot(Nv, smoldyn_excluded_volume_data,'gx', fillstyle='none', markersize=markersize, label=r'Smoldyn ($V=3\ \mathrm{\mu m}^{3}$)')
 
-filename = path+'smoldyn/smoldyn_excluded_volume_dilute_out.py'
+filename = path+'smoldyn/back_smoldyn_excluded_volume_dilute_out.py'
 if (os.path.isfile(filename)):
   imp.load_source('smoldyn_excluded_volume_dilute_out', filename)
   from smoldyn_excluded_volume_dilute_out import *
@@ -68,8 +68,8 @@ if (os.path.isfile(filename)):
 
 
 
-ax2.axvline(10, color='purple', linewidth=0.5)
-ax2.axvline(0.1, color='purple', linewidth=0.5)
+ax2.axvline(10, color='brown', linestyle="--", linewidth=0.8)
+ax2.axvline(0.1, color='brown', linestyle="--", linewidth=0.8)
 
 def n_to_c(n):
   volume = 30e-18 #in m^3
@@ -97,7 +97,7 @@ ax2.xaxis.set_major_formatter(ticker.FuncFormatter(log_format))
 ax2.set_xlabel(r"Concentration at $V=30\ \mathrm{\mu m}^{3}$ ($\mu$M)")
 ax1.yaxis.grid()
 ax1.xaxis.grid()
-ax1.grid(color='k', linewidth=0.1)
+ax1.grid(color='lightgray', linewidth=0.1)
 
 labels = [l.get_label() for l in lines]
 leg = ax2.legend(lines, labels, loc='upper left', labelspacing=0.1, handletextpad=0.1)

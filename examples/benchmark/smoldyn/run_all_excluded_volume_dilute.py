@@ -27,9 +27,9 @@ Rv = 2.5e-9 #voxel radius
 Dv = 1e-12 #diffusion coefficient
 Vv = [3e-17, ] * 11 #simulation volume in m^3
 Nv = [100,300,1000,3000,10000,30000,100000,300000,1000000,3000000,10000000] #number of molecules
-Tx = np.array([max(1e-5, min(T, 20e0 / math.pow(N, 2.0 / 3.0))) for N in Nv]) #duration
-Tr = np.array([0.77, 1.25, 1.87, 3.09, 10.00, 17.94, 33.91, 111.42, 230.33, 414.89, 733.01])
-Tv = 3000.0/Tr*Tx
+Tx = np.array([60.28, 17.85, 5.347, 1.555, 0.2154, 0.05773, 0.01369, 0.002003, 0.0004342, 0.0001159, 5.8783e-5]) 
+Tr = np.array([690.4, 560.1, 715.1, 777.7, 708.2, 749.9, 746.0, 675.5, 681.1, 596.2, 1031.7])
+Tv = 4000.0/Tr*Tx
 Mv = "diffusion_excluded_volume.txt"
 REPEAT = 1
 
