@@ -25,46 +25,44 @@ fig, ax1 = plt.subplots()
 ax2 = ax1.twiny()
 lines = []
 
-filename = path+'fastbd/fastbd_out.py'
-if (os.path.isfile(filename)):
-  imp.load_source('fastbd_out', filename)
-  from fastbd_out import *
-  lines += ax1.plot(Nv, fastbd_data,'k1', fillstyle='none', markersize=markersize, label=r'FastBD ($V=3\ \mathrm{\mu m}^{3}$)')
-
-filename = path+'fastbd/fastbd_dilute_out.py'
-if (os.path.isfile(filename)):
-  imp.load_source('fastbd_dilute_out', filename)
-  from fastbd_dilute_out import *
-  lines += ax1.plot(Nv, fastbd_dilute_data,'k^', fillstyle='none', markersize=markersize, label=r'FastBD ($V=30\ \mathrm{\mu m}^{3}$)')
-  #ax1.loglog(X, 0.72*X, 'k--', linewidth=0.5)
-
 filename = path+'spatiocyte/spatiocyte_point_out.py'
 if (os.path.isfile(filename)):
   imp.load_source('spatiocyte_point_out', filename)
   from spatiocyte_point_out import *
-  lines += ax1.plot(Nv, spatiocyte_point_data,'rX', fillstyle='none', markersize=markersize, label=r'Spatiocyte ($V=3\ \mathrm{\mu m}^{3}$)')
-  ax1.loglog(X, 0.28*X, 'r--', linewidth=0.5)
+  lines += ax1.plot(Nv, spatiocyte_point_data,'r+', fillstyle='none', markersize=markersize, label=r'Spatiocyte ($V=3\ \mathrm{\mu m}^{3}$)')
+  ax1.annotate(r'$T\propto N$', xy=(X[9], spatiocyte_point_data[9][0]),  xycoords='data', xytext=(-13, -28), textcoords='offset points', color='r', size=14)
 
 filename = path+'spatiocyte/spatiocyte_point_dilute_out.py'
 if (os.path.isfile(filename)):
   imp.load_source('spatiocyte_point_dilute_out', filename)
   from spatiocyte_point_dilute_out import *
-  lines += ax1.plot(Nv, spatiocyte_point_dilute_data,'rx', fillstyle='none', markersize=markersize, label=r'Spatiocyte ($V=3\ \mathrm{\mu m}^{3}$)')
+  lines += ax1.plot(Nv, spatiocyte_point_dilute_data,'rD', fillstyle='none', markersize=markersize, label=r'Spatiocyte ($V=30\ \mathrm{\mu m}^{3}$)')
   ax1.loglog(X, 0.28*X, 'r--', linewidth=0.5)
 
-filename = path+'smoldyn/smoldyn_dilute_out.py'
+filename = path+'fastbd/fastbd_out.py'
 if (os.path.isfile(filename)):
-  imp.load_source('smoldyn_dilute_out', filename)
-  from smoldyn_dilute_out import *
-  lines += ax1.plot(Nv, smoldyn_dilute_data,'g+', fillstyle='none', markersize=markersize, label=r'Smoldyn ($V=30\ \mathrm{\mu m}^{3}$)')
+  imp.load_source('fastbd_out', filename)
+  from fastbd_out import *
+  lines += ax1.plot(Nv, fastbd_data,'b1', fillstyle='none', markersize=markersize, label=r'Fast BD ($V=3\ \mathrm{\mu m}^{3}$)')
+
+filename = path+'fastbd/fastbd_dilute_out.py'
+if (os.path.isfile(filename)):
+  imp.load_source('fastbd_dilute_out', filename)
+  from fastbd_dilute_out import *
+  lines += ax1.plot(Nv, fastbd_dilute_data,'b^', fillstyle='none', markersize=markersize, label=r'Fast BD ($V=30\ \mathrm{\mu m}^{3}$)')
+  #ax1.loglog(X, 0.72*X, 'k--', linewidth=0.5)
 
 filename = path+'smoldyn/smoldyn_out.py'
 if (os.path.isfile(filename)):
   imp.load_source('smoldyn_out', filename)
   from smoldyn_out import *
-  lines += ax1.plot(Nv, smoldyn_data,'gs', fillstyle='none', markersize=markersize, label=r'Smoldyn ($V=3\ \mathrm{\mu m}^{3}$)')
-  #ax1.loglog(X, 0.4*X, 'g--', linewidth=0.5)
-  #annotate(r'$T\propto N$', xy=(X[1], smoldyn_data[1][0]),  xycoords='data', xytext=(-25, -23), textcoords='offset points', color='g', size=14)
+  lines += ax1.plot(Nv, smoldyn_data,'gx', fillstyle='none', markersize=markersize, label=r'Smoldyn ($V=3\ \mathrm{\mu m}^{3}$)')
+
+filename = path+'smoldyn/smoldyn_dilute_out.py'
+if (os.path.isfile(filename)):
+  imp.load_source('smoldyn_dilute_out', filename)
+  from smoldyn_dilute_out import *
+  lines += ax1.plot(Nv, smoldyn_dilute_data,'gs', fillstyle='none', markersize=markersize, label=r'Smoldyn ($V=30\ \mathrm{\mu m}^{3}$)')
 
 
 ax2.axvline(10, color='purple', linewidth=0.5)
