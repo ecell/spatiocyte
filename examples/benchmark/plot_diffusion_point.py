@@ -37,7 +37,7 @@ if (os.path.isfile(filename)):
   imp.load_source('spatiocyte_point_dilute_out', filename)
   from spatiocyte_point_dilute_out import *
   lines += ax1.plot(Nv, spatiocyte_point_dilute_data,'rD', fillstyle='none', markersize=markersize, label=r'Spatiocyte ($V=30\ \mathrm{\mu m}^{3}$)')
-  ax1.loglog(X, 0.30*X, 'r', linewidth=0.5)
+  ax1.loglog(X, 0.33*X, 'r', linewidth=0.5)
 
 filename = path+'smoldyn/smoldyn_out.py'
 if (os.path.isfile(filename)):
