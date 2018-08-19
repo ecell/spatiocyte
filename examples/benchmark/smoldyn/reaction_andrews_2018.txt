@@ -1,0 +1,48 @@
+# Michaelis-Menten reaction
+# units: micron and second
+
+graphics none
+
+dim 3
+species E S ES P
+boxsize 0.3			# side length of each partition
+
+# diffusion coefficients
+difc E 10
+difc S 10
+difc ES 10
+difc P 10
+
+# simulation times
+time_start 0
+time_stop 10
+time_step DELTA_T
+
+# system boundaries are periodic
+boundaries 0 0 4.4964 p
+boundaries 1 0 4.4964 p
+boundaries 2 0 4.4964 p
+
+# store molecules internally with separate list for each species
+molecule_lists Elist Slist ESlist Plist
+mol_list E Elist
+mol_list S Slist
+mol_list ES ESlist
+mol_list P Plist
+
+# initial molecule counts, uniformly distributed
+mol 909 E u u u			# 10 E/vol
+mol 9091 S u u u		# 100 S/vol
+
+# reactions and rates
+# fwd rate is 5.88 uM-1 s-1; binding radius is 0.0134 and would be 3.2e-5 if dt=0
+reaction fwd E + S -> ES 0.01
+reaction back ES -> E + S 1
+reaction prod ES -> E + P 1
+product_placement back pgemmax 0.2	# maximum probability of geminate recombination
+
+# save quantitative results
+output_files FILE
+cmd i 0 100 0.01 molcount FILE
+
+end_file
