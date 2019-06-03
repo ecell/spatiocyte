@@ -60,7 +60,7 @@ public:
   SpatiocyteStepper():
     isInitialized(false),
     isPeriodicEdge(false),
-    SearchVacant(false),
+    SearchVacant(true),
     RemoveSurfaceBias(false),
     DebugLevel(1),
     LatticeType(HCP_LATTICE),
