@@ -42,11 +42,14 @@ dif = theSimulator.createEntity('DiffusionProcess', 'Process:/:diffP')
 dif.VariableReferenceList = [['_', 'Variable:.:P']]
 dif.D = 1e-12
 
+keff = 0.01e-18
+kd = 4.*np.pi*2*rv*2*D
+ka = keff*kd/(kd-keff)
 binder = theSimulator.createEntity('DiffusionInfluencedReactionProcess', 'Process:/:fwd')
 binder.VariableReferenceList = [['_', 'Variable:.:E','-1']]
 binder.VariableReferenceList = [['_', 'Variable:.:S','-1']]
 binder.VariableReferenceList = [['_', 'Variable:.:ES','1']]
-binder.k = 0.01e-18
+binder.k = ka
 
 react = theSimulator.createEntity('SpatiocyteNextReactionProcess', 'Process:/:back')
 react.VariableReferenceList = [['_', 'Variable:.:ES', '-1']]
