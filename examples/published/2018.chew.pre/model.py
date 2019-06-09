@@ -10,12 +10,13 @@ ka1, kd1, kcat1 = 0.04483455086786913, 1.35, 1.5
 ka2, kd2, kcat2 = 0.09299017957780264, 1.73, 15.0
 trel = 1e-6
 k7 = math.log(2.)/trel
-D = 4. # [4, 0.06]
 ratios = np.logspace(-1.5,1.5,12)
+ratio = ratios[0]
+D = 4. # [4, 0.06]
 NKT = 120 # total K
-NPP = int(60./(ratios[0]+1))
+NPP = int(60./(ratio+1))
 NKK = 60-NPP
-duration = 200
+duration = 5
 
 sim = theSimulator.createStepper('SpatiocyteStepper', 'SS')
 sim.VoxelRadius = 1.0208582*molecule_radius
@@ -44,11 +45,11 @@ theSimulator.createEntity('Variable', 'Variable:/:Kp_PP').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/:KKa').Value = 0
 theSimulator.createEntity('Variable', 'Variable:/:PPa').Value = 0
 
-log = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:log')
-log.VariableReferenceList = [['_', 'Variable:.:KK']]
-log.VariableReferenceList = [['_', 'Variable:.:Kpp']]
-log.VariableReferenceList = [['_', 'Variable:.:PP']]
-log.LogInterval = 0.001
+#log = theSimulator.createEntity('VisualizationLogProcess', 'Process:/:log')
+#log.VariableReferenceList = [['_', 'Variable:.:KK']]
+#log.VariableReferenceList = [['_', 'Variable:.:Kpp']]
+#log.VariableReferenceList = [['_', 'Variable:.:PP']]
+#log.LogInterval = 0.001
 
 pop = theSimulator.createEntity('MoleculePopulateProcess', 'Process:/:pop')
 pop.VariableReferenceList = [['_', 'Variable:.:KK']]
