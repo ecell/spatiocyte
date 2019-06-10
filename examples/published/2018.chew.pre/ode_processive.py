@@ -8,10 +8,6 @@ from pylab import *
 from collections import OrderedDict
 from scipy.integrate import odeint
 
-labelFontSize = 23
-legendFontSize = 18
-lineFontSize = 23
-
 volume = 1.0
 molecule_radius = 0.0025
 box_l = math.pow(volume, 1.0/3.0)
@@ -26,17 +22,24 @@ D = 0.06
 NKT = 120 # total K
 NPP = int(60./(ratio+1))
 NKK = 60-NPP
-print("NKK:",NKK,"NPP:",NPP)
 duration = 200
 
 def kon(k):
   kD = 4*3.14*2*molecule_radius*2*D
   return k*kD/(k+kD)
+
 def koff(kd,ka):
   return kon(ka)*kd/ka 
 
 kon1 = kon(ka1)
 koff1 = koff(kd1, ka1)
+
+# (K + KK == K_KK | (kon1, koff1)
+#     > Kp_KK | kcat1
+#     > Kpp + KK | kcat2)
+# (Kpp + PP == Kpp_PP | (kon1, koff1)
+#     > Kp + PP | kcat1
+#     > K + PP | kcat2)
 
 # K = -kon1*KK*K + koff1*K_KK + kcat2*Kp*PP
 # KK = -kon1*KK*K + koff1*K_KK + kcat2*Kp_KK
@@ -56,26 +59,21 @@ koff1 = koff(kd1, ka1)
 # x[6] = kon1*x[4]*x[5] - koff1*x[6] - kcat1*x[6]
 # x[7] = kcat1*x[6] - kcat2*x[7]*x[5]
 
-
-def f(x, t0, kf, kr, kcat):
-    """
-    x: state vector with concentrations of E, S, ES, P
-    """
-    return np.array([ 
-      -kon1*x[1]*x[0] + koff1*x[2] + kcat2*x[7]*x[5],
-      -kon1*x[1]*x[0] + koff1*x[2] + kcat2*x[3],
-      kon1*x[1]*x[0] - koff1*x[2] - kcat1*x[2],
-      kcat1*x[2] - kcat2*x[3],
-      kcat2*x[3] - kon1*x[4]*x[5] + koff1*x[6],
-      -kon1*x[4]*x[5] + koff1*x[6] + kcat1*x[6],
-      kon1*x[4]*x[5] - koff1*x[6] - kcat1*x[6],
-      kcat1*x[6] - kcat2*x[7]*x[5]
-      ])
+def f(x, t0):
+  return np.array([ 
+    -kon1*x[1]*x[0] + koff1*x[2] + kcat2*x[7]*x[5],
+    -kon1*x[1]*x[0] + koff1*x[2] + kcat2*x[3],
+    kon1*x[1]*x[0] - koff1*x[2] - kcat1*x[2],
+    kcat1*x[2] - kcat2*x[3],
+    kcat2*x[3] - kon1*x[4]*x[5] + koff1*x[6],
+    -kon1*x[4]*x[5] + koff1*x[6] + kcat1*x[6],
+    kon1*x[4]*x[5] - koff1*x[6] - kcat1*x[6],
+    kcat1*x[6] - kcat2*x[7]*x[5]
+    ])
 
 init_state = np.array([NKT, NKK, 0., 0., 0., NPP, 0., 0.]) / volume
 ode_time = np.linspace(0.,duration,100000)
-ode_result = odeint(f, y0=init_state, t=ode_time, args=(0.98e-2, 1., 1.))
-#zip(ode_result[:,1], ode_result[:,4], ode_result[:,5])
+ode_result = odeint(f, y0=init_state, t=ode_time)
 data = np.c_[ode_time, ode_result[:,(1,4,5)]]
-np.savetxt('ode.csv', data, delimiter=',')
+np.savetxt('ode_processive.csv', data, delimiter=',')
 
