@@ -4,6 +4,7 @@ import numpy
 import csv
 import math
 from matplotlib import rc
+import matplotlib.pyplot as plt
 from pylab import *
 from collections import OrderedDict
 from scipy.integrate import odeint
@@ -16,12 +17,7 @@ ka1, kd1, kcat1 = 0.04483455086786913, 1.35, 1.5
 ka2, kd2, kcat2 = 0.09299017957780264, 1.73, 15.0
 trel = 1e-6
 k7 = math.log(2.)/trel
-ratios = np.logspace(-1.5,1.5,12)
-ratio = ratios[5]
 D = 0.06
-NKT = 120 # total K
-NPP = int(60./(ratio+1))
-NKK = 60-NPP
 duration = 200
 
 def kon(k):
@@ -71,9 +67,26 @@ def f(x, t0):
     kcat1*x[6] - kcat2*x[7]*x[5]
     ])
 
-init_state = np.array([NKT, NKK, 0., 0., 0., NPP, 0., 0.]) / volume
+length = 50
+ratios = np.logspace(-1.5,1.5,length)
+x = np.zeros(length)
+y = np.zeros(length)
 ode_time = np.linspace(0.,duration,100000)
-ode_result = odeint(f, y0=init_state, t=ode_time)
-data = np.c_[ode_time, ode_result[:,(1,4,5)]]
+result = []
+for i in range(len(ratios)):
+  NKT = 120 # total K
+  NPP = int(60./(ratios[i]+1)) # initial PP
+  NKK = 60-NPP # initial KK 
+  x[i] = float(NKK)/NPP
+  init_state = np.array([NKT, NKK, 0., 0., 0., NPP, 0., 0.]) / volume
+  ode_result = odeint(f, y0=init_state, t=ode_time)
+  #y[i:] = ode_result[-1:,(1,4,5)]
+  y[i] = ode_result[-1:,(4)] # just save Kpp equilibrium values
+
+y = y/NKT
+data = np.c_[x, y/NKT]
 np.savetxt('ode_processive.csv', data, delimiter=',')
+fig,ax=plt.subplots(1,1,figsize=(12,8))
+ax.semilogx(x,y)
+plt.show()
 

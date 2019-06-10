@@ -16,13 +16,7 @@ ka1, kd1, kcat1 = 0.04483455086786913, 1.35, 1.5
 ka2, kd2, kcat2 = 0.09299017957780264, 1.73, 15.0
 trel = 1e-6
 k7 = math.log(2.)/trel
-ratios = np.logspace(-1.5,1.5,12)
-ratio = ratios[5]
 D = 4.
-NKT = 120 # total K
-NPP = int(60./(ratio+1))
-NKK = 60-NPP
-print("NKK:",NKK,"NPP:",NPP)
 duration = 200
 
 def kon(k):
@@ -87,8 +81,25 @@ def f(x, t0):
     kon2*x[3]*x[7] - koff2*x[10] - kcat2*x[10],
     ])
 
-init_state = np.array([NKK, NKT, 0., 0., 0., 0., 0., NPP, 0., 0., 0.]) / volume
+length = 50
+NKT = 120 # total K
+ratios = np.logspace(-1.5,1.5,length)
+x = np.zeros(length)
+y = np.zeros(length)
 ode_time = np.linspace(0.,duration,100000)
-ode_result = odeint(f, y0=init_state, t=ode_time)
-data = np.c_[ode_time, ode_result[:,(0,6,7)]]
+result = []
+for i in range(len(ratios)):
+  NPP = int(60./(ratios[i]+1)) # initial PP
+  NKK = 60-NPP # initial KK 
+  x[i] = float(NKK)/NPP
+  init_state = np.array([NKK, NKT, 0., 0., 0., 0., 0., NPP, 0., 0., 0.])/volume
+  ode_result = odeint(f, y0=init_state, t=ode_time)
+  #y[i:] = ode_result[-1:,(0,6,7)]
+  y[i] = ode_result[-1:,(6)] # just save Kpp equilibrium values
+
+y = y/NKT
+data = np.c_[x, y/NKT]
 np.savetxt('ode_distributive.csv', data, delimiter=',')
+fig,ax=plt.subplots(1,1,figsize=(12,8))
+ax.semilogx(x,y)
+plt.show()
