@@ -68,13 +68,13 @@ def f(x, t0):
     ])
 
 length = 50
+NKT = 120 # total K
 ratios = np.logspace(-1.5,1.5,length)
 x = np.zeros(length)
 y = np.zeros(length)
 ode_time = np.linspace(0.,duration,100000)
 result = []
 for i in range(len(ratios)):
-  NKT = 120 # total K
   NPP = int(60./(ratios[i]+1)) # initial PP
   NKK = 60-NPP # initial KK 
   x[i] = float(NKK)/NPP
@@ -84,9 +84,9 @@ for i in range(len(ratios)):
   y[i] = ode_result[-1:,(4)] # just save Kpp equilibrium values
 
 y = y/NKT
-data = np.c_[x, y/NKT]
+data = np.c_[x, y]
 np.savetxt('ode_processive.csv', data, delimiter=',')
-fig,ax=plt.subplots(1,1,figsize=(12,8))
-ax.semilogx(x,y)
-plt.show()
+#fig,ax=plt.subplots(1,1,figsize=(12,8))
+#ax.semilogx(x,y)
+#plt.show()
 

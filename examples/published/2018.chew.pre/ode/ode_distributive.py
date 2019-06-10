@@ -98,8 +98,8 @@ for i in range(len(ratios)):
   y[i] = ode_result[-1:,(6)] # just save Kpp equilibrium values
 
 y = y/NKT
-data = np.c_[x, y/NKT]
+data = np.c_[x, y]
 np.savetxt('ode_distributive.csv', data, delimiter=',')
-fig,ax=plt.subplots(1,1,figsize=(12,8))
-ax.semilogx(x,y)
-plt.show()
+#fig,ax=plt.subplots(1,1,figsize=(12,8))
+#ax.semilogx(x,y)
+#plt.show()

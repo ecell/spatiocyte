@@ -19,7 +19,7 @@ x = np.sort(x)
 y = np.sort(y)
 
 fig,ax=plt.subplots(1,1,figsize=(12,8))
-ax.semilogx(x,y, '-o', markersize=10)
+ax.semilogx(x,y, 'o', markersize=10)
 
 dirs = glob.glob('ratio*_D_0*')
 ratios = np.logspace(-1.5,1.5,12)
@@ -33,7 +33,13 @@ for adir in dirs:
 x = np.sort(x)
 y = np.sort(y)
 
-ax.semilogx(x,y, '-o', markersize=10)
+ax.semilogx(x,y, 'o', markersize=10)
+
+data = np.loadtxt('ode/ode_processive.csv', delimiter=',')
+ax.semilogx(data[:,0], data[:,1], '-', markersize=10)
+
+data = np.loadtxt('ode/ode_distributive.csv', delimiter=',')
+ax.semilogx(data[:,0], data[:,1], '-', markersize=10)
 
 plt.show()
 
