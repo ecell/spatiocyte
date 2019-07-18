@@ -16,7 +16,7 @@ D = 4
 NKT = 120 # total K
 NPP = int(60./(ratio+1))
 NKK = 60-NPP
-print("NKK:",NKK,"NPP:",NPP)
+print("ratio:", ratio, "NKK:",NKK,"NPP:",NPP)
 duration = 200
 
 def kon(k):
